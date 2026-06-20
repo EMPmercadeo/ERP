@@ -14,7 +14,23 @@ export default function AuthLayout({
     return (
         <AuthProvider>
             <div className="flex min-h-screen">
-                {/* Left side - Brand panel (dark blue) */}
+                {/* Left side - Form panel (white) */}
+                <div className="flex w-full lg:w-1/2 flex-col items-center justify-between bg-white p-8 min-h-screen">
+                    <div className="w-full max-w-md flex-1 flex flex-col justify-center py-8">
+                        {/* Mobile logo */}
+                        <div className="lg:hidden mb-8">
+                            <div className="flex items-center gap-2 text-foreground">
+                                <Home className="h-6 w-6" />
+                                <span className="text-xl font-semibold">ERP Panamá</span>
+                            </div>
+                        </div>
+
+                        {children}
+                    </div>
+                    <Footer />
+                </div>
+
+                {/* Right side - Brand panel (dark blue) */}
                 <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-foreground p-12 text-white">
                     {/* Logo */}
                     {/* Logo - Static for Auth */}
@@ -41,22 +57,6 @@ export default function AuthLayout({
 
                     {/* Decorative line */}
                     <div className="w-12 h-1 bg-white/30 rounded" />
-                </div>
-
-                {/* Right side - Form panel (white) */}
-                <div className="flex w-full lg:w-1/2 flex-col items-center justify-between bg-white p-8 min-h-screen">
-                    <div className="w-full max-w-md flex-1 flex flex-col justify-center py-8">
-                        {/* Mobile logo */}
-                        <div className="lg:hidden mb-8">
-                            <div className="flex items-center gap-2 text-foreground">
-                                <Home className="h-6 w-6" />
-                                <span className="text-xl font-semibold">ERP Panamá</span>
-                            </div>
-                        </div>
-
-                        {children}
-                    </div>
-                    <Footer />
                 </div>
             </div>
         </AuthProvider>
