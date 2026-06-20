@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { Home, ArrowLeft } from 'lucide-react';
+import { Footer } from '@/components/layout/Footer';
 
 export default function TermsPage() {
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
             {/* Header */}
             <header className="bg-foreground text-white py-6">
                 <div className="max-w-4xl mx-auto px-4">
@@ -116,7 +117,35 @@ export default function TermsPage() {
                     </section>
 
                     <section>
-                        <h2 className="text-xl font-semibold text-foreground mb-3">10. Contacto</h2>
+                        <h2 className="text-xl font-semibold text-foreground mb-3">10. Cláusula de Arbitraje y Renuncia a Demandas Colectivas</h2>
+                        <p>
+                            Cualquier disputa, reclamo o controversia derivada de o relacionada con estos Términos o el Servicio se resolverá mediante arbitraje individual vinculante y definitivo, en lugar de en los tribunales ordinarios, con la única excepción de que usted podrá presentar reclamos en un tribunal de causas menores si califican.
+                        </p>
+                        <p className="mt-2">
+                            **Usted y ERP Panamá renuncian a cualquier derecho a un juicio por jurado y a participar en una demanda colectiva (Class Action)** o en acciones representativas o conjuntas. El arbitraje se llevará a cabo de manera individual y no se permitirán arbitrajes grupales o colectivos.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-xl font-semibold text-foreground mb-3">11. Política de Derechos de Autor (DMCA Takedown)</h2>
+                        <p>
+                            Respetamos los derechos de propiedad intelectual de terceros. Si usted considera que cualquier contenido disponible en el Servicio infringe sus derechos de autor, puede enviar una solicitud de retiro (takedown notice) a nuestro Agente de Derechos de Autor Designado que incluya:
+                        </p>
+                        <ul className="list-disc ml-6 mt-2 space-y-1">
+                            <li>Su firma física o electrónica del titular de los derechos de autor o su representante.</li>
+                            <li>Identificación de la obra protegida por derechos de autor que se alega ha sido infringida.</li>
+                            <li>Identificación del material infractor en la plataforma y su ubicación exacta (URL).</li>
+                            <li>Su dirección de correo electrónico, teléfono y dirección física.</li>
+                            <li>Una declaración de buena fe indicando que el uso del material no está autorizado por el titular.</li>
+                            <li>Una declaración bajo juramento de que la información proporcionada en la notificación es exacta.</li>
+                        </ul>
+                        <p className="mt-2">
+                            **Contacto del Agente Designado:** dmca@erp-panama.com. Retiraremos el contenido de forma expedita ante notificaciones válidas de acuerdo con los límites de responsabilidad legal (Safe Harbor).
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-xl font-semibold text-foreground mb-3">12. Contacto</h2>
                         <p>
                             Si tiene alguna pregunta sobre estos Términos, puede contactarnos en:
                         </p>
@@ -128,6 +157,7 @@ export default function TermsPage() {
                     </section>
                 </div>
             </main>
+            <Footer />
         </div>
     );
 }

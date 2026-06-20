@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { Home, ArrowLeft } from 'lucide-react';
+import { Footer } from '@/components/layout/Footer';
 
 export default function PrivacyPage() {
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
             {/* Header */}
             <header className="bg-foreground text-white py-6">
                 <div className="max-w-4xl mx-auto px-4">
@@ -119,6 +120,7 @@ export default function PrivacyPage() {
                         </ul>
                         <p className="mt-2">
                             Puede configurar su navegador para rechazar cookies, pero esto puede afectar la funcionalidad del Servicio.
+                            Para obtener una descripción detallada de todas las cookies que utilizamos y cómo administrarlas, por favor lea nuestra <Link href="/cookies" className="text-primary hover:underline">Política de Cookies</Link>.
                         </p>
                     </section>
 
@@ -162,6 +164,7 @@ export default function PrivacyPage() {
                     </section>
                 </div>
             </main>
+            <Footer />
         </div>
     );
 }
