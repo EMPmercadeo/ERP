@@ -1,8 +1,9 @@
-
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+
+export const dynamic = 'force-dynamic';
 import {
     ArrowLeft,
     Printer,
