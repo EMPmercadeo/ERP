@@ -49,7 +49,13 @@ export async function getTenants() {
     }
 }
 
-export async function getGlobalUsers(search?: string, role?: string, status?: string) {
+export async function getGlobalUsers(
+    search?: string,
+    role?: string,
+    status?: string,
+    page: number = 1,
+    pageSize: number = 10
+) {
     const { getTenantContext } = await import('@/lib/auth/context');
     const ctx = await getTenantContext();
 
@@ -75,9 +81,17 @@ export async function getGlobalUsers(search?: string, role?: string, status?: st
             where.activo = status === 'active';
         }
 
+        // Count total matching items
+        const totalCount = await prisma.usuario.count({ where });
+
+        // Skip calculations
+        const skip = (page - 1) * pageSize;
+
         const users = await prisma.usuario.findMany({
             where,
             orderBy: { createdAt: 'desc' },
+            skip,
+            take: pageSize,
             include: {
                 empresa: {
                     select: {
@@ -87,7 +101,7 @@ export async function getGlobalUsers(search?: string, role?: string, status?: st
             }
         });
 
-        return users.map(u => ({
+        const mappedUsers = users.map(u => ({
             id: u.id,
             nombre: u.nombre,
             email: u.email,
@@ -97,9 +111,17 @@ export async function getGlobalUsers(search?: string, role?: string, status?: st
             createdAt: u.createdAt,
             lastLogin: u.lastLogin
         }));
+
+        return {
+            users: mappedUsers,
+            totalCount
+        };
     } catch (error) {
         console.error('Error fetching global users:', error);
-        return [];
+        return {
+            users: [],
+            totalCount: 0
+        };
     }
 }
 

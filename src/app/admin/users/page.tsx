@@ -5,9 +5,10 @@ import { ContentContainer } from '@/components/layout/Content';
 import { Badge } from '@/components/ui/badge';
 import { UserFilters } from './UserFilters';
 import { UserRowActions } from './UserRowActions';
-import { Shield, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { Shield, ShieldAlert, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,7 @@ interface PageProps {
         search?: string;
         role?: string;
         status?: string;
+        page?: string;
     }>;
 }
 
@@ -24,8 +26,23 @@ export default async function AdminUsersPage(props: PageProps) {
     const search = searchParams?.search || '';
     const role = searchParams?.role || 'all';
     const status = searchParams?.status || 'all';
+    const currentPage = parseInt(searchParams?.page || '1', 10) || 1;
+    const pageSize = 10;
 
-    const users = await getGlobalUsers(search, role, status);
+    const { users, totalCount } = await getGlobalUsers(search, role, status, currentPage, pageSize);
+
+    const totalPages = Math.ceil(totalCount / pageSize);
+    const fromItem = (currentPage - 1) * pageSize + 1;
+    const toItem = Math.min(currentPage * pageSize, totalCount);
+
+    const buildPageUrl = (targetPage: number) => {
+        const params = new URLSearchParams();
+        if (search) params.set('search', search);
+        if (role && role !== 'all') params.set('role', role);
+        if (status && status !== 'all') params.set('status', status);
+        params.set('page', targetPage.toString());
+        return `/admin/users?${params.toString()}`;
+    };
 
     const getRoleBadge = (userRole: string) => {
         switch (userRole) {
@@ -74,7 +91,7 @@ export default async function AdminUsersPage(props: PageProps) {
                 <UserFilters />
             </Suspense>
 
-            {/* User List Table */}
+            {/* User List Card Container */}
             <div className="rounded-md border bg-white shadow overflow-hidden">
                 <Table>
                     <TableHeader className="bg-slate-50/50">
@@ -126,6 +143,66 @@ export default async function AdminUsersPage(props: PageProps) {
                         )}
                     </TableBody>
                 </Table>
+
+                {/* Pagination Controls */}
+                {totalCount > 0 && (
+                    <div className="flex items-center justify-between px-4 py-4 bg-slate-50/50 border-t border-border sm:px-6">
+                        <div className="flex flex-1 justify-between sm:hidden">
+                            <Link
+                                href={currentPage > 1 ? buildPageUrl(currentPage - 1) : '#'}
+                                className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${
+                                    currentPage <= 1 ? 'pointer-events-none opacity-50' : ''
+                                }`}
+                            >
+                                Anterior
+                            </Link>
+                            <Link
+                                href={currentPage < totalPages ? buildPageUrl(currentPage + 1) : '#'}
+                                className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${
+                                    currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''
+                                }`}
+                            >
+                                Siguiente
+                            </Link>
+                        </div>
+                        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                            <div>
+                                <p className="text-sm text-muted-foreground">
+                                    Mostrando <span className="font-semibold text-foreground">{fromItem}</span> a{' '}
+                                    <span className="font-semibold text-foreground">{toItem}</span> de{' '}
+                                    <span className="font-semibold text-foreground">{totalCount}</span> usuarios
+                                </p>
+                            </div>
+                            <div>
+                                <nav className="isolate inline-flex -space-x-px rounded-md shadow-xs bg-white" aria-label="Paginación">
+                                    <Link
+                                        href={currentPage > 1 ? buildPageUrl(currentPage - 1) : '#'}
+                                        className={`relative inline-flex items-center rounded-l-md px-3 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${
+                                            currentPage <= 1 ? 'pointer-events-none opacity-50' : ''
+                                        }`}
+                                    >
+                                        <span className="sr-only">Anterior</span>
+                                        <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                                    </Link>
+                                    
+                                    <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 focus:outline-offset-0 bg-slate-50/20">
+                                        Página {currentPage} de {totalPages || 1}
+                                    </span>
+
+                                    <Link
+                                        href={currentPage < totalPages ? buildPageUrl(currentPage + 1) : '#'}
+                                        className={`relative inline-flex items-center rounded-r-md px-3 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${
+                                            currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''
+                                        }`}
+                                    >
+                                        <span className="sr-only">Siguiente</span>
+                                        <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                                    </Link>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </ContentContainer>
     );
