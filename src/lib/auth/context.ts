@@ -14,28 +14,36 @@ export interface TenantContext {
 }
 
 export async function getTenantContext(): Promise<TenantContext> {
-    // 1. Get User Identity
-    // TODO: Replace with real Auth check (e.g. NextAuth session, Firebase token)
+    // 1. Get User Identity from session cookie
+    const cookieStore = await cookies();
+    const sessionEmail = cookieStore.get('session_email')?.value;
 
-    // For Development: Priority 1 - Explicit Super Admin
-    let devUser = await prisma.usuario.findUnique({
-        where: { email: 'empsignature@gmail.com' }
-    });
-
-    // Priority 2 - Any Super Admin
-    if (!devUser) {
-        devUser = await prisma.usuario.findFirst({
-            where: { rol: 'super_admin' }
+    let devUser = null;
+    if (sessionEmail && sessionEmail !== 'guest') {
+        devUser = await prisma.usuario.findUnique({
+            where: { email: sessionEmail }
         });
     }
 
-    // Priority 3 - Any User
-    if (!devUser) {
-        devUser = await prisma.usuario.findFirst();
+    // For Development: Only fall back if no session cookie was explicitly set as 'guest'
+    if (!devUser && sessionEmail !== 'guest' && process.env.NODE_ENV === 'development') {
+        devUser = await prisma.usuario.findUnique({
+            where: { email: 'empsignature@gmail.com' }
+        });
+
+        if (!devUser) {
+            devUser = await prisma.usuario.findFirst({
+                where: { rol: 'super_admin' }
+            });
+        }
+
+        if (!devUser) {
+            devUser = await prisma.usuario.findFirst();
+        }
     }
 
     if (!devUser) {
-        throw new Error('Unauthorized: No users found in system');
+        redirect('/login');
     }
 
     // 2. Check Impersonation (Strictly for Super Admin)
@@ -43,7 +51,6 @@ export async function getTenantContext(): Promise<TenantContext> {
     let isImpersonating = false;
 
     if (devUser.rol === 'super_admin') {
-        const cookieStore = await cookies();
         const impersonatedId = cookieStore.get('x-impersonation')?.value;
 
         if (impersonatedId) {

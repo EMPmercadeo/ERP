@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext } from 'react';
-import { getCurrentUser } from '@/lib/actions/auth';
+import { getCurrentUser, setSessionEmail, deleteSessionEmail } from '@/lib/actions/auth';
 import {
     User,
     signInWithPopup,
@@ -82,6 +82,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
+        const syncOnMount = async () => {
+            const currentUser = auth.currentUser || mockUser;
+            if (currentUser?.email) {
+                await setSessionEmail(currentUser.email);
+            } else {
+                await deleteSessionEmail();
+            }
+        };
+        syncOnMount();
+
         const unsubscribe = onAuthStateChanged(auth, async (u) => {
             if (u) {
                 // Determine if we need to sync name
@@ -90,8 +100,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     await firebaseUpdateProfile(u, { displayName: dbUser.nombre });
                 }
                 setUser(u);
+                if (u.email) {
+                    await setSessionEmail(u.email);
+                }
             } else {
                 setUser(null);
+                if (mockUser?.email) {
+                    await setSessionEmail(mockUser.email);
+                } else {
+                    await deleteSessionEmail();
+                }
             }
             setLoading(false);
         });
@@ -100,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         refreshUser();
 
         return () => unsubscribe();
-    }, []);
+    }, [mockUser]);
 
     const signInWithGoogle = async () => {
         try {
@@ -114,6 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const signInWithEmail = async (email: string, password: string) => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
+            await setSessionEmail(email);
         } catch (error: any) {
             if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
                 console.warn('Dev Mode: Bypassing Auth Error', error.code);
@@ -143,6 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 setMockUser(fakeUser);
                 localStorage.setItem('mockUser', JSON.stringify(fakeUser));
+                await setSessionEmail(email);
                 return;
             }
             console.error('Error signing in with email:', error);
@@ -164,6 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await firebaseSignOut(auth);
             setMockUser(null);
             localStorage.removeItem('mockUser');
+            await deleteSessionEmail();
         } catch (error: unknown) {
             console.error('Error signing out:', error);
             throw error;

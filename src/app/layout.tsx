@@ -45,6 +45,14 @@ export default function RootLayout({
 }
 
 async function ImpersonationWrapper() {
+  const { cookies } = await import('next/headers');
+  const cookieStore = await cookies();
+  const sessionEmail = cookieStore.get('session_email')?.value;
+
+  if (!sessionEmail || sessionEmail === 'guest') {
+    return null;
+  }
+
   const { getTenantContext } = await import('@/lib/auth/context');
   const { prisma } = await import('@/lib/db');
   const { ImpersonationBanner } = await import('@/components/layout/ImpersonationBanner');
