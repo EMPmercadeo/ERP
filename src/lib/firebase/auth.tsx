@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, createContext, useContext } from 'react';
-import { getCurrentUser, setSessionEmail, deleteSessionEmail } from '@/lib/actions/auth';
+import { useState, useEffect, useRef, createContext, useContext, useCallback } from 'react';
+import { getCurrentUser, setSessionEmail, deleteSessionEmail, getUserRole } from '@/lib/actions/auth';
 import {
     User,
     signInWithPopup,
@@ -16,6 +16,7 @@ import { auth, googleProvider } from '@/lib/firebase';
 interface AuthContextType {
     user: User | null;
     loading: boolean;
+    role: string | null;
     signInWithGoogle: () => Promise<void>;
     signInWithEmail: (email: string, password: string) => Promise<void>;
     signUpWithEmail: (email: string, password: string) => Promise<void>;
@@ -28,9 +29,11 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [role, setRole] = useState<string | null>(null);
+    const initializedRef = useRef(false);
 
-    const [mockUser, setMockUser] = useState<User | null>({
-        // ... previous mock user ...
+    // Stable mock user – created once, never triggers re-renders
+    const mockUserRef = useRef<User | null>({
         uid: 'force-admin-xyz',
         email: 'empsignature@gmail.com',
         emailVerified: true,
@@ -50,75 +53,87 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         providerId: 'password',
     } as unknown as User);
 
-    const refreshUser = async () => {
-        const currentUser = user || mockUser;
+    const refreshUser = useCallback(async () => {
+        const currentUser = user || mockUserRef.current;
         if (!currentUser?.email) return;
 
         try {
             const dbUser = await getCurrentUser(currentUser.email);
             if (dbUser) {
-                // Update Firebase User if exists
                 if (auth.currentUser) {
                     await firebaseUpdateProfile(auth.currentUser, { displayName: dbUser.nombre });
-                    // Force reload to get new object
                     await auth.currentUser.reload();
                     setUser({ ...auth.currentUser });
                 }
-
-                // Update Mock User if active
-                if (mockUser) {
-                    const updated = { ...mockUser, displayName: dbUser.nombre };
-                    setMockUser(updated as User);
-                    localStorage.setItem('mockUser', JSON.stringify(updated));
-                    // If user is currently mockUser, we need to update 'user' state too if it mirrors mock
-                    if (user === mockUser) {
-                        setUser(updated as User);
-                    }
+                if (mockUserRef.current && !auth.currentUser) {
+                    mockUserRef.current = {
+                        ...mockUserRef.current,
+                        displayName: dbUser.nombre
+                    } as User;
+                    setUser({ ...mockUserRef.current });
                 }
             }
         } catch (error) {
             console.error('Error refreshing user:', error);
         }
-    };
+    }, [user]);
 
+    // Single initialization effect – runs ONCE
     useEffect(() => {
-        const syncOnMount = async () => {
-            const currentUser = auth.currentUser || mockUser;
-            if (currentUser?.email) {
-                await setSessionEmail(currentUser.email);
-            } else {
-                await deleteSessionEmail();
+        if (initializedRef.current) return;
+        initializedRef.current = true;
+
+        const initAuth = async () => {
+            // Sync mock user session on mount
+            const mock = mockUserRef.current;
+            if (mock?.email) {
+                await setSessionEmail(mock.email);
+                // Fetch role once
+                const r = await getUserRole(mock.email);
+                setRole(r || null);
+
+                // Update display name from DB
+                const dbUser = await getCurrentUser(mock.email);
+                if (dbUser?.nombre) {
+                    mockUserRef.current = {
+                        ...mock,
+                        displayName: dbUser.nombre,
+                    } as User;
+                }
+                setUser(mockUserRef.current);
             }
+            setLoading(false);
         };
-        syncOnMount();
+
+        initAuth();
 
         const unsubscribe = onAuthStateChanged(auth, async (u) => {
             if (u) {
-                // Determine if we need to sync name
-                const dbUser = await getCurrentUser(u.email);
-                if (dbUser && dbUser.nombre !== u.displayName) {
-                    await firebaseUpdateProfile(u, { displayName: dbUser.nombre });
-                }
                 setUser(u);
                 if (u.email) {
                     await setSessionEmail(u.email);
+                    const r = await getUserRole(u.email);
+                    setRole(r || null);
+                    // Sync display name (once)
+                    const dbUser = await getCurrentUser(u.email);
+                    if (dbUser && dbUser.nombre !== u.displayName) {
+                        await firebaseUpdateProfile(u, { displayName: dbUser.nombre });
+                    }
                 }
             } else {
-                setUser(null);
-                if (mockUser?.email) {
-                    await setSessionEmail(mockUser.email);
+                // No Firebase user – keep mock
+                if (mockUserRef.current?.email) {
+                    await setSessionEmail(mockUserRef.current.email);
                 } else {
+                    setUser(null);
                     await deleteSessionEmail();
                 }
             }
             setLoading(false);
         });
 
-        // Initial refresh for mock/stored
-        refreshUser();
-
         return () => unsubscribe();
-    }, [mockUser]);
+    }, []); // Empty deps – runs once
 
     const signInWithGoogle = async () => {
         try {
@@ -137,7 +152,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
                 console.warn('Dev Mode: Bypassing Auth Error', error.code);
 
-                // Fetch real name from DB if possible
                 const dbUser = await getCurrentUser(email);
 
                 const fakeUser = {
@@ -154,15 +168,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     getIdTokenResult: async () => ({ token: 'mock', iat: 0, authTime: 0, expirationTime: 0, signInProvider: 'password', signInSecondFactor: null, claims: {} }),
                     reload: async () => { },
                     toJSON: () => ({}),
-                    displayName: dbUser?.nombre || 'Dev User', // Use DB name
+                    displayName: dbUser?.nombre || 'Dev User',
                     phoneNumber: null,
                     photoURL: null,
                     providerId: 'password',
                 } as unknown as User;
 
-                setMockUser(fakeUser);
+                mockUserRef.current = fakeUser;
                 localStorage.setItem('mockUser', JSON.stringify(fakeUser));
+                setUser(fakeUser);
                 await setSessionEmail(email);
+
+                // Fetch role for this new user
+                const r = await getUserRole(email);
+                setRole(r || null);
                 return;
             }
             console.error('Error signing in with email:', error);
@@ -182,8 +201,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const signOut = async () => {
         try {
             await firebaseSignOut(auth);
-            setMockUser(null);
+            mockUserRef.current = null;
             localStorage.removeItem('mockUser');
+            setRole(null);
             await deleteSessionEmail();
         } catch (error: unknown) {
             console.error('Error signing out:', error);
@@ -193,8 +213,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <AuthContext.Provider value={{
-            user: user || mockUser,
+            user: user || mockUserRef.current,
             loading,
+            role,
             signInWithGoogle,
             signInWithEmail,
             signUpWithEmail,
@@ -205,8 +226,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         </AuthContext.Provider>
     );
 }
-
-// ... useAuth
 
 export function useAuth() {
     const context = useContext(AuthContext);

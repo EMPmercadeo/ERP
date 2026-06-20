@@ -32,14 +32,11 @@ import {
 } from '@/components/ui/tooltip';
 import { useAuth } from '@/lib/firebase/auth';
 import { useRouter } from 'next/navigation';
-import { getUserRole } from '@/lib/actions/auth';
 
 const mainNavigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Facturas', href: '/invoices', icon: FileText },
     { name: 'Cotizaciones', href: '/quotes', icon: FileText },
-    // Renamed 'Clientes' to 'Clientes' (Customers) implicitly, keeping label but route is same. 
-    // Super Admin sees "Empresas".
     { name: 'Clientes', href: '/clients', icon: Users },
     { name: 'Productos', href: '/products', icon: Package },
     { name: 'Reportes', href: '/reports', icon: BarChart3 },
@@ -61,23 +58,12 @@ export function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
     const { isCollapsed: storedCollapsed, isMobileOpen, toggleCollapsed, setMobileOpen } = useSidebarStore();
-    const { user, signOut } = useAuth(); // Assuming useAuth exposes 'user'
+    const { user, signOut, role } = useAuth(); // Role from cached AuthContext
     const [isMounted, setIsMounted] = useState(false);
-    const [role, setRole] = useState<string | null>(null);
 
     useEffect(() => {
         setIsMounted(true);
     }, []);
-
-    useEffect(() => {
-        const fetchRole = async () => {
-            if (user?.email) {
-                const r = await getUserRole(user.email);
-                setRole(r || null);
-            }
-        };
-        fetchRole();
-    }, [user?.email]);
 
     const isCollapsed = isMounted ? storedCollapsed : false;
     const isSuperAdmin = role === 'super_admin';
