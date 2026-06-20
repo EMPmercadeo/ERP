@@ -6,6 +6,8 @@ import { ContentContainer } from '@/components/layout/Content';
 import { QuotesList } from '@/components/quotes/QuotesList';
 import { prisma } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export default async function QuotesPage() {
     const rawQuotes = await prisma.cotizacion.findMany({
         include: {
