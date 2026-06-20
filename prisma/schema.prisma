@@ -1,0 +1,393 @@
+// This usage is effectively a placeholder. I will use 'multi_replace_file_content' instead.
+
+// Para producción: usar PostgreSQL o Firebase
+
+generator client {
+  provider      = "prisma-client-js"
+  engineType    = "library"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ==========================================
+// MULTI-TENANT: Empresa
+// ==========================================
+model Empresa {
+  id              String  @id @default(cuid())
+  ruc             String  @unique
+  dv              String
+  razonSocial     String
+  nombreComercial String?
+  direccion       String
+  telefono        String?
+  email           String?
+  logo            String? // URL o base64
+
+  // Configuración fiscal
+  ambienteDgi    String  @default("1") // 1=Pruebas, 2=Producción
+  certificadoDgi String? // Path o contenido del certificado
+
+  // Suscripción y Planes
+  planType           String @default("free") // "free", "pro", "enterprise"
+  fiscalEnabled      Boolean @default(false)
+  subscriptionStatus String @default("active") // "active", "suspended", "cancelled"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sucursales   Sucursal[]
+  usuarios     Usuario[]
+  clientes     Cliente[]
+  productos    Producto[]
+  facturas     Factura[]
+  secuencias   Secuencia[]
+  cotizaciones Cotizacion[]
+  cajas        Caja[]
+  pagos        Pago[]
+
+  @@index([createdAt])
+}
+
+// ==========================================
+// ESTRUCTURA: Sucursal y Caja
+// ==========================================
+model Sucursal {
+  id        String  @id @default(cuid())
+  empresaId String
+  codigo    String // "001"
+  nombre    String
+  direccion String
+  activa    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa      Empresa      @relation(fields: [empresaId], references: [id])
+  cajas        Caja[]
+  facturas     Factura[]
+  secuencias   Secuencia[]
+  cotizaciones Cotizacion[]
+
+  @@unique([empresaId, codigo])
+  @@index([empresaId])
+}
+
+model Caja {
+  id         String  @id @default(cuid())
+  empresaId  String
+  sucursalId String
+  codigo     String // "01"
+  nombre     String
+  activa     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa      Empresa      @relation(fields: [empresaId], references: [id])
+  sucursal     Sucursal     @relation(fields: [sucursalId], references: [id])
+  facturas     Factura[]
+  secuencias   Secuencia[]
+  cotizaciones Cotizacion[]
+
+  @@unique([sucursalId, codigo])
+  @@index([empresaId])
+}
+
+// ==========================================
+// NUMERACIÓN ATÓMICA
+// ==========================================
+model Secuencia {
+  id            String @id @default(cuid())
+  empresaId     String
+  sucursalId    String
+  cajaId        String
+  tipoDocumento String // "FE", "NC", "ND"
+  ultimoNumero  Int    @default(0)
+
+  empresa  Empresa  @relation(fields: [empresaId], references: [id])
+  sucursal Sucursal @relation(fields: [sucursalId], references: [id])
+  caja     Caja     @relation(fields: [cajaId], references: [id])
+
+  @@unique([empresaId, sucursalId, cajaId, tipoDocumento])
+}
+
+// ==========================================
+// USUARIOS Y AUTENTICACIÓN
+// ==========================================
+model Usuario {
+  id           String  @id @default(cuid())
+  empresaId    String
+  email        String  @unique
+  passwordHash String
+  nombre       String
+  rol          String  @default("vendedor") // "super_admin", "admin", "vendedor", "contador"
+  activo       Boolean @default(true)
+
+  // Google Sign-In (futuro Firebase Auth)
+  googleId String? @unique
+  avatar   String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  lastLogin DateTime?
+
+  empresa      Empresa      @relation(fields: [empresaId], references: [id])
+  facturas     Factura[]    @relation("FacturaCreador")
+  pagos        Pago[]
+  auditorias   Auditoria[]
+  cotizaciones Cotizacion[]
+
+  @@index([empresaId])
+}
+
+// ==========================================
+// CLIENTES
+// ==========================================
+model Cliente {
+  id              String  @id @default(cuid())
+  empresaId       String
+  tipoRuc         String // "01"=Natural, "02"=Jurídico
+  ruc             String
+  dv              String?
+  razonSocial     String
+  nombreComercial String?
+  direccion       String?
+  email           String?
+  telefono        String?
+
+  // Crédito
+  limiteCredito  Decimal @default(0)
+  saldoPendiente Decimal @default(0)
+  saldoAFavor    Decimal @default(0)
+  condicionPago  String  @default("Contado") // "Contado", "Crédito 30", etc.
+  estado         String  @default("activo") // "activo", "moroso", "bloqueado"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa      Empresa      @relation(fields: [empresaId], references: [id])
+  facturas     Factura[]
+  pagos        Pago[]
+  cotizaciones Cotizacion[]
+
+  @@unique([empresaId, ruc])
+  @@index([empresaId])
+}
+
+// ==========================================
+// PRODUCTOS
+// ==========================================
+model Producto {
+  id              String  @id @default(cuid())
+  empresaId       String
+  codigoInterno   String
+  codigoBarras    String?
+  descripcion     String
+  descripcionLarga String? // WooCommerce style long description
+  costoUnitario   Decimal
+  precioVenta     Decimal
+  codigoTasaItbms String  @default("00") // "00"=Exento, "01"=7%, etc.
+  unidadMedida    String  @default("UND")
+  activo          Boolean @default(true)
+
+  // Inventario (futuro)
+  stockActual Int @default(0)
+  stockMinimo Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa         Empresa          @relation(fields: [empresaId], references: [id])
+  items         FacturaItem[]
+  cotizacionItems CotizacionItem[]
+
+  @@unique([empresaId, codigoInterno])
+  @@index([empresaId])
+}
+
+// ==========================================
+// FACTURAS Y DOCUMENTOS
+// ==========================================
+model Factura {
+  id         String @id @default(cuid())
+  empresaId  String
+  sucursalId String
+  cajaId     String
+  clienteId  String
+  creadorId  String
+
+  // Numeración atómica
+  tipoDocumento    String // "FE", "NC", "ND"
+  numeroSecuencial Int
+  numeroCompleto   String @unique // "001-001-01-FE-00000001"
+
+  fechaEmision     DateTime  @default(now())
+  fechaVencimiento DateTime?
+
+  // Totales
+  subtotal       Decimal
+  totalDescuento Decimal @default(0)
+  totalItbms     Decimal
+  totalNeto      Decimal
+
+  // Pagos
+  totalPagado    Decimal @default(0)
+  saldoPendiente Decimal
+
+  // Estado DGI
+  estadoDgi       String    @default("borrador") // "borrador", "pendiente", "aceptada", "rechazada", "anulada"
+  cufe            String?
+  qrUrl           String?
+  xmlContent      String?
+  fechaAceptacion DateTime?
+  errorDgi        String?
+
+  // Referencia para NC/ND
+  facturaOrigenId String?
+  motivoAnulacion String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa       Empresa       @relation(fields: [empresaId], references: [id])
+  sucursal      Sucursal      @relation(fields: [sucursalId], references: [id])
+  caja          Caja          @relation(fields: [cajaId], references: [id])
+  cliente       Cliente       @relation(fields: [clienteId], references: [id])
+  creador       Usuario       @relation("FacturaCreador", fields: [creadorId], references: [id])
+  facturaOrigen Factura?      @relation("NotasCredito", fields: [facturaOrigenId], references: [id])
+  notasCredito  Factura[]     @relation("NotasCredito")
+  items         FacturaItem[]
+  pagos         Pago[]
+
+  @@index([empresaId, fechaEmision])
+  @@index([clienteId])
+  @@index([estadoDgi])
+  @@index([empresaId])
+}
+
+model FacturaItem {
+  id              String  @id @default(cuid())
+  facturaId       String
+  productoId      String
+  descripcion     String // Snapshot del producto
+  cantidad        Decimal
+  precioUnitario  Decimal
+  costoUnitario   Decimal // Snapshot para margen
+  descuento       Decimal @default(0)
+  codigoTasaItbms String
+  montoItbms      Decimal
+  montoTotal      Decimal
+
+  factura  Factura  @relation(fields: [facturaId], references: [id], onDelete: Cascade)
+  producto Producto @relation(fields: [productoId], references: [id])
+}
+
+// ==========================================
+// PAGOS
+// ==========================================
+model Pago {
+  id        String @id @default(cuid())
+  empresaId String
+  facturaId String
+  clienteId String
+  usuarioId String
+
+  fechaPago  DateTime @default(now())
+  monto      Decimal
+  metodoPago String // "efectivo", "transferencia", "tarjeta", "cheque"
+  referencia String?
+
+  // Sobrepago
+  montoAplicado Decimal
+  montoCredito  Decimal @default(0)
+
+  createdAt DateTime @default(now())
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+  factura Factura @relation(fields: [facturaId], references: [id])
+  cliente Cliente @relation(fields: [clienteId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@index([empresaId])
+}
+
+// ==========================================
+// AUDITORÍA
+// ==========================================
+model Auditoria {
+  id           String  @id @default(cuid())
+  usuarioId    String
+  entidad      String // "Factura", "Cliente", "Producto"
+  entidadId    String
+  accion       String // "crear", "editar", "eliminar", "anular"
+  datosAntes   Json?
+  datosDespues Json?
+  ip           String?
+
+  createdAt DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@index([entidad, entidadId])
+  @@index([createdAt])
+}
+
+// ==========================================
+// COTIZACIONES
+// ==========================================
+model Cotizacion {
+  id         String @id @default(cuid())
+  empresaId  String
+  sucursalId String
+  cajaId     String // Opcional si las cotizaciones no van a caja, pero mantenemos consistencia
+  clienteId  String
+  creadorId  String
+
+  numero       String   @unique // "QT-00001"
+  fechaEmision DateTime @default(now())
+  validaHasta  DateTime
+
+  // Totales
+  subtotal       Decimal
+  totalDescuento Decimal @default(0)
+  totalItbms     Decimal
+  totalNeto      Decimal
+
+  estado String @default("borrador") // "borrador", "enviada", "aceptada", "rechazada", "convertida"
+
+  // Conversión a Factura
+  facturaId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa  Empresa          @relation(fields: [empresaId], references: [id])
+  sucursal Sucursal         @relation(fields: [sucursalId], references: [id])
+  cliente  Cliente          @relation(fields: [clienteId], references: [id])
+  creador  Usuario          @relation(fields: [creadorId], references: [id])
+  items    CotizacionItem[]
+  caja     Caja             @relation(fields: [cajaId], references: [id])
+
+  @@index([empresaId, fechaEmision])
+  @@index([clienteId])
+}
+
+model CotizacionItem {
+  id              String  @id @default(cuid())
+  cotizacionId    String
+  productoId      String
+  descripcion     String
+  cantidad        Decimal
+  precioUnitario  Decimal
+  descuento       Decimal @default(0)
+  codigoTasaItbms String
+  montoItbms      Decimal
+  montoTotal      Decimal
+
+  cotizacion Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
+  producto   Producto   @relation(fields: [productoId], references: [id])
+}

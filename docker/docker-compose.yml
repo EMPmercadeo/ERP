@@ -1,0 +1,63 @@
+# ERP Panamá - Docker Compose para Self-Hosted
+# 
+# Uso:
+#   docker-compose up -d       # Iniciar
+#   docker-compose down        # Detener
+#   docker-compose logs -f     # Ver logs
+#
+# Primer inicio:
+#   docker-compose up -d
+#   docker-compose exec app npx prisma migrate deploy
+#   docker-compose exec app npx prisma db seed
+
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: erp-panama-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-erp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-erp_secret_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-erp_panama}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-erp_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Aplicación Next.js
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: erp-panama-app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-erp_user}:${POSTGRES_PASSWORD:-erp_secret_2026}@postgres:5432/${POSTGRES_DB:-erp_panama}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-super-secret-key-change-me}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Adminer (opcional) - GUI para base de datos
+  adminer:
+    image: adminer:latest
+    container_name: erp-panama-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+    name: erp-panama-postgres-data
