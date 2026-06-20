@@ -1,3 +1,4 @@
+import Link from 'next/link';
 
 import {
     DollarSign,
@@ -160,7 +161,11 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
 
             <ContentContainer className="space-y-4">
 
-                <DashboardHeader title="Dashboard" />
+                <DashboardHeader
+                    title="Dashboard"
+                    kpiData={kpiData}
+                    recentInvoices={recentInvoices}
+                />
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 lg:gap-4">
                     <KpiCard
@@ -210,39 +215,45 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-3">
-                    <Card className="cursor-pointer transition-colors hover:bg-accent/50 group">
-                        <CardContent className="flex items-center gap-4 pt-6">
-                            <div className="rounded-lg bg-brand-1/10 p-3 group-hover:bg-brand-1 group-hover:text-white transition-colors text-brand-1">
-                                <FileText className="h-6 w-6" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold">Nueva Factura</h3>
-                                <p className="text-sm text-muted-foreground">Crear factura electrónica</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="cursor-pointer transition-colors hover:bg-accent/50 group">
-                        <CardContent className="flex items-center gap-4 pt-6">
-                            <div className="rounded-lg bg-emerald-500/10 p-3 group-hover:bg-emerald-500 group-hover:text-white transition-colors text-emerald-500">
-                                <DollarSign className="h-6 w-6" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold">Registrar Pago</h3>
-                                <p className="text-sm text-muted-foreground">Aplicar pago a factura</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="cursor-pointer transition-colors hover:bg-accent/50 group">
-                        <CardContent className="flex items-center gap-4 pt-6">
-                            <div className="rounded-lg bg-purple-500/10 p-3 group-hover:bg-purple-500 group-hover:text-white transition-colors text-purple-500">
-                                <TrendingUp className="h-6 w-6" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold">Ver Reportes</h3>
-                                <p className="text-sm text-muted-foreground">Analítica y métricas</p>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <Link href="/invoices/new" className="block">
+                        <Card className="cursor-pointer transition-colors hover:bg-accent/50 group h-full">
+                            <CardContent className="flex items-center gap-4 pt-6">
+                                <div className="rounded-lg bg-brand-1/10 p-3 group-hover:bg-brand-1 group-hover:text-white transition-colors text-brand-1">
+                                    <FileText className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-foreground">Nueva Factura</h3>
+                                    <p className="text-sm text-muted-foreground">Crear factura electrónica</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                    <Link href="/invoices?status=pendiente" className="block">
+                        <Card className="cursor-pointer transition-colors hover:bg-accent/50 group h-full">
+                            <CardContent className="flex items-center gap-4 pt-6">
+                                <div className="rounded-lg bg-emerald-500/10 p-3 group-hover:bg-emerald-500 group-hover:text-white transition-colors text-emerald-500">
+                                    <DollarSign className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-foreground">Registrar Pago</h3>
+                                    <p className="text-sm text-muted-foreground">Aplicar pago a factura</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                    <Link href="/reports" className="block">
+                        <Card className="cursor-pointer transition-colors hover:bg-accent/50 group h-full">
+                            <CardContent className="flex items-center gap-4 pt-6">
+                                <div className="rounded-lg bg-purple-500/10 p-3 group-hover:bg-purple-500 group-hover:text-white transition-colors text-purple-500">
+                                    <TrendingUp className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-foreground">Ver Reportes</h3>
+                                    <p className="text-sm text-muted-foreground">Analítica y métricas</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Link>
                 </div>
             </ContentContainer>
         </>
