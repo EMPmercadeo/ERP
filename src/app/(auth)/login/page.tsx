@@ -65,6 +65,11 @@ export default function LoginPage() {
 
     return (
         <div className="w-full max-w-md space-y-8">
+            {/* Cabecera de prueba para verificar git desktop */}
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm text-center font-medium">
+                Prueba de Git Local (Puedes borrar este texto)
+            </div>
+
             {/* Header */}
             <div className="text-center">
                 <h2 className="text-3xl font-bold text-foreground">Bienvenido de nuevo!</h2>
