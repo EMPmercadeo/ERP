@@ -120,7 +120,11 @@ export function Topbar({ title, children }: TopbarProps) {
                             Perfil
                         </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>Configuración</DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                        <Link href="/settings" className="cursor-pointer">
+                            Configuración
+                        </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                         className="text-destructive cursor-pointer"
