@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-erp_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-erp_secret_2026}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your_postgres_password}
       POSTGRES_DB: ${POSTGRES_DB:-erp_panama}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -38,8 +38,8 @@ services:
     container_name: erp-panama-app
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-erp_user}:${POSTGRES_PASSWORD:-erp_secret_2026}@postgres:5432/${POSTGRES_DB:-erp_panama}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-super-secret-key-change-me}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-erp_user}:${POSTGRES_PASSWORD:-your_postgres_password}@postgres:5432/${POSTGRES_DB:-erp_panama}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-your_nextauth_secret_key}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       NODE_ENV: production
     ports:
