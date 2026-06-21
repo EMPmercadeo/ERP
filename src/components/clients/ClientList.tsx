@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { deleteClient } from '@/lib/actions/clients';
 import {
@@ -88,10 +88,59 @@ function formatCurrency(value: number) {
     }).format(value);
 }
 
-export function ClientList({ initialData }: { initialData: ClientData[] }) {
+export function ClientList({
+    initialData,
+    pageCount,
+    currentPage,
+    pageSize,
+    totalCount,
+    initialSearch,
+    initialSortBy,
+    initialSortOrder
+}: {
+    initialData: ClientData[];
+    pageCount: number;
+    currentPage: number;
+    pageSize: number;
+    totalCount: number;
+    initialSearch: string;
+    initialSortBy: string;
+    initialSortOrder: 'asc' | 'desc';
+}) {
     const router = useRouter();
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [globalFilter, setGlobalFilter] = useState('');
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const [sorting, setSorting] = useState<SortingState>(
+        initialSortBy && initialSortOrder
+            ? [{ id: initialSortBy, desc: initialSortOrder === 'desc' }]
+            : []
+    );
+    const [globalFilter, setGlobalFilter] = useState(initialSearch);
+
+    const createQueryString = (params: Record<string, string | null>) => {
+        const newParams = new URLSearchParams(searchParams.toString());
+        for (const [key, value] of Object.entries(params)) {
+            if (value === null) {
+                newParams.delete(key);
+            } else {
+                newParams.set(key, value);
+            }
+        }
+        return newParams.toString();
+    };
+
+    // Debounce search update to URL
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const currentSearch = searchParams.get('search') || '';
+            if (globalFilter !== currentSearch) {
+                const query = createQueryString({ search: globalFilter || null, page: '1' });
+                router.push(`${pathname}?${query}`);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [globalFilter]);
 
     const handleDelete = async (id: string) => {
         if (confirm('¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer.')) {
@@ -235,21 +284,38 @@ export function ClientList({ initialData }: { initialData: ClientData[] }) {
     const table = useReactTable({
         data: initialData,
         columns,
-        onSortingChange: setSorting,
+        pageCount: pageCount,
+        manualPagination: true,
+        manualFiltering: true,
+        manualSorting: true,
+        onSortingChange: (updater) => {
+            const nextSorting = typeof updater === 'function' ? updater(sorting) : updater;
+            setSorting(nextSorting);
+            if (nextSorting.length > 0) {
+                const { id, desc } = nextSorting[0];
+                const query = createQueryString({
+                    sortBy: id,
+                    sortOrder: desc ? 'desc' : 'asc',
+                    page: '1'
+                });
+                router.push(`${pathname}?${query}`);
+            } else {
+                const query = createQueryString({
+                    sortBy: null,
+                    sortOrder: null,
+                    page: '1'
+                });
+                router.push(`${pathname}?${query}`);
+            }
+        },
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        onGlobalFilterChange: setGlobalFilter,
-        globalFilterFn: 'includesString',
         state: {
             sorting,
             globalFilter,
-        },
-        initialState: {
             pagination: {
-                pageSize: 8,
-            },
+                pageIndex: currentPage - 1,
+                pageSize: pageSize,
+            }
         },
     });
 
@@ -405,14 +471,18 @@ export function ClientList({ initialData }: { initialData: ClientData[] }) {
                         {/* Pagination */}
                         <div className="flex items-center justify-between border-t px-4 py-4">
                             <div className="text-sm text-muted-foreground">
-                                {table.getFilteredRowModel().rows.length} clientes
+                                Mostrando {totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0} a{' '}
+                                {Math.min(currentPage * pageSize, totalCount)} de {totalCount} clientes
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => table.previousPage()}
-                                    disabled={!table.getCanPreviousPage()}
+                                    onClick={() => {
+                                        const query = createQueryString({ page: String(currentPage - 1) });
+                                        router.push(`${pathname}?${query}`);
+                                    }}
+                                    disabled={currentPage <= 1}
                                 >
                                     <ChevronLeft className="h-4 w-4" />
                                     Anterior
@@ -420,8 +490,11 @@ export function ClientList({ initialData }: { initialData: ClientData[] }) {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => table.nextPage()}
-                                    disabled={!table.getCanNextPage()}
+                                    onClick={() => {
+                                        const query = createQueryString({ page: String(currentPage + 1) });
+                                        router.push(`${pathname}?${query}`);
+                                    }}
+                                    disabled={currentPage >= pageCount}
                                 >
                                     Siguiente
                                     <ChevronRight className="h-4 w-4" />

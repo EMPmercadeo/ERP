@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
     ColumnDef,
@@ -80,11 +81,69 @@ function formatCurrency(value: number) {
     }).format(value);
 }
 
-export function InvoiceList({ initialData }: { initialData: InvoiceData[] }) {
-    const [sorting, setSorting] = useState<SortingState>([]);
+export function InvoiceList({
+    initialData,
+    pageCount,
+    currentPage,
+    pageSize,
+    totalCount,
+    initialSearch,
+    initialStatus,
+    initialSortBy,
+    initialSortOrder
+}: {
+    initialData: InvoiceData[];
+    pageCount: number;
+    currentPage: number;
+    pageSize: number;
+    totalCount: number;
+    initialSearch: string;
+    initialStatus: string;
+    initialSortBy: string;
+    initialSortOrder: 'asc' | 'desc';
+}) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const [sorting, setSorting] = useState<SortingState>(
+        initialSortBy && initialSortOrder
+            ? [{ id: initialSortBy, desc: initialSortOrder === 'desc' }]
+            : []
+    );
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-    const [globalFilter, setGlobalFilter] = useState('');
-    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [globalFilter, setGlobalFilter] = useState(initialSearch);
+    const [statusFilter, setStatusFilter] = useState<string>(initialStatus);
+
+    const createQueryString = (params: Record<string, string | null>) => {
+        const newParams = new URLSearchParams(searchParams.toString());
+        for (const [key, value] of Object.entries(params)) {
+            if (value === null) {
+                newParams.delete(key);
+            } else {
+                newParams.set(key, value);
+            }
+        }
+        return newParams.toString();
+    };
+
+    // Debounce search update to URL
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const currentSearch = searchParams.get('search') || '';
+            if (globalFilter !== currentSearch) {
+                const query = createQueryString({ search: globalFilter || null, page: '1' });
+                router.push(`${pathname}?${query}`);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [globalFilter]);
+
+    const handleStatusChange = (val: string) => {
+        setStatusFilter(val);
+        const query = createQueryString({ status: val === 'all' ? null : val, page: '1' });
+        router.push(`${pathname}?${query}`);
+    };
 
     const columns: ColumnDef<InvoiceData>[] = useMemo(() => [
         {
@@ -215,31 +274,41 @@ export function InvoiceList({ initialData }: { initialData: InvoiceData[] }) {
         },
     ], []);
 
-    const filteredData = useMemo(() => {
-        if (statusFilter === 'all') return initialData;
-        return initialData.filter(inv => inv.estadoDgi === statusFilter);
-    }, [statusFilter, initialData]);
-
     const table = useReactTable({
-        data: filteredData,
+        data: initialData,
         columns,
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
+        pageCount: pageCount,
+        manualPagination: true,
+        manualFiltering: true,
+        manualSorting: true,
+        onSortingChange: (updater) => {
+            const nextSorting = typeof updater === 'function' ? updater(sorting) : updater;
+            setSorting(nextSorting);
+            if (nextSorting.length > 0) {
+                const { id, desc } = nextSorting[0];
+                const query = createQueryString({
+                    sortBy: id,
+                    sortOrder: desc ? 'desc' : 'asc',
+                    page: '1'
+                });
+                router.push(`${pathname}?${query}`);
+            } else {
+                const query = createQueryString({
+                    sortBy: null,
+                    sortOrder: null,
+                    page: '1'
+                });
+                router.push(`${pathname}?${query}`);
+            }
+        },
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        onGlobalFilterChange: setGlobalFilter,
-        globalFilterFn: 'includesString',
         state: {
             sorting,
-            columnFilters,
             globalFilter,
-        },
-        initialState: {
             pagination: {
-                pageSize: 10,
-            },
+                pageIndex: currentPage - 1,
+                pageSize: pageSize,
+            }
         },
     });
 
@@ -260,7 +329,7 @@ export function InvoiceList({ initialData }: { initialData: InvoiceData[] }) {
             { header: 'Estado', key: 'estado', width: 15 },
         ];
 
-        filteredData.forEach((inv) => {
+        initialData.forEach((inv) => {
             worksheet.addRow({
                 numero: inv.numeroCompleto,
                 cliente: inv.clientName,
@@ -318,7 +387,7 @@ export function InvoiceList({ initialData }: { initialData: InvoiceData[] }) {
                             </div>
 
                             {/* Status filter */}
-                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <Select value={statusFilter} onValueChange={handleStatusChange}>
                                 <SelectTrigger id="status-filter-trigger" className="w-full sm:w-48">
                                     <SelectValue placeholder="Estado DGI" />
                                 </SelectTrigger>
@@ -413,19 +482,19 @@ export function InvoiceList({ initialData }: { initialData: InvoiceData[] }) {
                         {/* Pagination */}
                         <div className="flex items-center justify-between border-t px-4 py-4">
                             <div className="text-sm text-muted-foreground">
-                                Mostrando {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} a{' '}
-                                {Math.min(
-                                    (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                                    table.getFilteredRowModel().rows.length
-                                )}{' '}
-                                de {table.getFilteredRowModel().rows.length} resultados
+                                Mostrando {totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0} a{' '}
+                                {Math.min(currentPage * pageSize, totalCount)}{' '}
+                                de {totalCount} resultados
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => table.previousPage()}
-                                    disabled={!table.getCanPreviousPage()}
+                                    onClick={() => {
+                                        const query = createQueryString({ page: String(currentPage - 1) });
+                                        router.push(`${pathname}?${query}`);
+                                    }}
+                                    disabled={currentPage <= 1}
                                 >
                                     <ChevronLeft className="h-4 w-4" />
                                     Anterior
@@ -433,8 +502,11 @@ export function InvoiceList({ initialData }: { initialData: InvoiceData[] }) {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => table.nextPage()}
-                                    disabled={!table.getCanNextPage()}
+                                    onClick={() => {
+                                        const query = createQueryString({ page: String(currentPage + 1) });
+                                        router.push(`${pathname}?${query}`);
+                                    }}
+                                    disabled={currentPage >= pageCount}
                                 >
                                     Siguiente
                                     <ChevronRight className="h-4 w-4" />
