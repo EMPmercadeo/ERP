@@ -58,7 +58,8 @@ function formatCurrency(value: number) {
 }
 
 const ITEMS_PER_PAGE = 4;
-const HEAD_CLASS = 'h-auto bg-surface-light px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground';
+const HEAD_CLASS = 'h-auto bg-surface-light px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground';
+const CELL_CLASS = 'px-3 py-3';
 
 export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
     const [currentPage, setCurrentPage] = useState(1);
@@ -106,38 +107,38 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                     <TableBody>
                         {currentInvoices.map((invoice) => (
                             <TableRow key={invoice.id} className="group hover:bg-surface-light/60">
-                                <TableCell className="px-4 py-3">
+                                <TableCell className={CELL_CLASS}>
                                     <span className="font-mono text-xs font-medium text-brand-1">{invoice.id}</span>
                                 </TableCell>
-                                <TableCell className="px-4 py-3">
+                                <TableCell className={CELL_CLASS}>
                                     <span
-                                        className="block max-w-[180px] truncate font-medium text-foreground"
+                                        className="block max-w-[130px] truncate font-medium text-foreground"
                                         title={invoice.client}
                                     >
                                         {invoice.client}
                                     </span>
                                 </TableCell>
-                                <TableCell className="px-4 py-3 text-right">
+                                <TableCell className={`${CELL_CLASS} text-right`}>
                                     <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
                                         {formatCurrency(invoice.amount)}
                                     </span>
                                 </TableCell>
-                                <TableCell className="px-4 py-3">
+                                <TableCell className={CELL_CLASS}>
                                     <StatusBadge
                                         status={invoice.status}
                                         showIcon={false}
-                                        className="h-5 px-2 text-[10px] uppercase tracking-wide"
+                                        className="h-5 px-1.5 text-[10px] uppercase tracking-wide"
                                     />
                                 </TableCell>
-                                <TableCell className="px-4 py-3">
+                                <TableCell className={CELL_CLASS}>
                                     <StatusBadge
                                         status={invoice.paymentStatus}
                                         showIcon={false}
-                                        className="h-5 px-2 text-[10px] uppercase tracking-wide"
+                                        className="h-5 px-1.5 text-[10px] uppercase tracking-wide"
                                     />
                                 </TableCell>
-                                <TableCell className="px-4 py-3 text-right">
-                                    <div className="flex items-center justify-end gap-0.5 opacity-80 transition-opacity group-hover:opacity-100">
+                                <TableCell className="px-1.5 py-3 text-right">
+                                    <div className="flex items-center justify-end opacity-80 transition-opacity group-hover:opacity-100">
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
@@ -145,7 +146,7 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-8 w-8 text-muted-foreground hover:text-brand-1"
+                                                            className="h-7 w-7 text-muted-foreground hover:text-brand-1"
                                                         >
                                                             <Eye className="h-4 w-4" />
                                                         </Button>
@@ -166,7 +167,7 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-8 w-8 text-muted-foreground hover:text-brand-1"
+                                                            className="h-7 w-7 text-muted-foreground hover:text-brand-1"
                                                         >
                                                             <FileText className="h-4 w-4" />
                                                         </Button>
@@ -183,7 +184,7 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-8 w-8 text-muted-foreground hover:text-brand-1"
+                                                            className="h-7 w-7 text-muted-foreground hover:text-brand-1"
                                                         >
                                                             <Pencil className="h-4 w-4" />
                                                         </Button>
@@ -200,7 +201,7 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-8 w-8 text-muted-foreground hover:text-emerald-600"
+                                                            className="h-7 w-7 text-muted-foreground hover:text-emerald-600"
                                                         >
                                                             <CreditCard className="h-4 w-4" />
                                                         </Button>
