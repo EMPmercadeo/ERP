@@ -2,6 +2,9 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { deleteClient } from '@/lib/actions/clients';
 import {
     ColumnDef,
     SortingState,
@@ -86,8 +89,25 @@ function formatCurrency(value: number) {
 }
 
 export function ClientList({ initialData }: { initialData: ClientData[] }) {
+    const router = useRouter();
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState('');
+
+    const handleDelete = async (id: string) => {
+        if (confirm('¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer.')) {
+            try {
+                const res = await deleteClient(id);
+                if (res.success) {
+                    toast.success(res.message);
+                    router.refresh();
+                } else {
+                    toast.error(res.message);
+                }
+            } catch (error) {
+                toast.error('Error al intentar eliminar el cliente.');
+            }
+        }
+    };
 
     const columns: ColumnDef<ClientData>[] = useMemo(() => [
         {
@@ -181,18 +201,21 @@ export function ClientList({ initialData }: { initialData: ClientData[] }) {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/clients/${client.id}/edit`)}>
                                 <Edit className="mr-2 h-4 w-4" />
                                 Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/clients/${client.id}?tab=invoices`)}>
                                 Ver facturas
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/clients/${client.id}?tab=statement`)}>
                                 Ver estado de cuenta
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem 
+                                className="text-destructive"
+                                onClick={() => handleDelete(client.id)}
+                            >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Eliminar
                             </DropdownMenuItem>
@@ -333,9 +356,19 @@ export function ClientList({ initialData }: { initialData: ClientData[] }) {
                                         <TableRow
                                             key={row.id}
                                             className="cursor-pointer hover:bg-accent"
+                                            onClick={(e) => {
+                                                const target = e.target as HTMLElement;
+                                                if (target.closest('.actions-cell') || target.closest('button')) {
+                                                    return;
+                                                }
+                                                router.push(`/clients/${row.original.id}`);
+                                            }}
                                         >
                                             {row.getVisibleCells().map((cell) => (
-                                                <TableCell key={cell.id}>
+                                                <TableCell 
+                                                    key={cell.id}
+                                                    className={cell.column.id === 'actions' ? 'actions-cell' : ''}
+                                                >
                                                     {flexRender(
                                                         cell.column.columnDef.cell,
                                                         cell.getContext()

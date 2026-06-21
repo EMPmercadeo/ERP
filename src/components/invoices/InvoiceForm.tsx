@@ -98,6 +98,9 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
     const [productSearch, setProductSearch] = useState('');
     const [showProductSearch, setShowProductSearch] = useState(false);
 
+    // Client search
+    const [clientSearch, setClientSearch] = useState('');
+
     const filteredProducts = useMemo(() => {
         if (!productSearch) return products; // Show all if no search
         return products.filter(p =>
@@ -105,6 +108,14 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
             p.codigo.toLowerCase().includes(productSearch.toLowerCase())
         );
     }, [productSearch, products]);
+
+    const filteredClients = useMemo(() => {
+        if (!clientSearch) return [];
+        return clients.filter(c =>
+            c.razonSocial.toLowerCase().includes(clientSearch.toLowerCase()) ||
+            c.ruc.toLowerCase().includes(clientSearch.toLowerCase())
+        ).slice(0, 8);
+    }, [clientSearch, clients]);
 
     const selectedClient = clients.find(c => c.id === clienteId);
 
@@ -198,31 +209,73 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
                                         Cliente
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent>
-                                    <Select value={clienteId} onValueChange={setClienteId}>
-                                        <SelectTrigger className={state?.errors?.clienteId ? 'border-red-500' : ''}>
-                                            <SelectValue placeholder="Seleccionar cliente..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {clients.length > 0 ? clients.map(client => (
-                                                <SelectItem key={client.id} value={client.id}>
-                                                    <div>
-                                                        <span className="font-medium">{client.razonSocial}</span>
-                                                        <span className="text-muted-foreground ml-2 text-xs">{client.ruc}</span>
-                                                    </div>
-                                                </SelectItem>
-                                            )) : (
-                                                <SelectItem value="none" disabled>No hay clientes registrados</SelectItem>
+                                <CardContent className="space-y-4">
+                                    {!clienteId ? (
+                                        <div className="space-y-2">
+                                            <div className="relative">
+                                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    type="text"
+                                                    placeholder="Buscar cliente por nombre o RUC..."
+                                                    value={clientSearch}
+                                                    onChange={(e) => setClientSearch(e.target.value)}
+                                                    className={`pl-8 ${state?.errors?.clienteId ? 'border-red-500' : ''}`}
+                                                />
+                                            </div>
+                                            {clientSearch && (
+                                                <div className="border rounded-lg max-h-48 overflow-auto bg-white z-10 shadow-md divide-y">
+                                                    {filteredClients.length > 0 ? (
+                                                        filteredClients.map(client => (
+                                                            <button
+                                                                key={client.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setClienteId(client.id);
+                                                                    setClientSearch('');
+                                                                }}
+                                                                className="w-full px-4 py-2.5 text-left hover:bg-slate-50 transition-colors flex justify-between items-center"
+                                                            >
+                                                                <div>
+                                                                    <div className="font-medium text-slate-800 text-sm">{client.razonSocial}</div>
+                                                                    <div className="text-xs text-slate-500">RUC: {client.ruc}</div>
+                                                                </div>
+                                                                <span className="text-xs text-indigo-600 font-semibold uppercase tracking-wider">Elegir</span>
+                                                            </button>
+                                                        ))
+                                                    ) : (
+                                                        <div className="p-3 text-sm text-muted-foreground text-center">
+                                                            No se encontraron clientes
+                                                        </div>
+                                                    )}
+                                                </div>
                                             )}
-                                        </SelectContent>
-                                    </Select>
-                                    {state?.errors?.clienteId && <p className="text-xs text-destructive mt-1">{state.errors.clienteId[0]}</p>}
-
-                                    {selectedClient && (
-                                        <div className="mt-3 p-3 bg-muted/50 rounded-lg">
-                                            <p className="font-medium">{selectedClient.razonSocial}</p>
-                                            <p className="text-sm text-muted-foreground">RUC: {selectedClient.ruc}</p>
+                                            {state?.errors?.clienteId && (
+                                                <p className="text-xs text-destructive mt-1">{state.errors.clienteId[0]}</p>
+                                            )}
                                         </div>
+                                    ) : (
+                                        selectedClient && (
+                                            <div className="p-4 border rounded-xl bg-slate-50 flex items-center justify-between shadow-sm">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
+                                                        {selectedClient.razonSocial.slice(0, 2).toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-semibold text-slate-900">{selectedClient.razonSocial}</h4>
+                                                        <p className="text-xs text-slate-500">RUC: {selectedClient.ruc}</p>
+                                                    </div>
+                                                </div>
+                                                <Button 
+                                                    type="button" 
+                                                    variant="ghost" 
+                                                    size="sm" 
+                                                    onClick={() => setClienteId('')}
+                                                    className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50"
+                                                >
+                                                    Cambiar Cliente
+                                                </Button>
+                                            </div>
+                                        )
                                     )}
                                 </CardContent>
                             </Card>
