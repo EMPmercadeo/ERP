@@ -123,7 +123,7 @@ export function TimeFilter({ className }: TimeFilterProps) {
                         className={cn(
                             "inline-flex h-full items-center justify-center whitespace-nowrap px-4 text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
                             isSelected
-                                ? "bg-brand-1 text-white hover:bg-brand-1/90"
+                                ? "bg-blue-50 text-blue-700 hover:bg-blue-100/70"
                                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                             "border-r"
                         )}
@@ -141,7 +141,7 @@ export function TimeFilter({ className }: TimeFilterProps) {
                         className={cn(
                             "inline-flex h-full items-center justify-center whitespace-nowrap px-4 text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
                             !quickOptions.some(o => o.value === currentPeriod)
-                                ? "bg-brand-1 text-white hover:bg-brand-1/90"
+                                ? "bg-blue-50 text-blue-700 hover:bg-blue-100/70"
                                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                             "border-l"
                         )}
@@ -152,7 +152,7 @@ export function TimeFilter({ className }: TimeFilterProps) {
                             if (currentPeriod === 'custom') return "Personalizado";
                             return extendedOptions.find(o => o.value === currentPeriod)?.label || "Más información";
                         })()}
-                        <ChevronDown className={cn("ml-2 h-4 w-4", !quickOptions.some(o => o.value === currentPeriod) ? "text-white" : "opacity-50")} />
+                        <ChevronDown className={cn("ml-2 h-4 w-4", !quickOptions.some(o => o.value === currentPeriod) ? "text-blue-700" : "opacity-50")} />
                     </button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[500px] p-0 gap-0 overflow-hidden">

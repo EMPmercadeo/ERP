@@ -1,0 +1,291 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* 
+ * ERP Panamá - Design System Tokens
+ * 
+ * Brand Colors:
+ * - brand1: #073674 (Primary Blue)
+ * - brand2: #052550 (Primary Blue Dark)
+ * - white: #FFFFFF
+ * - light2: #F4F7FA (Background Light)
+ * - light3: #DEE4ED (Border/Muted)
+ * - dark1: #172436 (Text Primary)
+ * - dark2: #2D3D53 (Text Secondary)
+ * - dark3: #47576B (Text Muted)
+ * 
+ * PROHIBIDO: No usar hex hardcode fuera de este archivo
+ */
+
+@theme inline {
+  /* Base colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Font families */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Semantic color mappings */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Custom Brand Colors */
+  --color-brand-1: #073674;
+  --color-brand-2: #052550;
+  --color-surface: var(--surface);
+  --color-surface-light: var(--surface-light);
+  --color-surface-muted: var(--surface-muted);
+
+  /* Chart colors */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Sidebar */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  --radius: 0.5rem;
+
+  /* Background & Surface */
+  --background: #F3F4F6;
+  /* light gray for contrast */
+  --foreground: #172436;
+  /* dark1 */
+  --surface: #FFFFFF;
+  --surface-light: #F4F7FA;
+  /* light2 */
+  --surface-muted: #DEE4ED;
+  /* light3 */
+
+  /* Card */
+  --card: #FFFFFF;
+  --card-foreground: #172436;
+  /* dark1 */
+
+  /* Popover */
+  --popover: #FFFFFF;
+  --popover-foreground: #172436;
+  /* dark1 */
+
+  /* Primary - Brand Blue */
+  --primary: #073674;
+  /* brand1 */
+  --primary-foreground: #FFFFFF;
+
+  /* Secondary */
+  --secondary: #F4F7FA;
+  /* light2 */
+  --secondary-foreground: #172436;
+  /* dark1 */
+
+  /* Muted */
+  --muted: #DEE4ED;
+  /* light3 */
+  --muted-foreground: #47576B;
+  /* dark3 */
+
+  /* Accent */
+  --accent: #F4F7FA;
+  /* light2 */
+  --accent-foreground: #073674;
+  /* brand1 */
+
+  /* Destructive */
+  --destructive: #DC2626;
+
+  /* Border & Input */
+  --border: #DEE4ED;
+  /* light3 */
+  --input: #DEE4ED;
+  /* light3 */
+  --ring: #073674;
+  /* brand1 */
+
+  /* Charts */
+  --chart-1: #073674;
+  /* brand1 */
+  --chart-2: #10B981;
+  /* success green */
+  --chart-3: #F59E0B;
+  /* warning amber */
+  --chart-4: #8B5CF6;
+  /* purple */
+  --chart-5: #EC4899;
+  /* pink */
+
+  /* Sidebar - White theme as requested */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #172436;
+  /* dark1 */
+  --sidebar-primary: #073674;
+  /* brand1 */
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F3F4F6;
+  /* light gray hover */
+  --sidebar-accent-foreground: #172436;
+  --sidebar-border: transparent;
+  /* No visible border for cleaner look */
+  --sidebar-ring: #073674;
+  /* brand1 */
+}
+
+/* Dark mode support (optional, for future) */
+.dark {
+  --background: #172436;
+  /* dark1 */
+  --foreground: #FFFFFF;
+  --surface: #2D3D53;
+  /* dark2 */
+  --surface-light: #172436;
+  /* dark1 */
+  --surface-muted: #47576B;
+  /* dark3 */
+
+  --card: #2D3D53;
+  /* dark2 */
+  --card-foreground: #FFFFFF;
+
+  --popover: #2D3D53;
+  /* dark2 */
+  --popover-foreground: #FFFFFF;
+
+  --primary: #4A90D9;
+  /* lighter brand for contrast */
+  --primary-foreground: #172436;
+
+  --secondary: #47576B;
+  /* dark3 */
+  --secondary-foreground: #FFFFFF;
+
+  --muted: #47576B;
+  /* dark3 */
+  --muted-foreground: #DEE4ED;
+  /* light3 */
+
+  --accent: #47576B;
+  /* dark3 */
+  --accent-foreground: #4A90D9;
+
+  --destructive: #F87171;
+
+  --border: #47576B;
+  /* dark3 */
+  --input: #47576B;
+  /* dark3 */
+  --ring: #4A90D9;
+
+  --sidebar: #052550;
+  /* brand2 */
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #4A90D9;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #073674;
+  /* brand1 */
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #073674;
+  /* brand1 */
+  --sidebar-ring: #4A90D9;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  /* Typography defaults */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  h1 {
+    @apply text-3xl;
+  }
+
+  h2 {
+    @apply text-2xl;
+  }
+
+  h3 {
+    @apply text-xl;
+  }
+}
+
+/* Scrollbar styling for desktop */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--muted);
+    border-radius: 3px;
+  }
+
+  /* Content max-width utility */
+  .content-container {
+    @apply mx-auto w-full max-w-[2000px] px-4 md:px-6;
+  }
+
+  /* Responsive padding */
+  @media (max-width: 768px) {
+    .content-container {
+      @apply px-4;
+    }
+  }
+}

@@ -1,8 +1,6 @@
-
-
 import Link from 'next/link';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 interface KpiCardProps {
@@ -35,40 +33,42 @@ export function KpiCard({
     const formattedValue = format === 'currency' ? formatCurrency(value) : value.toLocaleString();
     const TrendIcon = trend === 'up' ? TrendingUp : TrendingDown;
 
-    // Base styles
     const isPrimary = variant === 'primary';
 
-    // Dynamic styles based on variant
     const cardStyles = isPrimary
-        ? "flex flex-col justify-between bg-gradient-to-r from-blue-600 to-teal-400 text-white shadow-md border-0"
-        : "flex flex-col justify-between bg-white shadow-sm";
+        ? 'border-0 bg-gradient-to-r from-blue-600 to-teal-400 text-white shadow-md'
+        : 'bg-white shadow-sm';
 
-    const titleColor = isPrimary ? "text-white/80" : "text-muted-foreground";
-    const iconColor = isPrimary ? "text-white/80" : "text-muted-foreground";
+    const titleColor = isPrimary ? 'text-white/85' : 'text-muted-foreground';
+    const iconColor = isPrimary ? 'text-white/85' : 'text-muted-foreground';
 
-    // Trend color logic
     const getTrendColor = () => {
-        if (isPrimary) return "text-white";
+        if (isPrimary) return 'text-white';
         return trend === 'up' ? 'text-emerald-500' : 'text-red-500';
     };
 
     const Content = (
-        <Card className={cn(cardStyles, href && "hover:scale-[1.02] transition-transform cursor-pointer")}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className={`text-sm font-medium ${titleColor}`}>
-                    {title}
-                </CardTitle>
-                <Icon className={`h-4 w-4 ${iconColor}`} />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">{formattedValue}</div>
+        <Card
+            className={cn(
+                'flex min-h-30 flex-col justify-between gap-4 px-6 py-5',
+                cardStyles,
+                href && 'cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md',
+                href && !isPrimary && 'hover:border-brand-1/30'
+            )}
+        >
+            <div className="flex items-center justify-between gap-2">
+                <span className={cn('text-sm font-medium', titleColor)}>{title}</span>
+                <Icon className={cn('size-[18px] shrink-0', iconColor)} />
+            </div>
+            <div>
+                <div className="text-2xl font-bold leading-[1.1] tracking-tight">{formattedValue}</div>
                 {change !== undefined && (
-                    <div className={`flex items-center gap-1 text-xs ${getTrendColor()} mt-1`}>
-                        <TrendIcon className="h-3 w-3" />
-                        <span>{Math.abs(change)}% vs mes anterior</span>
+                    <div className={cn('mt-1.5 flex items-center gap-1 text-xs font-medium', getTrendColor())}>
+                        <TrendIcon className="size-3.5" />
+                        <span>{Math.abs(change)}% vs periodo anterior</span>
                     </div>
                 )}
-            </CardContent>
+            </div>
         </Card>
     );
 

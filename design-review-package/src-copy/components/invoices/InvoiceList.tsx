@@ -1,0 +1,521 @@
+'use client';
+
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import {
+    ColumnDef,
+    ColumnFiltersState,
+    SortingState,
+    flexRender,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    useReactTable,
+} from '@tanstack/react-table';
+import {
+    Search,
+    Download,
+    Plus,
+    MoreHorizontal,
+    ChevronLeft,
+    ChevronRight,
+    ArrowUpDown,
+    Eye,
+    FileX,
+    Printer,
+    FileText
+} from 'lucide-react';
+import { ContentContainer } from '@/components/layout/Content';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { StatusBadge, type DgiStatus } from '@/components/ui/status-badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { saveAs } from 'file-saver';
+import ExcelJS from 'exceljs';
+import { ImportInvoicesDialog } from './ImportInvoicesDialog';
+
+export interface InvoiceData {
+    id: string;
+    numeroCompleto: string;
+    clientName: string;
+    clientRuc: string;
+    fechaEmision: string; // ISO string
+    totalNeto: number;
+    saldoPendiente: number;
+    estadoDgi: string; // "borrador" | "pendiente" | "aceptada" | "rechazada" | "anulada"
+}
+
+
+
+function formatCurrency(value: number) {
+    return new Intl.NumberFormat('es-PA', {
+        style: 'currency',
+        currency: 'USD',
+    }).format(value);
+}
+
+export function InvoiceList({
+    initialData,
+    pageCount,
+    currentPage,
+    pageSize,
+    totalCount,
+    initialSearch,
+    initialStatus,
+    initialSortBy,
+    initialSortOrder
+}: {
+    initialData: InvoiceData[];
+    pageCount: number;
+    currentPage: number;
+    pageSize: number;
+    totalCount: number;
+    initialSearch: string;
+    initialStatus: string;
+    initialSortBy: string;
+    initialSortOrder: 'asc' | 'desc';
+}) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const [sorting, setSorting] = useState<SortingState>(
+        initialSortBy && initialSortOrder
+            ? [{ id: initialSortBy, desc: initialSortOrder === 'desc' }]
+            : []
+    );
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [globalFilter, setGlobalFilter] = useState(initialSearch);
+    const [statusFilter, setStatusFilter] = useState<string>(initialStatus);
+
+    const createQueryString = (params: Record<string, string | null>) => {
+        const newParams = new URLSearchParams(searchParams.toString());
+        for (const [key, value] of Object.entries(params)) {
+            if (value === null) {
+                newParams.delete(key);
+            } else {
+                newParams.set(key, value);
+            }
+        }
+        return newParams.toString();
+    };
+
+    // Debounce search update to URL
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const currentSearch = searchParams.get('search') || '';
+            if (globalFilter !== currentSearch) {
+                const query = createQueryString({ search: globalFilter || null, page: '1' });
+                router.push(`${pathname}?${query}`);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [globalFilter]);
+
+    const handleStatusChange = (val: string) => {
+        setStatusFilter(val);
+        const query = createQueryString({ status: val === 'all' ? null : val, page: '1' });
+        router.push(`${pathname}?${query}`);
+    };
+
+    const columns: ColumnDef<InvoiceData>[] = useMemo(() => [
+        {
+            accessorKey: 'numeroCompleto',
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    className="-ml-4"
+                >
+                    Número
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => (
+                <span className="font-mono text-sm">{row.getValue('numeroCompleto')}</span>
+            ),
+        },
+        {
+            accessorKey: 'clientName',
+            header: 'Cliente',
+            cell: ({ row }) => (
+                <div>
+                    <div className="font-medium">{row.getValue('clientName')}</div>
+                    <div className="text-xs text-muted-foreground">{row.original.clientRuc}</div>
+                </div>
+            ),
+        },
+        {
+            accessorKey: 'fechaEmision',
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    className="-ml-4"
+                >
+                    Fecha
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => {
+                const date = new Date(row.getValue('fechaEmision'));
+                return <span>{date.toLocaleDateString('es-PA')}</span>
+            }
+        },
+        {
+            accessorKey: 'totalNeto',
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    className="-ml-4"
+                >
+                    Total
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => {
+                const value = row.getValue('totalNeto') as number;
+                return (
+                    <span className={value < 0 ? 'text-red-600' : ''}>
+                        {formatCurrency(value)}
+                    </span>
+                );
+            },
+        },
+        {
+            accessorKey: 'saldoPendiente',
+            header: 'Saldo',
+            cell: ({ row }) => {
+                const value = row.getValue('saldoPendiente') as number;
+                if (value === 0) return <Badge variant="success">Pagada</Badge>;
+                return <Badge variant="warning">{formatCurrency(value)}</Badge>;
+            },
+        },
+        {
+            accessorKey: 'estadoDgi',
+            header: 'Estado DGI',
+            cell: ({ row }) => {
+                const status = row.getValue('estadoDgi') as DgiStatus;
+                return <StatusBadge status={status} />;
+            },
+            filterFn: (row, id, filterValue) => {
+                if (filterValue === 'all') return true;
+                return row.getValue(id) === filterValue;
+            },
+        },
+        {
+            id: 'actions',
+            cell: ({ row }) => {
+                const invoice = row.original;
+                return (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild id={`actions-${invoice.id}`}>
+                            <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Acciones</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>
+                                <Eye className="mr-2 h-4 w-4" />
+                                Ver detalle
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                                <Printer className="mr-2 h-4 w-4" />
+                                Imprimir
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                                <Download className="mr-2 h-4 w-4" />
+                                Descargar XML
+                            </DropdownMenuItem>
+                            {invoice.estadoDgi === 'aceptada' && (
+                                <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-destructive">
+                                        <FileX className="mr-2 h-4 w-4" />
+                                        Anular (crear NC)
+                                    </DropdownMenuItem>
+                                </>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                );
+            },
+        },
+    ], []);
+
+    const table = useReactTable({
+        data: initialData,
+        columns,
+        pageCount: pageCount,
+        manualPagination: true,
+        manualFiltering: true,
+        manualSorting: true,
+        onSortingChange: (updater) => {
+            const nextSorting = typeof updater === 'function' ? updater(sorting) : updater;
+            setSorting(nextSorting);
+            if (nextSorting.length > 0) {
+                const { id, desc } = nextSorting[0];
+                const query = createQueryString({
+                    sortBy: id,
+                    sortOrder: desc ? 'desc' : 'asc',
+                    page: '1'
+                });
+                router.push(`${pathname}?${query}`);
+            } else {
+                const query = createQueryString({
+                    sortBy: null,
+                    sortOrder: null,
+                    page: '1'
+                });
+                router.push(`${pathname}?${query}`);
+            }
+        },
+        getCoreRowModel: getCoreRowModel(),
+        state: {
+            sorting,
+            globalFilter,
+            pagination: {
+                pageIndex: currentPage - 1,
+                pageSize: pageSize,
+            }
+        },
+    });
+
+
+
+    // ... (existing imports)
+
+    const handleExport = async () => {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Facturas');
+
+        worksheet.columns = [
+            { header: 'Número', key: 'numero', width: 20 },
+            { header: 'Cliente', key: 'cliente', width: 30 },
+            { header: 'RUC', key: 'ruc', width: 15 },
+            { header: 'Fecha', key: 'fecha', width: 15 },
+            { header: 'Total', key: 'total', width: 15 },
+            { header: 'Estado', key: 'estado', width: 15 },
+        ];
+
+        initialData.forEach((inv) => {
+            worksheet.addRow({
+                numero: inv.numeroCompleto,
+                cliente: inv.clientName,
+                ruc: inv.clientRuc,
+                fecha: new Date(inv.fechaEmision).toLocaleDateString('es-PA'),
+                total: inv.totalNeto,
+                estado: inv.estadoDgi,
+            });
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, `facturas-${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
+    return (
+        <ContentContainer>
+            <div className="space-y-4">
+                {/* Header with actions */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight">Listado de Facturas</h2>
+                        <p className="text-muted-foreground">
+                            Gestiona tus facturas electrónicas y notas de crédito
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <ImportInvoicesDialog />
+                        <Button variant="outline" onClick={handleExport}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Exportar Excel
+                        </Button>
+                        <Button asChild>
+                            <Link href="/invoices/new">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Nueva Factura
+                            </Link>
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Filters */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                            {/* Search */}
+                            <div className="relative flex-1">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Buscar por número, cliente o RUC..."
+                                    value={globalFilter}
+                                    onChange={(e) => setGlobalFilter(e.target.value)}
+                                    className="pl-8"
+                                />
+                            </div>
+
+                            {/* Status filter */}
+                            <Select value={statusFilter} onValueChange={handleStatusChange}>
+                                <SelectTrigger id="status-filter-trigger" className="w-full sm:w-48">
+                                    <SelectValue placeholder="Estado DGI" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todos los estados</SelectItem>
+                                    <SelectItem value="borrador">Borrador</SelectItem>
+                                    <SelectItem value="pendiente">Pendiente DGI</SelectItem>
+                                    <SelectItem value="aceptada">Aceptada</SelectItem>
+                                    <SelectItem value="rechazada">Rechazada</SelectItem>
+                                    <SelectItem value="anulada">Anulada</SelectItem>
+                                </SelectContent>
+                            </Select>
+
+                            {/* Date range - placeholder */}
+                            <Input
+                                type="date"
+                                className="w-full sm:w-40"
+                                placeholder="Desde"
+                            />
+                            <Input
+                                type="date"
+                                className="w-full sm:w-40"
+                                placeholder="Hasta"
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Table */}
+                <Card>
+                    <CardContent className="p-0">
+                        <Table>
+                            <TableHeader>
+                                {table.getHeaderGroups().map((headerGroup) => (
+                                    <TableRow key={headerGroup.id}>
+                                        {headerGroup.headers.map((header) => (
+                                            <TableHead key={header.id}>
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                        header.column.columnDef.header,
+                                                        header.getContext()
+                                                    )}
+                                            </TableHead>
+                                        ))}
+                                    </TableRow>
+                                ))}
+                            </TableHeader>
+                            <TableBody>
+                                {table.getRowModel().rows?.length ? (
+                                    table.getRowModel().rows.map((row) => (
+                                        <TableRow
+                                            key={row.id}
+                                            data-state={row.getIsSelected() && 'selected'}
+                                            className="cursor-pointer hover:bg-accent"
+                                        >
+                                            {row.getVisibleCells().map((cell) => (
+                                                <TableCell key={cell.id}>
+                                                    {flexRender(
+                                                        cell.column.columnDef.cell,
+                                                        cell.getContext()
+                                                    )}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={columns.length}
+                                            className="h-48"
+                                        >
+                                            <EmptyState
+                                                icon={FileText}
+                                                title="No hay facturas"
+                                                description="Crea tu primera factura electrónica."
+                                                action={
+                                                    <Button asChild>
+                                                        <Link href="/invoices/new">
+                                                            <Plus className="mr-2 h-4 w-4" />
+                                                            Nueva Factura
+                                                        </Link>
+                                                    </Button>
+                                                }
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+
+                        {/* Pagination */}
+                        <div className="flex items-center justify-between border-t px-4 py-4">
+                            <div className="text-sm text-muted-foreground">
+                                Mostrando {totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0} a{' '}
+                                {Math.min(currentPage * pageSize, totalCount)}{' '}
+                                de {totalCount} resultados
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const query = createQueryString({ page: String(currentPage - 1) });
+                                        router.push(`${pathname}?${query}`);
+                                    }}
+                                    disabled={currentPage <= 1}
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                    Anterior
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const query = createQueryString({ page: String(currentPage + 1) });
+                                        router.push(`${pathname}?${query}`);
+                                    }}
+                                    disabled={currentPage >= pageCount}
+                                >
+                                    Siguiente
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </ContentContainer>
+    );
+}

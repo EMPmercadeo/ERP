@@ -1,0 +1,236 @@
+'use client';
+
+import { useState, useEffect, useRef, createContext, useContext, useCallback } from 'react';
+import { getCurrentUser, setSessionEmail, deleteSessionEmail, getUserRole } from '@/lib/actions/auth';
+import {
+    User,
+    signInWithPopup,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut as firebaseSignOut,
+    onAuthStateChanged,
+    updateProfile as firebaseUpdateProfile
+} from 'firebase/auth';
+import { auth, googleProvider } from '@/lib/firebase';
+
+interface AuthContextType {
+    user: User | null;
+    loading: boolean;
+    role: string | null;
+    signInWithGoogle: () => Promise<void>;
+    signInWithEmail: (email: string, password: string) => Promise<void>;
+    signUpWithEmail: (email: string, password: string) => Promise<void>;
+    signOut: () => Promise<void>;
+    refreshUser: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [role, setRole] = useState<string | null>(null);
+    const initializedRef = useRef(false);
+
+    // Stable mock user – created once, never triggers re-renders
+    const mockUserRef = useRef<User | null>({
+        uid: 'force-admin-xyz',
+        email: 'empsignature@gmail.com',
+        emailVerified: true,
+        displayName: 'Forced Admin',
+        isAnonymous: false,
+        metadata: {},
+        providerData: [],
+        refreshToken: '',
+        tenantId: null,
+        delete: async () => { },
+        getIdToken: async () => 'mock-token',
+        getIdTokenResult: async () => ({ token: 'mock', claims: {} } as any),
+        reload: async () => { },
+        toJSON: () => ({}),
+        phoneNumber: null,
+        photoURL: null,
+        providerId: 'password',
+    } as unknown as User);
+
+    const refreshUser = useCallback(async () => {
+        const currentUser = user || mockUserRef.current;
+        if (!currentUser?.email) return;
+
+        try {
+            const dbUser = await getCurrentUser(currentUser.email);
+            if (dbUser) {
+                if (auth.currentUser) {
+                    await firebaseUpdateProfile(auth.currentUser, { displayName: dbUser.nombre });
+                    await auth.currentUser.reload();
+                    setUser({ ...auth.currentUser });
+                }
+                if (mockUserRef.current && !auth.currentUser) {
+                    mockUserRef.current = {
+                        ...mockUserRef.current,
+                        displayName: dbUser.nombre
+                    } as User;
+                    setUser({ ...mockUserRef.current });
+                }
+            }
+        } catch (error) {
+            console.error('Error refreshing user:', error);
+        }
+    }, [user]);
+
+    // Single initialization effect – runs ONCE
+    useEffect(() => {
+        if (initializedRef.current) return;
+        initializedRef.current = true;
+
+        const initAuth = async () => {
+            // Sync mock user session on mount
+            const mock = mockUserRef.current;
+            if (mock?.email) {
+                await setSessionEmail(mock.email);
+                // Fetch role once
+                const r = await getUserRole(mock.email);
+                setRole(r || null);
+
+                // Update display name from DB
+                const dbUser = await getCurrentUser(mock.email);
+                if (dbUser?.nombre) {
+                    mockUserRef.current = {
+                        ...mock,
+                        displayName: dbUser.nombre,
+                    } as User;
+                }
+                setUser(mockUserRef.current);
+            }
+            setLoading(false);
+        };
+
+        initAuth();
+
+        const unsubscribe = onAuthStateChanged(auth, async (u) => {
+            if (u) {
+                setUser(u);
+                if (u.email) {
+                    await setSessionEmail(u.email);
+                    const r = await getUserRole(u.email);
+                    setRole(r || null);
+                    // Sync display name (once)
+                    const dbUser = await getCurrentUser(u.email);
+                    if (dbUser && dbUser.nombre !== u.displayName) {
+                        await firebaseUpdateProfile(u, { displayName: dbUser.nombre });
+                    }
+                }
+            } else {
+                // No Firebase user – keep mock
+                if (mockUserRef.current?.email) {
+                    await setSessionEmail(mockUserRef.current.email);
+                } else {
+                    setUser(null);
+                    await deleteSessionEmail();
+                }
+            }
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []); // Empty deps – runs once
+
+    const signInWithGoogle = async () => {
+        try {
+            await signInWithPopup(auth, googleProvider);
+        } catch (error: unknown) {
+            console.error('Error signing in with Google:', error);
+            throw error;
+        }
+    };
+
+    const signInWithEmail = async (email: string, password: string) => {
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            await setSessionEmail(email);
+        } catch (error: any) {
+            if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                console.warn('Dev Mode: Bypassing Auth Error', error.code);
+
+                const dbUser = await getCurrentUser(email);
+
+                const fakeUser = {
+                    uid: 'mock-uid-' + Math.random(),
+                    email: email,
+                    emailVerified: true,
+                    isAnonymous: false,
+                    metadata: {},
+                    providerData: [],
+                    refreshToken: '',
+                    tenantId: null,
+                    delete: async () => { },
+                    getIdToken: async () => 'mock-token',
+                    getIdTokenResult: async () => ({ token: 'mock', iat: 0, authTime: 0, expirationTime: 0, signInProvider: 'password', signInSecondFactor: null, claims: {} }),
+                    reload: async () => { },
+                    toJSON: () => ({}),
+                    displayName: dbUser?.nombre || 'Dev User',
+                    phoneNumber: null,
+                    photoURL: null,
+                    providerId: 'password',
+                } as unknown as User;
+
+                mockUserRef.current = fakeUser;
+                localStorage.setItem('mockUser', JSON.stringify(fakeUser));
+                setUser(fakeUser);
+                await setSessionEmail(email);
+
+                // Fetch role for this new user
+                const r = await getUserRole(email);
+                setRole(r || null);
+                return;
+            }
+            console.error('Error signing in with email:', error);
+            throw error;
+        }
+    };
+
+    const signUpWithEmail = async (email: string, password: string) => {
+        try {
+            await createUserWithEmailAndPassword(auth, email, password);
+        } catch (error: any) {
+            console.error('Error signing up:', error);
+            throw error;
+        }
+    };
+
+    const signOut = async () => {
+        try {
+            await firebaseSignOut(auth);
+            mockUserRef.current = null;
+            localStorage.removeItem('mockUser');
+            setRole(null);
+            await deleteSessionEmail();
+        } catch (error: unknown) {
+            console.error('Error signing out:', error);
+            throw error;
+        }
+    };
+
+    return (
+        <AuthContext.Provider value={{
+            user: user || mockUserRef.current,
+            loading,
+            role,
+            signInWithGoogle,
+            signInWithEmail,
+            signUpWithEmail,
+            signOut,
+            refreshUser
+        }}>
+            {children}
+        </AuthContext.Provider>
+    );
+}
+
+export function useAuth() {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+}

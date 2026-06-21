@@ -3,7 +3,7 @@ import Link from 'next/link';
 import {
     DollarSign,
     FileText,
-    Clock,
+    AlertCircle,
     TrendingUp,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -183,7 +183,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                         value={kpiData.facturasPendientes.value}
                         change={kpiData.facturasPendientes.change}
                         trend={kpiData.facturasPendientes.trend as "up" | "down"}
-                        icon={Clock}
+                        icon={AlertCircle}
                         href="/invoices?status=pendiente"
                     />
                     <KpiCard
@@ -205,7 +205,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                     />
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 items-stretch">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 items-start">
                     <div className="lg:col-span-8 h-full">
                         <RecentActivityTable invoices={recentInvoices} />
                     </div>
@@ -214,7 +214,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                     </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-6 md:grid-cols-3">
                     <Link href="/invoices/new" className="block">
                         <Card className="cursor-pointer transition-colors hover:bg-accent/50 group h-full">
                             <CardContent className="flex items-center gap-4 pt-6">
