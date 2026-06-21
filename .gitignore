@@ -48,3 +48,6 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# local verification screenshots
+dashboard-after-*.png
