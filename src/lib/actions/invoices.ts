@@ -93,6 +93,30 @@ export async function createInvoice(prevState: any, formData: FormData) {
     try {
         const { empresa, sucursal, caja } = await getDefaults();
 
+        // Check monthly document consumption limits
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const invoiceCount = await prisma.factura.count({
+            where: {
+                empresaId: empresa.id,
+                fechaEmision: {
+                    gte: startOfMonth
+                }
+            }
+        });
+
+        if (empresa.planType === 'free' && invoiceCount >= 10) {
+            return {
+                message: 'Límite de documentos excedido para tu plan. Actualiza tu plan en Configuración > Planes y Facturación para continuar.'
+            };
+        }
+
+        if (empresa.planType === 'pro' && invoiceCount >= 500) {
+            return {
+                message: 'Límite de documentos excedido para tu plan. Actualiza tu plan en Configuración > Planes y Facturación para continuar.'
+            };
+        }
+
         // --- FREE TIER CHECK ---
         const isFiscal = empresa.fiscalEnabled && empresa.planType !== 'free'; // Double check
         const tipoDoc = isFiscal ? 'FE' : 'REC'; // FE = Factura Electrónica, REC = Recibo Interno

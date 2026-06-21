@@ -30,6 +30,8 @@ model Empresa {
   // Configuración fiscal
   ambienteDgi    String  @default("1") // 1=Pruebas, 2=Producción
   certificadoDgi String? // Path o contenido del certificado
+  usuarioPac      String?
+  passwordPac     String?
 
   // Suscripción y Planes
   planType           String @default("free") // "free", "pro", "enterprise"
