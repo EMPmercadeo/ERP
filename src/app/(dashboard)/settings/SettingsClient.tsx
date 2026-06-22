@@ -73,13 +73,15 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
     // Document Limits & Display Info based on plan
     const getPlanLimitsInfo = (plan: string) => {
         switch (plan) {
+            case 'basic':
+                return { limit: 100, label: '100 docs/mes', desc: 'Tu plan Básico PAC te permite autorizar automáticamente hasta 100 facturas al mes con el PAC integrado.' };
             case 'pro':
-                return { limit: 500, label: '500 límite', desc: 'Tu plan Pro te permite generar hasta 500 facturas electrónicas al mes.' };
+                return { limit: 500, label: '500 docs/mes', desc: 'Tu plan Pro PAC te permite autorizar automáticamente hasta 500 facturas al mes con multiempresa y webhooks.' };
             case 'enterprise':
-                return { limit: Infinity, label: 'Ilimitado', desc: 'Tu plan Enterprise te permite generar facturas ilimitadas.' };
+                return { limit: Infinity, label: 'Ilimitado', desc: 'Tu plan Enterprise Embedded te permite autorizar volumen a la medida con soporte prioritario y multi-PAC.' };
             case 'free':
             default:
-                return { limit: 10, label: '10 límite', desc: 'Tu cuenta está en modo demostración. Puedes generar hasta 10 facturas de prueba al mes.' };
+                return { limit: 100, label: '100 docs/mes', desc: 'Tu plan Gratuito Asistido te permite preparar hasta 100 documentos al mes con autorización manual/asistida.' };
         }
     };
 
@@ -190,38 +192,59 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
     const plans = [
         {
             id: 'free',
-            name: 'Gratis',
-            description: 'Ideal para evaluar el sistema y pruebas iniciales.',
+            name: 'Gratuito Asistido',
+            description: 'Para preparar y migrar tus datos con panel manual sin costo de PAC.',
             price: {
                 monthly: 0,
                 yearly: 0,
             },
             features: [
-                'Hasta 10 facturas / documentos al mes',
-                '1 Sucursal y 1 Caja habilitada',
-                'Integración DGI en ambiente de pruebas',
-                'Gestión de clientes y productos básica',
-                'Reportes estándar en PDF',
+                'Hasta 100 documentos al mes (modo asistido)',
+                '1 empresa, 1 usuario, clientes/productos',
+                'Cotizaciones y prefacturas',
+                'Exportación CSV/Excel, plantillas DGI',
+                'Checklist de onboarding y alertas de certificado',
+                'Panel de estatus manual (sin PAC automático)',
             ],
             cta: 'Plan Actual',
             highlight: false,
             variant: 'outline' as const,
         },
         {
-            id: 'pro',
-            name: 'Pro',
-            description: 'Para empresas en crecimiento que facturan oficialmente.',
+            id: 'basic',
+            name: 'Básico PAC',
+            description: 'Conexión automática con PAC para pymes que inician.',
             price: {
-                monthly: 29,
-                yearly: 24, // $288 billed annually (17% off)
+                monthly: 9.90,
+                yearly: 8.25, // $99/year
             },
             features: [
-                'Hasta 500 facturas / documentos al mes',
-                'Integración oficial DGI en producción',
-                'Soporte para 3 Sucursales y 3 Cajas',
-                'Reportes avanzados (Excel, CSV, PDF)',
-                'Soporte prioritario por correo y chat',
-                'Acceso para hasta 3 usuarios',
+                'Hasta 100 documentos autorizados al mes',
+                '1 empresa, 2 usuarios',
+                'FE, NC, ND con CUFE/CAFE automáticos',
+                'Envío por correo/WhatsApp y descarga XML/PDF',
+                'Historial, dashboard simple, soporte 8x5',
+                'Exceso a USD 0.07/documento (BYO PAC opcional)',
+            ],
+            cta: 'Actualizar a Básico',
+            highlight: false,
+            variant: 'outline' as const,
+        },
+        {
+            id: 'pro',
+            name: 'Pro PAC',
+            description: 'Para empresas en crecimiento que facturan de forma avanzada.',
+            price: {
+                monthly: 19.90,
+                yearly: 16.58, // $199/year
+            },
+            features: [
+                'Hasta 500 documentos autorizados al mes',
+                '3 empresas, 5 usuarios',
+                'FE, NC, ND, sucursales y POS ligero',
+                'Exportación contable, conciliación por estados',
+                'Webhook/API entrante, contingencia, roles',
+                'Exceso a USD 0.04/documento (soporte contador)',
             ],
             cta: 'Actualizar a Pro',
             highlight: true,
@@ -229,23 +252,21 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
         },
         {
             id: 'enterprise',
-            name: 'Enterprise',
-            description: 'Solución a la medida para operaciones ilimitadas.',
+            name: 'Enterprise Embedded',
+            description: 'Solución corporativa para integraciones y alto volumen.',
             price: {
-                monthly: 'Custom',
-                yearly: 'Custom',
+                monthly: 79,
+                yearly: 65.83, // $790/year
             },
             features: [
-                'Facturas y documentos ilimitados',
-                'Sucursales y cajas ilimitadas',
-                'Integración oficial DGI en producción con SLA',
-                'Reportes avanzados y análisis en tiempo real',
-                'Permisos y roles de usuario adicionales',
-                'API de acceso para integraciones externas',
-                'Gerente de cuenta y soporte 24/7',
-                'Copias de seguridad diarias automatizadas',
+                'Facturas y documentos con volumen a la medida',
+                'Multiempresa avanzada y multiusuario granular',
+                'SSO, SLA, soporte prioritario 24/7',
+                'Ambientes dev/test/prod y webhooks salientes',
+                'Marca blanca (white-label) y auditoría completa',
+                'Redundancia dual-PAC failover y onboarding dedicado',
             ],
-            cta: 'Contactar Soporte',
+            cta: 'Actualizar a Enterprise',
             highlight: false,
             variant: 'outline' as const,
         },
@@ -541,13 +562,14 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
                                     <div className="flex items-center gap-4">
                                         <div className="p-3 bg-indigo-100 text-indigo-700 rounded-lg shrink-0">
                                             {company.planType === 'free' && <Sparkles className="h-6 w-6" />}
-                                            {company.planType === 'pro' && <Zap className="h-6 w-6" />}
-                                            {company.planType === 'enterprise' && <Building className="h-6 w-6" />}
+                                            {company.planType === 'basic' && <Zap className="h-6 w-6" />}
+                                            {company.planType === 'pro' && <Zap className="h-6 w-6 animate-pulse text-amber-500" />}
+                                            {company.planType === 'enterprise' && <Building className="h-6 w-6 text-indigo-600" />}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
                                                 <h3 className="font-semibold text-lg text-indigo-950">
-                                                    Plan Actual: {company.planType === 'free' ? 'Gratis (Pruebas)' : company.planType === 'pro' ? 'Pro' : 'Enterprise'}
+                                                    Plan Actual: {company.planType === 'free' ? 'Gratuito Asistido' : company.planType === 'basic' ? 'Básico PAC' : company.planType === 'pro' ? 'Pro PAC' : 'Enterprise Embedded'}
                                                 </h3>
                                                 <Badge variant="secondary" className="bg-indigo-100 text-indigo-800 border-indigo-200 uppercase text-[10px]">
                                                     {company.subscriptionStatus === 'active' ? 'Activo' : company.subscriptionStatus}
@@ -609,7 +631,7 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
                             </div>
 
                             {/* Plan Cards Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch mb-6">
                                 {plans.map((plan) => {
                                     const isCurrent = plan.id === company.planType;
                                     const isCustomPrice = typeof plan.price.monthly === 'string';
@@ -623,22 +645,24 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
                                             className={`flex flex-col h-full relative transition-all duration-300 hover:shadow-lg ${
                                                 plan.highlight
                                                     ? 'border-indigo-500 shadow-md ring-2 ring-indigo-500/10 scale-100 md:scale-[1.02]'
-                                                    : 'border-border'
+                                                     : 'border-border'
                                             }`}
                                         >
                                             {plan.highlight && (
-                                                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1 uppercase tracking-wider">
-                                                    <Zap className="h-3 w-3 fill-white" />
-                                                    Más Popular
-                                                </span>
+                                                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1 uppercase tracking-wider">
+                                                     <Zap className="h-3 w-3 fill-white" />
+                                                     Más Popular
+                                                 </span>
                                             )}
 
-                                            <CardHeader className="pb-6">
-                                                <CardTitle className="text-2xl font-bold flex items-center justify-between">
-                                                    <span>{plan.name}</span>
-                                                    {plan.id === 'pro' && <Sparkles className="h-5 w-5 text-indigo-500" />}
-                                                    {plan.id === 'enterprise' && <Building className="h-5 w-5 text-slate-500" />}
-                                                </CardTitle>
+                                             <CardHeader className="pb-6">
+                                                 <CardTitle className="text-2xl font-bold flex items-center justify-between">
+                                                     <span>{plan.name}</span>
+                                                     {plan.id === 'free' && <Sparkles className="h-5 w-5 text-indigo-500" />}
+                                                     {plan.id === 'basic' && <Zap className="h-5 w-5 text-indigo-500" />}
+                                                     {plan.id === 'pro' && <Zap className="h-5 w-5 text-amber-500" />}
+                                                     {plan.id === 'enterprise' && <Building className="h-5 w-5 text-slate-500" />}
+                                                 </CardTitle>
                                                 <CardDescription className="min-h-[40px] mt-2">
                                                     {plan.description}
                                                 </CardDescription>

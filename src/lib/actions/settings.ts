@@ -53,7 +53,7 @@ export async function updateDgiSettings(empresaId: string, data: {
 
 export async function updateCompanyPlan(empresaId: string, planType: string) {
     try {
-        if (!['free', 'pro', 'enterprise'].includes(planType)) {
+        if (!['free', 'basic', 'pro', 'enterprise'].includes(planType)) {
             return { success: false, message: 'Plan no válido.' };
         }
 
