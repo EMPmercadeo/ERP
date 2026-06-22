@@ -17,7 +17,7 @@ export default async function ClientsPage(props: {
     const search = searchParams.search || '';
     const sortBy = searchParams.sortBy || 'createdAt';
     const sortOrder = (searchParams.sortOrder === 'asc' ? 'asc' : 'desc') as 'asc' | 'desc';
-    const limit = 10;
+    const limit = 20;
     const skip = (page - 1) * limit;
 
     const where = search ? {

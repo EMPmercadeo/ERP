@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
     ColumnDef,
     SortingState,
@@ -83,9 +84,59 @@ function calculateMargin(cost: number, price: number): number {
     return ((price - cost) / price) * 100;
 }
 
-export function ProductList({ initialData }: { initialData: ProductData[] }) {
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [globalFilter, setGlobalFilter] = useState('');
+export function ProductList({
+    initialData,
+    pageCount,
+    currentPage,
+    pageSize,
+    totalCount,
+    initialSearch,
+    initialSortBy,
+    initialSortOrder
+}: {
+    initialData: ProductData[];
+    pageCount: number;
+    currentPage: number;
+    pageSize: number;
+    totalCount: number;
+    initialSearch: string;
+    initialSortBy: string;
+    initialSortOrder: 'asc' | 'desc';
+}) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const [sorting, setSorting] = useState<SortingState>(
+        initialSortBy && initialSortOrder
+            ? [{ id: initialSortBy, desc: initialSortOrder === 'desc' }]
+            : []
+    );
+    const [globalFilter, setGlobalFilter] = useState(initialSearch);
+
+    const createQueryString = (params: Record<string, string | null>) => {
+        const newParams = new URLSearchParams(searchParams.toString());
+        for (const [key, value] of Object.entries(params)) {
+            if (value === null) {
+                newParams.delete(key);
+            } else {
+                newParams.set(key, value);
+            }
+        }
+        return newParams.toString();
+    };
+
+    // Debounce search update to URL
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const currentSearch = searchParams.get('search') || '';
+            if (globalFilter !== currentSearch) {
+                const query = createQueryString({ search: globalFilter || null, page: '1' });
+                router.push(`${pathname}?${query}`);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [globalFilter]);
 
     const handleDelete = async (id: string, descripcion: string) => {
         if (confirm(`¿Estás seguro de que quieres eliminar el producto "${descripcion}"?`)) {
@@ -289,21 +340,38 @@ export function ProductList({ initialData }: { initialData: ProductData[] }) {
     const table = useReactTable({
         data: initialData,
         columns,
-        onSortingChange: setSorting,
+        pageCount: pageCount,
+        manualPagination: true,
+        manualFiltering: true,
+        manualSorting: true,
+        onSortingChange: (updater) => {
+            const nextSorting = typeof updater === 'function' ? updater(sorting) : updater;
+            setSorting(nextSorting);
+            if (nextSorting.length > 0) {
+                const { id, desc } = nextSorting[0];
+                const query = createQueryString({
+                    sortBy: id,
+                    sortOrder: desc ? 'desc' : 'asc',
+                    page: '1'
+                });
+                router.push(`${pathname}?${query}`);
+            } else {
+                const query = createQueryString({
+                    sortBy: null,
+                    sortOrder: null,
+                    page: '1'
+                });
+                router.push(`${pathname}?${query}`);
+            }
+        },
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        onGlobalFilterChange: setGlobalFilter,
-        globalFilterFn: 'includesString',
         state: {
             sorting,
             globalFilter,
-        },
-        initialState: {
             pagination: {
-                pageSize: 10,
-            },
+                pageIndex: currentPage - 1,
+                pageSize: pageSize,
+            }
         },
     });
 
@@ -444,15 +512,25 @@ export function ProductList({ initialData }: { initialData: ProductData[] }) {
 
                         {/* Pagination */}
                         <div className="flex items-center justify-between border-t px-4 py-4">
-                            <div className="text-sm text-muted-foreground">
-                                {table.getFilteredRowModel().rows.length} productos
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
+                                <span>
+                                    Mostrando {totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0} a{' '}
+                                    {Math.min(currentPage * pageSize, totalCount)} de {totalCount} productos
+                                </span>
+                                <span className="hidden sm:inline text-muted-foreground/30">|</span>
+                                <span className="font-medium text-foreground">
+                                    Página {currentPage} de {pageCount || 1}
+                                </span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => table.previousPage()}
-                                    disabled={!table.getCanPreviousPage()}
+                                    onClick={() => {
+                                        const query = createQueryString({ page: String(currentPage - 1) });
+                                        router.push(`${pathname}?${query}`);
+                                    }}
+                                    disabled={currentPage <= 1}
                                 >
                                     <ChevronLeft className="h-4 w-4" />
                                     Anterior
@@ -460,8 +538,11 @@ export function ProductList({ initialData }: { initialData: ProductData[] }) {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => table.nextPage()}
-                                    disabled={!table.getCanNextPage()}
+                                    onClick={() => {
+                                        const query = createQueryString({ page: String(currentPage + 1) });
+                                        router.push(`${pathname}?${query}`);
+                                    }}
+                                    disabled={currentPage >= pageCount}
                                 >
                                     Siguiente
                                     <ChevronRight className="h-4 w-4" />

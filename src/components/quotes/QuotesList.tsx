@@ -522,10 +522,15 @@ export function QuotesList({
                     </Table>
 
                     <div className="flex items-center justify-between border-t px-4 py-4">
-                        <div className="text-sm text-muted-foreground">
-                            Mostrando {totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0} a{' '}
-                            {Math.min(currentPage * pageSize, totalCount)}{' '}
-                            de {totalCount} resultados
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
+                            <span>
+                                Mostrando {totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0} a{' '}
+                                {Math.min(currentPage * pageSize, totalCount)} de {totalCount} cotizaciones
+                            </span>
+                            <span className="hidden sm:inline text-muted-foreground/30">|</span>
+                            <span className="font-medium text-foreground">
+                                Página {currentPage} de {pageCount || 1}
+                            </span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Button
