@@ -67,6 +67,20 @@ const statusConfig: Record<string, {
     },
 }
 
+const statusClassMap: Record<string, string> = {
+    // DGI statuses
+    aceptada: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
+    pendiente: "bg-warning-bg text-warning border-transparent hover:bg-warning-bg/90",
+    rechazada: "bg-danger-bg text-danger border-transparent hover:bg-danger-bg/90",
+    procesando: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
+    anulada: "bg-secondary text-muted-foreground border-border hover:bg-secondary/90",
+    borrador: "bg-secondary text-muted-foreground border-border hover:bg-secondary/90",
+    // Payment statuses
+    pagada: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
+    parcial: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
+    vencida: "bg-danger-bg text-danger border-transparent hover:bg-danger-bg/90",
+}
+
 // Fallback for unknown statuses
 const fallbackConfig = {
     label: "Desconocido",
@@ -87,15 +101,16 @@ function StatusBadge({
 }: StatusBadgeProps) {
     const config = statusConfig[status] || fallbackConfig
     const Icon = config.icon
+    const colorClass = statusClassMap[status] || "bg-secondary text-muted-foreground border-border hover:bg-secondary/90"
 
     return (
         <Badge
             variant={config.variant}
-            className={cn(className)}
+            className={cn("min-w-[118px] justify-center font-semibold gap-1.5 py-1 px-3 rounded-full text-xs transition-colors", colorClass, className)}
             {...props}
         >
             {showIcon && (
-                <Icon className={cn("h-3 w-3", status === "procesando" && "animate-spin")} />
+                <Icon className={cn("h-3.5 w-3.5 shrink-0", status === "procesando" && "animate-spin")} />
             )}
             {config.label}
         </Badge>

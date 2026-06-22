@@ -39,6 +39,7 @@ import {
 interface Invoice {
     id: string;
     client: string;
+    clientRuc?: string;
     amount: number;
     balance: number;
     status: DgiStatus;
@@ -57,9 +58,28 @@ function formatCurrency(value: number) {
     }).format(value);
 }
 
-const ITEMS_PER_PAGE = 4;
-const HEAD_CLASS = 'h-auto bg-surface-light px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground';
-const CELL_CLASS = 'px-3 py-3';
+const getInitials = (name: string) => {
+    return name
+        .split(' ')
+        .filter((w) => w[0] && /[a-zA-ZÁÉÍÓÚáéíóúÑñ]/.test(w[0]))
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase();
+};
+
+const palette = [
+    'from-blue-600 to-teal-400 text-white',
+    'from-emerald-500 to-teal-400 text-white',
+    'from-amber-500 to-orange-400 text-white',
+    'from-indigo-500 to-purple-400 text-white',
+    'from-rose-500 to-red-400 text-white',
+    'from-blue-500 to-indigo-400 text-white'
+];
+
+const ITEMS_PER_PAGE = 5;
+const HEAD_CLASS = 'h-auto bg-surface-light px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground';
+const CELL_CLASS = 'px-4 py-3.5 align-middle';
 
 export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
     const [currentPage, setCurrentPage] = useState(1);
@@ -77,146 +97,173 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
     };
 
     return (
-        <Card className="flex h-full flex-col bg-white shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between border-b py-4">
+        <Card className="flex h-full flex-col bg-white shadow-sm border-border">
+            <CardHeader className="flex flex-row items-center justify-between border-b p-5">
                 <div className="space-y-1">
-                    <CardTitle className="text-base font-semibold">Actividad Reciente</CardTitle>
+                    <CardTitle className="text-base font-semibold">Facturas Recientes</CardTitle>
                     <CardDescription className="text-xs">
-                        Mostrando {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, invoices.length)} de {invoices.length} facturas
+                        Mostrando {invoices.length > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + ITEMS_PER_PAGE, invoices.length)} de {invoices.length} facturas
                     </CardDescription>
                 </div>
                 <Link href="/invoices">
-                    <Button variant="ghost" size="sm" className="gap-1 text-brand-1 hover:text-brand-1/80">
+                    <Button variant="ghost" size="sm" className="gap-1 text-brand-1 hover:text-brand-1/80 font-semibold">
                         Ver todas
                         <ArrowRight className="h-4 w-4" />
                     </Button>
                 </Link>
             </CardHeader>
-            <CardContent className="flex-1 overflow-auto p-0">
-                <Table className="min-w-[680px]">
+            <CardContent className="flex-1 overflow-auto p-0 scrollbar-thin">
+                <Table className="min-w-[850px]">
                     <TableHeader>
                         <TableRow className="hover:bg-transparent">
                             <TableHead className={HEAD_CLASS}>Documento</TableHead>
                             <TableHead className={HEAD_CLASS}>Cliente</TableHead>
+                            <TableHead className={HEAD_CLASS}>Emisión</TableHead>
                             <TableHead className={`${HEAD_CLASS} text-right`}>Monto</TableHead>
-                            <TableHead className={HEAD_CLASS}>Estado DGI</TableHead>
+                            <TableHead className={`${HEAD_CLASS} text-right`}>Saldo</TableHead>
+                            <TableHead className={HEAD_CLASS}>DGI</TableHead>
                             <TableHead className={HEAD_CLASS}>Pago</TableHead>
                             <TableHead className={`${HEAD_CLASS} w-px`} />
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {currentInvoices.map((invoice) => (
-                            <TableRow key={invoice.id} className="group hover:bg-surface-light/60">
-                                <TableCell className={CELL_CLASS}>
-                                    <span className="font-mono text-xs font-medium text-brand-1">{invoice.id}</span>
-                                </TableCell>
-                                <TableCell className={CELL_CLASS}>
-                                    <span
-                                        className="block max-w-[130px] truncate font-medium text-foreground"
-                                        title={invoice.client}
-                                    >
-                                        {invoice.client}
-                                    </span>
-                                </TableCell>
-                                <TableCell className={`${CELL_CLASS} text-right`}>
-                                    <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
-                                        {formatCurrency(invoice.amount)}
-                                    </span>
-                                </TableCell>
-                                <TableCell className={CELL_CLASS}>
-                                    <StatusBadge
-                                        status={invoice.status}
-                                        showIcon={false}
-                                        className="h-5 px-1.5 text-[10px] uppercase tracking-wide"
-                                    />
-                                </TableCell>
-                                <TableCell className={CELL_CLASS}>
-                                    <StatusBadge
-                                        status={invoice.paymentStatus}
-                                        showIcon={false}
-                                        className="h-5 px-1.5 text-[10px] uppercase tracking-wide"
-                                    />
-                                </TableCell>
-                                <TableCell className="px-1.5 py-3 text-right">
-                                    <div className="flex items-center justify-end opacity-80 transition-opacity group-hover:opacity-100">
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Link href={`/invoices/${invoice.id}`}>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-7 w-7 text-muted-foreground hover:text-brand-1"
-                                                        >
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
-                                                    </Link>
-                                                </TooltipTrigger>
-                                                <TooltipContent>Ver detalles</TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
+                        {currentInvoices.map((invoice, index) => {
+                            const gradClass = palette[(startIndex + index) % palette.length];
+                            const initials = getInitials(invoice.client) || 'CF';
 
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <a
-                                                        href={`/api/invoices/${invoice.id}/pdf`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                    >
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-7 w-7 text-muted-foreground hover:text-brand-1"
-                                                        >
-                                                            <FileText className="h-4 w-4" />
-                                                        </Button>
-                                                    </a>
-                                                </TooltipTrigger>
-                                                <TooltipContent>Ver PDF</TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
+                            return (
+                                <TableRow key={invoice.id} className="group hover:bg-slate-50/70 border-b">
+                                    <TableCell className={CELL_CLASS}>
+                                        <span className="font-mono text-xs font-bold text-brand-1 tracking-tight">
+                                            {invoice.id}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className={CELL_CLASS}>
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
+                                                {initials}
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span
+                                                    className="font-semibold text-foreground text-sm truncate max-w-[200px]"
+                                                    title={invoice.client}
+                                                >
+                                                    {invoice.client}
+                                                </span>
+                                                <span className="text-[11px] text-muted-foreground font-mono leading-none mt-0.5">
+                                                    {invoice.clientRuc || '—'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className={`${CELL_CLASS} text-xs font-semibold text-muted-foreground`}>
+                                        {invoice.date}
+                                    </TableCell>
+                                    <TableCell className={`${CELL_CLASS} text-right`}>
+                                        <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
+                                            {formatCurrency(invoice.amount)}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className={`${CELL_CLASS} text-right`}>
+                                        <span className={`font-mono text-sm font-semibold tabular-nums ${invoice.balance > 0 ? 'text-warning font-bold' : 'text-muted-foreground/60'}`}>
+                                            {invoice.balance > 0 ? formatCurrency(invoice.balance) : '—'}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className={CELL_CLASS}>
+                                        <StatusBadge
+                                            status={invoice.status}
+                                            showIcon={true}
+                                            className="h-6"
+                                        />
+                                    </TableCell>
+                                    <TableCell className={CELL_CLASS}>
+                                        <StatusBadge
+                                            status={invoice.paymentStatus}
+                                            showIcon={false}
+                                            className="h-6"
+                                        />
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3.5 text-right">
+                                        <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Link href={`/invoices/${invoice.id}`}>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-7 w-7 text-muted-foreground hover:text-brand-1 rounded-lg"
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+                                                        </Link>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Ver detalles</TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
 
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Link href={`/invoices/${invoice.id}/edit`}>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-7 w-7 text-muted-foreground hover:text-brand-1"
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <a
+                                                            href={`/api/invoices/${invoice.id}/pdf`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
                                                         >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                    </Link>
-                                                </TooltipTrigger>
-                                                <TooltipContent>Editar factura</TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-7 w-7 text-muted-foreground hover:text-brand-1 rounded-lg"
+                                                            >
+                                                                <FileText className="h-4 w-4" />
+                                                            </Button>
+                                                        </a>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Ver PDF</TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
 
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Link href={`/invoices/${invoice.id}/payment`}>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-7 w-7 text-muted-foreground hover:text-emerald-600"
-                                                        >
-                                                            <CreditCard className="h-4 w-4" />
-                                                        </Button>
-                                                    </Link>
-                                                </TooltipTrigger>
-                                                <TooltipContent>Registrar cobro</TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Link href={`/invoices/${invoice.id}/edit`}>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-7 w-7 text-muted-foreground hover:text-brand-1 rounded-lg"
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </Button>
+                                                        </Link>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Editar factura</TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Link href={`/invoices/${invoice.id}/payment`}>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-7 w-7 text-muted-foreground hover:text-emerald-600 rounded-lg"
+                                                            >
+                                                                <CreditCard className="h-4 w-4" />
+                                                            </Button>
+                                                        </Link>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Registrar cobro</TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
                         {invoices.length === 0 && (
                             <TableRow className="hover:bg-transparent">
-                                <TableCell colSpan={6} className="h-32 text-center text-sm text-muted-foreground">
+                                <TableCell colSpan={8} className="h-32 text-center text-sm text-muted-foreground">
                                     No hay facturas recientes
                                 </TableCell>
                             </TableRow>
@@ -225,18 +272,18 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                 </Table>
             </CardContent>
             {totalPages > 1 && (
-                <CardFooter className="flex items-center justify-between border-t py-3">
+                <CardFooter className="flex items-center justify-between border-t p-4">
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={handlePrev}
                         disabled={currentPage === 1}
-                        className="h-8 gap-1 px-2 text-xs"
+                        className="h-8 gap-1 px-2.5 text-xs font-semibold"
                     >
                         <ChevronLeft className="h-3 w-3" />
                         Anterior
                     </Button>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground font-medium">
                         Página {currentPage} de {totalPages}
                     </span>
                     <Button
@@ -244,7 +291,7 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                         size="sm"
                         onClick={handleNext}
                         disabled={currentPage === totalPages}
-                        className="h-8 gap-1 px-2 text-xs"
+                        className="h-8 gap-1 px-2.5 text-xs font-semibold"
                     >
                         Siguiente
                         <ChevronRight className="h-3 w-3" />

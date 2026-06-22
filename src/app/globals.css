@@ -53,6 +53,16 @@
   --color-surface-light: var(--surface-light);
   --color-surface-muted: var(--surface-muted);
 
+  /* Status Colors */
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+
   /* Chart colors */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -82,6 +92,16 @@
 
 :root {
   --radius: 0.5rem;
+
+  /* Status Tokens */
+  --success: #15a378;
+  --success-bg: #e9f8f1;
+  --warning: #e0901f;
+  --warning-bg: #fcf2db;
+  --info: #4178e6;
+  --info-bg: #edf2fe;
+  --danger: #ec6a64;
+  --danger-bg: #fdeeec;
 
   /* Background & Surface */
   --background: #F3F4F6;

@@ -44,24 +44,24 @@ export function DashboardHeader({ title = 'Dashboard', kpiData, recentInvoices }
         ];
         
         kpiSheet.addRow({
-            title: 'Ventas del Periodo',
+            title: 'Facturado',
             value: new Intl.NumberFormat('es-PA', { style: 'currency', currency: 'USD' }).format(kpiData.ventas.value),
             change: `${kpiData.ventas.change}%`
         });
         kpiSheet.addRow({
-            title: 'Facturas Pendientes (DGI)',
-            value: kpiData.facturasPendientes.value,
-            change: '-'
+            title: 'Cobrado',
+            value: new Intl.NumberFormat('es-PA', { style: 'currency', currency: 'USD' }).format(kpiData.cobrado.value),
+            change: `${kpiData.cobrado.change}%`
         });
         kpiSheet.addRow({
-            title: 'Cuentas por Cobrar',
-            value: new Intl.NumberFormat('es-PA', { style: 'currency', currency: 'USD' }).format(kpiData.cuentasPorCobrar.value),
-            change: '-'
+            title: 'Pendiente por Cobrar',
+            value: new Intl.NumberFormat('es-PA', { style: 'currency', currency: 'USD' }).format(kpiData.pendiente.value),
+            change: `${kpiData.pendiente.change}%`
         });
         kpiSheet.addRow({
-            title: 'Documentos Generados',
-            value: kpiData.documentosProcesados.value,
-            change: `${kpiData.documentosProcesados.change}%`
+            title: 'Vencido',
+            value: new Intl.NumberFormat('es-PA', { style: 'currency', currency: 'USD' }).format(kpiData.vencido.value),
+            change: `${kpiData.vencido.change}%`
         });
 
         // 2. Recent Invoices Sheet
