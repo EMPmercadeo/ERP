@@ -64,7 +64,7 @@ import { toast } from 'sonner';
 interface Quote {
     id: string;
     numero: string;
-    cliente: { razonSocial: string };
+    cliente: { razonSocial: string; ruc?: string; dv?: string | null };
     fechaEmision: string;
     totalNeto: number;
     estado: string;
@@ -184,19 +184,6 @@ export function QuotesList({
         setTimeout(() => toast.success('Correo enviado correctamente'), 1500);
     };
 
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'aceptada':
-                return <Badge className="bg-green-500 hover:bg-green-600">Aceptada</Badge>;
-            case 'enviada':
-                return <Badge className="bg-blue-500 hover:bg-blue-600">Enviada</Badge>;
-            case 'rechazada':
-                return <Badge variant="destructive">Rechazada</Badge>;
-            default:
-                return <Badge variant="secondary">Borrador</Badge>;
-        }
-    };
-
     const columns: ColumnDef<Quote>[] = useMemo(() => [
         {
             accessorKey: 'numero',
@@ -204,20 +191,43 @@ export function QuotesList({
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4"
+                    className="-ml-4 font-semibold"
                 >
-                    Número
+                    Documento
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
-            cell: ({ row }) => <span className="font-medium">{row.getValue('numero')}</span>,
+            cell: ({ row }) => (
+                <span className="font-mono text-xs font-bold text-brand-1 tracking-tight">
+                    {row.getValue('numero')}
+                </span>
+            ),
         },
         {
             accessorKey: 'cliente',
             header: 'Cliente',
             cell: ({ row }) => {
-                const cliente = row.getValue('cliente') as { razonSocial: string };
-                return <span>{cliente.razonSocial}</span>;
+                const cliente = row.getValue('cliente') as { razonSocial: string; ruc?: string; dv?: string | null };
+                const name = cliente.razonSocial;
+                const initials = getInitials(name) || 'CF';
+                const gradClass = palette[row.index % palette.length];
+                return (
+                    <div className="flex items-center gap-3">
+                        <div className={`w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
+                            {initials}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-foreground text-sm truncate max-w-[200px]" title={name}>
+                                {name}
+                            </span>
+                            {cliente.ruc && (
+                                <span className="text-[11px] text-muted-foreground font-mono leading-none mt-0.5">
+                                    RUC: {cliente.ruc}{cliente.dv ? `-${cliente.dv}` : ''}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                );
             },
         },
         {
@@ -226,13 +236,16 @@ export function QuotesList({
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4"
+                    className="-ml-4 font-semibold"
                 >
-                    Fecha
+                    Emisión
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
-            cell: ({ row }) => new Date(row.getValue('fechaEmision')).toLocaleDateString('es-PA'),
+            cell: ({ row }) => {
+                const date = new Date(row.getValue('fechaEmision'));
+                return <span className="font-mono text-xs font-semibold text-muted-foreground">{date.toLocaleDateString('es-PA', { day: '2-digit', month: 'short', year: 'numeric' })}</span>;
+            },
         },
         {
             accessorKey: 'totalNeto',
@@ -240,18 +253,31 @@ export function QuotesList({
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4"
+                    className="-ml-4 font-semibold"
                 >
-                    Total
+                    Monto
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
-            cell: ({ row }) => `$${(row.getValue('totalNeto') as number).toFixed(2)}`,
+            cell: ({ row }) => {
+                const value = row.getValue('totalNeto') as number;
+                return (
+                    <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
+                        {formatCurrency(value)}
+                    </span>
+                );
+            },
         },
         {
             accessorKey: 'estado',
             header: 'Estado',
-            cell: ({ row }) => getStatusBadge(row.getValue('estado')),
+            cell: ({ row }) => (
+                <StatusBadge
+                    status={row.getValue('estado')}
+                    showIcon={false}
+                    className="h-6"
+                />
+            ),
         },
         {
             id: 'actions',

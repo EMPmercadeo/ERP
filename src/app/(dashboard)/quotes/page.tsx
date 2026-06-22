@@ -52,7 +52,11 @@ export default async function QuotesPage(props: {
             orderBy: { [orderByField]: sortOrder },
             include: {
                 cliente: {
-                    select: { razonSocial: true }
+                    select: {
+                        razonSocial: true,
+                        ruc: true,
+                        dv: true
+                    }
                 }
             },
             skip,

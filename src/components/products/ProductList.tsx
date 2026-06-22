@@ -30,6 +30,7 @@ import ExcelJS from 'exceljs';
 import { ImportProductsDialog } from './ImportProductsDialog';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -104,9 +105,20 @@ export function ProductList({ initialData }: { initialData: ProductData[] }) {
     const columns: ColumnDef<ProductData>[] = useMemo(() => [
         {
             accessorKey: 'codigoInterno',
-            header: 'Código',
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    className="-ml-4 font-semibold"
+                >
+                    Código
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
             cell: ({ row }) => (
-                <span className="font-mono text-sm">{row.getValue('codigoInterno')}</span>
+                <span className="font-mono text-xs font-bold text-brand-1 tracking-tight">
+                    {row.getValue('codigoInterno')}
+                </span>
             ),
         },
         {
@@ -115,16 +127,20 @@ export function ProductList({ initialData }: { initialData: ProductData[] }) {
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4"
+                    className="-ml-4 font-semibold"
                 >
                     Producto / Servicio
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
             cell: ({ row }) => (
-                <div className="flex items-center gap-2">
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                    <span>{row.getValue('descripcion')}</span>
+                <div className="flex items-center gap-3">
+                    <div className="w-[34px] h-[34px] rounded-full flex items-center justify-center bg-info-bg text-info shrink-0 select-none">
+                        <Package className="h-4 w-4" />
+                    </div>
+                    <span className="font-semibold text-foreground text-sm truncate max-w-[240px]" title={row.getValue('descripcion')}>
+                        {row.getValue('descripcion')}
+                    </span>
                 </div>
             ),
         },
@@ -134,30 +150,44 @@ export function ProductList({ initialData }: { initialData: ProductData[] }) {
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4"
+                    className="-ml-4 font-semibold"
                 >
-                    Precio
+                    Precio Venta
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
-            cell: ({ row }) => (
-                <div>
-                    <div className="font-medium">{formatCurrency(row.getValue('precioVenta'))}</div>
-                    <div className="text-xs text-muted-foreground">
-                        Margen: {calculateMargin(row.original.costoUnitario, row.original.precioVenta).toFixed(1)}%
+            cell: ({ row }) => {
+                const cost = row.original.costoUnitario;
+                const price = row.getValue('precioVenta') as number;
+                const margin = calculateMargin(cost, price);
+                return (
+                    <div className="flex flex-col">
+                        <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
+                            {formatCurrency(price)}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground leading-none mt-0.5">
+                            Margen: {margin.toFixed(1)}%
+                        </span>
                     </div>
-                </div>
-            ),
+                );
+            },
         },
         {
             accessorKey: 'codigoTasaItbms',
             header: 'ITBMS',
             cell: ({ row }) => {
                 const code = row.getValue('codigoTasaItbms') as string;
+                const label = itbmsConfig[code] || code;
+                const isExempt = code === '00';
                 return (
-                    <Badge variant={code === '00' ? 'secondary' : 'default'}>
-                        {itbmsConfig[code] || code}
-                    </Badge>
+                    <span className={cn(
+                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border transition-colors",
+                        isExempt 
+                            ? "bg-secondary text-muted-foreground border-border hover:bg-secondary/90" 
+                            : "bg-info-bg text-info border-transparent hover:bg-info-bg/90"
+                    )}>
+                        {label}
+                    </span>
                 );
             },
         },
@@ -167,12 +197,24 @@ export function ProductList({ initialData }: { initialData: ProductData[] }) {
             cell: ({ row }) => {
                 const stock = row.getValue('stockActual') as number;
                 if (stock === 0) {
-                    return <Badge variant="destructive">Agotado</Badge>;
+                    return (
+                        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-danger-bg text-danger border-transparent">
+                            Agotado
+                        </span>
+                    );
                 }
                 if (stock < 10) {
-                    return <Badge className="bg-yellow-500 hover:bg-yellow-600">{stock} uds</Badge>;
+                    return (
+                        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-warning-bg text-warning border-transparent">
+                            {stock} uds
+                        </span>
+                    );
                 }
-                return <span>{stock} uds</span>;
+                return (
+                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-success-bg text-success border-transparent">
+                        {stock} uds
+                    </span>
+                );
             },
         },
         {
@@ -181,9 +223,14 @@ export function ProductList({ initialData }: { initialData: ProductData[] }) {
             cell: ({ row }) => {
                 const active = row.getValue('activo') as boolean;
                 return (
-                    <Badge variant={active ? 'outline' : 'destructive'} className={active ? "bg-green-50 text-green-700 border-green-200" : ""}>
+                    <span className={cn(
+                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border transition-colors",
+                        active 
+                            ? "bg-success-bg text-success border-transparent" 
+                            : "bg-danger-bg text-danger border-transparent"
+                    )}>
                         {active ? 'Activo' : 'Inactivo'}
-                    </Badge>
+                    </span>
                 );
             },
         },
