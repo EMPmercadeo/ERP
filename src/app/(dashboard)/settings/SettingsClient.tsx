@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { updateDgiSettings, updateCompanyPlan } from '@/lib/actions/settings';
+import { updateDgiSettings, updateCompanyPlan, updateIntegrationSettings } from '@/lib/actions/settings';
 
 interface SettingsClientProps {
     initialCompany: {
@@ -42,6 +42,10 @@ interface SettingsClientProps {
         subscriptionStatus: string;
         createdAt: string;
         updatedAt: string;
+        whatsappPhone?: string;
+        whatsappToken?: string;
+        webhookUrl?: string;
+        webhookToken?: string;
     };
     invoicesCount: number;
     userRole: string;
@@ -49,7 +53,7 @@ interface SettingsClientProps {
 
 export function SettingsClient({ initialCompany, invoicesCount, userRole }: SettingsClientProps) {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<'dgi' | 'users' | 'billing'>('dgi');
+    const [activeTab, setActiveTab] = useState<'dgi' | 'users' | 'billing' | 'integrations'>('dgi');
     const [company, setCompany] = useState(initialCompany);
 
     // DGI Form state
@@ -62,10 +66,17 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
     const [ambienteDgi, setAmbienteDgi] = useState(company.ambienteDgi);
     const [certificado, setCertificado] = useState<File | null>(null);
 
+    // Integrations state
+    const [whatsappPhone, setWhatsappPhone] = useState(company.whatsappPhone || '');
+    const [whatsappToken, setWhatsappToken] = useState(company.whatsappToken || '');
+    const [webhookUrl, setWebhookUrl] = useState(company.webhookUrl || '');
+    const [webhookToken, setWebhookToken] = useState(company.webhookToken || '');
+
     // Loading states
     const [estadoConexion, setEstadoConexion] = useState<'conectado' | 'desconectado' | 'probando'>('desconectado');
     const [isSaving, setIsSaving] = useState(false);
     const [isPlanLoading, setIsPlanLoading] = useState(false);
+    const [isSavingIntegrations, setIsSavingIntegrations] = useState(false);
 
     // Billing state
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
@@ -125,6 +136,36 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
             toast.error('Ocurrió un error inesperado al guardar los cambios.');
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleSaveIntegrationSettings = async () => {
+        setIsSavingIntegrations(true);
+        try {
+            const result = await updateIntegrationSettings(company.id, {
+                whatsappPhone,
+                whatsappToken,
+                webhookUrl,
+                webhookToken
+            });
+
+            if (result.success) {
+                toast.success(result.message);
+                setCompany(prev => ({
+                    ...prev,
+                    whatsappPhone,
+                    whatsappToken,
+                    webhookUrl,
+                    webhookToken
+                }));
+                router.refresh();
+            } else {
+                toast.error(result.message);
+            }
+        } catch (error) {
+            toast.error('Error al guardar las integraciones.');
+        } finally {
+            setIsSavingIntegrations(false);
         }
     };
 
@@ -321,6 +362,18 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
                             <div className="flex items-center gap-2">
                                 <CreditCard className="h-4 w-4" />
                                 Planes y Facturación
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('integrations')}
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'integrations'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                                }`}
+                        >
+                            <div className="flex items-center gap-2">
+                                <Zap className="h-4 w-4" />
+                                WhatsApp y APIs
                             </div>
                         </button>
                     </div>
@@ -751,6 +804,135 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
                                     <Button variant="outline" className="shrink-0 border-slate-300 hover:bg-slate-100">
                                         Contactar Asesor
                                     </Button>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
+
+                    {/* Integrations Tab */}
+                    {activeTab === 'integrations' && (
+                        <div className="space-y-6">
+                            {/* Info Banner */}
+                            <Card className="border-indigo-200 bg-indigo-50/5">
+                                <CardContent className="pt-6">
+                                    <div className="flex items-start gap-3">
+                                        <Sparkles className="h-5 w-5 text-indigo-600 mt-0.5" />
+                                        <div>
+                                            <h3 className="font-semibold text-indigo-950">WhatsApp API y Webhooks de Integración</h3>
+                                            <p className="text-sm text-muted-foreground mt-1">
+                                                Configura el envío automático de facturas por WhatsApp y la recepción de eventos en tiempo real mediante Webhooks.
+                                                Estas características requieren un plan de pago habilitado.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <div className="grid gap-6 lg:grid-cols-2">
+                                {/* WhatsApp Config Card */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Zap className="h-5 w-5 text-indigo-600" />
+                                            Configuración de WhatsApp API
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Permite enviar el PDF y XML de la factura directo al WhatsApp del cliente
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                                Teléfono Emisor de WhatsApp
+                                            </label>
+                                            <Input
+                                                placeholder="+507 6000-0000"
+                                                value={whatsappPhone}
+                                                onChange={(e) => setWhatsappPhone(e.target.value)}
+                                            />
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Número configurado en tu cuenta de WhatsApp Business Cloud API.
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                                API Token / Access Token
+                                            </label>
+                                            <Input
+                                                type="password"
+                                                placeholder="Token de acceso permanente de Meta"
+                                                value={whatsappToken}
+                                                onChange={(e) => setWhatsappToken(e.target.value)}
+                                            />
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Se utiliza para autenticar los mensajes enviados mediante Meta Graph API.
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Webhook Config Card */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Building className="h-5 w-5 text-indigo-600" />
+                                            Webhooks y API Web Saliente
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Envía notificaciones de eventos (Factura Autorizada, Anulada) a tus sistemas externos
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                                URL de Destino del Webhook
+                                            </label>
+                                            <Input
+                                                placeholder="https://tu-sistema.com/api/webhooks/factura"
+                                                value={webhookUrl}
+                                                onChange={(e) => setWebhookUrl(e.target.value)}
+                                            />
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Endpoint que recibirá los payloads JSON del estado de facturas.
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                                Firma Secreta del Webhook (Token)
+                                            </label>
+                                            <Input
+                                                type="password"
+                                                placeholder="Clave de seguridad para verificar autenticidad"
+                                                value={webhookToken}
+                                                onChange={(e) => setWebhookToken(e.target.value)}
+                                            />
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Enviado en la cabecera `X-Webhook-Signature` para asegurar el origen.
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+
+                            {/* Actions */}
+                            <Card>
+                                <CardContent className="pt-6">
+                                    <div className="flex justify-end gap-2">
+                                        <Button
+                                            onClick={handleSaveIntegrationSettings}
+                                            disabled={isSavingIntegrations}
+                                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                                        >
+                                            {isSavingIntegrations ? (
+                                                <>
+                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                    Guardando...
+                                                </>
+                                            ) : (
+                                                'Guardar Integraciones'
+                                            )}
+                                        </Button>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </div>

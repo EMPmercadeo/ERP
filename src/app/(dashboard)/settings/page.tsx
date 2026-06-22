@@ -44,6 +44,10 @@ export default async function SettingsPage() {
         subscriptionStatus: empresa.subscriptionStatus,
         createdAt: empresa.createdAt.toISOString(),
         updatedAt: empresa.updatedAt.toISOString(),
+        whatsappPhone: (empresa as any).whatsappPhone || '',
+        whatsappToken: (empresa as any).whatsappToken || '',
+        webhookUrl: (empresa as any).webhookUrl || '',
+        webhookToken: (empresa as any).webhookToken || '',
     };
 
     return (

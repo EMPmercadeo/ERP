@@ -81,3 +81,28 @@ export async function updateCompanyPlan(empresaId: string, planType: string) {
         return { success: false, message: 'Error al cambiar de plan.' };
     }
 }
+
+export async function updateIntegrationSettings(empresaId: string, data: {
+    whatsappPhone?: string;
+    whatsappToken?: string;
+    webhookUrl?: string;
+    webhookToken?: string;
+}) {
+    try {
+        await prisma.empresa.update({
+            where: { id: empresaId },
+            data: {
+                whatsappPhone: data.whatsappPhone || null,
+                whatsappToken: data.whatsappToken || null,
+                webhookUrl: data.webhookUrl || null,
+                webhookToken: data.webhookToken || null
+            }
+        });
+
+        revalidatePath('/settings');
+        return { success: true, message: 'Configuración de integraciones guardada correctamente.' };
+    } catch (error) {
+        console.error('Error updating integration settings:', error);
+        return { success: false, message: 'Error al guardar la configuración de integraciones.' };
+    }
+}
