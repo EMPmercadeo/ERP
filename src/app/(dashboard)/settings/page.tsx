@@ -34,7 +34,23 @@ export default async function SettingsPage() {
     let empresa;
     try {
         empresa = await prisma.empresa.findUnique({
-            where: { id: empresaId }
+            where: { id: empresaId },
+            select: {
+                id: true,
+                razonSocial: true,
+                ruc: true,
+                dv: true,
+                direccion: true,
+                ambienteDgi: true,
+                certificadoDgi: true,
+                usuarioPac: true,
+                passwordPac: true,
+                planType: true,
+                fiscalEnabled: true,
+                subscriptionStatus: true,
+                createdAt: true,
+                updatedAt: true,
+            }
         });
     } catch (err) {
         console.error('[SettingsPage] prisma.empresa.findUnique failed:', err);
@@ -78,8 +94,8 @@ export default async function SettingsPage() {
     }
 
     // Pass a clean, serializable company object
-    // Access whatsapp/webhook fields safely - they exist in the schema
-    // but may not be populated in the database yet
+    // whatsapp/webhook columns don't exist in production DB yet (migration pending)
+    // so we default them to empty strings
     const companyData = {
         id: empresa.id,
         razonSocial: empresa.razonSocial,
@@ -95,10 +111,10 @@ export default async function SettingsPage() {
         subscriptionStatus: empresa.subscriptionStatus,
         createdAt: empresa.createdAt.toISOString(),
         updatedAt: empresa.updatedAt.toISOString(),
-        whatsappPhone: empresa.whatsappPhone || '',
-        whatsappToken: empresa.whatsappToken || '',
-        webhookUrl: empresa.webhookUrl || '',
-        webhookToken: empresa.webhookToken || '',
+        whatsappPhone: '',
+        whatsappToken: '',
+        webhookUrl: '',
+        webhookToken: '',
     };
 
     return (

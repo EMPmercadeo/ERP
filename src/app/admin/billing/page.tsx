@@ -35,7 +35,13 @@ export default async function AdminBillingPage() {
 
     try {
         empresa = await prisma.empresa.findUnique({
-            where: { id: empresaId }
+            where: { id: empresaId },
+            select: {
+                id: true,
+                razonSocial: true,
+                planType: true,
+                subscriptionStatus: true,
+            }
         });
     } catch (err) {
         console.error('[AdminBillingPage] prisma.empresa.findUnique failed:', err);
