@@ -8,12 +8,37 @@ export const dynamic = 'force-dynamic';
 export default async function AdminBillingPage() {
     const { empresaId } = await getTenantContext();
 
+    if (!empresaId) {
+        return (
+            <ContentContainer className="py-8">
+                <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-900 shadow-sm max-w-2xl mx-auto my-12">
+                    <h2 className="text-xl font-bold mb-2">Identificador de Empresa Inválido</h2>
+                    <p className="text-sm">
+                        No se ha podido determinar el identificador de la empresa activa para su sesión. Por favor, intente iniciar sesión de nuevo.
+                    </p>
+                </div>
+            </ContentContainer>
+        );
+    }
+
     const empresa = await prisma.empresa.findUnique({
         where: { id: empresaId }
     });
 
     if (!empresa) {
-        throw new Error('Empresa no encontrada');
+        return (
+            <ContentContainer className="py-8">
+                <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-900 shadow-sm max-w-2xl mx-auto my-12">
+                    <h2 className="text-xl font-bold mb-2">Empresa no encontrada</h2>
+                    <p className="text-sm mb-4">
+                        No se pudo encontrar la empresa con ID <code className="bg-red-100 px-1 py-0.5 rounded">{empresaId}</code>.
+                    </p>
+                    <p className="text-sm">
+                        Si es un super administrador impersonando a otra empresa, por favor finalice la impersonación o seleccione otra empresa válida desde el panel de control.
+                    </p>
+                </div>
+            </ContentContainer>
+        );
     }
 
     // Get current calendar month start

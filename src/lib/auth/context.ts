@@ -53,9 +53,16 @@ export async function getTenantContext(): Promise<TenantContext> {
     if (devUser.rol === 'super_admin') {
         const impersonatedId = cookieStore.get('x-impersonation')?.value;
 
-        if (impersonatedId) {
-            activeEmpresaId = impersonatedId;
-            isImpersonating = true;
+        if (impersonatedId && impersonatedId !== 'undefined' && impersonatedId !== 'null' && impersonatedId !== '') {
+            // Validate that the target company actually exists in the database
+            const targetEmpresa = await prisma.empresa.findUnique({
+                where: { id: impersonatedId },
+                select: { id: true }
+            });
+            if (targetEmpresa) {
+                activeEmpresaId = impersonatedId;
+                isImpersonating = true;
+            }
         }
     }
 
