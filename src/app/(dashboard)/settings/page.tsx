@@ -6,7 +6,17 @@ import { ContentContainer } from '@/components/layout/Content';
 export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage() {
-    const { empresaId, role } = await getTenantContext();
+    let empresaId: string | undefined;
+    let role: string = '';
+
+    try {
+        const ctx = await getTenantContext();
+        empresaId = ctx.empresaId;
+        role = ctx.role;
+    } catch (err) {
+        console.error('[SettingsPage] getTenantContext failed:', err);
+        throw new Error('No se pudo verificar la sesión del usuario. Intente iniciar sesión de nuevo.');
+    }
 
     if (!empresaId) {
         return (
@@ -21,9 +31,15 @@ export default async function SettingsPage() {
         );
     }
 
-    const empresa = await prisma.empresa.findUnique({
-        where: { id: empresaId }
-    });
+    let empresa;
+    try {
+        empresa = await prisma.empresa.findUnique({
+            where: { id: empresaId }
+        });
+    } catch (err) {
+        console.error('[SettingsPage] prisma.empresa.findUnique failed:', err);
+        throw new Error('Error al conectar con la base de datos. Intente de nuevo en unos momentos.');
+    }
 
     if (!empresa) {
         return (
@@ -41,20 +57,29 @@ export default async function SettingsPage() {
         );
     }
 
-    // Get current calendar month start
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    let invoicesCount = 0;
+    try {
+        // Get current calendar month start
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const invoicesCount = await prisma.factura.count({
-        where: {
-            empresaId,
-            fechaEmision: {
-                gte: startOfMonth
+        invoicesCount = await prisma.factura.count({
+            where: {
+                empresaId,
+                fechaEmision: {
+                    gte: startOfMonth
+                }
             }
-        }
-    });
+        });
+    } catch (err) {
+        console.error('[SettingsPage] prisma.factura.count failed:', err);
+        // Non-critical - continue with 0
+        invoicesCount = 0;
+    }
 
     // Pass a clean, serializable company object
+    // Access whatsapp/webhook fields safely - they exist in the schema
+    // but may not be populated in the database yet
     const companyData = {
         id: empresa.id,
         razonSocial: empresa.razonSocial,
@@ -70,10 +95,10 @@ export default async function SettingsPage() {
         subscriptionStatus: empresa.subscriptionStatus,
         createdAt: empresa.createdAt.toISOString(),
         updatedAt: empresa.updatedAt.toISOString(),
-        whatsappPhone: (empresa as any).whatsappPhone || '',
-        whatsappToken: (empresa as any).whatsappToken || '',
-        webhookUrl: (empresa as any).webhookUrl || '',
-        webhookToken: (empresa as any).webhookToken || '',
+        whatsappPhone: empresa.whatsappPhone || '',
+        whatsappToken: empresa.whatsappToken || '',
+        webhookUrl: empresa.webhookUrl || '',
+        webhookToken: empresa.webhookToken || '',
     };
 
     return (

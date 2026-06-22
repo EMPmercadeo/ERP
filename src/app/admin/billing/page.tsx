@@ -6,7 +6,16 @@ import { AdminBillingClient } from './AdminBillingClient';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminBillingPage() {
-    const { empresaId } = await getTenantContext();
+    let empresaId: string | undefined;
+
+    try {
+        const ctx = await getTenantContext();
+        empresaId = ctx.empresaId;
+    } catch (err) {
+        console.error('[AdminBillingPage] getTenantContext failed:', err);
+        // Re-throw to let the error boundary handle it with a nice UI
+        throw new Error('No se pudo verificar la sesión del usuario. Intente iniciar sesión de nuevo.');
+    }
 
     if (!empresaId) {
         return (
@@ -21,9 +30,17 @@ export default async function AdminBillingPage() {
         );
     }
 
-    const empresa = await prisma.empresa.findUnique({
-        where: { id: empresaId }
-    });
+    let empresa;
+    let invoicesCount = 0;
+
+    try {
+        empresa = await prisma.empresa.findUnique({
+            where: { id: empresaId }
+        });
+    } catch (err) {
+        console.error('[AdminBillingPage] prisma.empresa.findUnique failed:', err);
+        throw new Error('Error al conectar con la base de datos. Intente de nuevo en unos momentos.');
+    }
 
     if (!empresa) {
         return (
@@ -41,18 +58,24 @@ export default async function AdminBillingPage() {
         );
     }
 
-    // Get current calendar month start
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    try {
+        // Get current calendar month start
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const invoicesCount = await prisma.factura.count({
-        where: {
-            empresaId,
-            fechaEmision: {
-                gte: startOfMonth
+        invoicesCount = await prisma.factura.count({
+            where: {
+                empresaId,
+                fechaEmision: {
+                    gte: startOfMonth
+                }
             }
-        }
-    });
+        });
+    } catch (err) {
+        console.error('[AdminBillingPage] prisma.factura.count failed:', err);
+        // Non-critical - continue with 0
+        invoicesCount = 0;
+    }
 
     // Pass a clean, serializable company object
     const companyData = {
