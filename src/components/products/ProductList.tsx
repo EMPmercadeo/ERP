@@ -14,6 +14,13 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
     Search,
     Plus,
     MoreHorizontal,
@@ -451,7 +458,8 @@ export function ProductList({
                 {/* Table */}
                 <Card>
                     <CardContent className="p-0">
-                        <Table>
+                        <div className="overflow-y-auto max-h-[calc(100vh-340px)] min-h-[300px] border-b">
+                            <Table>
                             <TableHeader>
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow key={headerGroup.id}>
@@ -509,6 +517,7 @@ export function ProductList({
                                 )}
                             </TableBody>
                         </Table>
+                        </div>
 
                         {/* Pagination */}
                         <div className="flex items-center justify-between border-t px-4 py-4">
@@ -522,31 +531,53 @@ export function ProductList({
                                     Página {currentPage} de {pageCount || 1}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        const query = createQueryString({ page: String(currentPage - 1) });
-                                        router.push(`${pathname}?${query}`);
-                                    }}
-                                    disabled={currentPage <= 1}
-                                >
-                                    <ChevronLeft className="h-4 w-4" />
-                                    Anterior
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        const query = createQueryString({ page: String(currentPage + 1) });
-                                        router.push(`${pathname}?${query}`);
-                                    }}
-                                    disabled={currentPage >= pageCount}
-                                >
-                                    Siguiente
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span className="hidden sm:inline">Filas por página:</span>
+                                    <Select
+                                        value={String(pageSize)}
+                                        onValueChange={(val) => {
+                                            const query = createQueryString({ limit: val, page: '1' });
+                                            router.push(`${pathname}?${query}`);
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-8 w-[70px]">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="20">20</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                            <SelectItem value="100">100</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const query = createQueryString({ page: String(currentPage - 1) });
+                                            router.push(`${pathname}?${query}`);
+                                        }}
+                                        disabled={currentPage <= 1}
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                        Anterior
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const query = createQueryString({ page: String(currentPage + 1) });
+                                            router.push(`${pathname}?${query}`);
+                                        }}
+                                        disabled={currentPage >= pageCount}
+                                    >
+                                        Siguiente
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </CardContent>

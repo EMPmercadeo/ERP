@@ -190,3 +190,33 @@ export async function createInvoice(prevState: any, formData: FormData) {
     revalidatePath('/invoices');
     redirect('/invoices');
 }
+
+export async function voidInvoice(id: string) {
+    try {
+        const invoice = await prisma.factura.findUnique({
+            where: { id }
+        });
+
+        if (!invoice) {
+            return { success: false, message: 'Factura no encontrada.' };
+        }
+
+        if (invoice.estadoDgi === 'anulada') {
+            return { success: false, message: 'La factura ya está anulada.' };
+        }
+
+        await prisma.factura.update({
+            where: { id },
+            data: {
+                estadoDgi: 'anulada',
+                saldoPendiente: 0
+            }
+        });
+
+        revalidatePath('/invoices');
+        return { success: true, message: 'Factura anulada correctamente (Nota de Crédito aplicada).' };
+    } catch (error) {
+        console.error('Void invoice error:', error);
+        return { success: false, message: 'Error al intentar anular la factura. ' + (error instanceof Error ? error.message : '') };
+    }
+}

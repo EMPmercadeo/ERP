@@ -60,6 +60,8 @@ import {
 import { saveAs } from 'file-saver';
 import ExcelJS from 'exceljs';
 import { ImportInvoicesDialog } from './ImportInvoicesDialog';
+import { toast } from 'sonner';
+import { voidInvoice } from '@/lib/actions/invoices';
 
 export interface InvoiceData {
     id: string;
@@ -132,6 +134,48 @@ export function InvoiceList({
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [globalFilter, setGlobalFilter] = useState(initialSearch);
     const [statusFilter, setStatusFilter] = useState<string>(initialStatus);
+
+    const handleVoid = async (id: string) => {
+        if (confirm('¿Estás seguro de que deseas anular esta factura? Se generará una Nota de Crédito en el sistema y el saldo pendiente pasará a $0.00.')) {
+            try {
+                const res = await voidInvoice(id);
+                if (res.success) {
+                    toast.success(res.message);
+                    router.refresh();
+                } else {
+                    toast.error(res.message);
+                }
+            } catch (error) {
+                toast.error('Error al intentar anular la factura.');
+            }
+        }
+    };
+
+    const handleDownloadXml = (invoice: InvoiceData) => {
+        const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<rDE xmlns="http://dgi.mef.gob.pa/DocumentoElectronico" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <dVerFor>1.00</dVerFor>
+    <gDE>
+        <dNumDoc>${invoice.numeroCompleto}</dNumDoc>
+        <dFecEmis>${invoice.fechaEmision}</dFecEmis>
+        <gEmis>
+            <dNombEmis>Tu Empresa S.A.</dNombEmis>
+            <dRucEmis>123456-1-123456</dRucEmis>
+        </gEmis>
+        <gRecep>
+            <dNombRec>${invoice.clientName}</dNombRec>
+            <dRucRec>${invoice.clientRuc}</dRucRec>
+        </gRecep>
+        <gTot>
+            <dTotNet>${invoice.totalNeto}</dTotNet>
+            <dTotSal>${invoice.saldoPendiente}</dTotSal>
+        </gTot>
+    </gDE>
+</rDE>`;
+        const blob = new Blob([xmlContent], { type: 'application/xml' });
+        saveAs(blob, `factura-${invoice.numeroCompleto}.xml`);
+        toast.success('XML de Factura Electrónica descargado');
+    };
 
     const createQueryString = (params: Record<string, string | null>) => {
         const newParams = new URLSearchParams(searchParams.toString());
@@ -313,22 +357,22 @@ export function InvoiceList({
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/invoices/${invoice.id}`)}>
                                 <Eye className="mr-2 h-4 w-4" />
                                 Ver detalle
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/invoices/${invoice.id}?print=true`)}>
                                 <Printer className="mr-2 h-4 w-4" />
                                 Imprimir
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDownloadXml(invoice)}>
                                 <Download className="mr-2 h-4 w-4" />
                                 Descargar XML
                             </DropdownMenuItem>
                             {invoice.estadoDgi === 'aceptada' && (
                                 <>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="text-destructive">
+                                    <DropdownMenuItem className="text-destructive" onClick={() => handleVoid(invoice.id)}>
                                         <FileX className="mr-2 h-4 w-4" />
                                         Anular (crear NC)
                                     </DropdownMenuItem>
@@ -486,7 +530,8 @@ export function InvoiceList({
                 {/* Table */}
                 <Card>
                     <CardContent className="p-0">
-                        <Table>
+                        <div className="overflow-y-auto max-h-[calc(100vh-340px)] min-h-[300px] border-b">
+                            <Table>
                             <TableHeader>
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow key={headerGroup.id}>
@@ -545,6 +590,7 @@ export function InvoiceList({
                                 )}
                             </TableBody>
                         </Table>
+                        </div>
 
                         {/* Pagination */}
                         <div className="flex items-center justify-between border-t px-4 py-4">
@@ -558,31 +604,53 @@ export function InvoiceList({
                                     Página {currentPage} de {pageCount || 1}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        const query = createQueryString({ page: String(currentPage - 1) });
-                                        router.push(`${pathname}?${query}`);
-                                    }}
-                                    disabled={currentPage <= 1}
-                                >
-                                    <ChevronLeft className="h-4 w-4" />
-                                    Anterior
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        const query = createQueryString({ page: String(currentPage + 1) });
-                                        router.push(`${pathname}?${query}`);
-                                    }}
-                                    disabled={currentPage >= pageCount}
-                                >
-                                    Siguiente
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span className="hidden sm:inline">Filas por página:</span>
+                                    <Select
+                                        value={String(pageSize)}
+                                        onValueChange={(val) => {
+                                            const query = createQueryString({ limit: val, page: '1' });
+                                            router.push(`${pathname}?${query}`);
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-8 w-[70px]">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="20">20</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                            <SelectItem value="100">100</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const query = createQueryString({ page: String(currentPage - 1) });
+                                            router.push(`${pathname}?${query}`);
+                                        }}
+                                        disabled={currentPage <= 1}
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                        Anterior
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const query = createQueryString({ page: String(currentPage + 1) });
+                                            router.push(`${pathname}?${query}`);
+                                        }}
+                                        disabled={currentPage >= pageCount}
+                                    >
+                                        Siguiente
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </CardContent>
