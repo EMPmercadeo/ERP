@@ -1,0 +1,309 @@
+/* ═══════════════════════ ERP Panamá · app logic ═══════════════════════ */
+(function () {
+  "use strict";
+
+  /* ── data ── */
+  const fmt = v => new Intl.NumberFormat("es-PA", { style: "currency", currency: "USD" }).format(v);
+  const fmtPlain = v => new Intl.NumberFormat("es-PA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+
+  const summary = { facturado: 84720.5, cobrado: 61340, pendiente: 23380.5, vencido: 8910.25,
+    facturadoChange: 12.4, cobradoChange: 8.1, pendienteChange: -3.2, vencidoChange: 5.6 };
+  const trend = [
+    { mes: "Ene", facturado: 52100, cobrado: 47800 }, { mes: "Feb", facturado: 61450, cobrado: 55200 },
+    { mes: "Mar", facturado: 58900, cobrado: 56100 }, { mes: "Abr", facturado: 72300, cobrado: 64900 },
+    { mes: "May", facturado: 69800, cobrado: 60500 }, { mes: "Jun", facturado: 84720, cobrado: 61340 }];
+  const sparks = { facturado: [52,61,59,72,70,85], cobrado: [48,55,56,65,60,61], pendiente: [30,28,33,26,29,23], vencido: [4,6,5,7,6,9] };
+  const invoices = [
+    { id:"FE-001-2024-0042", cliente:"Distribuidora Istmo S.A.",   ruc:"155712345-2-2024", fecha:"18 jun 2024", monto:12480.9, saldo:0,        dgi:"aceptada",   pago:"pagada"   },
+    { id:"FE-001-2024-0041", cliente:"Ferretería La Cadena",        ruc:"8-912-2045",       fecha:"18 jun 2024", monto:3240,    saldo:3240,     dgi:"aceptada",   pago:"pendiente"},
+    { id:"FE-001-2024-0040", cliente:"Corporación Vista Mar",       ruc:"155698712-2-2023", fecha:"17 jun 2024", monto:28950.5, saldo:14475.25, dgi:"aceptada",   pago:"parcial"  },
+    { id:"FE-001-2024-0039", cliente:"Importadora Centenario",      ruc:"2155489-1-789456", fecha:"17 jun 2024", monto:6720,    saldo:6720,     dgi:"procesando", pago:"pendiente"},
+    { id:"FE-001-2024-0038", cliente:"Servicios Técnicos Pacífico", ruc:"8-754-1290",       fecha:"15 jun 2024", monto:1890.75, saldo:1890.75,  dgi:"rechazada",  pago:"pendiente"},
+    { id:"FE-001-2024-0037", cliente:"Hotelera Casco Viejo",        ruc:"155701234-2-2024", fecha:"14 jun 2024", monto:9450,    saldo:9450,     dgi:"aceptada",   pago:"vencida"  },
+    { id:"FE-001-2024-0036", cliente:"Agropecuaria Chiriquí",       ruc:"4-128-9087",       fecha:"13 jun 2024", monto:15200,   saldo:0,        dgi:"aceptada",   pago:"pagada"   },
+    { id:"FB-001-2024-0035", cliente:"Consumidor Final",            ruc:"—",                fecha:"12 jun 2024", monto:480.5,   saldo:0,        dgi:"borrador",   pago:"pendiente"}];
+  const clients = [
+    { nombre:"Distribuidora Istmo S.A.", ruc:"155712345-2-2024", facturas:42, total:184250.9, saldo:12480.9, estado:"activo" },
+    { nombre:"Corporación Vista Mar",    ruc:"155698712-2-2023", facturas:31, total:142800.0, saldo:14475.25, estado:"activo" },
+    { nombre:"Agropecuaria Chiriquí",    ruc:"4-128-9087",       facturas:27, total:98600.5,  saldo:0,       estado:"activo" },
+    { nombre:"Ferretería La Cadena",     ruc:"8-912-2045",       facturas:19, total:64200.0,  saldo:3240.0,  estado:"activo" },
+    { nombre:"Hotelera Casco Viejo",     ruc:"155701234-2-2024", facturas:14, total:51900.0,  saldo:9450.0,  estado:"moroso" },
+    { nombre:"Importadora Centenario",   ruc:"2155489-1-789456", facturas:11, total:38740.0,  saldo:6720.0,  estado:"activo" }];
+
+  /* ── helpers ── */
+  const palette = ["#3b7bd6","#15a378","#e0901f","#7c5cff","#ec6a64","#2a9bdb"];
+  const initials = n => n.split(" ").filter(w => w[0] && /[A-ZÁÉÍÓÚ]/i.test(w[0])).slice(0,2).map(w => w[0]).join("").toUpperCase() || "CF";
+  function avatar(name, i, size) {
+    const c1 = palette[i % palette.length], c2 = palette[(i + 2) % palette.length];
+    return `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.38)}px;background:linear-gradient(145deg,${c1},${c2})">${initials(name)}</div>`;
+  }
+  const dgiMap = {
+    aceptada:["b-green","check-circle-2","Aceptada"], procesando:["b-blue","loader-2","Procesando"],
+    pendiente:["b-amber","clock","Pendiente"], rechazada:["b-red","x-circle","Rechazada"], borrador:["b-gray","file-edit","Borrador"]};
+  const pagoMap = {
+    pagada:["b-green","Pagada"], pendiente:["b-amber","Pendiente"], parcial:["b-blue","Pago Parcial"], vencida:["b-red","Vencida"]};
+  const dgiBadge = k => { const d = dgiMap[k]; return `<span class="badge ${d[0]}"><i data-lucide="${d[1]}"${k==="procesando"?' class="spin"':''}></i>${d[2]}</span>`; };
+  const pagoBadge = k => { const p = pagoMap[k]; return `<span class="badge ${p[0]}">${p[1]}</span>`; };
+
+  const up = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>`;
+  const dn = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+
+  function smooth(pts){
+    if(pts.length<2) return "";
+    let d = `M ${pts[0][0]},${pts[0][1]}`;
+    for(let i=0;i<pts.length-1;i++){
+      const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2;
+      const c1x=p1[0]+(p2[0]-p0[0])/6, c1y=p1[1]+(p2[1]-p0[1])/6;
+      const c2x=p2[0]-(p3[0]-p1[0])/6, c2y=p2[1]-(p3[1]-p1[1])/6;
+      d += ` C ${c1x},${c1y} ${c2x},${c2y} ${p2[0]},${p2[1]}`;
+    }
+    return d;
+  }
+  function spark(points,color,id){
+    const w=200,h=54,max=Math.max(...points),min=Math.min(...points),pad=6;
+    const pts=points.map((p,i)=>[pad+i*(w-pad*2)/(points.length-1), h-pad-((p-min)/((max-min)||1))*(h-pad*2)]);
+    const d=smooth(pts), area=`${d} L ${pts[pts.length-1][0]},${h} L ${pts[0][0]},${h} Z`;
+    return `<svg class="kpi__spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+      <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${color}" stop-opacity=".28"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+      <path d="${area}" fill="url(#${id})"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+
+  /* ── screen: DASHBOARD ── */
+  const PERIODS = ["Hoy","7 días","Este mes","Trimestre","Año"];
+  const kpiDefs = [
+    {label:"Facturado",val:summary.facturado,chg:summary.facturadoChange,icon:"dollar-sign",cls:"chip-blue",spark:"facturado",col:"#ffffff",hero:true,inverse:false},
+    {label:"Cobrado",val:summary.cobrado,chg:summary.cobradoChange,icon:"check-circle-2",cls:"chip-green",spark:"cobrado",col:"#15a378",inverse:false},
+    {label:"Pendiente por Cobrar",val:summary.pendiente,chg:summary.pendienteChange,icon:"clock",cls:"chip-amber",spark:"pendiente",col:"#e0901f",inverse:true},
+    {label:"Vencido",val:summary.vencido,chg:summary.vencidoChange,icon:"alert-triangle",cls:"chip-red",spark:"vencido",col:"#ec6a64",inverse:true}];
+
+  function dashboardHTML(){
+    const kpis = kpiDefs.map((k,idx)=>{
+      const pos = k.chg>=0;
+      const cls = k.inverse ? (pos?"delta--down":"delta--up") : (pos?"delta--up":"delta--down");
+      return `<div class="kpi ${k.hero?'kpi--hero':''}">
+        <div class="kpi__top"><span class="kpi__label">${k.label}</span><span class="kpi__chip ${k.cls}"><i data-lucide="${k.icon}"></i></span></div>
+        <div class="kpi__value"><span class="cur">USD</span>${fmtPlain(k.val)}</div>
+        <div class="kpi__foot"><span class="delta ${cls}">${pos?up:dn}${Math.abs(k.chg)}%</span><span class="kpi__note">vs. mayo</span></div>
+        ${spark(sparks[k.spark],k.col,'sp'+idx)}</div>`;
+    }).join("");
+
+    const rows = invoices.map((v,i)=>`<tr>
+      <td class="id-cell">${v.id}</td>
+      <td><div class="cust">${avatar(v.cliente,i,34)}<div><div class="nm">${v.cliente}</div><div class="ruc">${v.ruc}</div></div></div></td>
+      <td class="date-cell">${v.fecha}</td>
+      <td class="r amt">${fmt(v.monto)}</td>
+      <td class="r saldo" style="color:${v.saldo>0?'#e0901f':'#9aa7bd'}">${v.saldo>0?fmt(v.saldo):"—"}</td>
+      <td>${dgiBadge(v.dgi)}</td><td>${pagoBadge(v.pago)}</td>
+      <td class="r"><div class="row-act"><button title="Ver"><i data-lucide="eye"></i></button><button title="Descargar PDF"><i data-lucide="download"></i></button></div></td>
+    </tr>`).join("");
+
+    return `
+    <div class="pagehead">
+      <div><h1>¡Hola, María! <span class="wave">👋</span></h1><p>Esto es lo que pasó en <b>junio 2024</b> · facturación y cobros al día de hoy.</p></div>
+      <div class="head-actions"><button class="btn btn--ghost" data-act="newclient"><i data-lucide="user-plus"></i>Nuevo Cliente</button><button class="btn btn--primary" data-act="newinvoice"><i data-lucide="plus"></i>Nueva Factura</button></div>
+    </div>
+    <div class="seg" id="seg">${PERIODS.map((p,i)=>`<button class="${i===2?'is-active':''}">${p}</button>`).join("")}</div>
+    <div class="kpis">${kpis}</div>
+    <div class="grid-8-4">
+      <section class="card">
+        <div class="card__head">
+          <div><div class="card__title">Tendencia de Ventas</div><div class="card__sub">Facturado vs. cobrado · últimos 6 meses</div></div>
+          <div class="legend"><span><i style="background:linear-gradient(135deg,#2563eb,#2a9bdb)"></i>Facturado</span><span><i style="background:#15a378"></i>Cobrado</span></div>
+        </div>
+        <div class="chart-wrap"><svg id="trend" viewBox="0 0 760 366" preserveAspectRatio="none"></svg><div class="tip" id="tip"></div></div>
+      </section>
+      <section class="card">
+        <div class="card__head"><div><div class="card__title">Estado DGI</div><div class="card__sub">Validación fiscal del mes</div></div></div>
+        <div class="donut-wrap"><div class="donut"><svg width="188" height="188" viewBox="0 0 188 188" id="donut"></svg><div class="donut__center"><div class="num">128</div><div class="lbl">documentos</div></div></div></div>
+        <div class="dgi-list" id="dgiList"></div>
+      </section>
+    </div>
+    <section class="card">
+      <div class="card__head"><div><div class="card__title">Facturas Recientes</div><div class="card__sub">Últimos documentos emitidos</div></div><a class="link" data-screen-link="facturas">Ver todas <i data-lucide="arrow-right"></i></a></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Documento</th><th>Cliente</th><th>Emisión</th><th class="r">Monto</th><th class="r">Saldo</th><th>DGI</th><th>Pago</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    </section>`;
+  }
+
+  function initDashboard(){
+    // segmented control
+    const seg = document.getElementById("seg");
+    seg && seg.addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return;
+      seg.querySelectorAll("button").forEach(x => x.classList.remove("is-active")); b.classList.add("is-active"); });
+
+    // trend chart
+    const W=760,H=366,L=52,R=18,T=24,B=42, iw=W-L-R, ih=H-T-B;
+    const max=Math.ceil(Math.max(...trend.map(d=>d.facturado))/10000)*10000;
+    const x=i=>L+i*iw/(trend.length-1), y=v=>T+ih-(v/max)*ih;
+    const fact=trend.map((d,i)=>[x(i),y(d.facturado)]), cobr=trend.map((d,i)=>[x(i),y(d.cobrado)]);
+    let g="";
+    for(let i=0;i<=4;i++){const gy=T+ih*i/4, val=max-(max/4)*i;
+      g+=`<line x1="${L}" y1="${gy}" x2="${W-R}" y2="${gy}" stroke="#eef1f6" stroke-width="1"/><text x="${L-12}" y="${gy+4}" text-anchor="end" font-size="11" fill="#9aa7bd" font-family="Geist Mono">${val/1000}k</text>`;}
+    trend.forEach((d,i)=>{g+=`<text x="${x(i)}" y="${H-14}" text-anchor="middle" font-size="12" fill="#6b7a92" font-weight="500">${d.mes}</text>`;});
+    const dF=smooth(fact), dC=smooth(cobr), areaF=`${dF} L ${fact[fact.length-1][0]},${T+ih} L ${fact[0][0]},${T+ih} Z`;
+    let dots="";
+    trend.forEach((d,i)=>{dots+=`<circle cx="${x(i)}" cy="${y(d.cobrado)}" r="4" fill="#fff" stroke="#15a378" stroke-width="2.5"/><circle cx="${x(i)}" cy="${y(d.facturado)}" r="4.5" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>`;});
+    let hot="";
+    trend.forEach((d,i)=>{hot+=`<rect class="hot" data-i="${i}" x="${x(i)-iw/trend.length/2}" y="${T}" width="${iw/trend.length}" height="${ih}" fill="transparent"/>`;});
+    const svg = document.getElementById("trend");
+    svg.innerHTML = `<defs><linearGradient id="gF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2563eb" stop-opacity=".24"/><stop offset="1" stop-color="#2563eb" stop-opacity="0"/></linearGradient>
+      <linearGradient id="gline" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#2a9bdb"/></linearGradient></defs>
+      ${g}<path d="${areaF}" fill="url(#gF)"/><path d="${dC}" fill="none" stroke="#15a378" stroke-width="2.6" stroke-dasharray="5 5" stroke-linecap="round"/>
+      <path d="${dF}" fill="none" stroke="url(#gline)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>${dots}${hot}`;
+    const tip = document.getElementById("tip");
+    svg.querySelectorAll(".hot").forEach(r=>{
+      r.addEventListener("mouseenter",()=>{const i=+r.dataset.i,d=trend[i];
+        tip.innerHTML=`<div style="font-weight:600;margin-bottom:2px">${d.mes} 2024</div>
+          <div class="tl"><i style="background:#2a9bdb"></i>Facturado <b style="margin-left:auto;padding-left:10px">${fmt(d.facturado)}</b></div>
+          <div class="tl"><i style="background:#15a378"></i>Cobrado <b style="margin-left:auto;padding-left:10px">${fmt(d.cobrado)}</b></div>`;
+        const rect=svg.getBoundingClientRect();
+        tip.style.left=(x(i)/W)*rect.width+"px"; tip.style.top=((y(d.facturado)/H)*rect.height-18)+"px";
+        tip.style.transform="translate(-50%,-100%)"; tip.style.opacity="1";});
+      r.addEventListener("mouseleave",()=>tip.style.opacity="0");
+    });
+
+    // donut
+    const segs=[{nm:"Aceptada",ct:103,color:"#15a378"},{nm:"Procesando",ct:12,color:"#4178e6"},{nm:"Pendiente",ct:8,color:"#e0901f"},{nm:"Rechazada",ct:5,color:"#ec6a64"}];
+    const total=segs.reduce((s,x)=>s+x.ct,0), cx=94,cy=94,rr=72,C=2*Math.PI*rr;
+    let off=0,ds="";
+    segs.forEach(s=>{const len=s.ct/total*C; ds+=`<circle cx="${cx}" cy="${cy}" r="${rr}" fill="none" stroke="${s.color}" stroke-width="20" stroke-dasharray="${len-3} ${C-len+3}" stroke-dashoffset="${-off}" stroke-linecap="round"/>`; off+=len;});
+    document.getElementById("donut").innerHTML=`<circle cx="${cx}" cy="${cy}" r="${rr}" fill="none" stroke="#f1f4f9" stroke-width="20"/>${ds}`;
+    document.getElementById("dgiList").innerHTML=segs.map(s=>`<div class="dgi-row"><i style="background:${s.color}"></i><span class="nm">${s.nm}</span><span class="ct">${s.ct}</span><span class="pc">${Math.round(s.ct/total*100)}%</span></div>`).join("");
+  }
+
+  /* ── screen: FACTURAS ── */
+  const FTABS = [["todas","Todas"],["pendiente","Pendientes"],["parcial","Pago parcial"],["vencida","Vencidas"],["pagada","Pagadas"]];
+  function invoiceRows(list){
+    return list.map((v,i)=>`<tr>
+      <td class="id-cell">${v.id}</td>
+      <td><div class="cust">${avatar(v.cliente,i,34)}<div><div class="nm">${v.cliente}</div><div class="ruc">${v.ruc}</div></div></div></td>
+      <td class="date-cell">${v.fecha}</td>
+      <td class="r amt">${fmt(v.monto)}</td>
+      <td class="r saldo" style="color:${v.saldo>0?'#e0901f':'#9aa7bd'}">${v.saldo>0?fmt(v.saldo):"—"}</td>
+      <td>${dgiBadge(v.dgi)}</td><td>${pagoBadge(v.pago)}</td>
+      <td class="r"><div class="row-act"><button title="Ver detalles"><i data-lucide="eye"></i></button><button title="Ver PDF"><i data-lucide="file-text"></i></button><button title="Registrar cobro"><i data-lucide="credit-card"></i></button></div></td>
+    </tr>`).join("");
+  }
+  function facturasHTML(){
+    const cnt = k => k==="todas" ? invoices.length : invoices.filter(x=>x.pago===k).length;
+    return `
+    <div class="pagehead">
+      <div><h1>Facturas</h1><p>Gestión de documentos electrónicos emitidos · <b>${invoices.length}</b> en junio.</p></div>
+      <div class="head-actions"><button class="btn btn--ghost"><i data-lucide="download"></i>Exportar</button><button class="btn btn--primary" data-act="newinvoice"><i data-lucide="plus"></i>Nueva Factura</button></div>
+    </div>
+    <section class="card">
+      <div class="listbar">
+        <div class="tabs" id="ftabs">${FTABS.map(([k,l],i)=>`<button class="tab ${i===0?'is-active':''}" data-tab="${k}">${l}<span class="cnt">${cnt(k)}</span></button>`).join("")}</div>
+        <label class="search search--inline"><i data-lucide="search"></i><input placeholder="Buscar…" /></label>
+      </div>
+      <div class="tbl-wrap"><table><thead><tr><th>Documento</th><th>Cliente</th><th>Emisión</th><th class="r">Monto</th><th class="r">Saldo</th><th>DGI</th><th>Pago</th><th></th></tr></thead><tbody id="ftbody">${invoiceRows(invoices)}</tbody></table></div>
+    </section>`;
+  }
+  function initFacturas(){
+    const tabs = document.getElementById("ftabs"), body = document.getElementById("ftbody");
+    tabs.addEventListener("click", e=>{const b=e.target.closest(".tab"); if(!b) return;
+      tabs.querySelectorAll(".tab").forEach(x=>x.classList.remove("is-active")); b.classList.add("is-active");
+      const k=b.dataset.tab, list=k==="todas"?invoices:invoices.filter(x=>x.pago===k);
+      body.innerHTML=invoiceRows(list); window.lucide && lucide.createIcons();});
+  }
+
+  /* ── screen: CLIENTES ── */
+  function clientesHTML(){
+    const rows = clients.map((c,i)=>`<tr>
+      <td><div class="cust">${avatar(c.nombre,i,34)}<div class="nm">${c.nombre}</div></div></td>
+      <td class="ruc-cell">${c.ruc}</td>
+      <td class="r num-cell">${c.facturas}</td>
+      <td class="r amt">${fmt(c.total)}</td>
+      <td class="r saldo" style="color:${c.saldo>0?'#e0901f':'#9aa7bd'}">${c.saldo>0?fmt(c.saldo):"—"}</td>
+      <td>${c.estado==="moroso"?'<span class="badge b-red b-auto">Moroso</span>':'<span class="badge b-green b-auto">Activo</span>'}</td>
+      <td class="r"><div class="row-act"><button title="Ver"><i data-lucide="eye"></i></button><button title="Editar"><i data-lucide="pencil"></i></button></div></td>
+    </tr>`).join("");
+    return `
+    <div class="pagehead">
+      <div><h1>Clientes</h1><p><b>${clients.length}</b> clientes registrados.</p></div>
+      <div class="head-actions"><button class="btn btn--ghost"><i data-lucide="upload"></i>Importar</button><button class="btn btn--primary" data-act="newclient"><i data-lucide="user-plus"></i>Nuevo Cliente</button></div>
+    </div>
+    <section class="card"><div class="tbl-wrap"><table><thead><tr><th>Cliente</th><th>RUC</th><th class="r">Facturas</th><th class="r">Total Facturado</th><th class="r">Saldo</th><th>Estado</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+  }
+
+  /* ── empty modules ── */
+  const META = {
+    cotizaciones:["file-edit","Cotizaciones","Crea y envía cotizaciones que se convierten en factura con un clic."],
+    productos:["package","Productos","Administra tu catálogo de productos y servicios con precios e ITBMS."],
+    reportes:["bar-chart-3","Reportes","Analítica de ventas, cobros y cuentas por cobrar."],
+    config:["settings","Configuración","Datos de tu empresa, RUC, conexión DGI y usuarios."],
+    ayuda:["life-buoy","Ayuda","Guías, soporte y documentación de ERP Panamá."]};
+  function emptyHTML(key){
+    const m = META[key];
+    return `<div class="empty"><div class="empty__chip"><i data-lucide="${m[0]}"></i></div><h2>${m[1]}</h2><p>${m[2]}</p><div style="margin-top:8px"><button class="btn btn--primary btn--sm" style="min-width:0"><i data-lucide="sparkles"></i>Módulo en desarrollo</button></div></div>`;
+  }
+
+  /* ── modal: Nueva Factura ── */
+  function openModal(){
+    const root = document.getElementById("modal-root");
+    root.innerHTML = `<div class="overlay" id="overlay"><div class="modal" id="modal">
+      <div class="modal__head"><div><div class="modal__title">Nueva Factura Electrónica</div><div class="card__sub">Los datos se transmiten a la DGI al emitir.</div></div><button class="icon-btn" data-close style="width:38px;height:38px"><i data-lucide="x"></i></button></div>
+      <div class="modal__body">
+        <div class="form-grid">
+          <div class="field"><span class="field__label">Cliente<em>*</em></span><input class="input" list="clientlist" placeholder="Buscar cliente o RUC…" value="Distribuidora Istmo S.A." /><datalist id="clientlist">${clients.map(c=>`<option value="${c.nombre}"></option>`).join("")}</datalist></div>
+          <div class="field"><span class="field__label">Tipo de documento<em>*</em></span><input class="input" value="Factura electrónica (FE)" readonly /></div>
+          <div class="field"><span class="field__label">Fecha de emisión<em>*</em></span><input class="input" type="date" value="2024-06-18" /></div>
+          <div class="field"><span class="field__label">Condición de pago</span><input class="input" value="Crédito 30 días" /></div>
+        </div>
+        <div class="lineitems">
+          <div class="li-head"><span>Detalle</span><span class="num">Cant.</span><span class="num">Precio</span><span class="num">ITBMS</span><span class="num">Total</span></div>
+          <div class="li-row"><input class="input" value="Servicio de consultoría" /><input class="input num" value="1" /><input class="input num" value="1,200.00" /><input class="input num" value="7%" /><span class="amt mono">$1,284.00</span></div>
+          <button class="additem"><i data-lucide="plus"></i>Agregar línea</button>
+        </div>
+        <div class="totals">
+          <div><span>Subtotal</span><span class="amt mono">$1,200.00</span></div>
+          <div><span>ITBMS (7%)</span><span class="amt mono">$84.00</span></div>
+          <div class="totals__grand"><span>Total</span><span class="amt mono">$1,284.00</span></div>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <span class="badge b-blue b-auto"><i data-lucide="shield-check"></i>Se validará con la DGI</span>
+        <div class="modal__foot-actions"><button class="btn btn--ghost btn--sm" data-close>Cancelar</button><button class="btn btn--ghost btn--sm">Guardar borrador</button><button class="btn btn--primary btn--sm" data-close><i data-lucide="send"></i>Emitir factura</button></div>
+      </div>
+    </div></div>`;
+    const overlay = document.getElementById("overlay");
+    overlay.addEventListener("click", e=>{ if(e.target===overlay || e.target.closest("[data-close]")) closeModal(); });
+    document.addEventListener("keydown", escClose);
+    window.lucide && lucide.createIcons();
+  }
+  function escClose(e){ if(e.key==="Escape") closeModal(); }
+  function closeModal(){
+    const overlay = document.getElementById("overlay"); if(!overlay) return;
+    overlay.classList.add("closing");
+    document.removeEventListener("keydown", escClose);
+    setTimeout(()=>{ document.getElementById("modal-root").innerHTML=""; }, 150);
+  }
+
+  /* ── router ── */
+  const CRUMB = { dashboard:"Dashboard", facturas:"Facturas", cotizaciones:"Cotizaciones", clientes:"Clientes",
+    productos:"Productos", reportes:"Reportes", config:"Configuración", ayuda:"Ayuda" };
+  function setScreen(name){
+    const screen = document.getElementById("screen"), scroll = document.querySelector(".scroll");
+    if(name==="dashboard") screen.innerHTML = dashboardHTML();
+    else if(name==="facturas") screen.innerHTML = facturasHTML();
+    else if(name==="clientes") screen.innerHTML = clientesHTML();
+    else screen.innerHTML = emptyHTML(name);
+    document.getElementById("crumb").textContent = CRUMB[name] || "ERP";
+    document.querySelectorAll(".nav__item").forEach(n => n.classList.toggle("is-active", n.dataset.screen===name));
+    if(name==="dashboard") initDashboard();
+    if(name==="facturas") initFacturas();
+    scroll.scrollTop = 0;
+    window.lucide && lucide.createIcons();
+  }
+
+  /* ── wire global events ── */
+  document.addEventListener("click", e=>{
+    const nav = e.target.closest(".nav__item"); if(nav){ setScreen(nav.dataset.screen); return; }
+    const link = e.target.closest("[data-screen-link]"); if(link){ setScreen(link.dataset.screenLink); return; }
+    const act = e.target.closest("[data-act]");
+    if(act){ if(act.dataset.act==="newinvoice") openModal();
+      else if(act.dataset.act==="newclient") setScreen("clientes"); }
+  });
+
+  setScreen("dashboard");
+})();

@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Badge, badgeVariants } from "./badge"
-import { CheckCircle2, Clock, XCircle, AlertCircle, Ban, Loader2, FileEdit, HelpCircle } from "lucide-react"
+import { CheckCircle2, Clock, XCircle, AlertCircle, Ban, Loader2, FileEdit, HelpCircle, Send } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { type VariantProps } from "class-variance-authority"
 
@@ -65,6 +65,28 @@ const statusConfig: Record<string, {
         variant: "destructive",
         icon: AlertCircle,
     },
+    // Client statuses
+    activo: {
+        label: "Activo",
+        variant: "success",
+        icon: CheckCircle2,
+    },
+    moroso: {
+        label: "Moroso",
+        variant: "warning",
+        icon: Clock,
+    },
+    bloqueado: {
+        label: "Bloqueado",
+        variant: "destructive",
+        icon: XCircle,
+    },
+    // Quote statuses
+    enviada: {
+        label: "Enviada",
+        variant: "info",
+        icon: Send,
+    },
 }
 
 const statusClassMap: Record<string, string> = {
@@ -79,6 +101,12 @@ const statusClassMap: Record<string, string> = {
     pagada: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
     parcial: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
     vencida: "bg-danger-bg text-danger border-transparent hover:bg-danger-bg/90",
+    // Client statuses
+    activo: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
+    moroso: "bg-warning-bg text-warning border-transparent hover:bg-warning-bg/90",
+    bloqueado: "bg-danger-bg text-danger border-transparent hover:bg-danger-bg/90",
+    // Quote statuses
+    enviada: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
 }
 
 // Fallback for unknown statuses

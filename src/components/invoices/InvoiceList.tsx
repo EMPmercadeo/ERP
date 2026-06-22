@@ -67,12 +67,30 @@ export interface InvoiceData {
     clientName: string;
     clientRuc: string;
     fechaEmision: string; // ISO string
+    fechaVencimiento?: string | null; // ISO string
     totalNeto: number;
     saldoPendiente: number;
     estadoDgi: string; // "borrador" | "pendiente" | "aceptada" | "rechazada" | "anulada"
 }
 
+const getInitials = (name: string) => {
+    return name
+        .split(' ')
+        .filter((w) => w[0] && /[a-zA-ZÁÉÍÓÚáéíóúÑñ]/.test(w[0]))
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase();
+};
 
+const palette = [
+    'from-blue-600 to-teal-400 text-white',
+    'from-emerald-500 to-teal-400 text-white',
+    'from-amber-500 to-orange-400 text-white',
+    'from-indigo-500 to-purple-400 text-white',
+    'from-rose-500 to-red-400 text-white',
+    'from-blue-500 to-indigo-400 text-white'
+];
 
 function formatCurrency(value: number) {
     return new Intl.NumberFormat('es-PA', {
@@ -152,25 +170,41 @@ export function InvoiceList({
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4"
+                    className="-ml-4 font-semibold"
                 >
-                    Número
+                    Documento
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
             cell: ({ row }) => (
-                <span className="font-mono text-sm">{row.getValue('numeroCompleto')}</span>
+                <span className="font-mono text-xs font-bold text-brand-1 tracking-tight">
+                    {row.getValue('numeroCompleto')}
+                </span>
             ),
         },
         {
             accessorKey: 'clientName',
             header: 'Cliente',
-            cell: ({ row }) => (
-                <div>
-                    <div className="font-medium">{row.getValue('clientName')}</div>
-                    <div className="text-xs text-muted-foreground">{row.original.clientRuc}</div>
-                </div>
-            ),
+            cell: ({ row }) => {
+                const name = row.getValue('clientName') as string;
+                const initials = getInitials(name) || 'CF';
+                const gradClass = palette[row.index % palette.length];
+                return (
+                    <div className="flex items-center gap-3">
+                        <div className={`w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
+                            {initials}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-foreground text-sm truncate max-w-[200px]" title={name}>
+                                {name}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground font-mono leading-none mt-0.5">
+                                {row.original.clientRuc}
+                            </span>
+                        </div>
+                    </div>
+                );
+            },
         },
         {
             accessorKey: 'fechaEmision',
@@ -178,15 +212,15 @@ export function InvoiceList({
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4"
+                    className="-ml-4 font-semibold"
                 >
-                    Fecha
+                    Emisión
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
             cell: ({ row }) => {
                 const date = new Date(row.getValue('fechaEmision'));
-                return <span>{date.toLocaleDateString('es-PA')}</span>
+                return <span className="font-mono text-xs font-semibold text-muted-foreground">{date.toLocaleDateString('es-PA', { day: '2-digit', month: 'short', year: 'numeric' })}</span>;
             }
         },
         {
@@ -195,16 +229,16 @@ export function InvoiceList({
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4"
+                    className="-ml-4 font-semibold"
                 >
-                    Total
+                    Monto
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
             cell: ({ row }) => {
                 const value = row.getValue('totalNeto') as number;
                 return (
-                    <span className={value < 0 ? 'text-red-600' : ''}>
+                    <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
                         {formatCurrency(value)}
                     </span>
                 );
@@ -215,20 +249,53 @@ export function InvoiceList({
             header: 'Saldo',
             cell: ({ row }) => {
                 const value = row.getValue('saldoPendiente') as number;
-                if (value === 0) return <Badge variant="success">Pagada</Badge>;
-                return <Badge variant="warning">{formatCurrency(value)}</Badge>;
+                return (
+                    <span className={`font-mono text-sm font-semibold tabular-nums ${value > 0 ? 'text-warning font-bold' : 'text-muted-foreground/60'}`}>
+                        {value > 0 ? formatCurrency(value) : '—'}
+                    </span>
+                );
             },
         },
         {
             accessorKey: 'estadoDgi',
-            header: 'Estado DGI',
+            header: 'DGI',
             cell: ({ row }) => {
                 const status = row.getValue('estadoDgi') as DgiStatus;
-                return <StatusBadge status={status} />;
+                return (
+                    <StatusBadge
+                        status={status}
+                        showIcon={true}
+                        className="h-6"
+                    />
+                );
             },
             filterFn: (row, id, filterValue) => {
                 if (filterValue === 'all') return true;
                 return row.getValue(id) === filterValue;
+            },
+        },
+        {
+            id: 'pago',
+            header: 'Pago',
+            cell: ({ row }) => {
+                const total = row.original.totalNeto;
+                const balance = row.original.saldoPendiente;
+                const vencimiento = row.original.fechaVencimiento ? new Date(row.original.fechaVencimiento) : null;
+                const paymentStatus = balance === 0
+                    ? 'pagada'
+                    : (vencimiento && vencimiento < new Date() && balance > 0)
+                        ? 'vencida'
+                        : balance === total
+                            ? 'pendiente'
+                            : 'parcial';
+
+                return (
+                    <StatusBadge
+                        status={paymentStatus}
+                        showIcon={false}
+                        className="h-6"
+                    />
+                );
             },
         },
         {

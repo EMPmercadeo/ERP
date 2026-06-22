@@ -60,6 +60,7 @@ export default async function InvoicesPage(props: {
         clientName: i.cliente.razonSocial,
         clientRuc: i.cliente.ruc,
         fechaEmision: i.fechaEmision.toISOString(),
+        fechaVencimiento: i.fechaVencimiento ? i.fechaVencimiento.toISOString() : null,
         totalNeto: i.totalNeto.toNumber(),
         saldoPendiente: i.saldoPendiente.toNumber(),
         estadoDgi: i.estadoDgi

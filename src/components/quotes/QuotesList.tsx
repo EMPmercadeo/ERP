@@ -34,7 +34,7 @@ import { ImportQuotesDialog } from './ImportQuotesDialog';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
@@ -72,6 +72,32 @@ interface Quote {
 
 interface QuotesListProps {
     quotes: Quote[];
+}
+
+const getInitials = (name: string) => {
+    return name
+        .split(' ')
+        .filter((w) => w[0] && /[a-zA-ZÁÉÍÓÚáéíóúÑñ]/.test(w[0]))
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase();
+};
+
+const palette = [
+    'from-blue-600 to-teal-400 text-white',
+    'from-emerald-500 to-teal-400 text-white',
+    'from-amber-500 to-orange-400 text-white',
+    'from-indigo-500 to-purple-400 text-white',
+    'from-rose-500 to-red-400 text-white',
+    'from-blue-500 to-indigo-400 text-white'
+];
+
+function formatCurrency(value: number) {
+    return new Intl.NumberFormat('es-PA', {
+        style: 'currency',
+        currency: 'USD',
+    }).format(value);
 }
 
 export function QuotesList({
