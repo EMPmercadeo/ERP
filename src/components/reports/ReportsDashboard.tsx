@@ -246,7 +246,8 @@ export function ReportsDashboard({
         currentFilters.creadorId !== 'all',
         currentFilters.estadoDgi !== 'all',
         currentFilters.tipoDocumento !== 'all',
-        currentFilters.paymentStatus !== 'all'
+        currentFilters.paymentStatus !== 'all',
+        currentFilters.metodoPago !== 'all'
     ].filter(Boolean).length;
 
     // SVG parameters for Trend Curve
@@ -553,6 +554,12 @@ export function ReportsDashboard({
                         <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
                             Pago: {currentFilters.paymentStatus}
                             <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('paymentStatus')} />
+                        </Badge>
+                    )}
+                    {currentFilters.metodoPago && currentFilters.metodoPago !== 'all' && (
+                        <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
+                            Método: {currentFilters.metodoPago === 'efectivo' ? 'Efectivo' : currentFilters.metodoPago === 'transferencia' ? 'Transferencia' : currentFilters.metodoPago === 'tarjeta' ? 'Tarjeta' : currentFilters.metodoPago === 'cheque' ? 'Cheque' : currentFilters.metodoPago}
+                            <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('metodoPago')} />
                         </Badge>
                     )}
                     <Button

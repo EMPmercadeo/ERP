@@ -11,17 +11,15 @@ import {
     RotateCcw,
     Calendar,
     Search,
-    User,
-    Tag,
-    Receipt,
-    Coins,
-    Briefcase,
-    ChevronDown,
     X,
     Filter,
     FileSpreadsheet,
     FileText,
-    Download
+    Download,
+    ChevronDown,
+    ChevronUp,
+    SlidersHorizontal,
+    AlertCircle
 } from 'lucide-react';
 import {
     startOfDay,
@@ -81,7 +79,7 @@ export function ReportFilters({
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    // Local filter states (applying filters only on click "Aplicar")
+    // Local filter states
     const [dateFrom, setDateFrom] = useState(currentFilters.dateFrom);
     const [dateTo, setDateTo] = useState(currentFilters.dateTo);
     const [periodoRapido, setPeriodoRapido] = useState(currentFilters.periodoRapido);
@@ -92,6 +90,17 @@ export function ReportFilters({
     const [tipoDocumento, setTipoDocumento] = useState(currentFilters.tipoDocumento);
     const [estadoDgi, setEstadoDgi] = useState(currentFilters.estadoDgi);
     const [paymentStatus, setPaymentStatus] = useState(currentFilters.paymentStatus);
+    const [metodoPago, setMetodoPago] = useState(currentFilters.metodoPago || 'all');
+
+    // Advanced filters panel state
+    const hasActiveAdvancedFilters = 
+        currentFilters.tipoDocumento !== 'all' || 
+        currentFilters.estadoDgi !== 'all' || 
+        currentFilters.paymentStatus !== 'all' || 
+        (currentFilters.metodoPago && currentFilters.metodoPago !== 'all') ||
+        (isSuperAdmin && !!searchParams.get('x-impersonation'));
+    
+    const [isAdvancedExpanded, setIsAdvancedExpanded] = useState(hasActiveAdvancedFilters);
 
     // Client Autocomplete states
     const [clientSearch, setClientSearch] = useState(
@@ -218,7 +227,11 @@ export function ReportFilters({
         setDateTo(format(to, 'yyyy-MM-dd'));
     };
 
+    const isDateRangeInvalid = !!(dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo));
+
     const handleApply = () => {
+        if (isDateRangeInvalid) return;
+
         const params = new URLSearchParams();
         params.set('dateFrom', dateFrom);
         params.set('dateTo', dateTo);
@@ -230,6 +243,7 @@ export function ReportFilters({
         if (tipoDocumento !== 'all') params.set('tipoDocumento', tipoDocumento);
         if (estadoDgi !== 'all') params.set('estadoDgi', estadoDgi);
         if (paymentStatus !== 'all') params.set('paymentStatus', paymentStatus);
+        if (metodoPago !== 'all') params.set('metodoPago', metodoPago);
         
         // Retain super admin impersonation target if preset
         const impersonation = searchParams.get('x-impersonation');
@@ -250,9 +264,15 @@ export function ReportFilters({
         setTipoDocumento('all');
         setEstadoDgi('all');
         setPaymentStatus('all');
+        setMetodoPago('all');
         setClientSearch('');
         setProductSearch('');
-        router.push(pathname);
+
+        const params = new URLSearchParams();
+        const impersonation = searchParams.get('x-impersonation');
+        if (impersonation) params.set('x-impersonation', impersonation);
+        
+        router.push(`${pathname}${params.toString() ? `?${params.toString()}` : ''}`);
     };
 
     const handleClearClient = () => {
@@ -268,272 +288,284 @@ export function ReportFilters({
     };
 
     return (
-        <Card className="bg-white shadow-sm border border-slate-100 rounded-xl">
-            <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-5 pb-3 border-b border-slate-100">
-                    <Filter className="h-4.5 w-4.5 text-brand-1" />
-                    <h3 className="text-sm font-bold text-foreground">Filtros del reporte</h3>
-                </div>
+        <Card className="bg-white shadow-sm border border-slate-100 rounded-xl overflow-visible">
+            <CardContent className="p-4 sm:p-5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-x-4 lg:gap-y-3">
+                    {/* FILA 1: Filtros Visibles Principales */}
+                    
+                    {/* Desde */}
+                    <div className="space-y-1">
+                        <Label htmlFor="dateFrom" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Desde</Label>
+                        <div className="relative">
+                            <Input
+                                id="dateFrom"
+                                type="date"
+                                value={dateFrom}
+                                onChange={(e) => {
+                                    setDateFrom(e.target.value);
+                                    setPeriodoRapido('personalizado');
+                                }}
+                                className={`h-10 text-xs sm:text-sm pl-9 pr-2 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full transition-colors ${
+                                    isDateRangeInvalid ? 'border-red-500 focus-visible:ring-red-500 bg-red-50/10' : ''
+                                }`}
+                            />
+                            <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${isDateRangeInvalid ? 'text-red-400' : 'text-slate-400'}`} />
+                        </div>
+                    </div>
 
-                <div className="space-y-6">
-                    {/* Grupo 1: Periodo */}
-                    <div className="space-y-3">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">Periodo</span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="space-y-1.5">
-                                <Label htmlFor="periodoRapido" className="text-xs font-semibold text-slate-500">Periodo rápido</Label>
+                    {/* Hasta */}
+                    <div className="space-y-1">
+                        <Label htmlFor="dateTo" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Hasta</Label>
+                        <div className="relative">
+                            <Input
+                                id="dateTo"
+                                type="date"
+                                value={dateTo}
+                                onChange={(e) => {
+                                    setDateTo(e.target.value);
+                                    setPeriodoRapido('personalizado');
+                                }}
+                                className={`h-10 text-xs sm:text-sm pl-9 pr-2 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full transition-colors ${
+                                    isDateRangeInvalid ? 'border-red-500 focus-visible:ring-red-500 bg-red-50/10' : ''
+                                }`}
+                            />
+                            <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${isDateRangeInvalid ? 'text-red-400' : 'text-slate-400'}`} />
+                        </div>
+                    </div>
+
+                    {/* Agrupar gráfico */}
+                    <div className="space-y-1">
+                        <Label htmlFor="groupBy" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Agrupar gráfico</Label>
+                        <Select value={groupBy} onValueChange={(val: any) => setGroupBy(val)}>
+                            <SelectTrigger id="groupBy" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                <SelectValue placeholder="Agrupación" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-lg">
+                                <SelectItem value="day" className="text-xs sm:text-sm cursor-pointer">Por Día</SelectItem>
+                                <SelectItem value="week" className="text-xs sm:text-sm cursor-pointer">Por Semana</SelectItem>
+                                <SelectItem value="month" className="text-xs sm:text-sm cursor-pointer">Por Mes</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Cliente Autocomplete */}
+                    <div className="space-y-1 relative" ref={clientRef}>
+                        <Label htmlFor="clienteSearch" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Cliente</Label>
+                        <div className="relative">
+                            <Input
+                                id="clienteSearch"
+                                type="text"
+                                placeholder="Buscar cliente..."
+                                value={clientSearch}
+                                onChange={(e) => {
+                                    setClientSearch(e.target.value);
+                                    setShowClientDropdown(true);
+                                    if (!e.target.value) {
+                                        setClienteId('all');
+                                    }
+                                }}
+                                onFocus={() => setShowClientDropdown(true)}
+                                className="h-10 text-xs sm:text-sm pl-9 pr-8 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                            />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            {clientSearch && (
+                                <button
+                                    type="button"
+                                    onClick={handleClearClient}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            )}
+                        </div>
+                        {showClientDropdown && (clientSuggestions.length > 0 || clientLoading) && (
+                            <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                                {clientLoading ? (
+                                    <div className="p-3 text-xs text-muted-foreground font-semibold">Buscando clientes...</div>
+                                ) : (
+                                    clientSuggestions.map((c) => (
+                                        <div
+                                            key={c.id}
+                                            onClick={() => {
+                                                setClientSearch(c.razonSocial);
+                                                setClienteId(c.id);
+                                                setShowClientDropdown(false);
+                                            }}
+                                            className="p-2.5 text-xs hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
+                                        >
+                                            <div className="font-bold text-slate-800">{c.razonSocial}</div>
+                                            <div className="text-[10px] text-slate-500 font-mono mt-0.5">RUC: {c.ruc}{c.dv ? `-${c.dv}` : ''}</div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Producto Autocomplete */}
+                    <div className="space-y-1 relative" ref={productRef}>
+                        <Label htmlFor="productoSearch" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Producto</Label>
+                        <div className="relative">
+                            <Input
+                                id="productoSearch"
+                                type="text"
+                                placeholder="Buscar producto..."
+                                value={productSearch}
+                                onChange={(e) => {
+                                    setProductSearch(e.target.value);
+                                    setShowProductDropdown(true);
+                                    if (!e.target.value) {
+                                        setProductoId('all');
+                                    }
+                                }}
+                                onFocus={() => setShowProductDropdown(true)}
+                                className="h-10 text-xs sm:text-sm pl-9 pr-8 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                            />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            {productSearch && (
+                                <button
+                                    type="button"
+                                    onClick={handleClearProduct}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            )}
+                        </div>
+                        {showProductDropdown && (productSuggestions.length > 0 || productLoading) && (
+                            <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                                {productLoading ? (
+                                    <div className="p-3 text-xs text-muted-foreground font-semibold">Buscando productos...</div>
+                                ) : (
+                                    productSuggestions.map((p) => (
+                                        <div
+                                            key={p.id}
+                                            onClick={() => {
+                                                setProductSearch(p.descripcion);
+                                                setProductoId(p.id);
+                                                setShowProductDropdown(false);
+                                            }}
+                                            className="p-2.5 text-xs hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
+                                        >
+                                            <div className="font-bold text-slate-800">{p.descripcion}</div>
+                                            <div className="text-[10px] text-slate-500 font-mono mt-0.5">Código: {p.codigoInterno}</div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Vendedor */}
+                    <div className="space-y-1">
+                        <Label htmlFor="creadorId" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Vendedor</Label>
+                        <Select value={creadorId} onValueChange={setCreadorId}>
+                            <SelectTrigger id="creadorId" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                <SelectValue placeholder="Vendedor" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-lg">
+                                <SelectItem value="all" className="text-xs sm:text-sm cursor-pointer">Todos los vendedores</SelectItem>
+                                {filterSellers.map((seller) => (
+                                    <SelectItem key={seller.id} value={seller.id} className="text-xs sm:text-sm cursor-pointer">
+                                        {seller.nombre}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* FILA 2: Filtros Avanzados (Condicionales Colapsables) */}
+                    {isAdvancedExpanded && (
+                        <>
+                            {/* Periodo Rápido */}
+                            <div className="space-y-1">
+                                <Label htmlFor="periodoRapido" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Periodo rápido</Label>
                                 <Select value={periodoRapido} onValueChange={handleQuickPeriodChange}>
-                                    <SelectTrigger id="periodoRapido" className="h-9 text-sm bg-slate-50/50 border-slate-200">
+                                    <SelectTrigger id="periodoRapido" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
                                         <SelectValue placeholder="Periodo rápido" />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="hoy">Hoy</SelectItem>
-                                        <SelectItem value="semana">Esta semana</SelectItem>
-                                        <SelectItem value="mes">Este mes</SelectItem>
-                                        <SelectItem value="mes_anterior">Mes anterior</SelectItem>
-                                        <SelectItem value="anio">Este año</SelectItem>
-                                        <SelectItem value="personalizado">Personalizado</SelectItem>
+                                    <SelectContent className="rounded-lg">
+                                        <SelectItem value="hoy" className="text-xs sm:text-sm cursor-pointer">Hoy</SelectItem>
+                                        <SelectItem value="semana" className="text-xs sm:text-sm cursor-pointer">Esta semana</SelectItem>
+                                        <SelectItem value="mes" className="text-xs sm:text-sm cursor-pointer">Este mes</SelectItem>
+                                        <SelectItem value="mes_anterior" className="text-xs sm:text-sm cursor-pointer">Mes anterior</SelectItem>
+                                        <SelectItem value="anio" className="text-xs sm:text-sm cursor-pointer">Este año</SelectItem>
+                                        <SelectItem value="personalizado" className="text-xs sm:text-sm cursor-pointer">Personalizado</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="space-y-1.5">
-                                <Label htmlFor="dateFrom" className="text-xs font-semibold text-slate-500">Desde</Label>
-                                <div className="relative">
-                                    <Input
-                                        id="dateFrom"
-                                        type="date"
-                                        value={dateFrom}
-                                        onChange={(e) => {
-                                            setDateFrom(e.target.value);
-                                            setPeriodoRapido('personalizado');
-                                        }}
-                                        className="h-9 text-sm pl-9 bg-slate-50/50 border-slate-200"
-                                    />
-                                    <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                                </div>
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label htmlFor="dateTo" className="text-xs font-semibold text-slate-500">Hasta</Label>
-                                <div className="relative">
-                                    <Input
-                                        id="dateTo"
-                                        type="date"
-                                        value={dateTo}
-                                        onChange={(e) => {
-                                            setDateTo(e.target.value);
-                                            setPeriodoRapido('personalizado');
-                                        }}
-                                        className="h-9 text-sm pl-9 bg-slate-50/50 border-slate-200"
-                                    />
-                                    <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                                </div>
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label htmlFor="groupBy" className="text-xs font-semibold text-slate-500">Agrupar gráfico</Label>
-                                <Select value={groupBy} onValueChange={(val: any) => setGroupBy(val)}>
-                                    <SelectTrigger id="groupBy" className="h-9 text-sm bg-slate-50/50 border-slate-200">
-                                        <SelectValue placeholder="Agrupación" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="day">Por Día</SelectItem>
-                                        <SelectItem value="week">Por Semana</SelectItem>
-                                        <SelectItem value="month">Por Mes</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Grupo 2: Datos Comerciales */}
-                    <div className="space-y-3 pt-2">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">Datos comerciales</span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {/* Cliente Autocomplete Input */}
-                            <div className="space-y-1.5 relative" ref={clientRef}>
-                                <Label htmlFor="clienteSearch" className="text-xs font-semibold text-slate-500">Cliente</Label>
-                                <div className="relative">
-                                    <Input
-                                        id="clienteSearch"
-                                        type="text"
-                                        placeholder="Buscar por nombre, RUC, correo..."
-                                        value={clientSearch}
-                                        onChange={(e) => {
-                                            setClientSearch(e.target.value);
-                                            setShowClientDropdown(true);
-                                            if (!e.target.value) {
-                                                setClienteId('all');
-                                            }
-                                        }}
-                                        onFocus={() => setShowClientDropdown(true)}
-                                        className="h-9 text-sm pl-9 pr-8 bg-slate-50/50 border-slate-200"
-                                    />
-                                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                                    {clientSearch && (
-                                        <button
-                                            type="button"
-                                            onClick={handleClearClient}
-                                            className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </button>
-                                    )}
-                                </div>
-                                {showClientDropdown && (clientSuggestions.length > 0 || clientLoading) && (
-                                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
-                                        {clientLoading ? (
-                                            <div className="p-3 text-xs text-muted-foreground font-semibold">Buscando clientes...</div>
-                                        ) : (
-                                            clientSuggestions.map((c) => (
-                                                <div
-                                                    key={c.id}
-                                                    onClick={() => {
-                                                        setClientSearch(c.razonSocial);
-                                                        setClienteId(c.id);
-                                                        setShowClientDropdown(false);
-                                                    }}
-                                                    className="p-2.5 text-xs hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
-                                                >
-                                                    <div className="font-bold text-slate-800">{c.razonSocial}</div>
-                                                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">RUC: {c.ruc}{c.dv ? `-${c.dv}` : ''} {c.email ? `· ${c.email}` : ''}</div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Producto Autocomplete Input */}
-                            <div className="space-y-1.5 relative" ref={productRef}>
-                                <Label htmlFor="productoSearch" className="text-xs font-semibold text-slate-500">Producto / Servicio</Label>
-                                <div className="relative">
-                                    <Input
-                                        id="productoSearch"
-                                        type="text"
-                                        placeholder="Buscar por nombre, código SKU..."
-                                        value={productSearch}
-                                        onChange={(e) => {
-                                            setProductSearch(e.target.value);
-                                            setShowProductDropdown(true);
-                                            if (!e.target.value) {
-                                                setProductoId('all');
-                                            }
-                                        }}
-                                        onFocus={() => setShowProductDropdown(true)}
-                                        className="h-9 text-sm pl-9 pr-8 bg-slate-50/50 border-slate-200"
-                                    />
-                                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                                    {productSearch && (
-                                        <button
-                                            type="button"
-                                            onClick={handleClearProduct}
-                                            className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </button>
-                                    )}
-                                </div>
-                                {showProductDropdown && (productSuggestions.length > 0 || productLoading) && (
-                                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
-                                        {productLoading ? (
-                                            <div className="p-3 text-xs text-muted-foreground font-semibold">Buscando productos...</div>
-                                        ) : (
-                                            productSuggestions.map((p) => (
-                                                <div
-                                                    key={p.id}
-                                                    onClick={() => {
-                                                        setProductSearch(p.descripcion);
-                                                        setProductoId(p.id);
-                                                        setShowProductDropdown(false);
-                                                    }}
-                                                    className="p-2.5 text-xs hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
-                                                >
-                                                    <div className="font-bold text-slate-800">{p.descripcion}</div>
-                                                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">Código: {p.codigoInterno} · Stock: {p.stockActual}</div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Vendedor Selector */}
-                            <div className="space-y-1.5">
-                                <Label htmlFor="creadorId" className="text-xs font-semibold text-slate-500">Vendedor</Label>
-                                <Select value={creadorId} onValueChange={setCreadorId}>
-                                    <SelectTrigger id="creadorId" className="h-9 text-sm bg-slate-50/50 border-slate-200">
-                                        <SelectValue placeholder="Seleccione Vendedor" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Todos los vendedores</SelectItem>
-                                        {filterSellers.map((seller) => (
-                                            <SelectItem key={seller.id} value={seller.id}>
-                                                {seller.nombre}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Grupo 3: Datos Fiscales */}
-                    <div className="space-y-3 pt-2">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">Datos fiscales / documento</span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* Tipo Documento */}
-                            <div className="space-y-1.5">
-                                <Label htmlFor="tipoDocumento" className="text-xs font-semibold text-slate-500">Tipo de Documento</Label>
+                            <div className="space-y-1">
+                                <Label htmlFor="tipoDocumento" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Tipo de Documento</Label>
                                 <Select value={tipoDocumento} onValueChange={setTipoDocumento}>
-                                    <SelectTrigger id="tipoDocumento" className="h-9 text-sm bg-slate-50/50 border-slate-200">
+                                    <SelectTrigger id="tipoDocumento" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
                                         <SelectValue placeholder="Tipo" />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Todos los tipos</SelectItem>
-                                        <SelectItem value="FE">Factura Electrónica (FE)</SelectItem>
-                                        <SelectItem value="NC">Nota de Crédito (NC)</SelectItem>
+                                    <SelectContent className="rounded-lg">
+                                        <SelectItem value="all" className="text-xs sm:text-sm cursor-pointer">Todos los tipos</SelectItem>
+                                        <SelectItem value="FE" className="text-xs sm:text-sm cursor-pointer">Factura Electrónica (FE)</SelectItem>
+                                        <SelectItem value="NC" className="text-xs sm:text-sm cursor-pointer">Nota de Crédito (NC)</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
                             {/* Estado DGI */}
-                            <div className="space-y-1.5">
-                                <Label htmlFor="estadoDgi" className="text-xs font-semibold text-slate-500">Estado DGI</Label>
+                            <div className="space-y-1">
+                                <Label htmlFor="estadoDgi" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Estado DGI</Label>
                                 <Select value={estadoDgi} onValueChange={setEstadoDgi}>
-                                    <SelectTrigger id="estadoDgi" className="h-9 text-sm bg-slate-50/50 border-slate-200">
+                                    <SelectTrigger id="estadoDgi" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
                                         <SelectValue placeholder="Estado DGI" />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Todos los estados</SelectItem>
-                                        <SelectItem value="borrador">Borrador</SelectItem>
-                                        <SelectItem value="pendiente">Pendiente DGI</SelectItem>
-                                        <SelectItem value="aceptada">Aceptada</SelectItem>
-                                        <SelectItem value="rechazada">Rechazada</SelectItem>
-                                        <SelectItem value="anulada">Anulada</SelectItem>
+                                    <SelectContent className="rounded-lg">
+                                        <SelectItem value="all" className="text-xs sm:text-sm cursor-pointer">Todos los estados</SelectItem>
+                                        <SelectItem value="borrador" className="text-xs sm:text-sm cursor-pointer">Borrador</SelectItem>
+                                        <SelectItem value="pendiente" className="text-xs sm:text-sm cursor-pointer">Pendiente DGI</SelectItem>
+                                        <SelectItem value="aceptada" className="text-xs sm:text-sm cursor-pointer">Aceptada</SelectItem>
+                                        <SelectItem value="rechazada" className="text-xs sm:text-sm cursor-pointer">Rechazada</SelectItem>
+                                        <SelectItem value="anulada" className="text-xs sm:text-sm cursor-pointer">Anulada</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
-                            {/* Estado de Pago */}
-                            <div className="space-y-1.5">
-                                <Label htmlFor="paymentStatus" className="text-xs font-semibold text-slate-500">Estado de Pago</Label>
+                            {/* Estado Pago */}
+                            <div className="space-y-1">
+                                <Label htmlFor="paymentStatus" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Estado de Pago</Label>
                                 <Select value={paymentStatus} onValueChange={setPaymentStatus}>
-                                    <SelectTrigger id="paymentStatus" className="h-9 text-sm bg-slate-50/50 border-slate-200">
+                                    <SelectTrigger id="paymentStatus" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
                                         <SelectValue placeholder="Estado de Pago" />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Todos los estados</SelectItem>
-                                        <SelectItem value="pagada">Pagada</SelectItem>
-                                        <SelectItem value="pendiente">Pendiente</SelectItem>
-                                        <SelectItem value="parcial">Parcial</SelectItem>
-                                        <SelectItem value="vencida">Vencida</SelectItem>
-                                        <SelectItem value="anulada">Anulada</SelectItem>
+                                    <SelectContent className="rounded-lg">
+                                        <SelectItem value="all" className="text-xs sm:text-sm cursor-pointer">Todos los estados</SelectItem>
+                                        <SelectItem value="pagada" className="text-xs sm:text-sm cursor-pointer">Pagada</SelectItem>
+                                        <SelectItem value="pendiente" className="text-xs sm:text-sm cursor-pointer">Pendiente</SelectItem>
+                                        <SelectItem value="parcial" className="text-xs sm:text-sm cursor-pointer">Parcial</SelectItem>
+                                        <SelectItem value="vencida" className="text-xs sm:text-sm cursor-pointer">Vencida</SelectItem>
+                                        <SelectItem value="anulada" className="text-xs sm:text-sm cursor-pointer">Anulada</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
-                            {/* Empresa (Visible for Super Admin) */}
-                            <div className="space-y-1.5">
-                                <Label htmlFor="empresaFilter" className="text-xs font-semibold text-slate-500">Empresa / Tenant</Label>
+                            {/* Método de Pago */}
+                            <div className="space-y-1">
+                                <Label htmlFor="metodoPago" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Método de Pago</Label>
+                                <Select value={metodoPago} onValueChange={setMetodoPago}>
+                                    <SelectTrigger id="metodoPago" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                        <SelectValue placeholder="Método de pago" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-lg">
+                                        <SelectItem value="all" className="text-xs sm:text-sm cursor-pointer">Todos los métodos</SelectItem>
+                                        <SelectItem value="efectivo" className="text-xs sm:text-sm cursor-pointer">Efectivo</SelectItem>
+                                        <SelectItem value="transferencia" className="text-xs sm:text-sm cursor-pointer">Transferencia</SelectItem>
+                                        <SelectItem value="tarjeta" className="text-xs sm:text-sm cursor-pointer">Tarjeta</SelectItem>
+                                        <SelectItem value="cheque" className="text-xs sm:text-sm cursor-pointer">Cheque</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Empresa / Tenant (Visibilidad condicionada a Super Admin) */}
+                            <div className="space-y-1">
+                                <Label htmlFor="empresaFilter" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Empresa / Tenant</Label>
                                 {isSuperAdmin ? (
                                     <Select
                                         value={searchParams.get('x-impersonation') || 'all'}
@@ -547,13 +579,13 @@ export function ReportFilters({
                                             router.push(`${pathname}?${params.toString()}`);
                                         }}
                                     >
-                                        <SelectTrigger id="empresaFilter" className="h-9 text-sm bg-slate-50/50 border-slate-200">
+                                        <SelectTrigger id="empresaFilter" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
                                             <SelectValue placeholder="Empresa impersonada" />
                                         </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">Empresa principal (Default)</SelectItem>
+                                        <SelectContent className="rounded-lg">
+                                            <SelectItem value="all" className="text-xs sm:text-sm cursor-pointer">Empresa principal (Default)</SelectItem>
                                             {filterCompanies.map((emp) => (
-                                                <SelectItem key={emp.id} value={emp.id}>
+                                                <SelectItem key={emp.id} value={emp.id} className="text-xs sm:text-sm cursor-pointer">
                                                     {emp.razonSocial}
                                                 </SelectItem>
                                             ))}
@@ -565,53 +597,93 @@ export function ReportFilters({
                                         type="text"
                                         value="Locked Tenant Context"
                                         disabled
-                                        className="h-9 text-sm bg-slate-100 border-slate-200 text-slate-400 font-semibold"
+                                        className="h-10 text-xs sm:text-sm bg-slate-100 border-slate-200 text-slate-400 font-semibold rounded-lg w-full cursor-not-allowed"
                                     />
                                 )}
                             </div>
+                        </>
+                    )}
+
+                    {/* Alerta de validación de fechas (si la inicial es mayor que la final) */}
+                    {isDateRangeInvalid && (
+                        <div className="col-span-1 sm:col-span-3 lg:col-span-6 flex items-center gap-2 p-2 bg-red-50 text-red-600 rounded-lg text-xs font-semibold border border-red-100 transition-all">
+                            <AlertCircle className="h-4.5 w-4.5 shrink-0" />
+                            <span>La fecha inicial (Desde) no puede ser posterior a la fecha final (Hasta).</span>
                         </div>
+                    )}
+
+                    {/* FILA DE ACCIONES: Alineados en la misma grilla en Desktop, auto-flex en Tablet y Móvil */}
+                    <div className="flex flex-col sm:flex-row sm:justify-end gap-2.5 w-full lg:grid lg:grid-cols-6 lg:gap-x-4 col-span-1 sm:col-span-3 lg:col-span-6 mt-1">
+                        {/* Marcador de posición de columnas vacías para alineación perfecta en desktop */}
+                        <div className="hidden lg:block lg:col-span-2"></div>
+                        
+                        {/* Botón Más filtros */}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsAdvancedExpanded(!isAdvancedExpanded)}
+                            className="h-10 text-xs font-bold text-slate-600 border-slate-200 rounded-lg w-full flex items-center justify-center gap-1.5 transition-all hover:bg-slate-50 shrink-0 lg:col-span-1"
+                        >
+                            <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
+                            <span>{isAdvancedExpanded ? 'Menos filtros' : 'Más filtros'}</span>
+                            {isAdvancedExpanded ? (
+                                <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
+                            ) : (
+                                <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+                            )}
+                        </Button>
+
+                        {/* Botón Exportar */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild id="export-report-trigger">
+                                <Button
+                                    variant="outline"
+                                    className="h-10 text-xs font-bold text-slate-600 border-slate-200 rounded-lg w-full flex items-center justify-center gap-1.5 transition-all hover:bg-slate-50 shrink-0 lg:col-span-1"
+                                >
+                                    <Download className="h-3.5 w-3.5 text-slate-500" />
+                                    <span>Exportar</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 rounded-lg shadow-md border-slate-200">
+                                <DropdownMenuLabel className="text-xs font-bold text-slate-500 px-3 py-2">Formatos de Exportación</DropdownMenuLabel>
+                                <DropdownMenuSeparator className="bg-slate-100" />
+                                <DropdownMenuItem onClick={onExportExcel} className="cursor-pointer text-xs font-semibold py-2 hover:bg-slate-50">
+                                    <FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" />
+                                    Reporte Excel (.xlsx)
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={onExportCSV} className="cursor-pointer text-xs font-semibold py-2 hover:bg-slate-50">
+                                    <FileText className="mr-2 h-4 w-4 text-blue-500" />
+                                    Detalle CSV (.csv)
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        {/* Botón Limpiar */}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleReset}
+                            className="h-10 text-xs font-bold text-slate-600 border-slate-200 rounded-lg w-full flex items-center justify-center gap-1.5 transition-all hover:bg-slate-50 shrink-0 lg:col-span-1"
+                        >
+                            <RotateCcw className="h-3.5 w-3.5 text-slate-500" />
+                            <span>Limpiar</span>
+                        </Button>
+
+                        {/* Botón Aplicar */}
+                        <Button
+                            type="button"
+                            onClick={handleApply}
+                            disabled={isDateRangeInvalid}
+                            className={`h-10 text-xs font-bold text-white rounded-lg w-full flex items-center justify-center gap-1.5 shadow-sm transition-all shrink-0 lg:col-span-1 ${
+                                isDateRangeInvalid 
+                                ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' 
+                                : 'bg-brand-1 hover:bg-brand-2 active:scale-95'
+                            }`}
+                        >
+                            <Filter className="h-3.5 w-3.5" />
+                            <span>Aplicar</span>
+                        </Button>
                     </div>
-                </div>
-
-                {/* Fila Final: Acciones a la Derecha */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 mt-6 pt-5 border-t border-slate-100">
-                    <Button
-                        variant="outline"
-                        onClick={handleReset}
-                        className="h-9 font-semibold text-xs text-slate-600 order-2 sm:order-none"
-                    >
-                        <RotateCcw className="mr-2 h-3.5 w-3.5" />
-                        Limpiar filtros
-                    </Button>
-
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild id="export-report-trigger">
-                            <Button variant="outline" className="h-9 gap-2 font-semibold text-xs border-slate-200">
-                                <Download className="h-4 w-4" />
-                                Exportar
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuLabel>Formatos de Exportación</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={onExportExcel} className="cursor-pointer">
-                                <FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" />
-                                Reporte Excel (.xlsx)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={onExportCSV} className="cursor-pointer">
-                                <FileText className="mr-2 h-4 w-4 text-blue-500" />
-                                Detalle CSV (.csv)
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    <Button
-                        onClick={handleApply}
-                        className="h-9 px-5 bg-brand-1 hover:bg-brand-2 text-white font-bold text-xs shadow-sm order-1 sm:order-none"
-                    >
-                        <Filter className="mr-2 h-3.5 w-3.5" />
-                        Aplicar filtros
-                    </Button>
                 </div>
             </CardContent>
         </Card>
