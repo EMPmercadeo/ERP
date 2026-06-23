@@ -218,6 +218,21 @@ export default function NewProductPage() {
                                 </div>
                             </CardContent>
                         </Card>
+
+                        {/* Multimedia Support Notice */}
+                        <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
+                            <CardHeader className="py-3 px-5 border-b border-slate-100 bg-slate-50">
+                                <CardTitle className="text-xs font-bold text-slate-700 uppercase tracking-wider">Multimedia</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4">
+                                <div className="border border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50/30">
+                                    <h4 className="text-xs font-bold text-slate-700">Soporte Multimedia Inactivo</h4>
+                                    <p className="text-[11px] text-slate-400 max-w-sm mx-auto mt-1 leading-relaxed">
+                                        El esquema de base de datos actual no tiene una columna de imágenes vinculada a los productos. Para habilitarla se requerirá aplicar una migración estructurada.
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
 
                     {/* RIGHT COLUMN: Price, Tax and Initial Inventory (4 cols) */}
@@ -355,16 +370,16 @@ export default function NewProductPage() {
                             <CardContent className="p-4 space-y-4">
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-1">
-                                        <Label htmlFor="stockActual" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Stock Inicial</Label>
+                                        <Label htmlFor="stockActual" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Stock Inicial (Solo Lectura)</Label>
                                         <Input
                                             id="stockActual"
                                             name="stockActual"
                                             type="number"
-                                            value={stockActual}
-                                            onChange={(e) => setStockActual(e.target.value)}
-                                            className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
-                                            placeholder="0"
+                                            value="0"
+                                            className="h-10 text-xs sm:text-sm bg-slate-100 text-slate-400 font-semibold border-slate-200 rounded-lg w-full cursor-not-allowed"
+                                            readOnly
                                         />
+                                        <span className="text-[9px] text-slate-400 font-medium block leading-tight">El stock actual se modifica automáticamente mediante transacciones o ajustes del Kardex.</span>
                                     </div>
                                     <div className="space-y-1">
                                         <Label htmlFor="stockMinimo" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Stock Mínimo</Label>
