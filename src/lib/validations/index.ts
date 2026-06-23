@@ -16,8 +16,9 @@ export const ClientSchema = z.object({
 export const ProductSchema = z.object({
     id: z.string().optional(),
     codigoInterno: z.string().min(1, { message: "El código interno es requerido" }),
+    codigoBarras: z.string().optional().or(z.literal('')),
     descripcion: z.string().min(1, { message: "La descripción es requerida" }),
-    descripcionLarga: z.string().optional(),
+    descripcionLarga: z.string().optional().or(z.literal('')),
     unidadMedida: z.string().default("UND"),
     costoUnitario: z.string().optional(), // Can be empty string if not set
     precioVenta: z.string().min(1, { message: "El precio es requerido" }), // Parse to float
