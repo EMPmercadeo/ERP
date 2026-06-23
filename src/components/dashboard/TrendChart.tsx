@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { formatCurrency } from '@/lib/utils/currency';
 
 interface TrendPoint {
     mes: string;
@@ -30,12 +31,7 @@ function smooth(pts: [number, number][]) {
     return d;
 }
 
-const formatCurrency = (v: number) => {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(v);
-};
+
 
 export function TrendChart({ data }: TrendChartProps) {
     const [hoveredPoint, setHoveredPoint] = useState<{
@@ -58,7 +54,7 @@ export function TrendChart({ data }: TrendChartProps) {
     }
 
     const W = 760;
-    const H = 366;
+    const H = 280;
     const L = 52;
     const R = 18;
     const T = 24;
@@ -108,11 +104,11 @@ export function TrendChart({ data }: TrendChartProps) {
                     </span>
                 </div>
             </div>
-            <CardContent className="flex-1 p-5 relative min-h-[300px]">
+            <CardContent className="flex-1 p-5 relative min-h-[220px]">
                 <div className="relative w-full h-full">
                     <svg
                         viewBox={`0 0 ${W} ${H}`}
-                        className="w-full h-full min-h-[260px]"
+                        className="w-full h-full min-h-[180px]"
                         preserveAspectRatio="none"
                         aria-hidden="true"
                     >

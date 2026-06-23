@@ -62,6 +62,7 @@ import ExcelJS from 'exceljs';
 import { ImportInvoicesDialog } from './ImportInvoicesDialog';
 import { toast } from 'sonner';
 import { voidInvoice } from '@/lib/actions/invoices';
+import { formatCurrency } from '@/lib/utils/currency';
 
 export interface InvoiceData {
     id: string;
@@ -94,12 +95,7 @@ const palette = [
     'from-blue-500 to-indigo-400 text-white'
 ];
 
-function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
-}
+
 
 export function InvoiceList({
     initialData,
@@ -151,31 +147,7 @@ export function InvoiceList({
         }
     };
 
-    const handleDownloadXml = (invoice: InvoiceData) => {
-        const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
-<rDE xmlns="http://dgi.mef.gob.pa/DocumentoElectronico" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <dVerFor>1.00</dVerFor>
-    <gDE>
-        <dNumDoc>${invoice.numeroCompleto}</dNumDoc>
-        <dFecEmis>${invoice.fechaEmision}</dFecEmis>
-        <gEmis>
-            <dNombEmis>Tu Empresa S.A.</dNombEmis>
-            <dRucEmis>123456-1-123456</dRucEmis>
-        </gEmis>
-        <gRecep>
-            <dNombRec>${invoice.clientName}</dNombRec>
-            <dRucRec>${invoice.clientRuc}</dRucRec>
-        </gRecep>
-        <gTot>
-            <dTotNet>${invoice.totalNeto}</dTotNet>
-            <dTotSal>${invoice.saldoPendiente}</dTotSal>
-        </gTot>
-    </gDE>
-</rDE>`;
-        const blob = new Blob([xmlContent], { type: 'application/xml' });
-        saveAs(blob, `factura-${invoice.numeroCompleto}.xml`);
-        toast.success('XML de Factura Electrónica descargado');
-    };
+
 
     const createQueryString = (params: Record<string, string | null>) => {
         const newParams = new URLSearchParams(searchParams.toString());
@@ -365,10 +337,11 @@ export function InvoiceList({
                                 <Printer className="mr-2 h-4 w-4" />
                                 Imprimir
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDownloadXml(invoice)}>
-                                <Download className="mr-2 h-4 w-4" />
-                                Descargar XML
+                            <DropdownMenuItem onClick={() => window.open(`/invoices/${invoice.id}?print=true`, '_blank')}>
+                                <FileText className="mr-2 h-4 w-4" />
+                                Descargar PDF
                             </DropdownMenuItem>
+
                             {invoice.estadoDgi === 'aceptada' && (
                                 <>
                                     <DropdownMenuSeparator />
@@ -555,6 +528,18 @@ export function InvoiceList({
                                             key={row.id}
                                             data-state={row.getIsSelected() && 'selected'}
                                             className="cursor-pointer hover:bg-accent"
+                                            onClick={(e) => {
+                                                const target = e.target as HTMLElement;
+                                                if (
+                                                    target.closest('button') ||
+                                                    target.closest('a') ||
+                                                    target.closest('[role="checkbox"]') ||
+                                                    target.closest('.dropdown-menu')
+                                                ) {
+                                                    return;
+                                                }
+                                                router.push(`/invoices/${row.original.id}`);
+                                            }}
                                         >
                                             {row.getVisibleCells().map((cell) => (
                                                 <TableCell key={cell.id}>

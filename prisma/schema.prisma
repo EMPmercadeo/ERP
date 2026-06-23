@@ -275,6 +275,8 @@ model Factura {
   @@index([clienteId])
   @@index([estadoDgi])
   @@index([empresaId])
+  @@index([empresaId, tipoDocumento])
+  @@index([creadorId])
 }
 
 model FacturaItem {
@@ -292,6 +294,9 @@ model FacturaItem {
 
   factura  Factura  @relation(fields: [facturaId], references: [id], onDelete: Cascade)
   producto Producto @relation(fields: [productoId], references: [id])
+
+  @@index([facturaId])
+  @@index([productoId])
 }
 
 // ==========================================
@@ -321,6 +326,9 @@ model Pago {
   usuario Usuario @relation(fields: [usuarioId], references: [id])
 
   @@index([empresaId])
+  @@index([facturaId])
+  @@index([clienteId])
+  @@index([fechaPago])
 }
 
 // ==========================================
