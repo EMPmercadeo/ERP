@@ -10,28 +10,27 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const query = searchParams.get('q') || '';
 
-        const customers = await prisma.cliente.findMany({
+        const products = await prisma.producto.findMany({
             where: {
                 empresaId,
+                activo: true,
                 OR: [
-                    { razonSocial: { contains: query, mode: 'insensitive' } },
-                    { ruc: { contains: query, mode: 'insensitive' } },
-                    { email: { contains: query, mode: 'insensitive' } }
+                    { descripcion: { contains: query, mode: 'insensitive' } },
+                    { codigoInterno: { contains: query, mode: 'insensitive' } }
                 ]
             },
             select: {
                 id: true,
-                razonSocial: true,
-                ruc: true,
-                dv: true,
-                email: true
+                descripcion: true,
+                codigoInterno: true,
+                stockActual: true
             },
             take: 10
         });
 
-        return NextResponse.json(customers);
+        return NextResponse.json(products);
     } catch (error) {
-        console.error('API error in /api/customers/search:', error);
-        return NextResponse.json({ error: 'Error al buscar clientes.' }, { status: 500 });
+        console.error('API error in /api/products/search:', error);
+        return NextResponse.json({ error: 'Error al buscar productos.' }, { status: 500 });
     }
 }

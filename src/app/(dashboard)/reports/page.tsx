@@ -28,6 +28,8 @@ interface PageProps {
         estadoDgi?: string;
         metodoPago?: string;
         tipoDocumento?: string;
+        paymentStatus?: string;
+        periodoRapido?: string;
         groupBy?: 'day' | 'week' | 'month';
         page?: string;
         limit?: string;
@@ -37,6 +39,7 @@ interface PageProps {
 export default async function ReportsPage(props: PageProps) {
     const tenant = await getTenantContext();
     const empresaId = tenant.empresaId;
+    const isSuperAdmin = tenant.role === 'super_admin';
 
     const searchParams = await props.searchParams;
     const dateFromStr = searchParams.dateFrom;
@@ -47,12 +50,21 @@ export default async function ReportsPage(props: PageProps) {
     const estadoDgi = searchParams.estadoDgi || 'all';
     const metodoPago = searchParams.metodoPago || 'all';
     const tipoDocumento = searchParams.tipoDocumento || 'all';
+    const paymentStatus = searchParams.paymentStatus || 'all';
+    const periodoRapido = searchParams.periodoRapido || 'mes';
     const page = Number(searchParams.page) || 1;
     const limit = Number(searchParams.limit) || 10;
 
     // Parse dates or default to current month
-    const dateFrom = dateFromStr ? parseISO(dateFromStr) : startOfMonth(new Date());
-    const dateTo = dateToStr ? parseISO(dateToStr) : endOfDay(new Date());
+    let dateFrom = dateFromStr ? parseISO(dateFromStr) : startOfMonth(new Date());
+    let dateTo = dateToStr ? parseISO(dateToStr) : endOfDay(new Date());
+
+    // Swap dates if from is after to (Validation)
+    if (dateFrom > dateTo) {
+        const temp = dateFrom;
+        dateFrom = dateTo;
+        dateTo = temp;
+    }
 
     // Auto-detect best grouping based on date range if not specified
     const rangeInDays = differenceInDays(dateTo, dateFrom);
@@ -77,6 +89,7 @@ export default async function ReportsPage(props: PageProps) {
         estadoDgi,
         metodoPago,
         tipoDocumento,
+        paymentStatus,
     };
 
     // Parallel aggregate data fetching from database
@@ -91,7 +104,8 @@ export default async function ReportsPage(props: PageProps) {
         invoiceDetail,
         filterClients,
         filterProducts,
-        filterSellers
+        filterSellers,
+        filterCompanies
     ] = await Promise.all([
         getReportKPIs(filters),
         getSalesTrend(filters, groupBy),
@@ -116,7 +130,14 @@ export default async function ReportsPage(props: PageProps) {
             where: { empresaId, activo: true },
             select: { id: true, nombre: true },
             orderBy: { nombre: 'asc' }
-        })
+        }),
+        // Fetch all companies only if user is super admin
+        isSuperAdmin
+            ? prisma.empresa.findMany({
+                  select: { id: true, razonSocial: true },
+                  orderBy: { razonSocial: 'asc' }
+              })
+            : Promise.resolve([])
     ]);
 
     return (
@@ -135,6 +156,8 @@ export default async function ReportsPage(props: PageProps) {
                     filterClients={filterClients}
                     filterProducts={filterProducts}
                     filterSellers={filterSellers}
+                    filterCompanies={filterCompanies}
+                    isSuperAdmin={isSuperAdmin}
                     currentFilters={{
                         dateFrom: dateFrom.toISOString().split('T')[0],
                         dateTo: dateTo.toISOString().split('T')[0],
@@ -144,6 +167,8 @@ export default async function ReportsPage(props: PageProps) {
                         estadoDgi,
                         metodoPago,
                         tipoDocumento,
+                        paymentStatus,
+                        periodoRapido,
                         groupBy,
                         page,
                         limit

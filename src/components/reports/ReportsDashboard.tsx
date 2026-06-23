@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
     Download,
     TrendingUp,
@@ -10,7 +11,6 @@ import {
     ArrowLeft,
     FileText,
     Calendar,
-    FileSpreadsheet,
     Clock,
     ChevronLeft,
     ChevronRight,
@@ -21,20 +21,14 @@ import {
     AlertCircle,
     Ticket,
     Receipt,
-    Briefcase
+    Briefcase,
+    X,
+    Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
 import { saveAs } from 'file-saver';
 import ExcelJS from 'exceljs';
@@ -141,6 +135,8 @@ interface ReportsDashboardProps {
     filterClients: { id: string; razonSocial: string }[];
     filterProducts: { id: string; descripcion: string; codigoInterno: string }[];
     filterSellers: { id: string; nombre: string }[];
+    filterCompanies: { id: string; razonSocial: string }[];
+    isSuperAdmin: boolean;
     currentFilters: {
         dateFrom: string;
         dateTo: string;
@@ -150,6 +146,8 @@ interface ReportsDashboardProps {
         estadoDgi: string;
         metodoPago: string;
         tipoDocumento: string;
+        paymentStatus: string;
+        periodoRapido: string;
         groupBy: 'day' | 'week' | 'month';
         page: number;
         limit: number;
@@ -168,13 +166,26 @@ export function ReportsDashboard({
     filterClients,
     filterProducts,
     filterSellers,
+    filterCompanies,
+    isSuperAdmin,
     currentFilters
 }: ReportsDashboardProps) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    // Helper to calculate percentage comparisons
+    // Loading transition state
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        setIsLoading(false);
+    }, [searchParams]);
+
+    const handleReset = () => {
+        setIsLoading(true);
+        router.push(pathname);
+    };
+
     const getPercentageChange = (current: number, previous: number) => {
         if (previous === 0) return current > 0 ? 100 : 0;
         return ((current - previous) / previous) * 100;
@@ -214,12 +225,29 @@ export function ReportsDashboard({
     const countNCChange = getPercentageChange(kpis.current.countNC, kpis.previous.countNC);
     const profitChange = getPercentageChange(kpis.current.grossProfit, kpis.previous.grossProfit);
 
-    // Dynamic pagination URL updates
     const handlePageChange = (newPage: number) => {
+        setIsLoading(true);
         const params = new URLSearchParams(searchParams.toString());
         params.set('page', String(newPage));
         router.push(`${pathname}?${params.toString()}`);
     };
+
+    const removeFilter = (key: string) => {
+        setIsLoading(true);
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete(key);
+        params.set('page', '1');
+        router.push(`${pathname}?${params.toString()}`);
+    };
+
+    const activeFiltersCount = [
+        currentFilters.clienteId !== 'all',
+        currentFilters.productoId !== 'all',
+        currentFilters.creadorId !== 'all',
+        currentFilters.estadoDgi !== 'all',
+        currentFilters.tipoDocumento !== 'all',
+        currentFilters.paymentStatus !== 'all'
+    ].filter(Boolean).length;
 
     // SVG parameters for Trend Curve
     const W = 760;
@@ -240,7 +268,6 @@ export function ReportsDashboard({
     const factPoints = trend.map((t, i) => [getX(i), getY(t.facturado)] as [number, number]);
     const cobrPoints = trend.map((t, i) => [getX(i), getY(t.cobrado)] as [number, number]);
 
-    // Simple line generator helper
     const generatePath = (pts: [number, number][]) => {
         if (pts.length < 2) return '';
         return `M ${pts[0][0]},${pts[0][1]} ` + pts.slice(1).map(p => `L ${p[0]},${p[1]}`).join(' ');
@@ -248,47 +275,47 @@ export function ReportsDashboard({
 
     const dFact = generatePath(factPoints);
     const dCobr = generatePath(cobrPoints);
-
-    // SVG Area path for fill
     const dFactArea = factPoints.length > 0
         ? `${dFact} L ${factPoints[factPoints.length - 1][0]},${T + ih} L ${factPoints[0][0]},${T + ih} Z`
         : '';
 
-    // Max values for horizontal bar charts
     const maxProductIngreso = Math.max(...topProducts.map(p => p.ingreso), 1);
     const maxClientFacturado = Math.max(...topClients.map(c => c.totalFacturado), 1);
-
-    // Total outstanding aging balance
     const totalAging = Object.values(receivablesAging).reduce((a, b) => a + b, 0);
 
-    // Excel export handler
+    // Excel export handler with metadata
     const handleExportExcel = async () => {
         const workbook = new ExcelJS.Workbook();
 
         // 1. Resumen de KPIs
         const kpiSheet = workbook.addWorksheet('Resumen KPIs');
-        kpiSheet.columns = [
-            { header: 'Indicador', key: 'metric', width: 30 },
-            { header: 'Periodo Actual', key: 'current', width: 22 },
-            { header: 'Periodo Anterior', key: 'previous', width: 22 },
-            { header: 'Variación %', key: 'change', width: 15 }
-        ];
+        
+        // Add Filter Metadata & Header
+        kpiSheet.addRow(['REPORTE FINANCIERO Y ANALÍTICO DE VENTAS']);
+        kpiSheet.addRow([`Fecha de Generación: ${new Date().toLocaleString('es-PA')}`]);
+        kpiSheet.addRow([`Rango de Fechas: Desde ${currentFilters.dateFrom} Hasta ${currentFilters.dateTo}`]);
+        kpiSheet.addRow([`Filtros Aplicados:`]);
+        kpiSheet.addRow([`  - Cliente: ${currentFilters.clienteId !== 'all' ? filterClients.find(c => c.id === currentFilters.clienteId)?.razonSocial : 'Todos'}`]);
+        kpiSheet.addRow([`  - Producto: ${currentFilters.productoId !== 'all' ? filterProducts.find(p => p.id === currentFilters.productoId)?.descripcion : 'Todos'}`]);
+        kpiSheet.addRow([`  - Vendedor: ${currentFilters.creadorId !== 'all' ? filterSellers.find(s => s.id === currentFilters.creadorId)?.nombre : 'Todos'}`]);
+        kpiSheet.addRow([`  - Tipo Documento: ${currentFilters.tipoDocumento !== 'all' ? currentFilters.tipoDocumento : 'Todos'}`]);
+        kpiSheet.addRow([`  - Estado DGI: ${currentFilters.estadoDgi !== 'all' ? currentFilters.estadoDgi : 'Todos'}`]);
+        kpiSheet.addRow([`  - Estado de Pago: ${currentFilters.paymentStatus !== 'all' ? currentFilters.paymentStatus : 'Todos'}`]);
+        kpiSheet.addRow([]); // blank space
+
+        const headersRow = kpiSheet.addRow(['Indicador', 'Periodo Actual', 'Periodo Anterior', 'Variación %']);
+        headersRow.font = { bold: true };
 
         const addKpiRow = (metric: string, curr: number, prev: number, change: number, isMoney = true) => {
-            const row = kpiSheet.addRow({
-                metric,
-                current: curr,
-                previous: prev,
-                change: change / 100
-            });
+            const row = kpiSheet.addRow([metric, curr, prev, change / 100]);
             if (isMoney) {
-                row.getCell('current').numFmt = '$#,##0.00';
-                row.getCell('previous').numFmt = '$#,##0.00';
+                row.getCell(2).numFmt = '$#,##0.00';
+                row.getCell(3).numFmt = '$#,##0.00';
             } else {
-                row.getCell('current').numFmt = '#,##0';
-                row.getCell('previous').numFmt = '#,##0';
+                row.getCell(2).numFmt = '#,##0';
+                row.getCell(3).numFmt = '#,##0';
             }
-            row.getCell('change').numFmt = '0.0%';
+            row.getCell(4).numFmt = '0.0%';
         };
 
         addKpiRow('Ventas Facturadas (Neto)', kpis.current.totalFacturado, kpis.previous.totalFacturado, salesChange);
@@ -298,6 +325,12 @@ export function ReportsDashboard({
         addKpiRow('Ticket Promedio', kpis.current.ticketPromedio, kpis.previous.ticketPromedio, avgTicketChange);
         addKpiRow('Facturas Emitidas (FE)', kpis.current.countFE, kpis.previous.countFE, countFEChange, false);
         addKpiRow('Notas de Crédito (NC)', kpis.current.countNC, kpis.previous.countNC, countNCChange, false);
+
+        // Adjust column widths
+        kpiSheet.getColumn(1).width = 30;
+        kpiSheet.getColumn(2).width = 22;
+        kpiSheet.getColumn(3).width = 22;
+        kpiSheet.getColumn(4).width = 15;
 
         // 2. Detalle de Facturas
         const invoiceSheet = workbook.addWorksheet('Detalle de Facturas');
@@ -425,8 +458,14 @@ export function ReportsDashboard({
         saveAs(blob, `reporte-financiero-${currentFilters.dateFrom}-al-${currentFilters.dateTo}.xlsx`);
     };
 
+    // CSV export handler with metadata header
     const handleExportCSV = () => {
         let csvContent = '\uFEFF'; // UTF-8 BOM
+        csvContent += "REPORTE FINANCIERO Y ANALÍTICO DE VENTAS\n";
+        csvContent += `Fecha de Generacion: ${new Date().toLocaleString('es-PA')}\n`;
+        csvContent += `Rango de Fechas: Desde ${currentFilters.dateFrom} Hasta ${currentFilters.dateTo}\n`;
+        csvContent += `Filtros Aplicados: Cliente=${currentFilters.clienteId}, Producto=${currentFilters.productoId}, Vendedor=${currentFilters.creadorId}, DGI=${currentFilters.estadoDgi}, TipoDoc=${currentFilters.tipoDocumento}, EstadoPago=${currentFilters.paymentStatus}\n\n`;
+
         csvContent += "Documento,Fecha Emision,Cliente,RUC,Vendedor,Total Neto,ITBMS,Pagado,Saldo,Estado DGI,Tipo\n";
         invoiceDetail.invoices.forEach(inv => {
             const clientEscaped = inv.clienteNombre.replace(/"/g, '""');
@@ -437,7 +476,17 @@ export function ReportsDashboard({
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 relative">
+            {/* Loading Overlay */}
+            {isLoading && (
+                <div className="fixed inset-0 bg-slate-900/10 backdrop-blur-[1px] z-50 flex items-center justify-center pointer-events-auto">
+                    <Card className="p-5 shadow-2xl flex items-center gap-3 bg-white border border-slate-100">
+                        <Loader2 className="h-5 w-5 animate-spin text-brand-1" />
+                        <span className="text-xs font-bold text-slate-700">Cargando datos contables...</span>
+                    </Card>
+                </div>
+            )}
+
             {/* Header Title with Back navigation */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -452,37 +501,70 @@ export function ReportsDashboard({
                         Métricas operativas y de caja 100% integradas a la base de datos
                     </p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild id="export-report-trigger">
-                            <Button className="h-9 gap-2 shadow-sm font-semibold bg-brand-1 text-white hover:bg-brand-2">
-                                <Download className="h-4 w-4" />
-                                Exportar
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuLabel>Formatos de Exportación</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={handleExportExcel} className="cursor-pointer">
-                                <FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" />
-                                Reporte Excel (.xlsx)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleExportCSV} className="cursor-pointer">
-                                <FileText className="mr-2 h-4 w-4 text-blue-500" />
-                                Detalle CSV (.csv)
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
             </div>
 
-            {/* Filter Section Component */}
+            {/* Redesigned Filter Section */}
             <ReportFilters
                 filterClients={filterClients}
                 filterProducts={filterProducts}
                 filterSellers={filterSellers}
+                filterCompanies={filterCompanies}
+                isSuperAdmin={isSuperAdmin}
                 currentFilters={currentFilters}
+                onExportExcel={handleExportExcel}
+                onExportCSV={handleExportCSV}
             />
+
+            {/* Active Filters Indicators */}
+            {activeFiltersCount > 0 && (
+                <div className="flex flex-wrap items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs">
+                    <span className="font-bold text-slate-500">Filtros activos:</span>
+                    {currentFilters.clienteId !== 'all' && (
+                        <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
+                            Cliente: {filterClients.find(c => c.id === currentFilters.clienteId)?.razonSocial || 'Seleccionado'}
+                            <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('clienteId')} />
+                        </Badge>
+                    )}
+                    {currentFilters.productoId !== 'all' && (
+                        <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
+                            Producto: {filterProducts.find(p => p.id === currentFilters.productoId)?.descripcion || 'Seleccionado'}
+                            <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('productoId')} />
+                        </Badge>
+                    )}
+                    {currentFilters.creadorId !== 'all' && (
+                        <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
+                            Vendedor: {filterSellers.find(s => s.id === currentFilters.creadorId)?.nombre || 'Seleccionado'}
+                            <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('creadorId')} />
+                        </Badge>
+                    )}
+                    {currentFilters.tipoDocumento !== 'all' && (
+                        <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
+                            Tipo: {currentFilters.tipoDocumento}
+                            <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('tipoDocumento')} />
+                        </Badge>
+                    )}
+                    {currentFilters.estadoDgi !== 'all' && (
+                        <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
+                            DGI: {currentFilters.estadoDgi}
+                            <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('estadoDgi')} />
+                        </Badge>
+                    )}
+                    {currentFilters.paymentStatus !== 'all' && (
+                        <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
+                            Pago: {currentFilters.paymentStatus}
+                            <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('paymentStatus')} />
+                        </Badge>
+                    )}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleReset}
+                        className="h-6 text-[10px] text-brand-1 font-bold hover:bg-slate-100"
+                    >
+                        Limpiar todos
+                    </Button>
+                </div>
+            )}
 
             {/* 8-Card KPIs Grid */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
@@ -644,7 +726,7 @@ export function ReportsDashboard({
                                         );
                                     })}
 
-                                    {/* Month labels */}
+                                    {/* Month/Day labels */}
                                     {trend.map((t, i) => (
                                         <text key={i} x={getX(i)} y={H - 5} textAnchor="middle" fontSize={10} fill="#6b7a92" fontWeight={600}>
                                             {t.mes}
@@ -765,7 +847,7 @@ export function ReportsDashboard({
                                         return (
                                             <div key={i} className="flex items-center justify-between text-xs py-1 hover:bg-slate-50 px-2 rounded transition-colors">
                                                 <div className="flex items-center gap-2">
-                                                    <span className={`w-2 h-2 rounded-full ${color}`} />
+                                                    <span className={`w-2.5 h-2.5 rounded-full ${color}`} />
                                                     <span className="capitalize font-semibold text-muted-foreground">{s.status}</span>
                                                 </div>
                                                 <div className="flex items-center gap-3 font-mono font-bold">

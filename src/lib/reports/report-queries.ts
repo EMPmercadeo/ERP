@@ -12,6 +12,7 @@ export interface ReportFilters {
     estadoDgi?: string;
     metodoPago?: string;
     tipoDocumento?: string;
+    paymentStatus?: string;
 }
 
 function buildPrismaWhere(filters: ReportFilters): Prisma.FacturaWhereInput {
@@ -40,6 +41,30 @@ function buildPrismaWhere(filters: ReportFilters): Prisma.FacturaWhereInput {
     }
     if (filters.metodoPago && filters.metodoPago !== 'all') {
         where.pagos = { some: { metodoPago: filters.metodoPago } };
+    }
+
+    if (filters.paymentStatus && filters.paymentStatus !== 'all') {
+        const now = new Date();
+        if (filters.paymentStatus === 'pagada') {
+            where.saldoPendiente = 0;
+            where.estadoDgi = { not: 'anulada' };
+        } else if (filters.paymentStatus === 'pendiente') {
+            where.saldoPendiente = { gt: 0 };
+            where.totalPagado = 0;
+            where.estadoDgi = { not: 'anulada' };
+            where.fechaVencimiento = { gte: now };
+        } else if (filters.paymentStatus === 'parcial') {
+            where.saldoPendiente = { gt: 0 };
+            where.totalPagado = { gt: 0 };
+            where.estadoDgi = { not: 'anulada' };
+            where.fechaVencimiento = { gte: now };
+        } else if (filters.paymentStatus === 'vencida') {
+            where.saldoPendiente = { gt: 0 };
+            where.estadoDgi = { not: 'anulada' };
+            where.fechaVencimiento = { lt: now };
+        } else if (filters.paymentStatus === 'anulada') {
+            where.estadoDgi = 'anulada';
+        }
     }
 
     return where;
@@ -435,9 +460,10 @@ export async function getTopClients(filters: ReportFilters, limit = 10) {
 }
 
 export async function getReceivablesAging(filters: ReportFilters) {
+    const baseWhere = buildPrismaWhere(filters);
     const invoices = await prisma.factura.findMany({
         where: {
-            empresaId: filters.empresaId,
+            ...baseWhere,
             tipoDocumento: 'FE',
             estadoDgi: { not: 'anulada' },
             saldoPendiente: { gt: 0 }
