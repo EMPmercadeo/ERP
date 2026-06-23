@@ -22,6 +22,13 @@ import { createProduct } from '@/lib/actions/products';
 import { useState, useActionState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import {
+    calcularITBMS,
+    calcularPrecioConImpuesto,
+    calcularMargen,
+    formatearMoneda,
+    formatearPorcentaje
+} from '@/lib/utils/fiscal';
 
 const initialState = {
     message: '',
@@ -29,10 +36,7 @@ const initialState = {
 };
 
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+    return formatearMoneda(value);
 }
 
 export default function NewProductPage() {
@@ -60,17 +64,16 @@ export default function NewProductPage() {
     const [stockActual, setStockActual] = useState('0');
     const [stockMinimo, setStockMinimo] = useState('0');
 
-    // Derived Calculations
+    // Derived Calculations using centralized fiscal utility
     const costNum = parseFloat(costoUnitario) || 0;
     const priceNum = parseFloat(precioVenta) || 0;
 
-    const rentabilidad = priceNum > 0 ? (priceNum - costNum).toFixed(2) : '0.00';
-    const margin = priceNum > 0 && costNum > 0 ? (((priceNum - costNum) / priceNum) * 100).toFixed(1) : '0.0';
+    const { rentabilidad: rentabilidadNum, margenPorcentaje: marginNum } = calcularMargen(priceNum, costNum);
+    const rentabilidad = rentabilidadNum.toFixed(2);
+    const margin = marginNum.toFixed(1);
 
-    const itbmsRates: Record<string, number> = { '00': 0, '01': 0.07, '02': 0.10, '03': 0.15 };
-    const itbmsRate = itbmsRates[codigoTasaItbms] || 0;
-    const itbmsEstimado = (priceNum * itbmsRate).toFixed(2);
-    const precioConImpuestos = (priceNum * (1 + itbmsRate)).toFixed(2);
+    const itbmsEstimado = calcularITBMS(priceNum, codigoTasaItbms).toFixed(2);
+    const precioConImpuestos = calcularPrecioConImpuesto(priceNum, codigoTasaItbms).toFixed(2);
 
     // Toast error messages
     useEffect(() => {
@@ -330,6 +333,14 @@ export default function NewProductPage() {
                                         <span className="font-mono">{formatCurrency(parseFloat(precioConImpuestos))}</span>
                                     </div>
                                 </div>
+
+                                {/* Advertencia de Margen Negativo */}
+                                {parseFloat(margin) < 0 && (
+                                    <Alert variant="error" className="py-2 px-3 text-xs mt-3">
+                                        <AlertCircle className="h-4 w-4 mr-2" />
+                                        <span>Advertencia: Margen negativo. El precio de venta es menor que el costo unitario.</span>
+                                    </Alert>
+                                )}
                             </CardContent>
                         </Card>
 

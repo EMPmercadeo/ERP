@@ -44,6 +44,13 @@ import { Label } from '@/components/ui/label';
 import { updateProduct, getProduct } from '@/lib/actions/products';
 import { useState, useEffect, use, useActionState } from 'react';
 import { cn } from '@/lib/utils';
+import {
+    calcularITBMS,
+    calcularPrecioConImpuesto,
+    calcularMargen,
+    formatearMoneda,
+    formatearPorcentaje
+} from '@/lib/utils/fiscal';
 
 const initialState = {
     message: '',
@@ -52,10 +59,7 @@ const initialState = {
 };
 
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+    return formatearMoneda(value);
 }
 
 export default function EditProductPage(props: { params: Promise<{ id: string }> }) {
@@ -125,17 +129,16 @@ function EditProductForm({ product }: { product: any }) {
     const [stockMinimo, setStockMinimo] = useState(product.stockMinimo?.toString() || '0');
     const [activo, setActivo] = useState(product.activo ? 'true' : 'false');
 
-    // Derived Calculations
+    // Derived Calculations using centralized fiscal utility
     const costNum = parseFloat(costoUnitario) || 0;
     const priceNum = parseFloat(precioVenta) || 0;
     
-    const rentabilidad = priceNum > 0 ? (priceNum - costNum).toFixed(2) : '0.00';
-    const margin = priceNum > 0 && costNum > 0 ? (((priceNum - costNum) / priceNum) * 100).toFixed(1) : '0.0';
+    const { rentabilidad: rentabilidadNum, margenPorcentaje: marginNum } = calcularMargen(priceNum, costNum);
+    const rentabilidad = rentabilidadNum.toFixed(2);
+    const margin = marginNum.toFixed(1);
 
-    const itbmsRates: Record<string, number> = { '00': 0, '01': 0.07, '02': 0.10, '03': 0.15 };
-    const itbmsRate = itbmsRates[codigoTasaItbms] || 0;
-    const itbmsEstimado = (priceNum * itbmsRate).toFixed(2);
-    const precioConImpuestos = (priceNum * (1 + itbmsRate)).toFixed(2);
+    const itbmsEstimado = calcularITBMS(priceNum, codigoTasaItbms).toFixed(2);
+    const precioConImpuestos = calcularPrecioConImpuesto(priceNum, codigoTasaItbms).toFixed(2);
 
     const stockActualNum = parseInt(stockActual) || 0;
     const stockMinimoNum = parseInt(stockMinimo) || 0;
@@ -189,7 +192,7 @@ function EditProductForm({ product }: { product: any }) {
             </div>
 
             {/* Main Content (2 columns on desktop/laptop, 1 column on tablet/mobile) */}
-            <div className="flex-1 w-full px-4 md:px-6 py-5 max-w-7xl mx-auto">
+            <div className="flex-1 w-full px-4 md:px-6 py-4 max-w-none mx-auto">
                 {state?.message && !state.success && (
                     <Alert variant="error" className="mb-4 text-xs font-semibold">
                         <AlertCircle className="h-4 w-4" />
@@ -316,11 +319,12 @@ function EditProductForm({ product }: { product: any }) {
                                     </TabsContent>
 
                                     {/* TAB 2: PRECIOS E IMPUESTOS */}
-                                    <TabsContent value="prices" className="mt-4 space-y-4 outline-none">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <TabsContent value="prices" className="mt-2 space-y-3 outline-none">
+                                        {/* Fila 1: Costo unitario base & Precio de venta neto */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             {/* Costo Unitario */}
                                             <div className="space-y-1">
-                                                <Label htmlFor="costoUnitario" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Costo Unitario (Base)</Label>
+                                                <Label htmlFor="costoUnitario" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Costo Unitario Base</Label>
                                                 <div className="relative">
                                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">$</span>
                                                     <Input
@@ -330,7 +334,7 @@ function EditProductForm({ product }: { product: any }) {
                                                         step="0.01"
                                                         value={costoUnitario}
                                                         onChange={(e) => setCostoUnitario(e.target.value)}
-                                                        className="h-10 text-xs sm:text-sm pl-7 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                                        className="h-10 text-xs sm:text-sm pl-7 pr-12 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
                                                         placeholder="0.00"
                                                     />
                                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">USD</span>
@@ -339,7 +343,7 @@ function EditProductForm({ product }: { product: any }) {
 
                                             {/* Precio de Venta */}
                                             <div className="space-y-1">
-                                                <Label htmlFor="precioVenta" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Precio de Venta (Neto)</Label>
+                                                <Label htmlFor="precioVenta" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Precio de Venta Neto</Label>
                                                 <div className="relative">
                                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">$</span>
                                                     <Input
@@ -350,7 +354,7 @@ function EditProductForm({ product }: { product: any }) {
                                                         value={precioVenta}
                                                         onChange={(e) => setPrecioVenta(e.target.value)}
                                                         required
-                                                        className={cn("h-10 text-xs sm:text-sm pl-7 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.precioVenta && "border-red-500")}
+                                                        className={cn("h-10 text-xs sm:text-sm pl-7 pr-12 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.precioVenta && "border-red-500")}
                                                         placeholder="0.00"
                                                     />
                                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">USD</span>
@@ -359,52 +363,77 @@ function EditProductForm({ product }: { product: any }) {
                                             </div>
                                         </div>
 
-                                        {/* Tasa ITBMS */}
-                                        <div className="space-y-2 pt-1">
-                                            <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Tasa de ITBMS Fiscal</Label>
-                                            <input type="hidden" name="codigoTasaItbms" value={codigoTasaItbms} />
-                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                                                {[
-                                                    { code: '01', label: '7%', sub: 'Servicios/Bienes' },
-                                                    { code: '02', label: '10%', sub: 'Licores' },
-                                                    { code: '03', label: '15%', sub: 'Tabaco' },
-                                                    { code: '00', label: 'Exento', sub: '0%' }
-                                                ].map((rate) => (
-                                                    <div
-                                                        key={rate.code}
-                                                        onClick={() => setCodigoTasaItbms(rate.code)}
-                                                        className={cn(
-                                                            "cursor-pointer rounded-xl border p-2.5 text-center transition-all select-none",
-                                                            codigoTasaItbms === rate.code
-                                                                ? "border-brand-1 bg-brand-1/5 ring-1 ring-brand-1 text-brand-1 font-bold"
-                                                                : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
-                                                        )}
-                                                    >
-                                                        <div className={cn("text-sm font-bold mb-0.5", codigoTasaItbms === rate.code ? "text-brand-1" : "text-slate-700")}>{rate.label}</div>
-                                                        <div className="text-[9px] font-semibold uppercase tracking-wider opacity-80">{rate.sub}</div>
-                                                    </div>
-                                                ))}
+                                        {/* Fila 2: Selector de ITBMS fiscal, Precio con impuesto, Margen bruto */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                                            {/* Selector de ITBMS fiscal */}
+                                            <div className="space-y-1 sm:col-span-1">
+                                                <Label htmlFor="codigoTasaItbms" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Tasa ITBMS Fiscal</Label>
+                                                <Select name="codigoTasaItbms" value={codigoTasaItbms} onValueChange={setCodigoTasaItbms}>
+                                                    <SelectTrigger id="codigoTasaItbms" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="rounded-lg">
+                                                        <SelectItem value="00" className="text-xs sm:text-sm cursor-pointer">Exento (0%)</SelectItem>
+                                                        <SelectItem value="01" className="text-xs sm:text-sm cursor-pointer">7% - Servicios/Bienes</SelectItem>
+                                                        <SelectItem value="02" className="text-xs sm:text-sm cursor-pointer">10% - Licores</SelectItem>
+                                                        <SelectItem value="03" className="text-xs sm:text-sm cursor-pointer">15% - Tabaco</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            {/* Precio con Impuesto */}
+                                            <div className="space-y-1">
+                                                <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Precio con Impuesto</Label>
+                                                <Input 
+                                                    value={formatearMoneda(parseFloat(precioConImpuestos))}
+                                                    disabled
+                                                    className="h-10 text-xs sm:text-sm bg-slate-100 text-slate-600 font-bold border-slate-200 rounded-lg w-full cursor-not-allowed font-mono"
+                                                />
+                                            </div>
+
+                                            {/* Margen Bruto */}
+                                            <div className="space-y-1">
+                                                <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Margen Bruto</Label>
+                                                <div className={cn(
+                                                    "h-10 flex items-center justify-between px-3 rounded-lg border text-xs font-bold font-mono",
+                                                    parseFloat(margin) <= 0 
+                                                        ? "bg-red-50 border-red-200 text-red-700" 
+                                                        : parseFloat(margin) < 15 
+                                                        ? "bg-amber-50 border-amber-200 text-amber-700" 
+                                                        : "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                                )}>
+                                                    <span>Rent: +{formatearMoneda(parseFloat(rentabilidad))}</span>
+                                                    <span>{formatearPorcentaje(parseFloat(margin))}</span>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        {/* desglose de Impuestos */}
-                                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2 mt-2">
-                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Cálculo Fiscal Estimado</span>
-                                            <div className="grid grid-cols-3 gap-4 text-xs font-semibold text-slate-600">
+                                        {/* Fila 3: Cálculo fiscal estimado compacto */}
+                                        <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-1 text-xs">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Cálculo Fiscal Estimado Detallado</span>
+                                            <div className="grid grid-cols-3 gap-3 text-slate-600">
                                                 <div className="flex flex-col">
-                                                    <span className="text-slate-400 text-[10px]">Precio Neto</span>
-                                                    <span className="font-mono text-slate-700 mt-0.5">{formatCurrency(priceNum)}</span>
+                                                    <span className="text-slate-400 text-[10px]">Neto Gravable</span>
+                                                    <span className="font-mono text-slate-700 mt-0.5">{formatearMoneda(priceNum)}</span>
                                                 </div>
                                                 <div className="flex flex-col">
                                                     <span className="text-slate-400 text-[10px]">ITBMS ({codigoTasaItbms === '00' ? '0%' : codigoTasaItbms === '01' ? '7%' : codigoTasaItbms === '02' ? '10%' : '15%'})</span>
-                                                    <span className="font-mono text-slate-700 mt-0.5">+{formatCurrency(parseFloat(itbmsEstimado))}</span>
+                                                    <span className="font-mono text-slate-700 mt-0.5">+{formatearMoneda(parseFloat(itbmsEstimado))}</span>
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <span className="text-brand-1 text-[10px]">Precio al Consumidor</span>
-                                                    <span className="font-mono text-brand-1 font-bold mt-0.5">{formatCurrency(parseFloat(precioConImpuestos))}</span>
+                                                    <span className="text-brand-1 text-[10px] font-bold">Consumidor Final</span>
+                                                    <span className="font-mono text-brand-1 font-bold mt-0.5">{formatearMoneda(parseFloat(precioConImpuestos))}</span>
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Advertencia de Margen Negativo */}
+                                        {parseFloat(margin) < 0 && (
+                                            <Alert variant="error" className="py-2 px-3 text-xs">
+                                                <AlertCircle className="h-4 w-4 mr-2" />
+                                                <span>Advertencia: El precio de venta es menor que el costo unitario (margen negativo).</span>
+                                            </Alert>
+                                        )}
                                     </TabsContent>
 
                                     {/* TAB 3: INVENTARIO */}
@@ -573,11 +602,11 @@ function EditProductForm({ product }: { product: any }) {
                     </div>
 
                     {/* RIGHT COLUMN: Sidebar Summary Widget (4 cols) */}
-                    <div className="xl:col-span-4 space-y-4">
+                    <div className="xl:col-span-4 xl:sticky xl:top-[60px] self-start space-y-4">
                         
-                        {/* Summary Card */}
+                        {/* Combined Summary & Metadata Card */}
                         <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
-                            <CardHeader className="bg-slate-50 border-b border-slate-100 py-3.5 px-4 flex flex-row items-center justify-between">
+                            <CardHeader className="bg-slate-50 border-b border-slate-100 py-3 px-4 flex flex-row items-center justify-between">
                                 <div className="flex items-center gap-1.5">
                                     <Package className="h-4.5 w-4.5 text-brand-1" />
                                     <CardTitle className="text-xs font-bold text-slate-700 uppercase tracking-wider">Resumen de Ficha</CardTitle>
@@ -586,26 +615,42 @@ function EditProductForm({ product }: { product: any }) {
                                     {unidadMedida}
                                 </span>
                             </CardHeader>
-                            <CardContent className="p-4 space-y-4">
-                                <div className="space-y-1">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Precio de Lista</span>
-                                    <span className="text-3xl font-extrabold text-slate-800 tracking-tight font-mono">
-                                        {formatCurrency(priceNum)}
-                                    </span>
+                            <CardContent className="p-4 space-y-3.5 text-xs text-slate-600">
+                                
+                                {/* Lista de Precios e Impuestos */}
+                                <div className="space-y-2">
+                                    <div className="flex items-baseline justify-between">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Precio de Lista</span>
+                                        <span className="text-2xl font-extrabold text-slate-800 font-mono">
+                                            {formatearMoneda(priceNum)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between py-0.5 border-b border-slate-50">
+                                        <span className="text-slate-400">Costo Base:</span>
+                                        <span className="font-semibold text-slate-700 font-mono">{formatearMoneda(costNum)}</span>
+                                    </div>
+                                    <div className="flex justify-between py-0.5 border-b border-slate-50">
+                                        <span className="text-slate-400">ITBMS Aplicado:</span>
+                                        <span className="font-semibold text-slate-700 font-mono">+{formatearMoneda(parseFloat(itbmsEstimado))}</span>
+                                    </div>
+                                    <div className="flex justify-between py-0.5 border-b border-slate-50">
+                                        <span className="text-slate-400">Precio con Impuesto:</span>
+                                        <span className="font-semibold text-slate-700 font-mono">{formatearMoneda(parseFloat(precioConImpuestos))}</span>
+                                    </div>
                                 </div>
 
                                 <div className="h-px bg-slate-100 w-full" />
 
                                 {/* Rentabilidad Widget */}
                                 <div className="space-y-2">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="font-bold text-slate-500">Rentabilidad</span>
-                                        <span className="font-bold text-emerald-600">+{formatCurrency(parseFloat(rentabilidad))}</span>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-slate-400">Rentabilidad:</span>
+                                        <span className="font-bold text-emerald-600 font-mono">+{formatearMoneda(parseFloat(rentabilidad))}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[10px] text-slate-400 leading-none">Margen Bruto</span>
+                                        <span className="text-slate-400">Margen Bruto:</span>
                                         <Badge className="bg-emerald-50 text-emerald-600 border-transparent hover:bg-emerald-50 text-[10px] font-bold px-2 py-0.5 rounded">
-                                            {margin}%
+                                            {formatearPorcentaje(parseFloat(margin))}
                                         </Badge>
                                     </div>
                                 </div>
@@ -614,8 +659,8 @@ function EditProductForm({ product }: { product: any }) {
 
                                 {/* Stock Widget */}
                                 <div className="space-y-2">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="font-bold text-slate-500">Estado de Stock</span>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-slate-400">Estado de Stock:</span>
                                         <Badge className={cn(
                                             "text-[10px] font-bold px-2 py-0.5 rounded border-transparent",
                                             stockActualNum <= 0 
@@ -635,25 +680,25 @@ function EditProductForm({ product }: { product: any }) {
                                         </div>
                                     </div>
                                 </div>
-                            </CardContent>
-                        </Card>
 
-                        {/* Metadata Audit Card */}
-                        <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden text-xs text-slate-500">
-                            <CardContent className="p-4 space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span className="flex items-center gap-1">
-                                        <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
-                                        Creado:
-                                    </span>
-                                    <span className="font-semibold text-slate-700">{new Date(product.createdAt).toLocaleDateString('es-PA')}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="flex items-center gap-1">
-                                        <History className="h-3.5 w-3.5 text-slate-400" />
-                                        Modificado:
-                                    </span>
-                                    <span className="font-semibold text-slate-700">{new Date(product.updatedAt).toLocaleDateString('es-PA')}</span>
+                                <div className="h-px bg-slate-100 w-full" />
+
+                                {/* Metadata Fechas */}
+                                <div className="space-y-1.5 text-slate-500 pt-0.5">
+                                    <div className="flex items-center justify-between">
+                                        <span className="flex items-center gap-1.5 text-slate-400">
+                                            <CalendarDays className="h-3.5 w-3.5" />
+                                            Creado:
+                                        </span>
+                                        <span className="font-semibold text-slate-700">{new Date(product.createdAt).toLocaleDateString('es-PA')}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="flex items-center gap-1.5 text-slate-400">
+                                            <History className="h-3.5 w-3.5" />
+                                            Modificado:
+                                        </span>
+                                        <span className="font-semibold text-slate-700">{new Date(product.updatedAt).toLocaleDateString('es-PA')}</span>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>

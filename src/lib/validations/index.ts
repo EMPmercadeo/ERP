@@ -19,10 +19,18 @@ export const ProductSchema = z.object({
     codigoBarras: z.string().optional().or(z.literal('')),
     descripcion: z.string().min(1, { message: "La descripción es requerida" }),
     descripcionLarga: z.string().optional().or(z.literal('')),
-    unidadMedida: z.string().default("UND"),
-    costoUnitario: z.string().optional(), // Can be empty string if not set
-    precioVenta: z.string().min(1, { message: "El precio es requerido" }), // Parse to float
-    codigoTasaItbms: z.string().min(2, { message: "Selecciona una tasa" }),
+    unidadMedida: z.enum(["UND", "HRS", "KG", "LT", "MT", "CJ", "SRV"], {
+        message: "Selecciona una unidad de medida válida"
+    }).default("UND"),
+    costoUnitario: z.string().optional().refine(val => !val || parseFloat(val) >= 0, {
+        message: "El costo unitario no puede ser negativo"
+    }),
+    precioVenta: z.string().min(1, { message: "El precio de venta es requerido" }).refine(val => parseFloat(val) >= 0, {
+        message: "El precio de venta no puede ser negativo"
+    }),
+    codigoTasaItbms: z.enum(["00", "01", "02", "03"], {
+        message: "Selecciona una tasa ITBMS válida"
+    }),
     stockActual: z.string().optional(), // Parse to int
     stockMinimo: z.string().optional(), // Parse to int
     activo: z.boolean().default(true),
