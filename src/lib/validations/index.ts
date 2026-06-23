@@ -19,6 +19,7 @@ export const ProductSchema = z.object({
     codigoBarras: z.string().optional().or(z.literal('')),
     descripcion: z.string().min(1, { message: "La descripción es requerida" }),
     descripcionLarga: z.string().optional().or(z.literal('')),
+    imagenUrl: z.string().optional().or(z.literal('')),
     unidadMedida: z.enum(["UND", "HRS", "KG", "LT", "MT", "CJ", "SRV"], {
         message: "Selecciona una unidad de medida válida"
     }).default("UND"),

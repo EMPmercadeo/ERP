@@ -128,6 +128,7 @@ function EditProductForm({ product }: { product: any }) {
     const [stockActual, setStockActual] = useState(product.stockActual?.toString() || '0');
     const [stockMinimo, setStockMinimo] = useState(product.stockMinimo?.toString() || '0');
     const [activo, setActivo] = useState(product.activo ? 'true' : 'false');
+    const [imagenUrl, setImagenUrl] = useState(product.imagenUrl || '');
 
     // Derived Calculations using centralized fiscal utility
     const costNum = parseFloat(costoUnitario) || 0;
@@ -441,17 +442,15 @@ function EditProductForm({ product }: { product: any }) {
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {/* Stock Actual */}
                                             <div className="space-y-1">
-                                                <Label htmlFor="stockActual" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Stock Actual (Solo Lectura)</Label>
+                                                <Label htmlFor="stockActual" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Stock Actual</Label>
                                                 <Input 
                                                     id="stockActual"
                                                     name="stockActual" 
                                                     value={stockActual} 
                                                     onChange={(e) => setStockActual(e.target.value)}
                                                     type="number"
-                                                    className="h-10 text-xs sm:text-sm bg-slate-100 border-slate-200 text-slate-400 font-semibold rounded-lg w-full cursor-not-allowed"
-                                                    readOnly
+                                                    className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
                                                 />
-                                                <span className="text-[9px] text-slate-400 font-medium block leading-tight">El stock actual se modifica automáticamente mediante transacciones o ajustes del Kardex.</span>
                                             </div>
 
                                             {/* Stock Mínimo */}
@@ -487,7 +486,11 @@ function EditProductForm({ product }: { product: any }) {
                                                     <TableBody>
                                                         {product.salesHistory && product.salesHistory.length > 0 ? (
                                                             product.salesHistory.map((sale: any) => (
-                                                                <TableRow key={sale.id} className="hover:bg-slate-50/50 border-b border-slate-100 last:border-0">
+                                                                <TableRow 
+                                                                    key={sale.id} 
+                                                                    className="hover:bg-slate-50/50 border-b border-slate-100 last:border-0 cursor-pointer"
+                                                                    onClick={() => router.push(`/invoices/${sale.facturaId}`)}
+                                                                >
                                                                     <TableCell className="py-2 font-semibold text-slate-800 text-[11px] font-mono">{sale.facturaNumero}</TableCell>
                                                                     <TableCell className="py-2 text-[11px] font-medium text-slate-600 max-w-[140px] truncate">{sale.cliente}</TableCell>
                                                                     <TableCell className="py-2 text-[11px] text-slate-500">{new Date(sale.fecha).toLocaleDateString('es-PA')}</TableCell>
@@ -511,13 +514,83 @@ function EditProductForm({ product }: { product: any }) {
                                     </TabsContent>
 
                                     {/* TAB 4: MULTIMEDIA */}
-                                    <TabsContent value="multimedia" className="mt-4 outline-none">
-                                        <div className="border border-dashed border-slate-200 rounded-xl p-8 text-center bg-slate-50/30">
-                                            <ImageIcon className="mx-auto h-10 w-10 opacity-30 text-slate-400 mb-3" />
-                                            <h4 className="text-sm font-bold text-slate-700">Soporte Multimedia Inactivo</h4>
-                                            <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1 leading-relaxed">
-                                                El esquema de base de datos actual no tiene una columna de imágenes vinculada a los productos. Para habilitarla se requerirá aplicar una migración estructurada.
-                                            </p>
+                                    <TabsContent value="multimedia" className="mt-2 space-y-4 outline-none">
+                                        <input type="hidden" name="imagenUrl" value={imagenUrl} />
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* Left side: Upload controls */}
+                                            <div className="space-y-4">
+                                                <div className="space-y-1">
+                                                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Cargar Imagen Local</Label>
+                                                    <div className="border border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50/50 hover:bg-slate-50 transition-colors relative cursor-pointer group">
+                                                        <Input 
+                                                            type="file" 
+                                                            accept="image/*"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) {
+                                                                    const reader = new FileReader();
+                                                                    reader.onloadend = () => {
+                                                                        setImagenUrl(reader.result as string);
+                                                                    };
+                                                                    reader.readAsDataURL(file);
+                                                                }
+                                                            }}
+                                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                        />
+                                                        <ImageIcon className="mx-auto h-8 w-8 text-slate-400 group-hover:text-brand-1 transition-colors mb-2" />
+                                                        <span className="text-xs font-bold text-slate-700 block">Arrastra o selecciona un archivo</span>
+                                                        <span className="text-[10px] text-slate-400 block mt-0.5">PNG, JPG, GIF hasta 5MB (Se almacena en base de datos)</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="relative flex py-1 items-center">
+                                                    <div className="flex-grow border-t border-slate-100"></div>
+                                                    <span className="flex-shrink mx-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">O</span>
+                                                    <div className="flex-grow border-t border-slate-100"></div>
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <Label htmlFor="urlImagenInput" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Enlace de Imagen (URL de Red)</Label>
+                                                    <Input
+                                                        id="urlImagenInput"
+                                                        placeholder="https://ejemplo.com/imagen.jpg"
+                                                        value={imagenUrl.startsWith('data:') ? '' : imagenUrl}
+                                                        onChange={(e) => setImagenUrl(e.target.value)}
+                                                        className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                                    />
+                                                    <span className="text-[9px] text-slate-400 block leading-tight">Pega una dirección web directa de imagen si está alojada en un servidor externo.</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Right side: Image Preview */}
+                                            <div className="space-y-2">
+                                                <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Vista Previa</Label>
+                                                <div className="border border-slate-200 rounded-xl bg-slate-50/30 overflow-hidden flex items-center justify-center min-h-[220px] max-h-[240px] relative p-3">
+                                                    {imagenUrl ? (
+                                                        <>
+                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                            <img 
+                                                                src={imagenUrl} 
+                                                                alt="Vista previa del producto" 
+                                                                className="max-w-full max-h-[200px] object-contain rounded shadow-sm"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setImagenUrl('')}
+                                                                className="absolute top-2 right-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-[10px] uppercase px-2 py-1 rounded border border-red-200 shadow-sm transition-colors active:scale-95"
+                                                            >
+                                                                Remover
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <div className="text-center text-slate-400 py-8">
+                                                            <ImageIcon className="mx-auto h-12 w-12 opacity-20 mb-2 text-slate-400" />
+                                                            <span className="text-xs font-semibold block">Sin imagen asignada</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                     </TabsContent>
 
@@ -606,6 +679,16 @@ function EditProductForm({ product }: { product: any }) {
                         
                         {/* Combined Summary & Metadata Card */}
                         <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
+                            {imagenUrl && (
+                                <div className="w-full h-32 bg-slate-50 border-b border-slate-100 flex items-center justify-center p-2 relative">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img 
+                                        src={imagenUrl} 
+                                        alt={descripcion} 
+                                        className="max-h-full max-w-full object-contain rounded"
+                                    />
+                                </div>
+                            )}
                             <CardHeader className="bg-slate-50 border-b border-slate-100 py-3 px-4 flex flex-row items-center justify-between">
                                 <div className="flex items-center gap-1.5">
                                     <Package className="h-4.5 w-4.5 text-brand-1" />

@@ -196,6 +196,7 @@ model Producto {
   codigoBarras    String?
   descripcion     String
   descripcionLarga String? // WooCommerce style long description
+  imagenUrl        String?
   costoUnitario   Decimal
   precioVenta     Decimal
   codigoTasaItbms String  @default("00") // "00"=Exento, "01"=7%, etc.

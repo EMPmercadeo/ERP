@@ -341,7 +341,7 @@ export function ProductList({
             cell: ({ row }) => {
                 const product = row.original;
                 return (
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
@@ -652,7 +652,8 @@ export function ProductList({
                                         table.getRowModel().rows.map((row) => (
                                             <TableRow
                                                 key={row.id}
-                                                className="hover:bg-slate-50/50 border-b border-slate-100 last:border-0"
+                                                className="hover:bg-slate-50/50 border-b border-slate-100 last:border-0 cursor-pointer"
+                                                onClick={() => router.push(`/products/${row.original.id}`)}
                                             >
                                                 {row.getVisibleCells().map((cell) => (
                                                     <TableCell key={cell.id} className="py-2.5 text-xs text-slate-600">
