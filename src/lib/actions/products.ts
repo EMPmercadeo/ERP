@@ -242,7 +242,7 @@ export async function getProduct(id: string) {
             facturaId: item.facturaId,
             facturaNumero: item.factura.numeroCompleto,
             fecha: item.factura.fechaEmision.toISOString(),
-            cliente: item.factura.cliente.razonSocial,
+            cliente: item.factura.cliente?.razonSocial || 'Consumidor Final',
             cantidad: item.cantidad.toNumber(),
             precio: item.precioUnitario.toNumber(),
             total: item.montoTotal.toNumber()
