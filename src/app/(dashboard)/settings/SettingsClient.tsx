@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -87,6 +87,101 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
     const [selectedPlanForPay, setSelectedPlanForPay] = useState<any>(null);
     const [paymentStep, setPaymentStep] = useState<'details' | 'simulating' | 'success'>('details');
     const [showCancelModal, setShowCancelModal] = useState(false);
+    const [isPaypalSdkLoaded, setIsPaypalSdkLoaded] = useState(false);
+
+    useEffect(() => {
+        if (!showPaypalModal || !selectedPlanForPay) return;
+
+        const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+        if (!clientId) {
+            console.log("No PayPal Client ID configured, using simulation mode.");
+            return;
+        }
+
+        const planId = selectedPlanForPay.id === 'basic'
+            ? process.env.NEXT_PUBLIC_PLAN_BASIC_ID || process.env.NEXT_PUBLIC_PAYPAL_PLAN_BASIC_ID
+            : process.env.NEXT_PUBLIC_PLAN_PRO_ID || process.env.NEXT_PUBLIC_PAYPAL_PLAN_PRO_ID;
+
+        if (!planId) {
+            console.error(`No Plan ID configured for plan type: ${selectedPlanForPay.id}`);
+            return;
+        }
+
+        // Load PayPal SDK script
+        const scriptId = 'paypal-sdk-script';
+        let script = document.getElementById(scriptId) as HTMLScriptElement;
+
+        const initButtons = () => {
+            if (!(window as any).paypal) return;
+            setIsPaypalSdkLoaded(true);
+            
+            const container = document.getElementById('paypal-button-container');
+            if (container) {
+                container.innerHTML = '';
+            } else {
+                return;
+            }
+
+            (window as any).paypal.Buttons({
+                style: {
+                    shape: 'pill',
+                    color: 'gold',
+                    layout: 'vertical',
+                    label: 'subscribe'
+                },
+                createSubscription: function(data: any, actions: any) {
+                    return actions.subscription.create({
+                        plan_id: planId,
+                        custom_id: company.id
+                    });
+                },
+                onApprove: async function(data: any, actions: any) {
+                    setPaymentStep('simulating');
+                    try {
+                        setIsPlanLoading(true);
+                        const result = await updateCompanyPlan(company.id, selectedPlanForPay.id);
+                        if (result.success) {
+                            setCompany(prev => ({
+                                ...prev,
+                                planType: selectedPlanForPay.id,
+                                fiscalEnabled: selectedPlanForPay.id !== 'free',
+                                subscriptionStatus: 'active'
+                            }));
+                            setPaymentStep('success');
+                            toast.success(`¡Suscripción al plan ${selectedPlanForPay.name} activada con éxito!`);
+                            router.refresh();
+                        } else {
+                            toast.error(result.message);
+                            setPaymentStep('details');
+                        }
+                    } catch (error) {
+                        toast.error('Error al actualizar el plan.');
+                        setPaymentStep('details');
+                    } finally {
+                        setIsPlanLoading(false);
+                    }
+                },
+                onError: function(err: any) {
+                    console.error('PayPal Checkout error:', err);
+                    toast.error('Error al procesar la suscripción con PayPal.');
+                }
+            }).render('#paypal-button-container');
+        };
+
+        if (!script) {
+            script = document.createElement('script');
+            script.id = scriptId;
+            script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&vault=true&intent=subscription`;
+            script.async = true;
+            script.onload = () => {
+                initButtons();
+            };
+            document.body.appendChild(script);
+        } else {
+            setTimeout(initButtons, 100);
+        }
+    }, [showPaypalModal, selectedPlanForPay, company.id, router]);
+
 
     // Document Limits & Display Info based on plan
     const getPlanLimitsInfo = (plan: string) => {
@@ -1038,18 +1133,30 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
                                 </div>
 
                                 <div className="space-y-3">
-                                    <div className="text-[10px] text-muted-foreground text-center">
-                                        Al presionar Pagar, se iniciará el proceso seguro de suscripción con PayPal Vault.
-                                    </div>
-
-                                    {/* PayPal Styled Yellow Button */}
-                                    <button
-                                        onClick={executePayment}
-                                        className="w-full flex items-center justify-center gap-2 py-3 bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-bold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#FFC439]"
-                                    >
-                                        <span className="italic font-extrabold text-lg">PayPal</span>
-                                        <span className="text-sm font-semibold tracking-wider">SUSCRIBIRSE</span>
-                                    </button>
+                                    {process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ? (
+                                        <div className="space-y-3">
+                                            <div id="paypal-button-container" className="w-full min-h-[50px] relative z-10"></div>
+                                            {!isPaypalSdkLoaded && (
+                                                <div className="flex items-center justify-center py-4 text-xs text-muted-foreground">
+                                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                                    Cargando botones de PayPal...
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="text-[10px] text-muted-foreground text-center">
+                                                Al presionar Pagar, se iniciará el proceso seguro de suscripción con PayPal Vault.
+                                            </div>
+                                            <button
+                                                onClick={executePayment}
+                                                className="w-full flex items-center justify-center gap-2 py-3 bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-bold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#FFC439]"
+                                            >
+                                                <span className="italic font-extrabold text-lg">PayPal</span>
+                                                <span className="text-sm font-semibold tracking-wider">SUSCRIBIRSE (Simulado)</span>
+                                            </button>
+                                        </>
+                                    )}
 
                                     <Button
                                         variant="outline"
