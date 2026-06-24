@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db';
 import { Topbar } from '@/components/layout/Topbar';
 import { ClientList } from '@/components/clients/ClientList';
+import { getTenantContext } from '@/lib/auth/context';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,7 @@ export default async function ClientsPage(props: {
     }>;
 }) {
     const searchParams = await props.searchParams;
+    const { empresaId } = await getTenantContext();
     const page = Number(searchParams.page) || 1;
     const search = searchParams.search || '';
     const sortBy = searchParams.sortBy || 'createdAt';
@@ -22,12 +24,13 @@ export default async function ClientsPage(props: {
     const skip = (page - 1) * limit;
 
     const where = search ? {
+        empresaId,
         OR: [
             { razonSocial: { contains: search, mode: 'insensitive' as const } },
             { ruc: { contains: search, mode: 'insensitive' as const } },
             { email: { contains: search, mode: 'insensitive' as const } },
         ]
-    } : {};
+    } : { empresaId };
 
     const validSortFields = ['razonSocial', 'saldoPendiente', 'createdAt'];
     const orderByField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';

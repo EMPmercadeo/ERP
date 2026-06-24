@@ -71,11 +71,15 @@ export default function TermsPage() {
                     </section>
 
                     <section>
-                        <h2 className="text-xl font-semibold text-foreground mb-3">5. Pagos y Suscripciones</h2>
+                        <h2 className="text-xl font-semibold text-foreground mb-3">5. Pagos, Suscripciones y PayPal</h2>
                         <p>
-                            El acceso al Servicio puede requerir el pago de una suscripción mensual o anual.
-                            Los precios están sujetos a cambios con previo aviso de 30 días.
-                            Los pagos no son reembolsables excepto en los casos establecidos por la ley panameña.
+                            El acceso al Servicio requiere la contratación de una suscripción periódica (mensual o anual). Todos los pagos y cobros recurrentes de nuestros planes se procesan de manera exclusiva e integrada a través de la plataforma de pagos **PayPal**.
+                        </p>
+                        <p className="mt-2">
+                            Al contratar un plan de pago (como Pro o Enterprise), usted autoriza expresamente a ERP Panamá a realizar cargos periódicos automáticos a su cuenta de PayPal al inicio de cada ciclo de facturación. Es su responsabilidad mantener fondos suficientes o un método de pago válido asociado en su cuenta de PayPal.
+                        </p>
+                        <p className="mt-2">
+                            **Cancelaciones y Reembolsos:** Puede cancelar su suscripción en cualquier momento desde los ajustes de su perfil en ERP Panamá o directamente desde su panel de control en PayPal. La cancelación detendrá los cargos futuros, pero no generará reembolsos retroactivos por períodos de facturación ya iniciados o parcialmente utilizados, a excepción de lo estrictamente estipulado por las normativas de protección al consumidor aplicables en la República de Panamá.
                         </p>
                     </section>
 

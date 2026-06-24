@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { ChevronLeft, Download, Send } from 'lucide-react';
 import Link from 'next/link';
 import { QuotePDFDownloadButton } from '@/components/quotes/QuotePDFDownloadButton';
+import { getTenantContext } from '@/lib/auth/context';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,9 +17,9 @@ interface PageProps {
     params: Promise<{ id: string }>;
 }
 
-async function getQuote(id: string) {
-    const quote = await prisma.cotizacion.findUnique({
-        where: { id },
+async function getQuote(id: string, empresaId: string) {
+    const quote = await prisma.cotizacion.findFirst({
+        where: { id, empresaId },
         include: {
             cliente: true,
             items: true,
@@ -34,7 +35,8 @@ export default async function QuoteDetailPage(props: PageProps) {
     // Next.js 15 requires awaiting params
     const params = await props.params;
     const { id } = params;
-    const rawQuote = await getQuote(id);
+    const { empresaId } = await getTenantContext();
+    const rawQuote = await getQuote(id, empresaId);
 
     if (!rawQuote) {
         notFound();

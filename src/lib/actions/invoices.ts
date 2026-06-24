@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { InvoiceSchema } from '@/lib/validations';
 
+import { getTenantContext } from '@/lib/auth/context';
+
 // DGI Document Codes
 const DOC_TYPE_FE = 'FE'; // Factura Electrónica
 
@@ -46,8 +48,9 @@ async function getNextSequence(empresaId: string, sucursalId: string, cajaId: st
     });
 }
 
-async function getDefaults() {
-    const company = await prisma.empresa.findFirst({
+async function getDefaults(empresaId: string) {
+    const company = await prisma.empresa.findUnique({
+        where: { id: empresaId },
         include: {
             sucursales: {
                 include: {
@@ -91,7 +94,33 @@ export async function createInvoice(prevState: any, formData: FormData) {
     const { data } = validatedFields;
 
     try {
-        const { empresa, sucursal, caja } = await getDefaults();
+        const { empresaId, userId } = await getTenantContext();
+        const { empresa, sucursal, caja } = await getDefaults(empresaId);
+
+        // Verify client belongs to current company
+        const client = await prisma.cliente.findFirst({
+            where: { id: data.clienteId, empresaId }
+        });
+        if (!client) {
+            return {
+                message: 'El cliente seleccionado no pertenece a tu empresa o no existe.'
+            };
+        }
+
+        // Verify all products belong to current company
+        const productIds = data.items.map(item => item.productoId);
+        const uniqueProductIds = Array.from(new Set(productIds));
+        const products = await prisma.producto.findMany({
+            where: {
+                id: { in: uniqueProductIds },
+                empresaId
+            }
+        });
+        if (products.length !== uniqueProductIds.length) {
+            return {
+                message: 'Uno o más productos seleccionados no pertenecen a tu empresa o no existen.'
+            };
+        }
 
         // Check monthly document consumption limits
         const now = new Date();
@@ -151,7 +180,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
                 sucursalId: sucursal.id,
                 cajaId: caja.id,
                 clienteId: data.clienteId,
-                creadorId: (await prisma.usuario.findFirst())?.id || '',
+                creadorId: userId,
 
                 tipoDocumento: tipoDoc,
                 numeroSecuencial,
@@ -166,16 +195,21 @@ export async function createInvoice(prevState: any, formData: FormData) {
                 estadoDgi: isFiscal ? 'pendiente' : 'local', // 'local' avoids DGI triggers
 
                 items: {
-                    create: data.items.map(item => ({
-                        productoId: item.productoId,
-                        descripcion: item.descripcion,
-                        cantidad: item.cantidad,
-                        precioUnitario: item.precioUnitario,
-                        costoUnitario: 0,
-                        codigoTasaItbms: item.codigoTasaItbms,
-                        montoItbms: item.cantidad * item.precioUnitario * (item.codigoTasaItbms === '01' ? 0.07 : 0),
-                        montoTotal: item.cantidad * item.precioUnitario * (1 + (item.codigoTasaItbms === '01' ? 0.07 : 0))
-                    }))
+                    create: data.items.map(item => {
+                        const tasa = item.codigoTasaItbms === '01' ? 0.07 :
+                            item.codigoTasaItbms === '02' ? 0.10 :
+                                item.codigoTasaItbms === '03' ? 0.15 : 0;
+                        return {
+                            productoId: item.productoId,
+                            descripcion: item.descripcion,
+                            cantidad: item.cantidad,
+                            precioUnitario: item.precioUnitario,
+                            costoUnitario: 0,
+                            codigoTasaItbms: item.codigoTasaItbms,
+                            montoItbms: item.cantidad * item.precioUnitario * tasa,
+                            montoTotal: item.cantidad * item.precioUnitario * (1 + tasa)
+                        };
+                    })
                 }
             }
         });
@@ -193,12 +227,13 @@ export async function createInvoice(prevState: any, formData: FormData) {
 
 export async function voidInvoice(id: string) {
     try {
-        const invoice = await prisma.factura.findUnique({
-            where: { id }
+        const { empresaId } = await getTenantContext();
+        const invoice = await prisma.factura.findFirst({
+            where: { id, empresaId }
         });
 
         if (!invoice) {
-            return { success: false, message: 'Factura no encontrada.' };
+            return { success: false, message: 'Factura no encontrada o acceso denegado.' };
         }
 
         if (invoice.estadoDgi === 'anulada') {

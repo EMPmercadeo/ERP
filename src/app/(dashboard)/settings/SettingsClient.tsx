@@ -15,7 +15,8 @@ import {
     CreditCard,
     Sparkles,
     Zap,
-    Building
+    Building,
+    X
 } from 'lucide-react';
 import { Topbar } from '@/components/layout/Topbar';
 import { ContentContainer } from '@/components/layout/Content';
@@ -81,6 +82,12 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
     // Billing state
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
+    // Subscription payment simulation states
+    const [showPaypalModal, setShowPaypalModal] = useState(false);
+    const [selectedPlanForPay, setSelectedPlanForPay] = useState<any>(null);
+    const [paymentStep, setPaymentStep] = useState<'details' | 'simulating' | 'success'>('details');
+    const [showCancelModal, setShowCancelModal] = useState(false);
+
     // Document Limits & Display Info based on plan
     const getPlanLimitsInfo = (plan: string) => {
         switch (plan) {
@@ -92,7 +99,7 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
                 return { limit: Infinity, label: 'Ilimitado', desc: 'Tu plan Enterprise Embedded te permite autorizar volumen a la medida con soporte prioritario y multi-PAC.' };
             case 'free':
             default:
-                return { limit: 100, label: '100 docs/mes', desc: 'Tu plan Gratuito Asistido te permite preparar hasta 100 documentos al mes con autorización manual/asistida.' };
+                return { limit: 10, label: '10 docs/mes', desc: 'Tu plan Gratuito Asistido te permite preparar hasta 10 documentos al mes con autorización manual/asistida.' };
         }
     };
 
@@ -196,27 +203,65 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
             return;
         }
 
-        setIsPlanLoading(true);
+        const planObj = plans.find(p => p.id === newPlan);
+        if (planObj) {
+            setSelectedPlanForPay(planObj);
+            setPaymentStep('details');
+            setShowPaypalModal(true);
+        }
+    };
+
+    const executePayment = async () => {
+        if (!selectedPlanForPay) return;
+        setPaymentStep('simulating');
+        
         try {
-            const result = await updateCompanyPlan(company.id, newPlan);
+            // Simulate connecting with PayPal and vaulting payment token
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            setIsPlanLoading(true);
+            const result = await updateCompanyPlan(company.id, selectedPlanForPay.id);
             if (result.success) {
-                toast.success(result.message);
                 setCompany(prev => ({
                     ...prev,
-                    planType: newPlan,
-                    fiscalEnabled: newPlan !== 'free',
-                    // Auto reset environment to Test if plan changed to free
-                    ambienteDgi: newPlan === 'free' ? '1' : prev.ambienteDgi
+                    planType: selectedPlanForPay.id,
+                    fiscalEnabled: selectedPlanForPay.id !== 'free',
+                    subscriptionStatus: 'active'
                 }));
-                if (newPlan === 'free') {
-                    setAmbienteDgi('1');
-                }
+                setPaymentStep('success');
+                toast.success(`¡Suscripción al plan ${selectedPlanForPay.name} activada con éxito!`);
+                router.refresh();
+            } else {
+                toast.error(result.message);
+                setPaymentStep('details');
+            }
+        } catch (error) {
+            toast.error('Error al procesar la suscripción con PayPal.');
+            setPaymentStep('details');
+        } finally {
+            setIsPlanLoading(false);
+        }
+    };
+
+    const executeCancelSubscription = async () => {
+        setIsPlanLoading(true);
+        try {
+            const result = await updateCompanyPlan(company.id, 'free');
+            if (result.success) {
+                setCompany(prev => ({
+                    ...prev,
+                    planType: 'free',
+                    fiscalEnabled: false,
+                    subscriptionStatus: 'active'
+                }));
+                setShowCancelModal(false);
+                toast.success('Tu suscripción ha sido cancelada. Tu cuenta ahora está en el plan Gratuito.');
                 router.refresh();
             } else {
                 toast.error(result.message);
             }
         } catch (error) {
-            toast.error('Error al cambiar de plan.');
+            toast.error('Error al cancelar la suscripción.');
         } finally {
             setIsPlanLoading(false);
         }
@@ -631,6 +676,20 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
                                             <p className="text-sm text-indigo-900/80 mt-1">
                                                 {planInfo.desc}
                                             </p>
+                                            {company.planType !== 'free' && company.planType !== 'enterprise' && (
+                                                <div className="mt-2.5 flex items-center gap-4">
+                                                    <span className="text-xs text-indigo-950/60 font-semibold flex items-center gap-1">
+                                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                                                        Renovación PayPal activa
+                                                    </span>
+                                                    <button
+                                                        onClick={() => setShowCancelModal(true)}
+                                                        className="text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline"
+                                                    >
+                                                        Cancelar Suscripción
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="w-full sm:w-auto">
@@ -939,6 +998,163 @@ export function SettingsClient({ initialCompany, invoicesCount, userRole }: Sett
                     )}
                 </div>
             </ContentContainer>
+
+            {/* --- MODALES DE SUSCRIPCIÓN --- */}
+
+            {/* PayPal Subscription Payment Modal */}
+            {showPaypalModal && selectedPlanForPay && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="w-full max-w-md bg-card rounded-xl border border-border shadow-2xl p-6 relative font-sans">
+                        <button
+                            onClick={() => setShowPaypalModal(false)}
+                            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+                            disabled={paymentStep === 'simulating'}
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+
+                        {paymentStep === 'details' && (
+                            <div className="space-y-6">
+                                <div className="text-center">
+                                    <h3 className="text-xl font-bold text-slate-900">Suscripción al Plan</h3>
+                                    <p className="text-xs text-muted-foreground mt-1">Completa el pago recurrente para activar tu plan fiscal de inmediato.</p>
+                                </div>
+
+                                <div className="bg-slate-50 border rounded-lg p-4 space-y-2 text-sm text-slate-700">
+                                    <div className="flex justify-between font-semibold">
+                                        <span>Plan {selectedPlanForPay.name}</span>
+                                        <span>${billingCycle === 'monthly' ? selectedPlanForPay.price.monthly : selectedPlanForPay.price.yearly} / mes</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs text-muted-foreground">
+                                        <span>Ciclo de facturación</span>
+                                        <span>{billingCycle === 'monthly' ? 'Mensual' : 'Anual'}</span>
+                                    </div>
+                                    {billingCycle === 'yearly' && (
+                                        <div className="flex justify-between text-xs text-indigo-600 font-semibold border-t pt-2">
+                                            <span>Cobro total anual</span>
+                                            <span>${(selectedPlanForPay.price.yearly * 12).toFixed(2)} USD</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="text-[10px] text-muted-foreground text-center">
+                                        Al presionar Pagar, se iniciará el proceso seguro de suscripción con PayPal Vault.
+                                    </div>
+
+                                    {/* PayPal Styled Yellow Button */}
+                                    <button
+                                        onClick={executePayment}
+                                        className="w-full flex items-center justify-center gap-2 py-3 bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-bold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#FFC439]"
+                                    >
+                                        <span className="italic font-extrabold text-lg">PayPal</span>
+                                        <span className="text-sm font-semibold tracking-wider">SUSCRIBIRSE</span>
+                                    </button>
+
+                                    <Button
+                                        variant="outline"
+                                        className="w-full"
+                                        onClick={() => setShowPaypalModal(false)}
+                                    >
+                                        Cancelar
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {paymentStep === 'simulating' && (
+                            <div className="text-center py-12 space-y-6">
+                                <Loader2 className="h-12 w-12 text-[#003087] mx-auto animate-spin" />
+                                <div className="space-y-2">
+                                    <h4 className="font-bold text-slate-900">Conectando con PayPal...</h4>
+                                    <p className="text-xs text-muted-foreground">Autorizando token de suscripción y vinculando cuenta...</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {paymentStep === 'success' && (
+                            <div className="text-center py-8 space-y-6">
+                                <div className="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                                    <Check className="h-10 w-10 stroke-[3]" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="text-xl font-bold text-slate-900">¡Suscripción Activada!</h4>
+                                    <p className="text-xs text-muted-foreground">
+                                        Tu cuenta ha sido actualizada al plan <strong className="text-indigo-600">{selectedPlanForPay.name}</strong>. Ya puedes emitir documentos fiscales de forma automática.
+                                    </p>
+                                </div>
+                                <Button
+                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+                                    onClick={() => {
+                                        setShowPaypalModal(false);
+                                        router.refresh();
+                                    }}
+                                >
+                                    Ir a mi Dashboard
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Cancel Subscription Warning Modal */}
+            {showCancelModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="w-full max-w-md bg-card rounded-xl border border-border shadow-2xl p-6 relative font-sans">
+                        <button
+                            onClick={() => setShowCancelModal(false)}
+                            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+                            disabled={isPlanLoading}
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+
+                        <div className="space-y-5">
+                            <div className="flex items-start gap-4">
+                                <div className="p-3 bg-rose-100 text-rose-700 rounded-full shrink-0">
+                                    <XCircle className="h-6 w-6" />
+                                </div>
+                                <div className="space-y-1">
+                                    <h3 className="text-lg font-bold text-slate-900">¿Cancelar tu suscripción?</h3>
+                                    <p className="text-xs text-muted-foreground">
+                                        Si cancelas tu suscripción, tu empresa bajará inmediatamente al **Plan Gratuito Asistido**.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="bg-rose-50/50 border border-rose-100 rounded-lg p-4 text-xs text-rose-800 space-y-2">
+                                <p className="font-semibold">Esto implica las siguientes restricciones:</p>
+                                <ul className="list-disc pl-4 space-y-1">
+                                    <li>Límite de facturación reducido a **10 documentos al mes** (actualmente {company.planType === 'pro' ? '500' : '100'}).</li>
+                                    <li>Desactivación del timbrado automático con el PAC integrado.</li>
+                                    <li>Restablecimiento del ambiente DGI obligatorio a modo **Pruebas (Test)**.</li>
+                                    <li>Pérdida de integraciones WhatsApp API y Webhooks salientes.</li>
+                                </ul>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    className="flex-1"
+                                    onClick={() => setShowCancelModal(false)}
+                                    disabled={isPlanLoading}
+                                >
+                                    Conservar Plan
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-semibold"
+                                    onClick={executeCancelSubscription}
+                                    disabled={isPlanLoading}
+                                >
+                                    {isPlanLoading ? 'Procesando...' : 'Confirmar Cancelación'}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

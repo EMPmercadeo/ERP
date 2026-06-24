@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { getTenantContext } from '@/lib/auth/context';
 
 export const dynamic = 'force-dynamic';
 import {
@@ -41,9 +42,11 @@ export default async function InvoiceDetailPage(props: PageProps) {
     const { id } = params;
     const printParam = searchParams.print;
     const sentParam = searchParams.sent;
+    const { empresaId } = await getTenantContext();
 
     const invoice = await prisma.factura.findFirst({
         where: {
+            empresaId,
             OR: [
                 { id: id },
                 { numeroCompleto: id }

@@ -10,10 +10,11 @@ export default async function ClientDetailPage(props: { params: Promise<{ id: st
     const searchParams = await props.searchParams;
     const { id } = params;
     const initialTab = searchParams.tab || 'info';
+    const { empresaId } = await getTenantContext();
 
     // 1. Fetch Client
-    const client = await prisma.cliente.findUnique({
-        where: { id },
+    const client = await prisma.cliente.findFirst({
+        where: { id, empresaId },
         include: {
             facturas: {
                 orderBy: { fechaEmision: 'desc' },

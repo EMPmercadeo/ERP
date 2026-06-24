@@ -5,6 +5,7 @@ import { Topbar } from '@/components/layout/Topbar';
 import { ContentContainer } from '@/components/layout/Content';
 import { QuotesList } from '@/components/quotes/QuotesList';
 import { prisma } from '@/lib/db';
+import { getTenantContext } from '@/lib/auth/context';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,7 @@ export default async function QuotesPage(props: {
     }>;
 }) {
     const searchParams = await props.searchParams;
+    const { empresaId } = await getTenantContext();
     const page = Number(searchParams.page) || 1;
     const search = searchParams.search || '';
     const status = searchParams.status || 'all';
@@ -28,6 +30,7 @@ export default async function QuotesPage(props: {
     const skip = (page - 1) * limit;
 
     const where: any = {
+        empresaId,
         AND: []
     };
 

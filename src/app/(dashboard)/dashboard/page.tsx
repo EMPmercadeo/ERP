@@ -19,10 +19,11 @@ import { TrendChart } from '@/components/dashboard/TrendChart';
 
 import { prisma } from '@/lib/db';
 import { subHours, subDays, subMonths, startOfDay, endOfDay, parseISO } from 'date-fns';
+import { getTenantContext } from '@/lib/auth/context';
 
 export const dynamic = 'force-dynamic';
 
-async function getDashboardData(searchParams: { [key: string]: string | string[] | undefined }) {
+async function getDashboardData(searchParams: { [key: string]: string | string[] | undefined }, empresaId: string) {
     const period = (searchParams?.period as string) || '3m';
     const customStart = searchParams?.start as string;
     const customEnd = searchParams?.end as string;
@@ -55,8 +56,8 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
     // Google Analytics style: "Previous period"
     const prevStart = new Date(prevEnd.getTime() - duration);
 
-    const whereDate = { fechaEmision: { gte: start, lte: end } };
-    const wherePrev = { fechaEmision: { gte: prevStart, lte: prevEnd } };
+    const whereDate = { empresaId, fechaEmision: { gte: start, lte: end } };
+    const wherePrev = { empresaId, fechaEmision: { gte: prevStart, lte: prevEnd } };
 
     // 1. Fetch Current Data & Details
     const [
@@ -85,7 +86,7 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
         }),
         prisma.pago.aggregate({
             _sum: { monto: true },
-            where: { fechaPago: { gte: start, lte: end } }
+            where: { empresaId, fechaPago: { gte: start, lte: end } }
         }),
         prisma.factura.aggregate({
             _sum: { saldoPendiente: true },
@@ -116,7 +117,7 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
         }),
         prisma.pago.aggregate({
             _sum: { monto: true },
-            where: { fechaPago: { gte: prevStart, lte: prevEnd } }
+            where: { empresaId, fechaPago: { gte: prevStart, lte: prevEnd } }
         }),
         prisma.factura.aggregate({
             _sum: { saldoPendiente: true },
@@ -153,6 +154,7 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
                 prisma.factura.aggregate({
                     _sum: { totalNeto: true },
                     where: {
+                        empresaId,
                         fechaEmision: { gte: m.start, lte: m.end },
                         estadoDgi: { not: 'anulada' }
                     }
@@ -160,12 +162,14 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
                 prisma.pago.aggregate({
                     _sum: { monto: true },
                     where: {
+                        empresaId,
                         fechaPago: { gte: m.start, lte: m.end }
                     }
                 }),
                 prisma.factura.aggregate({
                     _sum: { saldoPendiente: true },
                     where: {
+                        empresaId,
                         fechaEmision: { gte: m.start, lte: m.end },
                         estadoDgi: { not: 'anulada' }
                     }
@@ -173,6 +177,7 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
                 prisma.factura.aggregate({
                     _sum: { saldoPendiente: true },
                     where: {
+                        empresaId,
                         fechaEmision: { gte: m.start, lte: m.end },
                         fechaVencimiento: { lt: now },
                         saldoPendiente: { gt: 0 },
@@ -282,7 +287,8 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
 
 export default async function DashboardPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const searchParams = await props.searchParams;
-    const { recentInvoices, dgiData, trendData, sparks, kpiData } = await getDashboardData(searchParams);
+    const { empresaId } = await getTenantContext();
+    const { recentInvoices, dgiData, trendData, sparks, kpiData } = await getDashboardData(searchParams, empresaId);
 
     return (
         <>

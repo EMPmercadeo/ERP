@@ -56,15 +56,16 @@ export default function PrivacyPage() {
                     </section>
 
                     <section>
-                        <h2 className="text-xl font-semibold text-foreground mb-3">3. Compartir Información</h2>
+                        <h2 className="text-xl font-semibold text-foreground mb-3">3. Compartir Información y Terceros</h2>
                         <p>
-                            No vendemos ni alquilamos su información personal. Podemos compartir información en las siguientes circunstancias:
+                            No vendemos ni alquilamos su información personal. Compartimos información únicamente para la prestación segura del servicio en las siguientes circunstancias:
                         </p>
-                        <ul className="list-disc ml-6 mt-2 space-y-1">
-                            <li><strong>Con la DGI:</strong> Para la emisión y validación de documentos fiscales electrónicos</li>
-                            <li><strong>Proveedores de servicios:</strong> Google Cloud Platform para hosting y procesamiento</li>
-                            <li><strong>Cumplimiento legal:</strong> Cuando sea requerido por ley o proceso legal</li>
-                            <li><strong>Protección de derechos:</strong> Para proteger nuestros derechos, privacidad, seguridad o propiedad</li>
+                        <ul className="list-disc ml-6 mt-2 space-y-1.5">
+                            <li><strong>Con la DGI:</strong> Para la emisión, validación y certificación de documentos fiscales electrónicos.</li>
+                            <li><strong>Con PayPal:</strong> Para el procesamiento de pagos, suscripciones y transacciones financieras. ERP Panamá no almacena ni procesa directamente los números de tarjetas de crédito o credenciales de pago; estos datos son manejados de forma exclusiva y segura por PayPal de acuerdo con su propia política de privacidad.</li>
+                            <li><strong>Proveedores de servicios:</strong> Proveedores de infraestructura en la nube (como Google Cloud Platform / Supabase) para hosting, almacenamiento seguro y procesamiento de datos.</li>
+                            <li><strong>Cumplimiento legal:</strong> Cuando sea requerido por autoridades competentes de la República de Panamá en cumplimiento de la ley.</li>
+                            <li><strong>Protección de derechos:</strong> Para proteger nuestros derechos, privacidad, seguridad o propiedad.</li>
                         </ul>
                     </section>
 

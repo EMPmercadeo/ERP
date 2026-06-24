@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db';
 import { Topbar } from '@/components/layout/Topbar';
 import { InvoiceList } from '@/components/invoices/InvoiceList';
+import { getTenantContext } from '@/lib/auth/context';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,7 @@ export default async function InvoicesPage(props: {
     }>;
 }) {
     const searchParams = await props.searchParams;
+    const { empresaId } = await getTenantContext();
     const page = Number(searchParams.page) || 1;
     const search = searchParams.search || '';
     const status = searchParams.status || 'all';
@@ -24,6 +26,7 @@ export default async function InvoicesPage(props: {
     const skip = (page - 1) * limit;
 
     const where: any = {
+        empresaId,
         AND: []
     };
 
