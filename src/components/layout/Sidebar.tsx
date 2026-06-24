@@ -41,6 +41,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useAuth } from '@/lib/firebase/auth';
 import { getCurrentUserWithPlan } from '@/lib/actions/auth';
+import { createSupportTicket, submitFeedback } from '@/lib/actions/support';
 import { toast } from 'sonner';
 
 const mainNavigation = [
@@ -57,12 +58,10 @@ const adminNavigation = [
     { name: 'Usuarios', href: '/admin/users', icon: UserCog },
     { name: 'Auditoría', href: '/admin/audit', icon: FileClock },
     { name: 'Facturación', href: '/admin/billing', icon: CreditCard },
+    { name: 'Soporte y Feedback', href: '/admin/support', icon: MessageSquare },
 ];
 
-const footerNavigation = [
-    { name: 'Configuración', href: '/settings', icon: Settings },
-    { name: 'Ayuda', href: '/help', icon: HelpCircle },
-];
+// Configuración and Ayuda are now rendered within the user profile popover
 
 export function Sidebar() {
     const pathname = usePathname();
@@ -136,29 +135,45 @@ export function Sidebar() {
         toast.success('¡Código de referido copiado al portapapeles!');
     };
 
-    const handleSendFeedback = async (e: React.FormEvent) => {
+const handleSendFeedback = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!feedbackText.trim()) return;
         setIsSubmittingFeedback(true);
-        // Simulate sending feedback
-        await new Promise(r => setTimeout(r, 1000));
-        setIsSubmittingFeedback(false);
-        setFeedbackText('');
-        setShowFeedbackModal(false);
-        toast.success('¡Gracias por tus comentarios! Nos ayudan a mejorar.');
+        try {
+            const res = await submitFeedback(feedbackText);
+            if (res.success) {
+                toast.success(res.message);
+                setFeedbackText('');
+                setShowFeedbackModal(false);
+            } else {
+                toast.error(res.message);
+            }
+        } catch (error) {
+            toast.error('Error al enviar comentarios.');
+        } finally {
+            setIsSubmittingFeedback(false);
+        }
     };
 
     const handleSendSupport = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!supportSubject.trim() || !supportMessage.trim()) return;
         setIsSubmittingSupport(true);
-        // Simulate sending support message
-        await new Promise(r => setTimeout(r, 1200));
-        setIsSubmittingSupport(false);
-        setSupportSubject('');
-        setSupportMessage('');
-        setShowSupportModal(false);
-        toast.success('Mensaje enviado. Nuestro equipo de soporte te contactará pronto.');
+        try {
+            const res = await createSupportTicket(supportSubject, supportMessage);
+            if (res.success) {
+                toast.success(res.message);
+                setSupportSubject('');
+                setSupportMessage('');
+                setShowSupportModal(false);
+            } else {
+                toast.error(res.message);
+            }
+        } catch (error) {
+            toast.error('Error al enviar el ticket de soporte.');
+        } finally {
+            setIsSubmittingSupport(false);
+        }
     };
 
     const NavItem = ({ item }: { item: any }) => {
@@ -286,15 +301,8 @@ export function Sidebar() {
                     </TooltipProvider>
                 </nav>
 
-                {/* Footer Navigation (Settings, Help) & User Profile Popover */}
+                {/* User Profile Popover & Collapse Toggle */}
                 <div className="border-t border-sidebar-border p-3 space-y-2 bg-sidebar relative font-sans">
-                    <TooltipProvider delayDuration={0}>
-                        <ul className="space-y-1">
-                            {footerNavigation.map((item) => (
-                                <NavItem key={item.name} item={item} />
-                            ))}
-                        </ul>
-                    </TooltipProvider>
 
                     {/* Collapse toggle - Desktop only */}
                     <div className="hidden lg:block">
@@ -358,7 +366,7 @@ export function Sidebar() {
                         {isDropdownOpen && (
                             <div className={cn(
                                 "absolute z-50 w-64 rounded-xl border border-sidebar-border bg-card text-card-foreground shadow-2xl p-2 animate-in fade-in zoom-in-95 duration-100",
-                                isCollapsed ? "bottom-0 left-16" : "bottom-14 left-0"
+                                isCollapsed ? "bottom-0 left-16 ml-2" : "bottom-0 left-64 ml-2"
                             )}>
                                 {submenu === 'main' && (
                                     <div className="space-y-1">
@@ -386,6 +394,24 @@ export function Sidebar() {
                                         >
                                             <UserIcon className="h-4 w-4 text-muted-foreground" />
                                             <span>Mi Cuenta</span>
+                                        </Link>
+
+                                        <Link
+                                            href="/settings"
+                                            onClick={() => setIsDropdownOpen(false)}
+                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg hover:bg-sidebar-accent transition-colors"
+                                        >
+                                            <Settings className="h-4 w-4 text-muted-foreground" />
+                                            <span>Configuración</span>
+                                        </Link>
+
+                                        <Link
+                                            href="/help"
+                                            onClick={() => setIsDropdownOpen(false)}
+                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg hover:bg-sidebar-accent transition-colors"
+                                        >
+                                            <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                            <span>Ayuda</span>
                                         </Link>
 
                                         <button
@@ -422,26 +448,16 @@ export function Sidebar() {
                                         </button>
 
                                         <Link
-                                            href="/settings"
+                                            href="/research-hub"
                                             onClick={() => setIsDropdownOpen(false)}
-                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg hover:bg-sidebar-accent transition-colors"
-                                        >
-                                            <CreditCard className="h-4 w-4 text-muted-foreground" />
-                                            <span>Planes y Precios</span>
-                                        </Link>
-
-                                        <a
-                                            href="https://autodev.eriktaveras.com"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
                                             className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-lg hover:bg-sidebar-accent transition-colors"
                                         >
                                             <div className="flex items-center gap-2.5">
-                                                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                                <Globe className="h-4 w-4 text-muted-foreground" />
                                                 <span>Research Hub</span>
                                             </div>
-                                            <ExternalLink className="h-3 w-3 text-muted-foreground/60" />
-                                        </a>
+                                            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60" />
+                                        </Link>
 
                                         <div className="border-t border-sidebar-border/60 my-1" />
 
