@@ -78,6 +78,11 @@ async function main() {
     console.log('🗑️  Limpiando base de datos...');
 
     // Clean up in order
+    await prisma.productImage.deleteMany().catch(() => { });
+    await prisma.posSyncLog.deleteMany().catch(() => { });
+    await prisma.posIntegration.deleteMany().catch(() => { });
+    await prisma.documentUsage.deleteMany().catch(() => { });
+    await prisma.subscription.deleteMany().catch(() => { });
     await prisma.cotizacionItem.deleteMany().catch(() => { });
     await prisma.cotizacion.deleteMany().catch(() => { });
     await prisma.auditoria.deleteMany();
@@ -91,9 +96,91 @@ async function main() {
     await prisma.caja.deleteMany();
     await prisma.sucursal.deleteMany();
     await prisma.empresa.deleteMany();
+    await prisma.plan.deleteMany().catch(() => { });
 
     console.log('✅ Base de datos limpiada');
     console.log('🌱 Creando datos de muestra...\n');
+
+    // 0. Seed Plans
+    console.log('🌱 Creando planes...');
+    const planEmprendedor = await prisma.plan.create({
+        data: {
+            name: 'Plan Emprendedor',
+            slug: 'emprendedor',
+            priceMonthly: 19.99,
+            includedDocuments: 150,
+            maxUsers: 1,
+            featuresJson: [
+                'Clientes',
+                'Productos y servicios',
+                'Cotizaciones',
+                'Facturas electrónicas',
+                'PDF/XML',
+                'Cuentas por cobrar',
+                'Reportes básicos',
+                'Envío por correo o WhatsApp'
+            ],
+            isActive: true
+        }
+    });
+
+    const planNegocio = await prisma.plan.create({
+        data: {
+            name: 'Plan Negocio',
+            slug: 'negocio',
+            priceMonthly: 34.99,
+            includedDocuments: 300,
+            maxUsers: 2,
+            featuresJson: [
+                'Todo lo del plan Emprendedor',
+                'Inventario básico',
+                'Notas de crédito',
+                'Notas de débito',
+                'Reportes de ventas',
+                'Control de pagos',
+                'Dashboard mensual'
+            ],
+            isActive: true
+        }
+    });
+
+    const planPro = await prisma.plan.create({
+        data: {
+            name: 'Plan Pro',
+            slug: 'pro',
+            priceMonthly: 54.99,
+            includedDocuments: 600,
+            maxUsers: 5,
+            featuresJson: [
+                'Todo lo del plan Negocio',
+                'Permisos por usuario',
+                'Sucursales',
+                'Reportes avanzados',
+                'Exportación contable',
+                'Automatizaciones básicas'
+            ],
+            isActive: true
+        }
+    });
+
+    const planEmpresa = await prisma.plan.create({
+        data: {
+            name: 'Plan Empresa',
+            slug: 'empresa',
+            priceMonthly: 89.99,
+            includedDocuments: 1000,
+            maxUsers: 10,
+            featuresJson: [
+                'Todo lo del plan Pro',
+                'Soporte prioritario',
+                'API',
+                'Integraciones',
+                'Configuración asistida',
+                'Multiempresa o multisucursal si aplica'
+            ],
+            isActive: true
+        }
+    });
 
     // 1. Create Empresa
     console.log('📊 Creando empresa...');
@@ -107,7 +194,38 @@ async function main() {
             telefono: '+507 300-0000',
             email: 'info@erp-panama.com',
             ambienteDgi: '1',
+            planType: 'pro',
+            fiscalEnabled: true,
+            subscriptionStatus: 'active'
         },
+    });
+
+    // Create Subscription for the empresa (Default to Plan Pro)
+    console.log('💳 Creando suscripción de muestra...');
+    const now = new Date();
+    await prisma.subscription.create({
+        data: {
+            empresaId: empresa.id,
+            planId: planPro.id,
+            status: 'active',
+            currentPeriodStart: now,
+            currentPeriodEnd: new Date(now.getFullYear(), now.getMonth() + 1, now.getDate()),
+            paymentProvider: 'paypal',
+            externalSubscriptionId: 'I-SAMPLE-SUB-ID'
+        }
+    });
+
+    // Create DocumentUsage record for the current month/year
+    console.log('📊 Creando uso de documentos de muestra...');
+    await prisma.documentUsage.create({
+        data: {
+            empresaId: empresa.id,
+            month: now.getMonth() + 1,
+            year: now.getFullYear(),
+            includedLimit: 600,
+            usedDocuments: 15,
+            remainingDocuments: 585
+        }
     });
 
     // 2. Create 150 Sucursales with Cajas
@@ -256,6 +374,40 @@ async function main() {
             },
         });
         productos.push(producto);
+    }
+
+    // Creando imágenes de producto
+    console.log('🖼️ Creando imágenes de muestra para productos...');
+    for (let i = 0; i < 20; i++) {
+        const producto = productos[i];
+        await prisma.productImage.create({
+            data: {
+                productoId: producto.id,
+                empresaId: empresa.id,
+                imageUrl: `https://images.unsplash.com/photo-${1500000000000 + i}?auto=format&fit=crop&w=300&q=80`,
+                altText: `Imagen principal para ${producto.descripcion}`,
+                isPrimary: true,
+                sortOrder: 0
+            }
+        });
+
+        await prisma.producto.update({
+            where: { id: producto.id },
+            data: { imagenUrl: `https://images.unsplash.com/photo-${1500000000000 + i}?auto=format&fit=crop&w=300&q=80` }
+        });
+
+        if (i % 2 === 0) {
+            await prisma.productImage.create({
+                data: {
+                    productoId: producto.id,
+                    empresaId: empresa.id,
+                    imageUrl: `https://images.unsplash.com/photo-${1600000000000 + i}?auto=format&fit=crop&w=300&q=80`,
+                    altText: `Imagen de detalle para ${producto.descripcion}`,
+                    isPrimary: false,
+                    sortOrder: 1
+                }
+            });
+        }
     }
 
     // 7. Create 150 Facturas with Items

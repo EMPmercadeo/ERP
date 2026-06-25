@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { ProductSchema } from '@/lib/validations';
 import { getTenantContext } from '@/lib/auth/context';
+import fs from 'fs/promises';
+import path from 'path';
 
 export async function createProduct(prevState: any, formData: FormData) {
     const { empresaId, userId } = await getTenantContext();
@@ -206,7 +208,12 @@ export async function getProduct(id: string) {
     try {
         const { empresaId } = await getTenantContext();
         const product = await prisma.producto.findFirst({
-            where: { id, empresaId }
+            where: { id, empresaId },
+            include: {
+                productImages: {
+                    orderBy: { sortOrder: 'asc' }
+                }
+            }
         });
 
         if (!product) return null;
@@ -254,6 +261,18 @@ export async function getProduct(id: string) {
             precioVenta: product.precioVenta.toNumber(),
             createdAt: product.createdAt.toISOString(),
             updatedAt: product.updatedAt.toISOString(),
+            productImages: product.productImages.map(img => ({
+                id: img.id,
+                productoId: img.productoId,
+                empresaId: img.empresaId,
+                imageUrl: img.imageUrl,
+                storagePath: img.storagePath,
+                altText: img.altText,
+                sortOrder: img.sortOrder,
+                isPrimary: img.isPrimary,
+                createdAt: img.createdAt.toISOString(),
+                updatedAt: img.updatedAt.toISOString()
+            })),
             auditHistory: formattedAuditLogs,
             salesHistory: formattedSalesHistory
         };
@@ -395,5 +414,201 @@ export async function getProductsForExport(filters: {
     } catch (e) {
         console.error('Export query failed', e);
         return [];
+    }
+}
+
+export async function uploadProductImage(productId: string, formData: FormData) {
+    try {
+        const { empresaId } = await getTenantContext();
+
+        const file = formData.get('file') as File;
+        if (!file) {
+            return { success: false, message: 'No se recibió ningún archivo.' };
+        }
+
+        // Validate extension
+        const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+        const ext = path.extname(file.name).toLowerCase();
+        if (!allowedExtensions.includes(ext)) {
+            return { success: false, message: 'Formato de imagen no permitido. Solo se aceptan .jpg, .jpeg, .png y .webp.' };
+        }
+
+        // Convert to Buffer
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+
+        // Define file path
+        const filename = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products');
+        await fs.mkdir(uploadDir, { recursive: true });
+        const filepath = path.join(uploadDir, filename);
+
+        // Write file
+        await fs.writeFile(filepath, buffer);
+        const imageUrl = `/uploads/products/${filename}`;
+
+        // Save in DB
+        const result = await prisma.$transaction(async (tx) => {
+            const count = await tx.productImage.count({
+                where: { productoId: productId, empresaId }
+            });
+
+            const isPrimary = count === 0;
+
+            const newImage = await tx.productImage.create({
+                data: {
+                    productoId: productId,
+                    empresaId,
+                    imageUrl,
+                    storagePath: filepath,
+                    isPrimary,
+                    sortOrder: count
+                }
+            });
+
+            if (isPrimary) {
+                await tx.producto.update({
+                    where: { id: productId },
+                    data: { imagenUrl: imageUrl }
+                });
+            }
+
+            return newImage;
+        });
+
+        revalidatePath('/products');
+        revalidatePath(`/products/${productId}`);
+        return { success: true, image: result };
+    } catch (error) {
+        console.error('Error uploading product image:', error);
+        return { success: false, message: 'Error al subir la imagen.' };
+    }
+}
+
+export async function deleteProductImage(imageId: string) {
+    try {
+        const { empresaId } = await getTenantContext();
+
+        // Find image and verify ownership
+        const image = await prisma.productImage.findFirst({
+            where: { id: imageId, empresaId }
+        });
+
+        if (!image) {
+            return { success: false, message: 'Imagen no encontrada.' };
+        }
+
+        const productId = image.productoId;
+
+        // Perform in transaction to keep consistency
+        await prisma.$transaction(async (tx) => {
+            // Delete image from database
+            await tx.productImage.delete({
+                where: { id: imageId }
+            });
+
+            // If it was primary, set new primary if other images exist
+            if (image.isPrimary) {
+                const nextImage = await tx.productImage.findFirst({
+                    where: { productoId: productId, empresaId },
+                    orderBy: { sortOrder: 'asc' }
+                });
+
+                if (nextImage) {
+                    await tx.productImage.update({
+                        where: { id: nextImage.id },
+                        data: { isPrimary: true }
+                    });
+                    await tx.producto.update({
+                        where: { id: productId },
+                        data: { imagenUrl: nextImage.imageUrl }
+                    });
+                } else {
+                    await tx.producto.update({
+                        where: { id: productId },
+                        data: { imagenUrl: null }
+                    });
+                }
+            }
+        });
+
+        // Try to delete file from disk
+        if (image.storagePath) {
+            try {
+                await fs.unlink(image.storagePath);
+            } catch (err) {
+                console.warn('Could not delete physical image file:', err);
+            }
+        }
+
+        revalidatePath('/products');
+        revalidatePath(`/products/${productId}`);
+        return { success: true, message: 'Imagen eliminada correctamente.' };
+    } catch (error) {
+        console.error('Error deleting product image:', error);
+        return { success: false, message: 'Error al eliminar la imagen.' };
+    }
+}
+
+export async function setProductImagePrimary(imageId: string) {
+    try {
+        const { empresaId } = await getTenantContext();
+
+        const image = await prisma.productImage.findFirst({
+            where: { id: imageId, empresaId }
+        });
+
+        if (!image) {
+            return { success: false, message: 'Imagen no encontrada.' };
+        }
+
+        const productId = image.productoId;
+
+        await prisma.$transaction(async (tx) => {
+            // Set all to non-primary
+            await tx.productImage.updateMany({
+                where: { productoId: productId, empresaId },
+                data: { isPrimary: false }
+            });
+
+            // Set chosen to primary
+            await tx.productImage.update({
+                where: { id: imageId },
+                data: { isPrimary: true }
+            });
+
+            // Update product imagenUrl
+            await tx.producto.update({
+                where: { id: productId },
+                data: { imagenUrl: image.imageUrl }
+            });
+        });
+
+        revalidatePath('/products');
+        revalidatePath(`/products/${productId}`);
+        return { success: true, message: 'Imagen principal actualizada.' };
+    } catch (error) {
+        console.error('Error setting primary image:', error);
+        return { success: false, message: 'Error al establecer la imagen principal.' };
+    }
+}
+
+export async function updateProductImageOrder(imagesOrder: { id: string, sortOrder: number }[]) {
+    try {
+        const { empresaId } = await getTenantContext();
+
+        await prisma.$transaction(
+            imagesOrder.map((item) =>
+                prisma.productImage.update({
+                    where: { id: item.id, empresaId },
+                    data: { sortOrder: item.sortOrder }
+                })
+            )
+        );
+
+        return { success: true, message: 'Orden de imágenes actualizado.' };
+    } catch (error) {
+        console.error('Error updating image order:', error);
+        return { success: false, message: 'Error al ordenar las imágenes.' };
     }
 }

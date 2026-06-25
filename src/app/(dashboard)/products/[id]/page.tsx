@@ -41,7 +41,14 @@ import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { updateProduct, getProduct } from '@/lib/actions/products';
+import { 
+    updateProduct, 
+    getProduct,
+    uploadProductImage,
+    deleteProductImage,
+    setProductImagePrimary,
+    updateProductImageOrder
+} from '@/lib/actions/products';
 import { useState, useEffect, use, useActionState } from 'react';
 import { cn } from '@/lib/utils';
 import {
@@ -129,6 +136,129 @@ function EditProductForm({ product }: { product: any }) {
     const [stockMinimo, setStockMinimo] = useState(product.stockMinimo?.toString() || '0');
     const [activo, setActivo] = useState(product.activo ? 'true' : 'false');
     const [imagenUrl, setImagenUrl] = useState(product.imagenUrl || '');
+    const [images, setImages] = useState<any[]>(product.productImages || []);
+    const [activePreviewUrl, setActivePreviewUrl] = useState(product.imagenUrl || '');
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        toast.info(`Iniciando subida de ${files.length} archivo(s)...`);
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await uploadProductImage(product.id, formData);
+                if (res.success && res.image) {
+                    setImages(prev => {
+                        if (prev.some(img => img.id === res.image?.id)) return prev;
+                        const next = [...prev, res.image];
+                        return next.sort((a, b) => a.sortOrder - b.sortOrder);
+                    });
+                    if (res.image.isPrimary) {
+                        setImagenUrl(res.image.imageUrl);
+                        setActivePreviewUrl(res.image.imageUrl);
+                    }
+                } else {
+                    toast.error(`Error al subir ${file.name}: ${res.message}`);
+                }
+            } catch (err) {
+                toast.error(`Error de red al subir ${file.name}`);
+            }
+        }
+        toast.success('Proceso de carga de imágenes finalizado.');
+    };
+
+    const handleDelete = async (imageId: string) => {
+        const img = images.find(i => i.id === imageId);
+        if (!img) return;
+
+        toast.promise(
+            deleteProductImage(imageId).then((res) => {
+                if (res.success) {
+                    setImages(prev => {
+                        const next = prev.filter(i => i.id !== imageId);
+                        if (img.isPrimary && next.length > 0) {
+                            next[0].isPrimary = true;
+                            setImagenUrl(next[0].imageUrl);
+                            setActivePreviewUrl(next[0].imageUrl);
+                        } else if (next.length === 0) {
+                            setImagenUrl('');
+                            setActivePreviewUrl('');
+                        }
+                        return next;
+                    });
+                    return 'Imagen eliminada.';
+                } else {
+                    throw new Error(res.message || 'Error al eliminar la imagen.');
+                }
+            }),
+            {
+                loading: 'Eliminando imagen...',
+                success: (msg) => msg,
+                error: (err) => err.message
+            }
+        );
+    };
+
+    const handleSetPrimary = async (imageId: string) => {
+        toast.promise(
+            setProductImagePrimary(imageId).then((res) => {
+                if (res.success) {
+                    setImages(prev => prev.map(img => ({
+                        ...img,
+                        isPrimary: img.id === imageId
+                    })));
+                    const img = images.find(i => i.id === imageId);
+                    if (img) {
+                        setImagenUrl(img.imageUrl);
+                        setActivePreviewUrl(img.imageUrl);
+                    }
+                    return 'Imagen principal actualizada.';
+                } else {
+                    throw new Error(res.message || 'Error al actualizar imagen principal.');
+                }
+            }),
+            {
+                loading: 'Estableciendo imagen principal...',
+                success: (msg) => msg,
+                error: (err) => err.message
+            }
+        );
+    };
+
+    const handleMove = async (index: number, direction: 'left' | 'right') => {
+        const newImages = [...images];
+        const targetIndex = direction === 'left' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= newImages.length) return;
+
+        // Swap
+        const temp = newImages[index];
+        newImages[index] = newImages[targetIndex];
+        newImages[targetIndex] = temp;
+
+        // Update sortOrder values
+        const updatedImages = newImages.map((img, i) => ({
+            ...img,
+            sortOrder: i
+        }));
+        setImages(updatedImages);
+
+        const orderPayload = updatedImages.map((img, i) => ({
+            id: img.id,
+            sortOrder: i
+        }));
+
+        const res = await updateProductImageOrder(orderPayload);
+        if (!res.success) {
+            toast.error(res.message);
+        } else {
+            toast.success('Orden de galería actualizado.');
+        }
+    };
 
     // Derived Calculations using centralized fiscal utility
     const costNum = parseFloat(costoUnitario) || 0;
@@ -512,85 +642,122 @@ function EditProductForm({ product }: { product: any }) {
                                             </div>
                                         </div>
                                     </TabsContent>
-
+                                    
                                     {/* TAB 4: MULTIMEDIA */}
-                                    <TabsContent value="multimedia" className="mt-2 space-y-4 outline-none">
+                                    <TabsContent value="multimedia" className="mt-2 space-y-6 outline-none">
                                         <input type="hidden" name="imagenUrl" value={imagenUrl} />
                                         
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {/* Left side: Upload controls */}
-                                            <div className="space-y-4">
-                                                <div className="space-y-1">
-                                                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Cargar Imagen Local</Label>
-                                                    <div className="border border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50/50 hover:bg-slate-50 transition-colors relative cursor-pointer group">
-                                                        <Input 
-                                                            type="file" 
-                                                            accept="image/*"
-                                                            onChange={(e) => {
-                                                                const file = e.target.files?.[0];
-                                                                if (file) {
-                                                                    const reader = new FileReader();
-                                                                    reader.onloadend = () => {
-                                                                        setImagenUrl(reader.result as string);
-                                                                    };
-                                                                    reader.readAsDataURL(file);
-                                                                }
-                                                            }}
-                                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                                        />
-                                                        <ImageIcon className="mx-auto h-8 w-8 text-slate-400 group-hover:text-brand-1 transition-colors mb-2" />
-                                                        <span className="text-xs font-bold text-slate-700 block">Arrastra o selecciona un archivo</span>
-                                                        <span className="text-[10px] text-slate-400 block mt-0.5">PNG, JPG, GIF hasta 5MB (Se almacena en base de datos)</span>
-                                                    </div>
-                                                </div>
+                                        {/* Upload Widget */}
+                                        <div className="border border-dashed border-slate-200 rounded-xl p-6 text-center bg-slate-50/50 hover:bg-slate-50 transition-colors relative cursor-pointer group">
+                                            <input 
+                                                type="file" 
+                                                accept="image/*"
+                                                multiple
+                                                onChange={handleUpload}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                            />
+                                            <ImageIcon className="mx-auto h-10 w-10 text-slate-400 group-hover:text-brand-1 transition-colors mb-2" />
+                                            <span className="text-xs font-bold text-slate-700 block">Subir imágenes para la galería del producto</span>
+                                            <span className="text-[10px] text-slate-400 block mt-1">Soporta selección múltiple de archivos PNG, JPG o WebP</span>
+                                        </div>
 
-                                                <div className="relative flex py-1 items-center">
-                                                    <div className="flex-grow border-t border-slate-100"></div>
-                                                    <span className="flex-shrink mx-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">O</span>
-                                                    <div className="flex-grow border-t border-slate-100"></div>
+                                        {/* Images Grid */}
+                                        <div className="space-y-3">
+                                            <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Galería de Imágenes ({images.length})</Label>
+                                            
+                                            {images.length === 0 ? (
+                                                <div className="border rounded-xl p-8 text-center text-slate-400 bg-white">
+                                                    <ImageIcon className="mx-auto h-12 w-12 opacity-20 mb-2" />
+                                                    <p className="text-xs font-semibold">No hay imágenes en la galería para este producto.</p>
+                                                    <p className="text-[10px] text-slate-400 mt-0.5">Usa el selector de arriba para agregar imágenes locales.</p>
                                                 </div>
+                                            ) : (
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                                    {images.map((img, idx) => (
+                                                        <Card key={img.id} className={cn(
+                                                            "relative group overflow-hidden border shadow-sm flex flex-col justify-between bg-white",
+                                                            img.isPrimary ? "border-brand-1 ring-1 ring-brand-1/25" : "border-slate-100"
+                                                        )}>
+                                                            {/* Image content */}
+                                                            <div className="aspect-square bg-slate-50 flex items-center justify-center p-2 relative">
+                                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                <img 
+                                                                    src={img.imageUrl} 
+                                                                    alt={descripcion || 'Imagen del producto'} 
+                                                                    className="max-h-full max-w-full object-contain rounded"
+                                                                />
+                                                                
+                                                                {/* Primary Badge */}
+                                                                {img.isPrimary && (
+                                                                    <Badge className="absolute top-2 left-2 bg-brand-1 hover:bg-brand-1 text-white text-[8px] font-extrabold px-1.5 py-0.5 uppercase tracking-wider shadow">
+                                                                        Principal
+                                                                    </Badge>
+                                                                )}
 
-                                                <div className="space-y-1">
-                                                    <Label htmlFor="urlImagenInput" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Enlace de Imagen (URL de Red)</Label>
-                                                    <Input
-                                                        id="urlImagenInput"
-                                                        placeholder="https://ejemplo.com/imagen.jpg"
-                                                        value={imagenUrl.startsWith('data:') ? '' : imagenUrl}
-                                                        onChange={(e) => setImagenUrl(e.target.value)}
-                                                        className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
-                                                    />
-                                                    <span className="text-[9px] text-slate-400 block leading-tight">Pega una dirección web directa de imagen si está alojada en un servidor externo.</span>
-                                                </div>
-                                            </div>
+                                                                {/* Index Badge */}
+                                                                <span className="absolute top-2 right-2 bg-slate-900/60 text-white text-[9px] font-mono font-bold h-5 w-5 rounded-full flex items-center justify-center">
+                                                                    {idx + 1}
+                                                                </span>
+                                                            </div>
 
-                                            {/* Right side: Image Preview */}
-                                            <div className="space-y-2">
-                                                <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Vista Previa</Label>
-                                                <div className="border border-slate-200 rounded-xl bg-slate-50/30 overflow-hidden flex items-center justify-center min-h-[220px] max-h-[240px] relative p-3">
-                                                    {imagenUrl ? (
-                                                        <>
-                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                            <img 
-                                                                src={imagenUrl} 
-                                                                alt="Vista previa del producto" 
-                                                                className="max-w-full max-h-[200px] object-contain rounded shadow-sm"
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setImagenUrl('')}
-                                                                className="absolute top-2 right-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-[10px] uppercase px-2 py-1 rounded border border-red-200 shadow-sm transition-colors active:scale-95"
-                                                            >
-                                                                Remover
-                                                            </button>
-                                                        </>
-                                                    ) : (
-                                                        <div className="text-center text-slate-400 py-8">
-                                                            <ImageIcon className="mx-auto h-12 w-12 opacity-20 mb-2 text-slate-400" />
-                                                            <span className="text-xs font-semibold block">Sin imagen asignada</span>
-                                                        </div>
-                                                    )}
+                                                            {/* Actions Panel */}
+                                                            <div className="p-2 border-t border-slate-50 bg-slate-50/20 flex flex-col gap-1.5 shrink-0">
+                                                                {/* Sort Buttons */}
+                                                                <div className="flex gap-1">
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline"
+                                                                        size="icon"
+                                                                        disabled={idx === 0}
+                                                                        onClick={() => handleMove(idx, 'left')}
+                                                                        className="h-7 flex-1 text-slate-500 border-slate-200"
+                                                                        title="Mover Izquierda"
+                                                                    >
+                                                                        ←
+                                                                    </Button>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline"
+                                                                        size="icon"
+                                                                        disabled={idx === images.length - 1}
+                                                                        onClick={() => handleMove(idx, 'right')}
+                                                                        className="h-7 flex-1 text-slate-500 border-slate-200"
+                                                                        title="Mover Derecha"
+                                                                    >
+                                                                        →
+                                                                    </Button>
+                                                                </div>
+
+                                                                {/* Primary & Delete */}
+                                                                <div className="flex gap-1">
+                                                                    {!img.isPrimary ? (
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="outline"
+                                                                            onClick={() => handleSetPrimary(img.id)}
+                                                                            className="h-7 flex-1 text-[10px] font-bold text-indigo-600 border-indigo-100 hover:bg-indigo-50"
+                                                                        >
+                                                                            Principal
+                                                                        </Button>
+                                                                    ) : (
+                                                                        <span className="h-7 flex-1 text-[10px] font-bold text-brand-1 flex items-center justify-center bg-brand-1/5 rounded">
+                                                                            Activa
+                                                                        </span>
+                                                                    )}
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline"
+                                                                        onClick={() => handleDelete(img.id)}
+                                                                        className="h-7 w-7 text-rose-600 hover:text-white hover:bg-rose-600 border-rose-100 hover:border-transparent p-0 flex items-center justify-center"
+                                                                    >
+                                                                        ✕
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        </Card>
+                                                    ))}
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
                                     </TabsContent>
 
@@ -679,15 +846,48 @@ function EditProductForm({ product }: { product: any }) {
                         
                         {/* Combined Summary & Metadata Card */}
                         <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
-                            {imagenUrl && (
-                                <div className="w-full h-32 bg-slate-50 border-b border-slate-100 flex items-center justify-center p-2 relative">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img 
-                                        src={imagenUrl} 
-                                        alt={descripcion} 
-                                        className="max-h-full max-w-full object-contain rounded"
-                                    />
+                            {images.length > 0 ? (
+                                <div className="space-y-2 border-b border-slate-100 p-3 bg-slate-50/50">
+                                    <div className="w-full h-40 flex items-center justify-center relative bg-white border rounded-lg p-2">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img 
+                                            src={activePreviewUrl || imagenUrl || "/placeholder-product.png"} 
+                                            alt={descripcion || 'Producto'} 
+                                            className="max-h-full max-w-full object-contain rounded transition-all duration-300"
+                                        />
+                                    </div>
+                                    {images.length > 1 && (
+                                        <div className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-thin">
+                                            {images.map((img) => (
+                                                <button
+                                                    key={img.id}
+                                                    type="button"
+                                                    onClick={() => setActivePreviewUrl(img.imageUrl)}
+                                                    className={cn(
+                                                        "h-10 w-10 rounded border overflow-hidden shrink-0 transition-all p-0.5 bg-white",
+                                                        (activePreviewUrl || imagenUrl) === img.imageUrl 
+                                                            ? "border-brand-1 scale-95 ring-1 ring-brand-1" 
+                                                            : "border-slate-200 hover:border-slate-300"
+                                                    )}
+                                                >
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={img.imageUrl} className="h-full w-full object-cover rounded" alt="miniatura" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
+                            ) : (
+                                imagenUrl && (
+                                    <div className="w-full h-32 bg-slate-50 border-b border-slate-100 flex items-center justify-center p-2 relative">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img 
+                                            src={imagenUrl} 
+                                            alt={descripcion} 
+                                            className="max-h-full max-w-full object-contain rounded"
+                                        />
+                                    </div>
+                                )
                             )}
                             <CardHeader className="bg-slate-50 border-b border-slate-100 py-3 px-4 flex flex-row items-center justify-between">
                                 <div className="flex items-center gap-1.5">

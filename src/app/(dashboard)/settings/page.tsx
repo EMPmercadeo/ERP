@@ -74,8 +74,14 @@ export default async function SettingsPage() {
     }
 
     let invoicesCount = 0;
+    let documentUsage = {
+        usedDocuments: 0,
+        includedLimit: 10,
+        extraDocumentsPurchased: 0,
+        remainingDocuments: 10
+    };
+
     try {
-        // Get current calendar month start
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -87,10 +93,41 @@ export default async function SettingsPage() {
                 }
             }
         });
+
+        const dbUsage = await prisma.documentUsage.findFirst({
+            where: {
+                empresaId,
+                month: now.getMonth() + 1,
+                year: now.getFullYear()
+            }
+        });
+
+        if (dbUsage) {
+            documentUsage = {
+                usedDocuments: dbUsage.usedDocuments,
+                includedLimit: dbUsage.includedLimit,
+                extraDocumentsPurchased: dbUsage.extraDocumentsPurchased,
+                remainingDocuments: dbUsage.remainingDocuments
+            };
+        } else {
+            // Fallback limits mapping
+            const planLimits: Record<string, number> = {
+                free: 10,
+                emprendedor: 150,
+                negocio: 300,
+                pro: 600,
+                empresa: 1000
+            };
+            const limit = planLimits[empresa.planType] || 10;
+            documentUsage = {
+                usedDocuments: invoicesCount,
+                includedLimit: limit,
+                extraDocumentsPurchased: 0,
+                remainingDocuments: Math.max(0, limit - invoicesCount)
+            };
+        }
     } catch (err) {
-        console.error('[SettingsPage] prisma.factura.count failed:', err);
-        // Non-critical - continue with 0
-        invoicesCount = 0;
+        console.error('[SettingsPage] prisma queries failed:', err);
     }
 
     // Pass a clean, serializable company object
@@ -121,6 +158,7 @@ export default async function SettingsPage() {
         <SettingsClient 
             initialCompany={companyData} 
             invoicesCount={invoicesCount} 
+            initialDocumentUsage={documentUsage}
             userRole={role} 
         />
     );

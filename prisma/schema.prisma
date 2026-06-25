@@ -41,6 +41,11 @@ model Empresa {
   secuencias         Secuencia[]
   sucursales         Sucursal[]
   usuarios           Usuario[]
+  subscription       Subscription?
+  documentUsages     DocumentUsage[]
+  posIntegrations    PosIntegration[]
+  posSyncLogs        PosSyncLog[]
+  productImages      ProductImage[]
 
   @@index([createdAt])
 }
@@ -166,6 +171,7 @@ model Producto {
   cotizacionItems  CotizacionItem[]
   items            FacturaItem[]
   empresa          Empresa          @relation(fields: [empresaId], references: [id])
+  productImages    ProductImage[]
 
   @@unique([empresaId, codigoInterno])
   @@index([empresaId])
@@ -197,6 +203,7 @@ model Factura {
   errorDgi         String?
   facturaOrigenId  String?
   motivoAnulacion  String?
+  source           String        @default("manual")
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   caja             Caja          @relation(fields: [cajaId], references: [id])
@@ -319,3 +326,107 @@ model CotizacionItem {
   cotizacion      Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
   producto        Producto   @relation(fields: [productoId], references: [id])
 }
+
+model Plan {
+  id                String         @id @default(cuid())
+  name              String
+  slug              String         @unique
+  priceMonthly      Decimal
+  includedDocuments Int
+  maxUsers          Int
+  featuresJson      Json
+  isActive          Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  subscriptions     Subscription[]
+}
+
+model Subscription {
+  id                     String    @id @default(cuid())
+  empresaId              String    @unique
+  planId                 String
+  status                 String
+  currentPeriodStart     DateTime
+  currentPeriodEnd       DateTime
+  paymentProvider        String
+  externalSubscriptionId String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  empresa                Empresa   @relation(fields: [empresaId], references: [id])
+  plan                   Plan      @relation(fields: [planId], references: [id])
+}
+
+model DocumentUsage {
+  id                       String   @id @default(cuid())
+  empresaId                String
+  month                    Int
+  year                     Int
+  includedLimit            Int
+  usedDocuments            Int      @default(0)
+  extraDocumentsPurchased  Int      @default(0)
+  remainingDocuments       Int
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  empresa                  Empresa  @relation(fields: [empresaId], references: [id])
+
+  @@unique([empresaId, month, year])
+  @@index([empresaId])
+}
+
+model PosIntegration {
+  id                    String        @id @default(cuid())
+  empresaId             String
+  providerName          String
+  providerSlug          String
+  apiKeyEncrypted       String?
+  apiSecretEncrypted    String?
+  accessTokenEncrypted  String?
+  refreshTokenEncrypted String?
+  status                String        @default("pending")
+  lastSyncAt            DateTime?
+  syncProductsEnabled   Boolean       @default(false)
+  syncSalesEnabled      Boolean       @default(false)
+  syncInventoryEnabled  Boolean       @default(false)
+  isPrimary             Boolean       @default(false)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  empresa               Empresa       @relation(fields: [empresaId], references: [id])
+  syncLogs              PosSyncLog[]
+
+  @@index([empresaId])
+}
+
+model PosSyncLog {
+  id                 String         @id @default(cuid())
+  empresaId          String
+  posIntegrationId   String
+  syncType           String
+  status             String
+  message            String?
+  recordsProcessed   Int            @default(0)
+  errorDetails       String?
+  createdAt          DateTime       @default(now())
+  empresa            Empresa        @relation(fields: [empresaId], references: [id])
+  posIntegration     PosIntegration @relation(fields: [posIntegrationId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId])
+}
+
+model ProductImage {
+  id          String   @id @default(cuid())
+  productoId  String
+  empresaId   String
+  imageUrl    String
+  storagePath String?
+  altText     String?
+  sortOrder   Int      @default(0)
+  isPrimary   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  empresa     Empresa  @relation(fields: [empresaId], references: [id])
+  producto    Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  @@index([productoId])
+  @@index([empresaId])
+}
+

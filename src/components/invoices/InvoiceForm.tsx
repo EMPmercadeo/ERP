@@ -11,7 +11,10 @@ import {
     Trash2,
     Search,
     User,
-    Package
+    Package,
+    AlertTriangle,
+    X,
+    Zap
 } from 'lucide-react';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
@@ -36,7 +39,9 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { createInvoice } from '@/lib/actions/invoices';
+import { purchaseDocumentBlock } from '@/lib/actions/billing';
 import { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 
 // Interfaces for Props
 export interface ClientOption {
@@ -84,9 +89,25 @@ const initialState = {
     errors: {},
 };
 
-export function InvoiceForm({ clients, products }: { clients: ClientOption[], products: ProductOption[] }) {
+export function InvoiceForm({ 
+    clients, 
+    products,
+    companyId,
+    remainingDocuments = 10
+}: { 
+    clients: ClientOption[]; 
+    products: ProductOption[];
+    companyId: string;
+    remainingDocuments: number;
+}) {
     const router = useRouter();
     const [state, formAction] = useFormState(createInvoice, initialState);
+
+    // Billing and Limits state
+    const [currentRemaining, setCurrentRemaining] = useState(remainingDocuments);
+    const [showPurchaseBlockModal, setShowPurchaseBlockModal] = useState(false);
+    const [selectedBlockSize, setSelectedBlockSize] = useState<number>(100);
+    const [isPurchasingBlock, setIsPurchasingBlock] = useState(false);
 
     // Form state
     const [clienteId, setClienteId] = useState('');
@@ -116,6 +137,24 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
             c.ruc.toLowerCase().includes(clientSearch.toLowerCase())
         ).slice(0, 8);
     }, [clientSearch, clients]);
+
+    const handlePurchaseBlock = async () => {
+        setIsPurchasingBlock(true);
+        try {
+            const res = await purchaseDocumentBlock(companyId, selectedBlockSize);
+            if (res.success) {
+                toast.success(res.message);
+                setCurrentRemaining(prev => prev + selectedBlockSize);
+                setShowPurchaseBlockModal(false);
+            } else {
+                toast.error(res.message);
+            }
+        } catch (error) {
+            toast.error('Error al procesar la compra del bloque de documentos.');
+        } finally {
+            setIsPurchasingBlock(false);
+        }
+    };
 
     const selectedClient = clients.find(c => c.id === clienteId);
 
@@ -189,6 +228,44 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
 
                 {state?.message && (
                     <Alert variant="error">{state.message}</Alert>
+                )}
+
+                {currentRemaining <= 0 && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in fade-in duration-200">
+                        <div className="flex items-start gap-3">
+                            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                            <div>
+                                <h4 className="font-bold text-amber-950 text-sm">Límite mensual de facturación alcanzado</h4>
+                                <p className="text-xs text-amber-900/80 mt-0.5">
+                                    Has agotado los documentos de facturación electrónica incluidos en tu plan para este mes.
+                                    Para continuar facturando y timbrando con la DGI, adquiere un bloque adicional o actualiza tu plan.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                            <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs"
+                                onClick={() => setShowPurchaseBlockModal(true)}
+                            >
+                                <Zap className="h-3.5 w-3.5 mr-1.5 fill-white" />
+                                Comprar Bloque
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="border-amber-200 text-amber-800 hover:bg-amber-100/50 text-xs font-semibold"
+                                asChild
+                            >
+                                <Link href="/settings">
+                                    Ver Planes
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
                 )}
 
                 {/* Form */}
@@ -447,7 +524,7 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
 
                             {/* Actions */}
                             <div className="flex flex-col gap-2">
-                                <SubmitButton disabled={items.length === 0} />
+                                <SubmitButton disabled={items.length === 0 || currentRemaining <= 0} />
                                 <Button type="button" variant="outline" onClick={() => router.back()} className="w-full">
                                     Cancelar
                                 </Button>
@@ -456,6 +533,96 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
                     </div>
                 </form>
             </div>
+
+            {/* Modal de Compra de Bloques de Documentos desde Formulario */}
+            {showPurchaseBlockModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="w-full max-w-md bg-card rounded-xl border border-border shadow-2xl p-6 relative font-sans">
+                        <button
+                            onClick={() => setShowPurchaseBlockModal(false)}
+                            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+                            disabled={isPurchasingBlock}
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+
+                        <div className="space-y-6">
+                            <div className="text-center">
+                                <h3 className="text-xl font-bold text-slate-900">Comprar Bloque de Documentos</h3>
+                                <p className="text-xs text-muted-foreground mt-1">Adquiere folios electrónicos adicionales para poder timbrar esta factura inmediatamente.</p>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="block text-xs font-semibold text-muted-foreground">Seleccionar Tamaño del Bloque</label>
+                                <div className="grid grid-cols-3 gap-3">
+                                    {[
+                                        { size: 100, price: 5.00, label: '100 docs' },
+                                        { size: 500, price: 25.00, label: '500 docs' },
+                                        { size: 1000, price: 50.00, label: '1,000 docs' }
+                                    ].map((block) => (
+                                        <button
+                                            key={block.size}
+                                            type="button"
+                                            onClick={() => setSelectedBlockSize(block.size)}
+                                            className={`p-3 border rounded-lg flex flex-col items-center justify-center gap-1 transition-all ${
+                                                selectedBlockSize === block.size
+                                                    ? 'border-indigo-600 bg-indigo-50/50 text-indigo-950 ring-2 ring-indigo-600/10'
+                                                    : 'border-border bg-white text-slate-700 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            <span className="text-xs font-bold">{block.label}</span>
+                                            <span className="text-xs font-semibold text-indigo-600">${block.price.toFixed(2)}</span>
+                                            <span className="text-[9px] text-muted-foreground">($0.05 c/u)</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="bg-indigo-50/30 border border-indigo-100 rounded-lg p-4 space-y-2 text-xs text-indigo-950/80">
+                                <div className="flex justify-between font-semibold">
+                                    <span>Costo del Bloque</span>
+                                    <span>${(selectedBlockSize * 0.05).toFixed(2)} USD</span>
+                                </div>
+                                <div className="flex justify-between text-[10px] text-muted-foreground">
+                                    <span>Precio por documento</span>
+                                    <span>$0.05 USD</span>
+                                </div>
+                                <p className="text-[10px] text-muted-foreground border-t pt-2 mt-1">
+                                    * Al confirmar el pago, los folios se acreditarán a tu cuenta de inmediato y podrás guardar tu factura sin salir del formulario.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Button
+                                    onClick={handlePurchaseBlock}
+                                    disabled={isPurchasingBlock}
+                                    className="w-full bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-bold py-5 flex items-center justify-center gap-2 border-none shadow-sm hover:shadow-md"
+                                >
+                                    {isPurchasingBlock ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                            Procesando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="italic font-extrabold text-lg">PayPal</span>
+                                            <span className="text-sm font-semibold tracking-wider">COMPRAR AHORA (Simulado)</span>
+                                        </>
+                                    )}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="w-full"
+                                    onClick={() => setShowPurchaseBlockModal(false)}
+                                    disabled={isPurchasingBlock}
+                                >
+                                    Cancelar
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </ContentContainer>
     );
 }
