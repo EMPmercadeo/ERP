@@ -11,7 +11,10 @@ export default async function AdminBillingPage() {
     try {
         const ctx = await getTenantContext();
         empresaId = ctx.empresaId;
-    } catch (err) {
+    } catch (err: any) {
+        if (err && typeof err === 'object' && 'digest' in err && String(err.digest).startsWith('NEXT_REDIRECT')) {
+            throw err;
+        }
         console.error('[AdminBillingPage] getTenantContext failed:', err);
         // Re-throw to let the error boundary handle it with a nice UI
         throw new Error('No se pudo verificar la sesión del usuario. Intente iniciar sesión de nuevo.');

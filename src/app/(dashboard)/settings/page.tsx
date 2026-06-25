@@ -13,7 +13,10 @@ export default async function SettingsPage() {
         const ctx = await getTenantContext();
         empresaId = ctx.empresaId;
         role = ctx.role;
-    } catch (err) {
+    } catch (err: any) {
+        if (err && typeof err === 'object' && 'digest' in err && String(err.digest).startsWith('NEXT_REDIRECT')) {
+            throw err;
+        }
         console.error('[SettingsPage] getTenantContext failed:', err);
         throw new Error('No se pudo verificar la sesión del usuario. Intente iniciar sesión de nuevo.');
     }

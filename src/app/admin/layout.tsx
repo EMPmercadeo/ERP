@@ -15,7 +15,10 @@ export default async function AdminLayout({
     let context;
     try {
         context = await getTenantContext();
-    } catch (err) {
+    } catch (err: any) {
+        if (err && typeof err === 'object' && 'digest' in err && String(err.digest).startsWith('NEXT_REDIRECT')) {
+            throw err;
+        }
         console.error('[AdminLayout] getTenantContext failed:', err);
         throw new Error('Error de autenticación al acceder al panel de administración.');
     }
