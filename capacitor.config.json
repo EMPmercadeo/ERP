@@ -1,0 +1,10 @@
+{
+  "appId": "com.erppanama.app",
+  "appName": "ERP Panamá",
+  "webDir": "public",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://erp-panama-demo.vercel.app",
+    "cleartext": true
+  }
+}

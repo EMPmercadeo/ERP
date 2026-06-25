@@ -231,20 +231,11 @@ const handleSendFeedback = async (e: React.FormEvent) => {
 
     return (
         <>
-            {/* Mobile overlay */}
-            {isMobileOpen && (
-                <div
-                    className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-                    onClick={() => setMobileOpen(false)}
-                />
-            )}
-
-            {/* Sidebar */}
+            {/* Sidebar - Desktop Only */}
             <aside
                 className={cn(
-                    'fixed left-0 top-0 z-50 flex h-full flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300',
-                    isCollapsed ? 'w-16' : 'w-64',
-                    isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                    'fixed left-0 top-0 z-50 hidden lg:flex h-full flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300',
+                    isCollapsed ? 'w-16' : 'w-64'
                 )}
             >
                 {/* Logo */}

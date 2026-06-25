@@ -290,13 +290,13 @@ export function InvoiceForm({
                                     {!clienteId ? (
                                         <div className="space-y-2">
                                             <div className="relative">
-                                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Search className="absolute left-2.5 top-3.5 md:top-2.5 h-4 w-4 text-muted-foreground" />
                                                 <Input
                                                     type="text"
                                                     placeholder="Buscar cliente por nombre o RUC..."
                                                     value={clientSearch}
                                                     onChange={(e) => setClientSearch(e.target.value)}
-                                                    className={`pl-8 ${state?.errors?.clienteId ? 'border-red-500' : ''}`}
+                                                    className={`pl-8 h-11 md:h-10 ${state?.errors?.clienteId ? 'border-red-500' : ''}`}
                                                 />
                                             </div>
                                             {clientSearch && (
@@ -310,7 +310,7 @@ export function InvoiceForm({
                                                                     setClienteId(client.id);
                                                                     setClientSearch('');
                                                                 }}
-                                                                className="w-full px-4 py-2.5 text-left hover:bg-slate-50 transition-colors flex justify-between items-center"
+                                                                className="w-full px-4 py-3 md:py-2.5 text-left hover:bg-slate-50 transition-colors flex justify-between items-center"
                                                             >
                                                                 <div>
                                                                     <div className="font-medium text-slate-800 text-sm">{client.razonSocial}</div>
@@ -347,7 +347,7 @@ export function InvoiceForm({
                                                     variant="ghost" 
                                                     size="sm" 
                                                     onClick={() => setClienteId('')}
-                                                    className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50"
+                                                    className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 h-11 md:h-9"
                                                 >
                                                     Cambiar Cliente
                                                 </Button>
@@ -373,12 +373,12 @@ export function InvoiceForm({
                                     {showProductSearch ? (
                                         <div className="space-y-2">
                                             <div className="relative">
-                                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Search className="absolute left-2.5 top-3.5 md:top-2.5 h-4 w-4 text-muted-foreground" />
                                                 <Input
                                                     placeholder="Buscar producto..."
                                                     value={productSearch}
                                                     onChange={(e) => setProductSearch(e.target.value)}
-                                                    className="pl-8"
+                                                    className="pl-8 h-11 md:h-10"
                                                     autoFocus
                                                 />
                                             </div>
@@ -388,7 +388,7 @@ export function InvoiceForm({
                                                         key={product.id}
                                                         type="button"
                                                         onClick={() => addProduct(product)}
-                                                        className="w-full px-3 py-2 text-left hover:bg-accent flex justify-between items-center border-b last:border-0"
+                                                        className="w-full px-3 py-3 md:py-2 text-left hover:bg-accent flex justify-between items-center border-b last:border-0"
                                                     >
                                                         <span>{product.descripcion}</span>
                                                         <span className="text-muted-foreground">{formatCurrency(product.precio)}</span>
@@ -399,12 +399,12 @@ export function InvoiceForm({
                                                     </div>
                                                 )}
                                             </div>
-                                            <Button type="button" variant="ghost" size="sm" onClick={() => setShowProductSearch(false)}>
+                                            <Button type="button" variant="ghost" size="sm" onClick={() => setShowProductSearch(false)} className="h-11 md:h-9">
                                                 Cancelar
                                             </Button>
                                         </div>
                                     ) : (
-                                        <Button type="button" variant="outline" onClick={() => setShowProductSearch(true)}>
+                                        <Button type="button" variant="outline" onClick={() => setShowProductSearch(true)} className="h-11 md:h-10 font-bold text-xs">
                                             <Plus className="h-4 w-4 mr-2" />
                                             Agregar Producto
                                         </Button>
@@ -414,49 +414,106 @@ export function InvoiceForm({
 
                                     {/* Items table */}
                                     {items.length > 0 && (
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Producto</TableHead>
-                                                    <TableHead className="w-24">Cant.</TableHead>
-                                                    <TableHead className="text-right">Precio</TableHead>
-                                                    <TableHead className="text-right">ITBMS</TableHead>
-                                                    <TableHead className="text-right">Total</TableHead>
-                                                    <TableHead className="w-12"></TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
+                                        <>
+                                            {/* Desktop Items Table */}
+                                            <div className="hidden md:block">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead>Producto</TableHead>
+                                                            <TableHead className="w-24">Cant.</TableHead>
+                                                            <TableHead className="text-right">Precio</TableHead>
+                                                            <TableHead className="text-right">ITBMS</TableHead>
+                                                            <TableHead className="text-right">Total</TableHead>
+                                                            <TableHead className="w-12"></TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {items.map(item => (
+                                                            <TableRow key={item.id}>
+                                                                <TableCell className="font-medium">{item.descripcion}</TableCell>
+                                                                <TableCell>
+                                                                    <Input
+                                                                        type="number"
+                                                                        min="0.01"
+                                                                        step="0.01"
+                                                                        value={item.cantidad}
+                                                                        onChange={(e) => updateItemQuantity(item.id, parseFloat(e.target.value) || 0)}
+                                                                        className="w-20"
+                                                                    />
+                                                                </TableCell>
+                                                                <TableCell className="text-right">{formatCurrency(item.subtotal)}</TableCell>
+                                                                <TableCell className="text-right">{formatCurrency(item.itbms)}</TableCell>
+                                                                <TableCell className="text-right font-medium">{formatCurrency(item.total)}</TableCell>
+                                                                <TableCell>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        onClick={() => removeItem(item.id)}
+                                                                        className="text-destructive hover:text-destructive"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+
+                                            {/* Mobile Items Cards */}
+                                            <div className="block md:hidden space-y-3 font-sans">
                                                 {items.map(item => (
-                                                    <TableRow key={item.id}>
-                                                        <TableCell className="font-medium">{item.descripcion}</TableCell>
-                                                        <TableCell>
-                                                            <Input
-                                                                type="number"
-                                                                min="0.01"
-                                                                step="0.01"
-                                                                value={item.cantidad}
-                                                                onChange={(e) => updateItemQuantity(item.id, parseFloat(e.target.value) || 0)}
-                                                                className="w-20"
-                                                            />
-                                                        </TableCell>
-                                                        <TableCell className="text-right">{formatCurrency(item.subtotal)}</TableCell>
-                                                        <TableCell className="text-right">{formatCurrency(item.itbms)}</TableCell>
-                                                        <TableCell className="text-right font-medium">{formatCurrency(item.total)}</TableCell>
-                                                        <TableCell>
-                                                            <Button
-                                                                type="button"
-                                                                variant="ghost"
-                                                                size="icon"
+                                                    <div 
+                                                        key={item.id}
+                                                        className="border border-slate-100 rounded-xl p-3 bg-slate-50/50 space-y-2 flex flex-col justify-between"
+                                                    >
+                                                        <div className="flex justify-between items-start gap-2">
+                                                            <span className="font-semibold text-slate-800 text-xs sm:text-sm">{item.descripcion}</span>
+                                                            <Button 
+                                                                type="button" 
+                                                                variant="ghost" 
+                                                                size="icon" 
+                                                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0 rounded-lg" 
                                                                 onClick={() => removeItem(item.id)}
-                                                                className="text-destructive hover:text-destructive"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
                                                             </Button>
-                                                        </TableCell>
-                                                    </TableRow>
+                                                        </div>
+                                                        
+                                                        <div className="flex items-center justify-between border-t border-slate-100/60 pt-2">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">P. Unitario</span>
+                                                                <span className="font-mono text-xs text-slate-800 font-bold mt-0.5">{formatCurrency(item.precioUnitario)}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs text-slate-500">Cant:</span>
+                                                                <Input 
+                                                                    type="number" 
+                                                                    min="0.01" 
+                                                                    step="0.01" 
+                                                                    value={item.cantidad} 
+                                                                    onChange={(e) => updateItemQuantity(item.id, parseFloat(e.target.value) || 0)} 
+                                                                    className="w-20 h-10 text-xs text-center rounded-lg bg-white" 
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex justify-between items-center text-[10px] text-slate-500 border-t border-slate-100/60 pt-2">
+                                                            <div className="flex flex-col gap-0.5">
+                                                                <span>Subtotal: {formatCurrency(item.subtotal)}</span>
+                                                                <span>ITBMS ({(itbmsRates[item.codigoTasaItbms] * 100).toFixed(0)}%): {formatCurrency(item.itbms)}</span>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider leading-none">Total</span>
+                                                                <span className="font-mono font-bold text-xs text-slate-800">{formatCurrency(item.total)}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 ))}
-                                            </TableBody>
-                                        </Table>
+                                            </div>
+                                        </>
                                     )}
                                 </CardContent>
                             </Card>
@@ -474,7 +531,7 @@ export function InvoiceForm({
                                             Condición de Pago
                                         </label>
                                         <Select name="condicionPago" value={condicionPago} onValueChange={setCondicionPago}>
-                                            <SelectTrigger>
+                                            <SelectTrigger className="h-11 md:h-10">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -525,7 +582,7 @@ export function InvoiceForm({
                             {/* Actions */}
                             <div className="flex flex-col gap-2">
                                 <SubmitButton disabled={items.length === 0 || currentRemaining <= 0} />
-                                <Button type="button" variant="outline" onClick={() => router.back()} className="w-full">
+                                <Button type="button" variant="outline" onClick={() => router.back()} className="w-full h-11 md:h-10 text-sm font-semibold">
                                     Cancelar
                                 </Button>
                             </div>
@@ -630,7 +687,7 @@ export function InvoiceForm({
 function SubmitButton({ disabled }: { disabled: boolean }) {
     const { pending } = useFormStatus();
     return (
-        <Button type="submit" disabled={pending || disabled} className="w-full">
+        <Button type="submit" disabled={pending || disabled} className="w-full h-11 md:h-10 font-bold text-xs md:text-sm">
             {pending ? (
                 <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

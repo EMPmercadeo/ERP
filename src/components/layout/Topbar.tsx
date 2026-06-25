@@ -46,20 +46,19 @@ export function Topbar({ title, children }: TopbarProps) {
 
     return (
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-surface px-4 lg:px-6">
-            {/* Mobile menu button */}
-            <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                onClick={toggleMobile}
-            >
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Abrir menú</span>
-            </Button>
+            {/* Logo on Mobile */}
+            <div className="flex items-center gap-2 lg:hidden select-none">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-1">
+                    <span className="text-xs font-bold text-white font-mono">EP</span>
+                </div>
+                <span className="text-sm font-bold text-slate-800 tracking-tight">
+                    ERP Panamá
+                </span>
+            </div>
 
             {/* Title */}
             {title && (
-                <h1 className="text-xl font-semibold text-foreground hidden sm:block">
+                <h1 className="text-sm font-bold text-slate-700 uppercase tracking-wider hidden sm:block">
                     {title}
                 </h1>
             )}

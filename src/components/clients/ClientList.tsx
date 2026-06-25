@@ -423,11 +423,11 @@ export function ClientList({
                         </div>
                     </CardContent>
                 </Card>
-
                 {/* Table */}
                 <Card>
                     <CardContent className="p-0">
-                        <div className="overflow-y-auto max-h-[calc(100vh-340px)] min-h-[300px] border-b">
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block overflow-y-auto max-h-[calc(100vh-340px)] min-h-[300px] border-b">
                             <Table>
                             <TableHeader>
                                 {table.getHeaderGroups().map((headerGroup) => (
@@ -496,6 +496,75 @@ export function ClientList({
                                 )}
                             </TableBody>
                         </Table>
+                        </div>
+
+                        {/* Mobile Card List View */}
+                        <div className="block md:hidden p-4 space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto min-h-[300px] border-b font-sans">
+                            {initialData.length > 0 ? (
+                                initialData.map((client, index) => {
+                                    const initials = getInitials(client.razonSocial) || 'CL';
+                                    const gradClass = palette[index % palette.length];
+                                    return (
+                                        <div 
+                                            key={client.id}
+                                            onClick={() => router.push(`/clients/${client.id}`)}
+                                            className="bg-slate-50/50 border border-slate-100 rounded-xl p-3.5 space-y-3 shadow-sm active:scale-98 transition-transform cursor-pointer"
+                                        >
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
+                                                        {initials}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <h4 className="font-bold text-slate-800 text-xs truncate max-w-[150px]">{client.razonSocial}</h4>
+                                                        <p className="text-[10px] text-muted-foreground font-mono leading-none mt-0.5">RUC: {client.ruc} - DV {client.dv || '—'}</p>
+                                                    </div>
+                                                </div>
+                                                <StatusBadge status={client.estado} showIcon={false} className="h-5 text-[9px] px-2 shrink-0" />
+                                            </div>
+                                            
+                                            {(client.telefono || client.email) && (
+                                                <div className="flex flex-col gap-1 text-[10px] text-slate-500 border-t border-slate-100/60 pt-2">
+                                                    {client.telefono && (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Phone className="h-3 w-3 text-slate-400" />
+                                                            <span>{client.telefono}</span>
+                                                        </div>
+                                                    )}
+                                                    {client.email && (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Mail className="h-3 w-3 text-slate-400" />
+                                                            <span className="truncate max-w-[200px]">{client.email}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div className="flex gap-1.5 border-t border-slate-100/60 pt-2">
+                                                <Link href={`/clients/${client.id}`} className="flex-1">
+                                                    <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-slate-600 rounded-lg">
+                                                        Detalle
+                                                    </Button>
+                                                </Link>
+                                                <Link href={`/clients/${client.id}/edit`} className="flex-1">
+                                                    <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-slate-600 rounded-lg">
+                                                        Editar
+                                                    </Button>
+                                                </Link>
+                                                <Link href={`/invoices/new?clienteId=${client.id}`} className="flex-1">
+                                                    <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-brand-1 border-brand-1/10 hover:bg-brand-1/5 rounded-lg">
+                                                        Facturar
+                                                    </Button>
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="py-12 text-center text-xs text-slate-400 font-semibold">
+                                    No hay clientes registrados
+                                </div>
+                            )}
                         </div>
 
                         {/* Pagination */}

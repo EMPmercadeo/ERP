@@ -70,6 +70,7 @@ export interface ProductData {
     stockActual: number;
     activo: boolean;
     unidadMedida: string;
+    imagenUrl?: string | null;
 }
 
 const itbmsConfig: Record<string, string> = {
@@ -77,6 +78,13 @@ const itbmsConfig: Record<string, string> = {
     '01': '7%',
     '02': '10%',
     '03': '15%',
+};
+
+const taxRates: Record<string, number> = {
+    '00': 0.00,
+    '01': 0.07,
+    '02': 0.10,
+    '03': 0.15,
 };
 
 const commonUnits = [
@@ -629,7 +637,8 @@ export function ProductList({
                 {/* Table */}
                 <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
                     <CardContent className="p-0">
-                        <div className="overflow-x-auto min-h-[300px]">
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block overflow-x-auto min-h-[300px]">
                             <Table className="border-b border-slate-100">
                                 <TableHeader className="bg-slate-50 border-b border-slate-100">
                                     {table.getHeaderGroups().map((headerGroup) => (
@@ -681,7 +690,7 @@ export function ProductList({
                                                         (globalFilter || status !== 'all' || tax !== 'all' || stockStatus !== 'all' || unidad !== 'all') ? (
                                                             <Button onClick={handleResetFilters} variant="outline" className="h-9 font-semibold text-xs border-slate-200 gap-1.5">
                                                                 <RotateCcw className="h-3.5 w-3.5" />
-                                                                Restablecer Filtros
+                                                                 Restablecer Filtros
                                                             </Button>
                                                         ) : (
                                                             <Button asChild className="h-9 bg-brand-1 hover:bg-brand-2 text-white font-bold text-xs shadow-sm">
@@ -698,6 +707,116 @@ export function ProductList({
                                     )}
                                 </TableBody>
                             </Table>
+                        </div>
+
+                        {/* Mobile Grid View */}
+                        <div className="grid grid-cols-2 gap-3 md:hidden p-4 max-h-[calc(100vh-300px)] overflow-y-auto min-h-[300px] border-b font-sans">
+                            {initialData.length > 0 ? (
+                                initialData.map((product) => {
+                                    const taxRate = taxRates[product.codigoTasaItbms] || 0.00;
+                                    const priceWithTax = product.precioVenta * (1 + taxRate);
+                                    
+                                    return (
+                                        <div 
+                                            key={product.id}
+                                            onClick={() => router.push(`/products/${product.id}`)}
+                                            className="bg-slate-50/50 border border-slate-100 rounded-xl p-3 flex flex-col justify-between shadow-sm active:scale-98 transition-transform cursor-pointer relative"
+                                        >
+                                            <div>
+                                                {/* Image Thumbnail Container */}
+                                                <div className="w-full aspect-square rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden mb-2 border border-slate-200/50 relative">
+                                                    {product.imagenUrl ? (
+                                                        <img 
+                                                            src={product.imagenUrl} 
+                                                            alt={product.descripcion} 
+                                                            className="w-full h-full object-cover" 
+                                                        />
+                                                    ) : (
+                                                        <Package className="h-7 w-7 text-slate-400" />
+                                                    )}
+                                                    
+                                                    {/* ITBMS Badge */}
+                                                    <span className="absolute top-1.5 left-1.5 bg-white/95 text-slate-800 backdrop-blur-sm text-[9px] font-bold px-1.5 py-0.5 rounded border border-slate-200 shadow-sm leading-none">
+                                                        {product.codigoTasaItbms === '00' ? 'Exento' : `${itbmsConfig[product.codigoTasaItbms] || product.codigoTasaItbms}`}
+                                                    </span>
+
+                                                    {/* Stock Status Badge */}
+                                                    <span className="absolute top-1.5 right-1.5 leading-none">
+                                                        {product.stockActual <= 0 ? (
+                                                            <Badge className="bg-red-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
+                                                                Agotado
+                                                            </Badge>
+                                                        ) : product.stockActual < 10 ? (
+                                                            <Badge className="bg-amber-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
+                                                                {product.stockActual} uds
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge className="bg-emerald-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
+                                                                {product.stockActual} uds
+                                                            </Badge>
+                                                        )}
+                                                    </span>
+                                                </div>
+
+                                                {/* SKU */}
+                                                <span className="font-mono text-[9px] font-bold text-slate-400 block tracking-tight truncate">
+                                                    {product.codigoInterno}
+                                                </span>
+
+                                                {/* Name */}
+                                                <h4 className="font-bold text-slate-800 text-[11px] leading-tight line-clamp-2 mt-0.5 min-h-[2rem]" title={product.descripcion}>
+                                                    {product.descripcion}
+                                                </h4>
+                                            </div>
+
+                                            <div>
+                                                {/* Price */}
+                                                <div className="mt-2 border-t border-slate-100/60 pt-2 flex items-baseline justify-between">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-mono text-xs font-bold text-slate-800">
+                                                            {formatCurrency(priceWithTax)}
+                                                        </span>
+                                                        <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider leading-none">
+                                                            c/Impuesto
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1 py-0.5 rounded">
+                                                        {product.unidadMedida || 'UND'}
+                                                    </span>
+                                                </div>
+
+                                                {/* Actions */}
+                                                <div className="flex gap-1 mt-2.5" onClick={(e) => e.stopPropagation()}>
+                                                    <Link href={`/products/${product.id}`} className="flex-1">
+                                                        <Button variant="outline" size="sm" className="w-full h-8 text-[9px] font-bold text-slate-600 rounded-lg p-0">
+                                                            <Edit className="h-3 w-3 mr-1 text-slate-500" />
+                                                            Editar
+                                                        </Button>
+                                                    </Link>
+                                                    <Link href={`/products/${product.id}?tab=history`} className="flex-1">
+                                                        <Button variant="outline" size="sm" className="w-full h-8 text-[9px] font-bold text-slate-600 rounded-lg p-0">
+                                                            <History className="h-3 w-3 mr-1 text-slate-500" />
+                                                            Ver
+                                                        </Button>
+                                                    </Link>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg p-0 shrink-0"
+                                                        onClick={() => handleDelete(product.id, product.descripcion)}
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="col-span-2 py-12 text-center text-xs text-slate-400 font-semibold">
+                                    No hay productos registrados
+                                </div>
+                            )}
                         </div>
 
                         {/* Pagination (Backend Powered) */}

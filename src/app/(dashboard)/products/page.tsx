@@ -95,7 +95,8 @@ export default async function ProductsPage(props: PageProps) {
         codigoTasaItbms: p.codigoTasaItbms,
         stockActual: p.stockActual,
         activo: p.activo,
-        unidadMedida: p.unidadMedida
+        unidadMedida: p.unidadMedida,
+        imagenUrl: p.imagenUrl
     }));
 
     const pageCount = Math.ceil(totalCount / limit);
