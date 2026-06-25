@@ -82,7 +82,7 @@ export function BottomNavigation() {
     const mainItems = [
         { name: 'Inicio', href: '/dashboard', icon: LayoutDashboard },
         { name: 'Facturar', href: '/invoices/new', icon: FileText },
-        { name: 'POS POS', href: '/pos', icon: ShoppingCart },
+        { name: 'Productos', href: '/products', icon: Package },
         { name: 'Clientes', href: '/clients', icon: Users },
     ];
 
@@ -176,9 +176,9 @@ export function BottomNavigation() {
                             <div className="space-y-1">
                                 <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1">Módulos</h5>
                                 <div className="grid grid-cols-2 gap-2">
-                                    <Link href="/products" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
-                                        <Package className="h-4.5 w-4.5 text-brand-1" />
-                                        <span>Productos</span>
+                                    <Link href="/pos" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
+                                        <ShoppingCart className="h-4.5 w-4.5 text-brand-1" />
+                                        <span>Venta POS</span>
                                     </Link>
                                     <Link href="/quotes" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
                                         <FileText className="h-4.5 w-4.5 text-brand-1" />

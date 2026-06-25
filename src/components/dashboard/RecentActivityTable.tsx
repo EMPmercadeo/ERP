@@ -59,6 +59,7 @@ function formatCurrency(value: number) {
 }
 
 const getInitials = (name: string) => {
+    if (!name || typeof name !== 'string') return 'CF';
     return name
         .split(' ')
         .filter((w) => w[0] && /[a-zA-ZÁÉÍÓÚáéíóúÑñ]/.test(w[0]))

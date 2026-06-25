@@ -57,6 +57,7 @@ export interface ReceivableInvoice {
 }
 
 const getInitials = (name: string) => {
+    if (!name || typeof name !== 'string') return 'CL';
     return name
         .split(' ')
         .filter((w) => w[0] && /[a-zA-ZÁÉÍÓÚáéíóúÑñ]/.test(w[0]))
