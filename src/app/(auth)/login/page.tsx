@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User, Lock, Fingerprint, MessageSquare, Shield, Tag, QrCode, Star, X, CheckCircle2, ArrowRight, Camera } from 'lucide-react';
+import { User, Lock, Fingerprint, MessageSquare, Shield, Tag, QrCode, Star, X, Eye, EyeOff, Camera } from 'lucide-react';
 import { Alert } from '@/components/ui/alert';
 import { useAuth } from '@/lib/firebase/auth';
 
@@ -86,7 +86,7 @@ export default function LoginPage() {
 
         try {
             if (isRegistered) {
-                // Si ya se guardó permiso antes en este teléfono, verificamos la huella para iniciar sesión
+                // Si ya se dio permiso en este dispositivo, verificamos huella para entrar
                 const challenge = new Uint8Array(32);
                 window.crypto.getRandomValues(challenge);
                 const credential = await navigator.credentials.get({
@@ -102,7 +102,7 @@ export default function LoginPage() {
                     return;
                 }
             } else {
-                // Si es la primera vez en este celular o no encontró llave, abrimos el registro nativo del celular
+                // Si es la primera vez en este dominio, creamos/registramos el permiso nativo con la huella
                 const challenge = new Uint8Array(32);
                 window.crypto.getRandomValues(challenge);
                 const userId = new Uint8Array(16);
@@ -136,7 +136,6 @@ export default function LoginPage() {
                 }
             }
         } catch {
-            // Si intentó get() y falló o canceló, quitamos la marca para que la próxima intente crear/dar permiso directamente
             if (isRegistered) {
                 localStorage.removeItem('erp_passkey_saved');
             }
@@ -145,7 +144,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="w-full max-w-md mx-auto space-y-3.5 lg:space-y-6 flex flex-col justify-center my-auto relative">
+        <div className="w-full relative">
             {/* Overlay Modals */}
             {activeModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
@@ -165,7 +164,7 @@ export default function LoginPage() {
                                 </div>
                                 <h3 className="text-lg font-black text-gray-900">Permiso Biométrico DGI</h3>
                                 <p className="text-xs text-gray-600 leading-relaxed">
-                                    Para autorizar tu huella digital o Face ID en este dispositivo, escribe tu correo y pulsa el ícono de huella nuevamente para vincular la seguridad del celular con la app.
+                                    Para autorizar tu huella digital o Face ID en este dispositivo, escribe tu correo y pulsa el ícono de huella nuevamente para vincular la seguridad del dispositivo con tu cuenta.
                                 </p>
                                 <button
                                     type="button"
@@ -277,187 +276,268 @@ export default function LoginPage() {
                 </div>
             )}
 
-            {/* Logo Mobile / Header (Sólo móvil - Oculto en escritorio) */}
-            <div className="flex lg:hidden items-center justify-center gap-2 pt-0 pb-1">
-                <div className="bg-white/20 p-1.5 rounded-xl backdrop-blur-sm">
-                    <Star className="h-6 w-6 sm:h-7 sm:w-7 fill-white text-white" />
-                </div>
-                <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-                    ERP Panamá
-                </span>
-            </div>
-
-            {/* Banco General Inspired Banner Placeholder (Sólo móvil - Oculto en escritorio) */}
-            <div className="flex lg:hidden h-[20vh] min-h-[120px] bg-white/10 border border-white/25 rounded-2xl p-3 flex-col items-center justify-center text-center backdrop-blur-md shadow-sm">
-                <div className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-[10px] font-bold text-white uppercase tracking-wider mb-2">
-                    Espacio para Imagen
-                </div>
-                <p className="text-xs sm:text-sm font-semibold text-white leading-snug max-w-[280px]">
-                    Ve por tu historia / Nosotros te acompañamos en tu gestión fiscal
-                </p>
-            </div>
-
-            {/* Desktop Header / Welcome text (Sólo escritorio) */}
-            <div className="hidden lg:block space-y-1 text-center lg:text-left mb-2">
-                <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">
-                    Iniciar Sesión
-                </h2>
-                <p className="text-sm text-gray-500 font-medium">
-                    Ingresa a tu portal de facturación y gestión fiscal
-                </p>
-            </div>
-
             {error && (
-                <Alert variant="error" className="bg-red-500/95 text-white border-none rounded-xl shadow-md py-2 text-xs">
+                <Alert variant="error" className="bg-red-500/95 text-white border-none rounded-xl shadow-md py-2 text-xs mb-3">
                     {error}
                 </Alert>
             )}
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-2.5 lg:space-y-4">
-                {/* Username/Email Input */}
-                <div className="bg-white rounded-2xl p-1.5 lg:p-2 shadow-md flex items-center gap-2.5 border border-gray-200/80 lg:border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 transition-all text-gray-800">
-                    <User className="h-5 w-5 text-gray-400 ml-2 shrink-0" />
-                    <input
-                        type="email"
-                        placeholder="Usuario o Correo DGI"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full py-1.5 text-sm sm:text-base font-medium"
-                    />
-                    {email && (
-                        <button
-                            type="button"
-                            onClick={() => setEmail('')}
-                            className="text-gray-400 hover:text-gray-600 px-2 text-xs font-bold cursor-pointer"
-                        >
-                            ✕
-                        </button>
-                    )}
+            {/* =========================================================
+                VISTA MÓVIL (< lg) - Estilo Banco General
+            ========================================================= */}
+            <div className="flex lg:hidden w-full max-w-md mx-auto space-y-3.5 flex-col justify-center my-auto">
+                {/* Logo Mobile */}
+                <div className="flex items-center justify-center gap-2 pt-0 pb-1">
+                    <div className="bg-white/20 p-1.5 rounded-xl backdrop-blur-sm">
+                        <Star className="h-6 w-6 sm:h-7 sm:w-7 fill-white text-white" />
+                    </div>
+                    <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                        ERP Panamá
+                    </span>
                 </div>
 
-                {/* Password Input + Biometric Button */}
-                <div className="flex gap-2 items-center">
-                    <div className="bg-white rounded-2xl p-1.5 lg:p-2 shadow-md flex items-center gap-2.5 flex-1 border border-gray-200/80 lg:border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 transition-all text-gray-800">
-                        <Lock className="h-5 w-5 text-gray-400 ml-2 shrink-0" />
+                {/* Banner Placeholder (20vh) */}
+                <div className="h-[20vh] min-h-[120px] bg-white/10 border border-white/25 rounded-2xl p-3 flex flex-col items-center justify-center text-center backdrop-blur-md shadow-sm">
+                    <div className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-[10px] font-bold text-white uppercase tracking-wider mb-2">
+                        Espacio para Imagen
+                    </div>
+                    <p className="text-xs sm:text-sm font-semibold text-white leading-snug max-w-[280px]">
+                        Ve por tu historia / Nosotros te acompañamos en tu gestión fiscal
+                    </p>
+                </div>
+
+                {/* Form Móvil */}
+                <form onSubmit={handleSubmit} className="space-y-2.5">
+                    <div className="bg-white rounded-2xl p-1.5 shadow-md flex items-center gap-2.5 text-gray-800">
+                        <User className="h-5 w-5 text-gray-400 ml-2 shrink-0" />
                         <input
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder="Contraseña"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            type="email"
+                            placeholder="Usuario o Correo DGI"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             required
                             className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full py-1.5 text-sm sm:text-base font-medium"
                         />
+                        {email && (
+                            <button
+                                type="button"
+                                onClick={() => setEmail('')}
+                                className="text-gray-400 hover:text-gray-600 px-2 text-xs font-bold cursor-pointer"
+                            >
+                                ✕
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="flex gap-2 items-center">
+                        <div className="bg-white rounded-2xl p-1.5 shadow-md flex items-center gap-2.5 flex-1 text-gray-800">
+                            <Lock className="h-5 w-5 text-gray-400 ml-2 shrink-0" />
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="Contraseña"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full py-1.5 text-sm sm:text-base font-medium"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="text-xs font-bold text-[#0052cc] hover:text-[#003366] px-2 shrink-0 transition-colors cursor-pointer"
+                            >
+                                {showPassword ? 'Ocultar' : 'Mostrar'}
+                            </button>
+                        </div>
+
+                        {/* Botón biométrico Huella Digital */}
                         <button
                             type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="text-xs font-bold text-[#0052cc] hover:text-[#003366] px-2 shrink-0 transition-colors cursor-pointer"
+                            onClick={handleBiometricLogin}
+                            title="Ingresar con Huella Digital"
+                            className="bg-white rounded-2xl p-3 sm:p-3.5 shadow-md flex items-center justify-center text-[#0052cc] hover:bg-blue-50 transition-all shrink-0 active:scale-95 cursor-pointer"
                         >
-                            {showPassword ? 'Ocultar' : 'Mostrar'}
+                            <Fingerprint className="h-5 w-5 sm:h-6 sm:w-6" />
                         </button>
                     </div>
 
-                    {/* Biometric Scan Button (Con ícono real de Huella Digital) */}
+                    <div className="pt-1">
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full bg-[#002855] hover:bg-[#001f42] text-white font-extrabold text-base sm:text-lg py-3.5 rounded-2xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide"
+                        >
+                            {isLoading ? 'Iniciando sesión...' : 'Entrar'}
+                        </button>
+                    </div>
+                </form>
+
+                <div className="text-center">
+                    <Link href="/forgot-password" className="text-white font-bold text-xs sm:text-sm hover:underline tracking-wide">
+                        ¿Olvidaste tu contraseña?
+                    </Link>
+                </div>
+
+                <div>
+                    <Link href="/register" className="block w-full border border-white/80 text-white font-bold text-sm sm:text-base py-2.5 sm:py-3 rounded-2xl text-center hover:bg-white/10 transition-all shadow-sm">
+                        Crea tu usuario o abre tu cuenta
+                    </Link>
+                </div>
+
+                <div>
                     <button
                         type="button"
-                        onClick={handleBiometricLogin}
-                        title="Ingresar con Huella Digital o Face ID"
-                        className="bg-white rounded-2xl p-3 sm:p-3.5 lg:p-4 shadow-md flex items-center justify-center text-[#0052cc] hover:bg-blue-50 border border-gray-200/80 lg:border-gray-300 transition-all shrink-0 active:scale-95 cursor-pointer"
+                        onClick={handleGoogleLogin}
+                        disabled={isGoogleLoading}
+                        className="w-full bg-white/95 text-gray-800 font-semibold text-xs sm:text-sm py-2.5 px-4 rounded-2xl shadow-md hover:bg-white flex items-center justify-center gap-2 transition-all cursor-pointer"
                     >
-                        <Fingerprint className="h-5 w-5 sm:h-6 sm:w-6" />
+                        <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                        </svg>
+                        <span>{isGoogleLoading ? 'Conectando...' : 'O continuar con Google'}</span>
                     </button>
                 </div>
 
-                {/* Submit button (Entrar) */}
-                <div className="pt-1">
+                <p className="text-center text-[11px] font-medium text-white/70">
+                    Versión 1.0.0 (ERP Panamá)
+                </p>
+
+                <div className="grid grid-cols-4 gap-2 pt-1 w-full">
+                    <button type="button" onClick={() => setActiveModal('soporte')} className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all text-[11px] font-semibold shadow-sm cursor-pointer">
+                        <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <span>Soporte</span>
+                    </button>
+                    <button type="button" onClick={() => setActiveModal('seguridad')} className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all text-[11px] font-semibold shadow-sm cursor-pointer">
+                        <Shield className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <span>Seguridad</span>
+                    </button>
+                    <button type="button" onClick={() => setActiveModal('planes')} className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all text-[11px] font-semibold shadow-sm cursor-pointer">
+                        <Tag className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <span>Planes</span>
+                    </button>
+                    <button type="button" onClick={() => setActiveModal('qr')} className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all text-[11px] font-semibold shadow-sm cursor-pointer">
+                        <QrCode className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <span>Lector QR</span>
+                    </button>
+                </div>
+            </div>
+
+
+            {/* =========================================================
+                VISTA ESCRITORIO / LAPTOP (>= lg) - Referencia Adjunta
+            ========================================================= */}
+            <div className="hidden lg:flex w-full max-w-md mx-auto flex-col justify-center text-left">
+                {/* Asterisco / Star Icon */}
+                <div className="mb-4">
+                    <Star className="h-8 w-8 text-[#4f46e5] fill-[#4f46e5]" />
+                </div>
+
+                {/* Título & Subtítulo */}
+                <h2 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tight mb-2">
+                    Iniciar sesión
+                </h2>
+                <p className="text-sm text-gray-500 font-medium leading-relaxed mb-6">
+                    Accede a tus facturas, reportes fiscales DGI y control de inventario en un solo lugar.
+                </p>
+
+                {/* Formulario Escritorio */}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-extrabold text-gray-700 uppercase tracking-wider mb-1.5">
+                            Tu correo electrónico o usuario DGI
+                        </label>
+                        <input
+                            type="email"
+                            placeholder="usuario@empresa.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="w-full bg-gray-50/80 border border-gray-200 focus:bg-white focus:border-[#4f46e5] focus:ring-4 focus:ring-[#4f46e5]/10 rounded-xl px-4 py-3 text-sm text-gray-900 transition-all font-medium placeholder:text-gray-400 outline-none"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-extrabold text-gray-700 uppercase tracking-wider mb-1.5">
+                            Contraseña
+                        </label>
+                        <div className="relative">
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="••••••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                className="w-full bg-gray-50/80 border border-gray-200 focus:bg-white focus:border-[#4f46e5] focus:ring-4 focus:ring-[#4f46e5]/10 rounded-xl px-4 py-3 text-sm text-gray-900 transition-all font-medium placeholder:text-gray-400 outline-none pr-10"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                            >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        </div>
+                    </div>
+
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-[#002855] hover:bg-[#001f42] lg:bg-primary lg:hover:bg-primary/90 text-white font-extrabold text-base sm:text-lg py-3.5 rounded-2xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide"
+                        className="w-full bg-[#4f46e5] hover:bg-[#4338ca] text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-indigo-500/25 transition-all active:scale-[0.99] disabled:opacity-70 text-sm tracking-wide mt-2 cursor-pointer"
                     >
-                        {isLoading ? 'Iniciando sesión...' : 'Entrar'}
+                        {isLoading ? 'Conectando...' : 'Comenzar'}
+                    </button>
+                </form>
+
+                {/* Divider */}
+                <div className="relative flex py-6 items-center">
+                    <div className="flex-grow border-t border-gray-200"></div>
+                    <span className="flex-shrink mx-4 text-gray-400 text-xs font-bold uppercase tracking-wider">o continuar con</span>
+                    <div className="flex-grow border-t border-gray-200"></div>
+                </div>
+
+                {/* Social & Biometric Row (Estilo Pastillas) */}
+                <div className="flex gap-3">
+                    <button
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        disabled={isGoogleLoading}
+                        className="flex-1 bg-gray-100/80 hover:bg-gray-200/80 text-gray-700 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all border border-gray-200/50 cursor-pointer"
+                    >
+                        <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                        </svg>
+                        <span>Google</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={handleBiometricLogin}
+                        className="flex-1 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-700 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all border border-indigo-200/60 cursor-pointer"
+                    >
+                        <Fingerprint className="h-4 w-4" />
+                        <span>Huella / Passkey</span>
                     </button>
                 </div>
-            </form>
 
-            {/* Forgot password link */}
-            <div className="text-center">
-                <Link
-                    href="/forgot-password"
-                    className="text-white lg:text-primary font-bold text-xs sm:text-sm hover:underline tracking-wide"
-                >
-                    ¿Olvidaste tu contraseña?
-                </Link>
-            </div>
-
-            {/* Create account outline button */}
-            <div>
-                <Link
-                    href="/register"
-                    className="block w-full border border-white/80 lg:border-primary text-white lg:text-primary font-bold text-sm sm:text-base py-2.5 sm:py-3 rounded-2xl text-center hover:bg-white/10 lg:hover:bg-primary/5 transition-all shadow-sm"
-                >
-                    Crea tu usuario o abre tu cuenta
-                </Link>
-            </div>
-
-            {/* Google login option */}
-            <div>
-                <button
-                    type="button"
-                    onClick={handleGoogleLogin}
-                    disabled={isGoogleLoading}
-                    className="w-full bg-white/95 lg:bg-white text-gray-800 font-semibold text-xs sm:text-sm py-2.5 px-4 rounded-2xl shadow-md hover:bg-white flex items-center justify-center gap-2 transition-all border border-gray-200/80 cursor-pointer"
-                >
-                    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                    </svg>
-                    <span>{isGoogleLoading ? 'Conectando...' : 'O continuar con Google'}</span>
-                </button>
-            </div>
-
-            {/* Version */}
-            <p className="text-center text-[11px] font-medium text-white/70 lg:text-gray-400">
-                Versión 1.0.0 (ERP Panamá)
-            </p>
-
-            {/* Bottom Quick Action Cards Grid (Sólo móvil - Oculto en escritorio) */}
-            <div className="grid lg:hidden grid-cols-4 gap-2 pt-1 w-full">
-                <button
-                    type="button"
-                    onClick={() => setActiveModal('soporte')}
-                    className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all text-[11px] font-semibold shadow-sm cursor-pointer"
-                >
-                    <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span>Soporte</span>
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setActiveModal('seguridad')}
-                    className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all text-[11px] font-semibold shadow-sm cursor-pointer"
-                >
-                    <Shield className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span>Seguridad</span>
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setActiveModal('planes')}
-                    className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all text-[11px] font-semibold shadow-sm cursor-pointer"
-                >
-                    <Tag className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span>Planes</span>
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setActiveModal('qr')}
-                    className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all text-[11px] font-semibold shadow-sm cursor-pointer"
-                >
-                    <QrCode className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span>Lector QR</span>
-                </button>
+                {/* Footer links */}
+                <div className="mt-8 text-center space-y-2">
+                    <p className="text-xs text-gray-500 font-medium">
+                        ¿No tienes una cuenta?{' '}
+                        <Link href="/register" className="text-[#4f46e5] font-extrabold hover:underline">
+                            Regístrate gratis
+                        </Link>
+                    </p>
+                    <p>
+                        <Link href="/forgot-password" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+                            ¿Olvidaste tu contraseña?
+                        </Link>
+                    </p>
+                </div>
             </div>
         </div>
     );
