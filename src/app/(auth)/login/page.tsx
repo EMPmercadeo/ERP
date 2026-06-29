@@ -79,15 +79,68 @@ export default function LoginPage() {
     };
 
     const handleBiometricLogin = async () => {
-        if (typeof window !== 'undefined' && window.PublicKeyCredential) {
-            try {
-                setError('');
-                alert('🤖 Lector Biométrico Activado: Coloca tu huella o usa Face ID para ingresar con tu token de seguridad DGI.');
-            } catch {
-                setError('No se pudo autenticar con biometría en este dispositivo.');
+        setError('');
+        if (typeof window === 'undefined' || !window.PublicKeyCredential) {
+            setError('Tu navegador o dispositivo no soporta autenticación biométrica (WebAuthn).');
+            return;
+        }
+
+        try {
+            const challenge = new Uint8Array(32);
+            window.crypto.getRandomValues(challenge);
+
+            // Intentar autenticar con huella o Face ID existente
+            const credential = await navigator.credentials.get({
+                publicKey: {
+                    challenge: challenge,
+                    timeout: 60000,
+                    userVerification: "required"
+                }
+            });
+
+            if (credential) {
+                window.location.href = '/dashboard';
             }
-        } else {
-            alert('🔐 Lector Biométrico / Token DGI listo para autenticación móvil.');
+        } catch {
+            // Si no hay credencial guardada, abrimos el registro nativo del sensor biométrico
+            try {
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+                const userId = new Uint8Array(16);
+                window.crypto.getRandomValues(userId);
+
+                const newCredential = await navigator.credentials.create({
+                    publicKey: {
+                        challenge: challenge,
+                        rp: { name: "ERP Panamá" },
+                        user: {
+                            id: userId,
+                            name: email || "usuario@erppanama.com",
+                            displayName: email || "Usuario ERP Panamá",
+                        },
+                        pubKeyCredParams: [
+                            { type: "public-key", alg: -7 },
+                            { type: "public-key", alg: -257 }
+                        ],
+                        authenticatorSelection: {
+                            authenticatorAttachment: "platform",
+                            userVerification: "required"
+                        },
+                        timeout: 60000
+                    }
+                });
+
+                if (newCredential) {
+                    window.location.href = '/dashboard';
+                }
+            } catch (createErr: unknown) {
+                const err = createErr as { name?: string };
+                if (err.name === 'NotAllowedError') {
+                    setError('Cancelaste la autorización biométrica en tu celular.');
+                } else {
+                    setError('Asegúrate de tener configurada tu huella o Face ID en tu celular para autorizar la app.');
+                }
+            }
         }
     };
 
