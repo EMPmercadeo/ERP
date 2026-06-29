@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Search, Trash2, FileText, DollarSign, Building2, Phone, Mail } from 'lucide-react';
@@ -60,8 +60,13 @@ const palette = [
 ];
 
 export function SupplierList({ initialData }: { initialData: SupplierData[] }) {
+    const [isMounted, setIsMounted] = useState(false);
     const [search, setSearch] = useState('');
     const [suppliers, setSuppliers] = useState<SupplierData[]>(initialData);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const filtered = suppliers.filter(s => 
         s.razonSocial.toLowerCase().includes(search.toLowerCase()) ||
@@ -80,6 +85,8 @@ export function SupplierList({ initialData }: { initialData: SupplierData[] }) {
             }
         }
     };
+
+    if (!isMounted) return null;
 
     return (
         <ContentContainer className="py-4 space-y-4">

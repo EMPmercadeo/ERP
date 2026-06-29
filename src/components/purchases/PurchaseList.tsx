@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -64,8 +64,13 @@ const palette = [
 ];
 
 export function PurchaseList({ initialData }: { initialData: PurchaseData[] }) {
+    const [isMounted, setIsMounted] = useState(false);
     const [search, setSearch] = useState('');
     const [purchases, setPurchases] = useState<PurchaseData[]>(initialData);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const filtered = purchases.filter(p => 
         p.numeroFactura.toLowerCase().includes(search.toLowerCase()) ||
@@ -84,6 +89,8 @@ export function PurchaseList({ initialData }: { initialData: PurchaseData[] }) {
             }
         }
     };
+
+    if (!isMounted) return null;
 
     return (
         <ContentContainer className="py-4 space-y-4">
