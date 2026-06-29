@@ -5,6 +5,8 @@ import { getCurrentUser, setSessionEmail, deleteSessionEmail, getUserRole } from
 import {
     User,
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut as firebaseSignOut,
@@ -109,6 +111,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         initAuth();
 
+        // Procesar resultado si venimos de una redirección de Google OAuth
+        getRedirectResult(auth).then(async (res) => {
+            if (res?.user?.email) {
+                await setSessionEmail(res.user.email);
+                if (window.location.pathname === '/login' || window.location.pathname === '/register') {
+                    window.location.href = '/dashboard';
+                }
+            }
+        }).catch((err) => {
+            console.error('Error procesando getRedirectResult de Google:', err);
+        });
+
         const unsubscribe = onAuthStateChanged(auth, async (u) => {
             if (u) {
                 setUser(u);
@@ -143,8 +157,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (res.user?.email) {
                 await setSessionEmail(res.user.email);
             }
-        } catch (error: unknown) {
-            console.error('Error signing in with Google:', error);
+        } catch (error: any) {
+            console.error('Error signing in with Google popup, intentando redirección automática:', error);
+            if (error?.code === 'auth/internal-error' || error?.code === 'auth/popup-blocked' || error?.code === 'auth/unauthorized-domain' || error?.message?.includes('internal')) {
+                await signInWithRedirect(auth, googleProvider);
+                return;
+            }
             throw error;
         }
     };
