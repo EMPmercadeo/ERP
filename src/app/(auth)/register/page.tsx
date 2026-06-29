@@ -92,6 +92,8 @@ export default function RegisterPage() {
                 setError('El registro con Google no está habilitado en Firebase Console -> Authentication -> Sign-in method.');
             } else if (error.code === 'auth/popup-blocked') {
                 setError('El navegador bloqueó la ventana emergente (popup). Por favor, permite ventanas emergentes para este sitio.');
+            } else if (error.code === 'auth/internal-error') {
+                setError('Error interno de Firebase (auth/internal-error). En Firebase Console ve a Project Settings -> General y asegúrate de seleccionar un "Correo electrónico de asistencia" (Support email). Luego en Authentication -> Sign-in method -> Google, verifica que esté habilitado y guardado.');
             } else {
                 setError(`Error al registrarse con Google (${error.code || error.message || 'Error desconocido'}).`);
             }
