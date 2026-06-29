@@ -53,6 +53,10 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
             return NextResponse.json({ error: 'Factura no encontrada.' }, { status: 404 });
         }
 
+        if (invoice.estadoDgi === 'aceptada') {
+            return NextResponse.json({ error: 'Esta factura ya fue autorizada por la DGI.' }, { status: 400 });
+        }
+
         const seq = await getNextSequence(empresaId, invoice.sucursalId, invoice.cajaId);
         const seqStr = String(seq).padStart(8, '0');
         const prefix = invoice.empresa.planType === 'free' ? 'REC' : 'FE';

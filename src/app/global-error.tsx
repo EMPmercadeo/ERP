@@ -43,7 +43,7 @@ export default function GlobalError({
                         <p style={{ fontSize: '14px', color: '#991b1b', marginBottom: '8px' }}>
                             Ocurrió un error inesperado. Esto puede deberse a un problema temporal de conexión.
                         </p>
-                        {error?.digest && (
+                        {process.env.NODE_ENV === 'development' && error?.digest && (
                             <p style={{ fontSize: '12px', color: '#ef4444', marginBottom: '16px' }}>
                                 Código: <code style={{
                                     backgroundColor: '#fee2e2',

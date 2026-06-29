@@ -21,7 +21,7 @@ export default function DashboardError({
                 <p className="text-sm text-amber-700 mb-2">
                     Ocurrió un error inesperado al cargar esta sección del panel.
                 </p>
-                {error?.digest && (
+                {process.env.NODE_ENV === 'development' && error?.digest && (
                     <p className="text-xs text-amber-500 mb-4">
                         Código de error: <code className="bg-amber-100 px-1 py-0.5 rounded">{error.digest}</code>
                     </p>

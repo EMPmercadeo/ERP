@@ -28,7 +28,7 @@ export default async function ProductsPage(props: PageProps) {
     const search = searchParams.search || '';
     const sortBy = searchParams.sortBy || 'createdAt';
     const sortOrder = (searchParams.sortOrder === 'asc' ? 'asc' : 'desc') as 'asc' | 'desc';
-    const limit = Number(searchParams.limit) || 20;
+    const limit = Math.min(Number(searchParams.limit) || 20, 100);
     const status = searchParams.status || 'all';
     const tax = searchParams.tax || 'all';
     const stockStatus = searchParams.stockStatus || 'all';
