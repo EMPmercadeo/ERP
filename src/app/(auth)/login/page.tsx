@@ -269,22 +269,22 @@ export default function LoginPage() {
                 </div>
             )}
 
-            {/* Logo Mobile / Header */}
-            <div className="flex items-center justify-center gap-2 pt-1">
+            {/* Logo Mobile / Header (Posicionado arriba) */}
+            <div className="flex items-center justify-center gap-2 pt-0 pb-1">
                 <div className="bg-white/20 lg:bg-primary/10 p-1.5 rounded-xl backdrop-blur-sm">
-                    <Star className="h-7 w-7 fill-white text-white lg:fill-primary lg:text-primary" />
+                    <Star className="h-6 w-6 sm:h-7 sm:w-7 fill-white text-white lg:fill-primary lg:text-primary" />
                 </div>
                 <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white lg:text-foreground">
                     ERP Panamá
                 </span>
             </div>
 
-            {/* Banco General Inspired Banner Placeholder */}
-            <div className="bg-white/10 lg:bg-primary/5 border border-white/25 lg:border-primary/10 rounded-2xl p-3 text-center backdrop-blur-md shadow-sm">
-                <div className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 lg:bg-primary/10 text-[10px] font-bold text-white lg:text-primary uppercase tracking-wider mb-1">
+            {/* Banco General Inspired Banner Placeholder (Altura exacta 20vh) */}
+            <div className="h-[20vh] min-h-[120px] bg-white/10 lg:bg-primary/5 border border-white/25 lg:border-primary/10 rounded-2xl p-3 flex flex-col items-center justify-center text-center backdrop-blur-md shadow-sm">
+                <div className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 lg:bg-primary/10 text-[10px] font-bold text-white lg:text-primary uppercase tracking-wider mb-2">
                     Espacio para Imagen
                 </div>
-                <p className="text-xs sm:text-sm font-semibold text-white lg:text-foreground leading-snug">
+                <p className="text-xs sm:text-sm font-semibold text-white lg:text-foreground leading-snug max-w-[280px]">
                     Ve por tu historia / Nosotros te acompañamos en tu gestión fiscal
                 </p>
             </div>

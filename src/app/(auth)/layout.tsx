@@ -14,7 +14,7 @@ export default function AuthLayout({
         <div className="flex min-h-screen lg:h-screen overflow-hidden">
             {/* Left side - Form panel (blue on mobile, white on desktop) */}
             <div className="flex w-full lg:w-1/2 flex-col items-center justify-between bg-gradient-to-b from-[#0056b3] via-[#004899] to-[#003366] lg:bg-none lg:bg-white p-3 sm:p-8 h-[100dvh] lg:h-full overflow-y-auto sm:overflow-hidden text-white lg:text-foreground">
-                <div className="w-full max-w-md flex-1 flex flex-col justify-center py-1 sm:py-6">
+                <div className="w-full max-w-md flex-1 flex flex-col justify-start lg:justify-center py-1 sm:py-6 h-full">
                     {children}
                 </div>
                 <div className="hidden lg:block w-full">
