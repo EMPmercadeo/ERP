@@ -29,7 +29,9 @@ import {
     Send,
     Copy,
     Building2,
-    ShoppingCart
+    ShoppingCart,
+    ClipboardList,
+    Truck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSidebarStore } from '@/lib/store';
@@ -48,8 +50,10 @@ import { toast } from 'sonner';
 
 const mainNavigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Facturas', href: '/invoices', icon: FileText },
     { name: 'Cotizaciones', href: '/quotes', icon: FileText },
+    { name: 'Pedidos', href: '/orders', icon: ClipboardList },
+    { name: 'Albaranes', href: '/delivery-notes', icon: Truck },
+    { name: 'Facturas', href: '/invoices', icon: FileText },
     { name: 'Clientes', href: '/clients', icon: Users },
     { name: 'Proveedores', href: '/suppliers', icon: Building2 },
     { name: 'Compras', href: '/purchases', icon: ShoppingCart },

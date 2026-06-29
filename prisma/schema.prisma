@@ -49,6 +49,8 @@ model Empresa {
   posIntegrations    PosIntegration[]
   posSyncLogs        PosSyncLog[]
   productImages      ProductImage[]
+  pedidosVenta       PedidoVenta[]
+  albaranesVenta     AlbaranVenta[]
 
   @@index([createdAt])
 }
@@ -63,29 +65,33 @@ model Sucursal {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   cajas        Caja[]
-  cotizaciones Cotizacion[]
-  facturas     Factura[]
-  secuencias   Secuencia[]
-  empresa      Empresa      @relation(fields: [empresaId], references: [id])
+  cotizaciones   Cotizacion[]
+  facturas       Factura[]
+  secuencias     Secuencia[]
+  pedidosVenta   PedidoVenta[]
+  albaranesVenta AlbaranVenta[]
+  empresa        Empresa      @relation(fields: [empresaId], references: [id])
 
   @@unique([empresaId, codigo])
   @@index([empresaId])
 }
 
 model Caja {
-  id           String       @id @default(cuid())
-  empresaId    String
-  sucursalId   String
-  codigo       String
-  nombre       String
-  activa       Boolean      @default(true)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  empresa      Empresa      @relation(fields: [empresaId], references: [id])
-  sucursal     Sucursal     @relation(fields: [sucursalId], references: [id])
-  cotizaciones Cotizacion[]
-  facturas     Factura[]
-  secuencias   Secuencia[]
+  id             String         @id @default(cuid())
+  empresaId      String
+  sucursalId     String
+  codigo         String
+  nombre         String
+  activa         Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  empresa        Empresa        @relation(fields: [empresaId], references: [id])
+  sucursal       Sucursal       @relation(fields: [sucursalId], references: [id])
+  cotizaciones   Cotizacion[]
+  facturas       Factura[]
+  secuencias     Secuencia[]
+  pedidosVenta   PedidoVenta[]
+  albaranesVenta AlbaranVenta[]
 
   @@unique([sucursalId, codigo])
   @@index([empresaId])
@@ -124,6 +130,8 @@ model Usuario {
   pagos            Pago[]
   comprasCreadas   Compra[]          @relation("CompraCreador")
   pagosProveedores PagoProveedor[]   @relation("PagoProveedorUsuario")
+  pedidosVenta     PedidoVenta[]     @relation("PedidoCreador")
+  albaranesVenta   AlbaranVenta[]    @relation("AlbaranCreador")
   empresa          Empresa           @relation(fields: [empresaId], references: [id])
 
   @@index([empresaId])
@@ -151,6 +159,8 @@ model Cliente {
   cotizaciones    Cotizacion[]
   facturas        Factura[]
   pagos           Pago[]
+  pedidosVenta    PedidoVenta[]
+  albaranesVenta  AlbaranVenta[]
 
   @@unique([empresaId, ruc])
   @@index([empresaId])
@@ -176,6 +186,8 @@ model Producto {
   cotizacionItems  CotizacionItem[]
   items            FacturaItem[]
   compraItems      CompraItem[]
+  pedidoItems      PedidoVentaItem[]
+  albaranItems     AlbaranVentaItem[]
   empresa          Empresa          @relation(fields: [empresaId], references: [id])
   productImages    ProductImage[]
 
@@ -221,6 +233,7 @@ model Factura {
   sucursal         Sucursal      @relation(fields: [sucursalId], references: [id])
   items            FacturaItem[]
   pagos            Pago[]
+  albaranes        AlbaranVenta[]
 
   @@index([empresaId, fechaEmision])
   @@index([clienteId])
@@ -313,6 +326,7 @@ model Cotizacion {
   empresa        Empresa          @relation(fields: [empresaId], references: [id])
   sucursal       Sucursal         @relation(fields: [sucursalId], references: [id])
   items          CotizacionItem[]
+  pedidos        PedidoVenta[]
 
   @@index([empresaId, fechaEmision])
   @@index([clienteId])
@@ -527,6 +541,108 @@ model PagoProveedor {
   @@index([compraId])
   @@index([proveedorId])
   @@index([fechaPago])
+}
+
+model PedidoVenta {
+  id             String            @id @default(cuid())
+  empresaId      String
+  sucursalId     String
+  cajaId         String
+  clienteId      String
+  creadorId      String
+  numero         String            @unique
+  fechaEmision   DateTime          @default(now())
+  fechaEntrega   DateTime?
+  subtotal       Decimal
+  totalDescuento Decimal           @default(0)
+  totalItbms     Decimal
+  totalNeto      Decimal
+  estado         String            @default("pendiente") // pendiente | en_proceso | entregado | facturado | anulado
+  cotizacionId   String?
+  observaciones  String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  caja           Caja              @relation(fields: [cajaId], references: [id])
+  cliente        Cliente           @relation(fields: [clienteId], references: [id])
+  creador        Usuario           @relation("PedidoCreador", fields: [creadorId], references: [id])
+  empresa        Empresa           @relation(fields: [empresaId], references: [id])
+  sucursal       Sucursal          @relation(fields: [sucursalId], references: [id])
+  cotizacion     Cotizacion?       @relation(fields: [cotizacionId], references: [id])
+  items          PedidoVentaItem[]
+  albaranes      AlbaranVenta[]
+
+  @@index([empresaId, fechaEmision])
+  @@index([clienteId])
+}
+
+model PedidoVentaItem {
+  id              String      @id @default(cuid())
+  pedidoId        String
+  productoId      String
+  descripcion     String
+  cantidad        Decimal
+  precioUnitario  Decimal
+  descuento       Decimal     @default(0)
+  codigoTasaItbms String
+  montoItbms      Decimal
+  montoTotal      Decimal
+  pedido          PedidoVenta @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  producto        Producto    @relation(fields: [productoId], references: [id])
+
+  @@index([pedidoId])
+  @@index([productoId])
+}
+
+model AlbaranVenta {
+  id              String             @id @default(cuid())
+  empresaId       String
+  sucursalId      String
+  cajaId          String
+  clienteId       String
+  creadorId       String
+  numero          String             @unique
+  fechaEmision    DateTime           @default(now())
+  subtotal        Decimal
+  totalDescuento  Decimal            @default(0)
+  totalItbms      Decimal
+  totalNeto       Decimal
+  estado          String             @default("pendiente") // pendiente | entregado | facturado | anulado
+  pedidoId        String?
+  facturaId       String?
+  firmaClienteUrl String?
+  observaciones   String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  caja            Caja               @relation(fields: [cajaId], references: [id])
+  cliente         Cliente            @relation(fields: [clienteId], references: [id])
+  creador         Usuario            @relation("AlbaranCreador", fields: [creadorId], references: [id])
+  empresa         Empresa            @relation(fields: [empresaId], references: [id])
+  sucursal        Sucursal           @relation(fields: [sucursalId], references: [id])
+  pedido          PedidoVenta?       @relation(fields: [pedidoId], references: [id])
+  factura         Factura?           @relation(fields: [facturaId], references: [id])
+  items           AlbaranVentaItem[]
+
+  @@index([empresaId, fechaEmision])
+  @@index([clienteId])
+  @@index([estado])
+}
+
+model AlbaranVentaItem {
+  id              String       @id @default(cuid())
+  albaranId       String
+  productoId      String
+  descripcion     String
+  cantidad        Decimal
+  precioUnitario  Decimal
+  descuento       Decimal      @default(0)
+  codigoTasaItbms String
+  montoItbms      Decimal
+  montoTotal      Decimal
+  albaran         AlbaranVenta @relation(fields: [albaranId], references: [id], onDelete: Cascade)
+  producto        Producto     @relation(fields: [productoId], references: [id])
+
+  @@index([albaranId])
+  @@index([productoId])
 }
 
 

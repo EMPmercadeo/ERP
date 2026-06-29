@@ -87,6 +87,22 @@ const statusConfig: Record<string, {
         variant: "info",
         icon: Send,
     },
+    // Order / Delivery statuses
+    en_proceso: {
+        label: "En Proceso",
+        variant: "info",
+        icon: Loader2,
+    },
+    entregado: {
+        label: "Entregado",
+        variant: "success",
+        icon: CheckCircle2,
+    },
+    facturado: {
+        label: "Facturado",
+        variant: "success",
+        icon: CheckCircle2,
+    },
 }
 
 const statusClassMap: Record<string, string> = {
@@ -107,6 +123,10 @@ const statusClassMap: Record<string, string> = {
     bloqueado: "bg-danger-bg text-danger border-transparent hover:bg-danger-bg/90",
     // Quote statuses
     enviada: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
+    // Order / Delivery statuses
+    en_proceso: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
+    entregado: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
+    facturado: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
 }
 
 // Fallback for unknown statuses
