@@ -23,6 +23,42 @@ export async function getTenantContext(): Promise<TenantContext> {
         devUser = await prisma.usuario.findUnique({
             where: { email: sessionEmail }
         });
+
+        // Auto-aprovisionar nueva cuenta en PostgreSQL para usuarios que inician sesión/registran por primera vez vía Firebase (Google o Email)
+        if (!devUser && sessionEmail.includes('@')) {
+            try {
+                const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+                const rucGen = `PE-${Date.now()}-${randomSuffix}`;
+                const nombreGen = sessionEmail.split('@')[0];
+                const razonGen = nombreGen.toUpperCase();
+
+                const nuevaEmpresa = await prisma.empresa.create({
+                    data: {
+                        ruc: rucGen,
+                        dv: '00',
+                        razonSocial: razonGen,
+                        direccion: 'Panamá',
+                        email: sessionEmail,
+                        planType: 'free',
+                        subscriptionStatus: 'active'
+                    }
+                });
+
+                devUser = await prisma.usuario.create({
+                    data: {
+                        empresaId: nuevaEmpresa.id,
+                        email: sessionEmail,
+                        passwordHash: 'oauth-firebase',
+                        nombre: nombreGen,
+                        rol: 'admin',
+                        activo: true
+                    }
+                });
+                console.log(`Auto-provisioned new account in PostgreSQL for ${sessionEmail}`);
+            } catch (error) {
+                console.error('Error auto-provisioning user in PostgreSQL:', error);
+            }
+        }
     }
 
     // For Development: Only fall back if no session cookie was explicitly set as 'guest'
