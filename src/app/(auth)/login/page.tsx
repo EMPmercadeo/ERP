@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User, Lock, Scan, MessageSquare, Shield, Tag, QrCode, Star, X, CheckCircle2, ArrowRight, Camera } from 'lucide-react';
+import { User, Lock, Fingerprint, MessageSquare, Shield, Tag, QrCode, Star, X, CheckCircle2, ArrowRight, Camera } from 'lucide-react';
 import { Alert } from '@/components/ui/alert';
 import { useAuth } from '@/lib/firebase/auth';
 
@@ -82,26 +82,27 @@ export default function LoginPage() {
             return;
         }
 
+        const isRegistered = localStorage.getItem('erp_passkey_saved') === 'true';
+
         try {
-            const challenge = new Uint8Array(32);
-            window.crypto.getRandomValues(challenge);
+            if (isRegistered) {
+                // Si ya se guardó permiso antes en este teléfono, verificamos la huella para iniciar sesión
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+                const credential = await navigator.credentials.get({
+                    publicKey: {
+                        challenge: challenge,
+                        timeout: 60000,
+                        userVerification: "required"
+                    }
+                });
 
-            // Intentar autenticar con huella o Face ID existente
-            const credential = await navigator.credentials.get({
-                publicKey: {
-                    challenge: challenge,
-                    timeout: 60000,
-                    userVerification: "required"
+                if (credential) {
+                    window.location.href = '/dashboard';
+                    return;
                 }
-            });
-
-            if (credential) {
-                window.location.href = '/dashboard';
-                return;
-            }
-        } catch {
-            // Si falla o no hay credencial guardada, intentamos crear una o mostrar modal guía
-            try {
+            } else {
+                // Si es la primera vez en este celular o no encontró llave, abrimos el registro nativo del celular
                 const challenge = new Uint8Array(32);
                 window.crypto.getRandomValues(challenge);
                 const userId = new Uint8Array(16);
@@ -129,19 +130,23 @@ export default function LoginPage() {
                 });
 
                 if (newCredential) {
+                    localStorage.setItem('erp_passkey_saved', 'true');
                     window.location.href = '/dashboard';
                     return;
                 }
-            } catch {
-                // En lugar de mostrar un error técnico rojo, abrimos el modal informativo amable
-                setActiveModal('bio_info');
             }
+        } catch {
+            // Si intentó get() y falló o canceló, quitamos la marca para que la próxima intente crear/dar permiso directamente
+            if (isRegistered) {
+                localStorage.removeItem('erp_passkey_saved');
+            }
+            setActiveModal('bio_info');
         }
     };
 
     return (
-        <div className="w-full max-w-md mx-auto space-y-3.5 flex flex-col justify-center my-auto relative">
-            {/* Overlay Modals (Rendered directly in screen without scrolling) */}
+        <div className="w-full max-w-md mx-auto space-y-3.5 lg:space-y-6 flex flex-col justify-center my-auto relative">
+            {/* Overlay Modals */}
             {activeModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
                     <div className="bg-white rounded-3xl p-6 max-w-sm w-full text-gray-800 shadow-2xl relative space-y-4 border border-gray-100">
@@ -156,18 +161,21 @@ export default function LoginPage() {
                         {activeModal === 'bio_info' && (
                             <div className="text-center space-y-3">
                                 <div className="w-12 h-12 bg-blue-100 text-[#0052cc] rounded-full flex items-center justify-center mx-auto">
-                                    <Scan className="h-6 w-6" />
+                                    <Fingerprint className="h-6 w-6" />
                                 </div>
-                                <h3 className="text-lg font-black text-gray-900">Vincular Huella / Face ID</h3>
+                                <h3 className="text-lg font-black text-gray-900">Permiso Biométrico DGI</h3>
                                 <p className="text-xs text-gray-600 leading-relaxed">
-                                    Para activar el ingreso instantáneo por biometría en este teléfono, primero ingresa con tu <strong>correo y contraseña</strong> la primera vez. Luego podrás activarlo en los ajustes de tu cuenta.
+                                    Para autorizar tu huella digital o Face ID en este dispositivo, escribe tu correo y pulsa el ícono de huella nuevamente para vincular la seguridad del celular con la app.
                                 </p>
                                 <button
                                     type="button"
-                                    onClick={() => setActiveModal(null)}
+                                    onClick={() => {
+                                        setActiveModal(null);
+                                        localStorage.removeItem('erp_passkey_saved');
+                                    }}
                                     className="w-full bg-[#002855] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#001f42] transition-all cursor-pointer"
                                 >
-                                    Entendido, ingresaré con contraseña
+                                    Entendido, autorizar ahora
                                 </button>
                             </div>
                         )}
@@ -269,23 +277,33 @@ export default function LoginPage() {
                 </div>
             )}
 
-            {/* Logo Mobile / Header (Posicionado arriba) */}
-            <div className="flex items-center justify-center gap-2 pt-0 pb-1">
-                <div className="bg-white/20 lg:bg-primary/10 p-1.5 rounded-xl backdrop-blur-sm">
-                    <Star className="h-6 w-6 sm:h-7 sm:w-7 fill-white text-white lg:fill-primary lg:text-primary" />
+            {/* Logo Mobile / Header (Sólo móvil - Oculto en escritorio) */}
+            <div className="flex lg:hidden items-center justify-center gap-2 pt-0 pb-1">
+                <div className="bg-white/20 p-1.5 rounded-xl backdrop-blur-sm">
+                    <Star className="h-6 w-6 sm:h-7 sm:w-7 fill-white text-white" />
                 </div>
-                <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white lg:text-foreground">
+                <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
                     ERP Panamá
                 </span>
             </div>
 
-            {/* Banco General Inspired Banner Placeholder (Altura exacta 20vh) */}
-            <div className="h-[20vh] min-h-[120px] bg-white/10 lg:bg-primary/5 border border-white/25 lg:border-primary/10 rounded-2xl p-3 flex flex-col items-center justify-center text-center backdrop-blur-md shadow-sm">
-                <div className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 lg:bg-primary/10 text-[10px] font-bold text-white lg:text-primary uppercase tracking-wider mb-2">
+            {/* Banco General Inspired Banner Placeholder (Sólo móvil - Oculto en escritorio) */}
+            <div className="flex lg:hidden h-[20vh] min-h-[120px] bg-white/10 border border-white/25 rounded-2xl p-3 flex-col items-center justify-center text-center backdrop-blur-md shadow-sm">
+                <div className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-[10px] font-bold text-white uppercase tracking-wider mb-2">
                     Espacio para Imagen
                 </div>
-                <p className="text-xs sm:text-sm font-semibold text-white lg:text-foreground leading-snug max-w-[280px]">
+                <p className="text-xs sm:text-sm font-semibold text-white leading-snug max-w-[280px]">
                     Ve por tu historia / Nosotros te acompañamos en tu gestión fiscal
+                </p>
+            </div>
+
+            {/* Desktop Header / Welcome text (Sólo escritorio) */}
+            <div className="hidden lg:block space-y-1 text-center lg:text-left mb-2">
+                <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">
+                    Iniciar Sesión
+                </h2>
+                <p className="text-sm text-gray-500 font-medium">
+                    Ingresa a tu portal de facturación y gestión fiscal
                 </p>
             </div>
 
@@ -296,9 +314,9 @@ export default function LoginPage() {
             )}
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-2.5">
+            <form onSubmit={handleSubmit} className="space-y-2.5 lg:space-y-4">
                 {/* Username/Email Input */}
-                <div className="bg-white rounded-2xl p-1.5 shadow-md flex items-center gap-2.5 border border-transparent focus-within:ring-2 focus-within:ring-blue-300 transition-all text-gray-800">
+                <div className="bg-white rounded-2xl p-1.5 lg:p-2 shadow-md flex items-center gap-2.5 border border-gray-200/80 lg:border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 transition-all text-gray-800">
                     <User className="h-5 w-5 text-gray-400 ml-2 shrink-0" />
                     <input
                         type="email"
@@ -321,7 +339,7 @@ export default function LoginPage() {
 
                 {/* Password Input + Biometric Button */}
                 <div className="flex gap-2 items-center">
-                    <div className="bg-white rounded-2xl p-1.5 shadow-md flex items-center gap-2.5 flex-1 border border-transparent focus-within:ring-2 focus-within:ring-blue-300 transition-all text-gray-800">
+                    <div className="bg-white rounded-2xl p-1.5 lg:p-2 shadow-md flex items-center gap-2.5 flex-1 border border-gray-200/80 lg:border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 transition-all text-gray-800">
                         <Lock className="h-5 w-5 text-gray-400 ml-2 shrink-0" />
                         <input
                             type={showPassword ? 'text' : 'password'}
@@ -340,14 +358,14 @@ export default function LoginPage() {
                         </button>
                     </div>
 
-                    {/* Biometric Scan Button */}
+                    {/* Biometric Scan Button (Con ícono real de Huella Digital) */}
                     <button
                         type="button"
                         onClick={handleBiometricLogin}
-                        title="Ingresar con biometría"
-                        className="bg-white rounded-2xl p-3 sm:p-3.5 shadow-md flex items-center justify-center text-[#0052cc] hover:bg-blue-50 transition-all shrink-0 active:scale-95 cursor-pointer"
+                        title="Ingresar con Huella Digital o Face ID"
+                        className="bg-white rounded-2xl p-3 sm:p-3.5 lg:p-4 shadow-md flex items-center justify-center text-[#0052cc] hover:bg-blue-50 border border-gray-200/80 lg:border-gray-300 transition-all shrink-0 active:scale-95 cursor-pointer"
                     >
-                        <Scan className="h-5 w-5 sm:h-6 sm:w-6" />
+                        <Fingerprint className="h-5 w-5 sm:h-6 sm:w-6" />
                     </button>
                 </div>
 
@@ -406,12 +424,12 @@ export default function LoginPage() {
                 Versión 1.0.0 (ERP Panamá)
             </p>
 
-            {/* Bottom Quick Action Cards Grid (Real ERP Interactive Overlays) */}
-            <div className="grid grid-cols-4 gap-2 pt-1 w-full">
+            {/* Bottom Quick Action Cards Grid (Sólo móvil - Oculto en escritorio) */}
+            <div className="grid lg:hidden grid-cols-4 gap-2 pt-1 w-full">
                 <button
                     type="button"
                     onClick={() => setActiveModal('soporte')}
-                    className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 lg:border-gray-200 bg-white/10 lg:bg-gray-50 backdrop-blur-md text-white lg:text-gray-700 hover:bg-white/20 lg:hover:bg-gray-100 transition-all text-[11px] font-semibold shadow-sm cursor-pointer"
+                    className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all text-[11px] font-semibold shadow-sm cursor-pointer"
                 >
                     <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
                     <span>Soporte</span>
@@ -419,7 +437,7 @@ export default function LoginPage() {
                 <button
                     type="button"
                     onClick={() => setActiveModal('seguridad')}
-                    className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 lg:border-gray-200 bg-white/10 lg:bg-gray-50 backdrop-blur-md text-white lg:text-gray-700 hover:bg-white/20 lg:hover:bg-gray-100 transition-all text-[11px] font-semibold shadow-sm cursor-pointer"
+                    className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all text-[11px] font-semibold shadow-sm cursor-pointer"
                 >
                     <Shield className="h-4 w-4 sm:h-5 sm:w-5" />
                     <span>Seguridad</span>
@@ -427,7 +445,7 @@ export default function LoginPage() {
                 <button
                     type="button"
                     onClick={() => setActiveModal('planes')}
-                    className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 lg:border-gray-200 bg-white/10 lg:bg-gray-50 backdrop-blur-md text-white lg:text-gray-700 hover:bg-white/20 lg:hover:bg-gray-100 transition-all text-[11px] font-semibold shadow-sm cursor-pointer"
+                    className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all text-[11px] font-semibold shadow-sm cursor-pointer"
                 >
                     <Tag className="h-4 w-4 sm:h-5 sm:w-5" />
                     <span>Planes</span>
@@ -435,7 +453,7 @@ export default function LoginPage() {
                 <button
                     type="button"
                     onClick={() => setActiveModal('qr')}
-                    className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 lg:border-gray-200 bg-white/10 lg:bg-gray-50 backdrop-blur-md text-white lg:text-gray-700 hover:bg-white/20 lg:hover:bg-gray-100 transition-all text-[11px] font-semibold shadow-sm cursor-pointer"
+                    className="flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3 rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all text-[11px] font-semibold shadow-sm cursor-pointer"
                 >
                     <QrCode className="h-4 w-4 sm:h-5 sm:w-5" />
                     <span>Lector QR</span>
