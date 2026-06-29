@@ -139,7 +139,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signInWithGoogle = async () => {
         try {
-            await signInWithPopup(auth, googleProvider);
+            const res = await signInWithPopup(auth, googleProvider);
+            if (res.user?.email) {
+                await setSessionEmail(res.user.email);
+            }
         } catch (error: unknown) {
             console.error('Error signing in with Google:', error);
             throw error;
@@ -193,6 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const signUpWithEmail = async (email: string, password: string) => {
         try {
             await createUserWithEmailAndPassword(auth, email, password);
+            await setSessionEmail(email);
         } catch (error: any) {
             console.error('Error signing up:', error);
             throw error;
