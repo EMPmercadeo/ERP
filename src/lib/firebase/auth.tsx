@@ -19,6 +19,8 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     role: string | null;
+    error: string | null;
+    clearError: () => void;
     signInWithGoogle: () => Promise<void>;
     signInWithEmail: (email: string, password: string) => Promise<void>;
     signUpWithEmail: (email: string, password: string) => Promise<void>;
@@ -32,7 +34,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [role, setRole] = useState<string | null>(null);
+    const [authError, setAuthError] = useState<string | null>(null);
     const initializedRef = useRef(false);
+
+    const clearError = () => setAuthError(null);
 
     // Stable mock user – created once, never triggers re-renders
     const mockUserRef = useRef<User | null>(process.env.NODE_ENV === 'development' ? {
@@ -114,25 +119,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Procesar resultado si venimos de una redirección de Google OAuth
         getRedirectResult(auth).then(async (res) => {
             if (res?.user?.email) {
-                await setSessionEmail(res.user.email);
+                try {
+                    await setSessionEmail(res.user.email);
+                } catch (e) {
+                    console.error('Error setting session email in getRedirectResult:', e);
+                }
                 if (window.location.pathname === '/login' || window.location.pathname === '/register') {
                     window.location.href = '/dashboard';
                 }
             }
         }).catch((err) => {
             console.error('Error procesando getRedirectResult de Google:', err);
+            setAuthError('Error procesando redirección de Google: ' + (err instanceof Error ? err.message : 'Error desconocido'));
         });
 
         const unsubscribe = onAuthStateChanged(auth, async (u) => {
             if (u) {
                 if (u.email) {
-                    await setSessionEmail(u.email);
-                    const r = await getUserRole(u.email);
-                    setRole(r || null);
-                    // Sync display name (once)
-                    const dbUser = await getCurrentUser(u.email);
-                    if (dbUser && dbUser.nombre !== u.displayName) {
-                        await firebaseUpdateProfile(u, { displayName: dbUser.nombre });
+                    try {
+                        await setSessionEmail(u.email);
+                    } catch (e) {
+                        console.error('Error setting session email in onAuthStateChanged:', e);
+                        setAuthError('Error al establecer sesión: ' + (e instanceof Error ? e.message : 'Error desconocido'));
+                    }
+                    try {
+                        const r = await getUserRole(u.email);
+                        setRole(r || null);
+                        const dbUser = await getCurrentUser(u.email);
+                        if (dbUser && dbUser.nombre !== u.displayName) {
+                            await firebaseUpdateProfile(u, { displayName: dbUser.nombre });
+                        }
+                    } catch (dbErr) {
+                        console.error('Error syncing details from PostgreSQL, proceeding anyway:', dbErr);
                     }
                 }
                 setUser(u);
@@ -142,10 +160,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } else {
                 // No Firebase user – keep mock
                 if (mockUserRef.current?.email) {
-                    await setSessionEmail(mockUserRef.current.email);
+                    try {
+                        await setSessionEmail(mockUserRef.current.email);
+                    } catch (e) {
+                        console.error('Error setting mock session email:', e);
+                    }
                 } else {
                     setUser(null);
-                    await deleteSessionEmail();
+                    try {
+                        await deleteSessionEmail();
+                    } catch (e) {
+                        console.error('Error deleting session email:', e);
+                    }
                 }
             }
             setLoading(false);
@@ -241,6 +267,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             user: user || mockUserRef.current,
             loading,
             role,
+            error: authError,
+            clearError,
             signInWithGoogle,
             signInWithEmail,
             signUpWithEmail,

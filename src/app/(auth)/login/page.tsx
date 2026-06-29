@@ -11,13 +11,19 @@ import { useAuth } from '@/lib/firebase/auth';
 
 export default function LoginPage() {
     const router = useRouter();
-    const { signInWithGoogle, signInWithEmail, user, loading } = useAuth();
+    const { signInWithGoogle, signInWithEmail, user, loading, error: authError } = useAuth();
 
     useEffect(() => {
         if (!loading && user) {
             window.location.href = '/dashboard';
         }
-    }, [user, loading, router]);
+    }, [user, loading]);
+
+    useEffect(() => {
+        if (authError) {
+            setError(authError);
+        }
+    }, [authError]);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);

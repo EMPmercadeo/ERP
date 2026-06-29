@@ -18,7 +18,7 @@ import { useAuth } from '@/lib/firebase/auth';
 
 export default function RegisterPage() {
     const router = useRouter();
-    const { signUpWithEmail, signInWithGoogle, user, loading } = useAuth();
+    const { signUpWithEmail, signInWithGoogle, user, loading, error: authError } = useAuth();
     const [mounted, setMounted] = useState(false);
     const [tipoCuenta, setTipoCuenta] = useState('empresa');
     const [nombreComercial, setNombreComercial] = useState('');
@@ -37,7 +37,13 @@ export default function RegisterPage() {
         if (!loading && user) {
             window.location.href = '/dashboard';
         }
-    }, [user, loading, router]);
+    }, [user, loading]);
+
+    useEffect(() => {
+        if (authError) {
+            setError(authError);
+        }
+    }, [authError]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
