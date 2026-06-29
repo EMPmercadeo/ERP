@@ -164,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error('Error signing in with Google popup, intentando redirección automática:', error);
             if (error?.code === 'auth/internal-error' || error?.code === 'auth/popup-blocked' || error?.code === 'auth/unauthorized-domain' || error?.message?.includes('internal')) {
                 await signInWithRedirect(auth, googleProvider);
-                return;
+                return new Promise<void>(() => {}); // Bloquear resolución para que el navegador complete la redirección a Google sin ser interrumpido
             }
             throw error;
         }
