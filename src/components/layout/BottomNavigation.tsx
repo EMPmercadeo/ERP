@@ -20,7 +20,8 @@ import {
     BookOpen,
     UserCog,
     FileClock,
-    CreditCard
+    CreditCard,
+    Building2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -195,6 +196,14 @@ export function BottomNavigation() {
                                     <Link href="/quotes" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
                                         <FileText className="h-4.5 w-4.5 text-brand-1" />
                                         <span>Cotizaciones</span>
+                                    </Link>
+                                    <Link href="/suppliers" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
+                                        <Building2 className="h-4.5 w-4.5 text-brand-1" />
+                                        <span>Proveedores</span>
+                                    </Link>
+                                    <Link href="/purchases" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
+                                        <ShoppingCart className="h-4.5 w-4.5 text-brand-1" />
+                                        <span>Compras</span>
                                     </Link>
                                     <Link href="/receivables" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
                                         <CreditCard className="h-4.5 w-4.5 text-brand-1" />

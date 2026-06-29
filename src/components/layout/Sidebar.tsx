@@ -27,7 +27,9 @@ import {
     Check,
     ExternalLink,
     Send,
-    Copy
+    Copy,
+    Building2,
+    ShoppingCart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSidebarStore } from '@/lib/store';
@@ -49,6 +51,8 @@ const mainNavigation = [
     { name: 'Facturas', href: '/invoices', icon: FileText },
     { name: 'Cotizaciones', href: '/quotes', icon: FileText },
     { name: 'Clientes', href: '/clients', icon: Users },
+    { name: 'Proveedores', href: '/suppliers', icon: Building2 },
+    { name: 'Compras', href: '/purchases', icon: ShoppingCart },
     { name: 'Productos', href: '/products', icon: Package },
     { name: 'Reportes', href: '/reports', icon: BarChart3 },
 ];

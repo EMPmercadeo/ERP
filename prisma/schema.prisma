@@ -41,6 +41,9 @@ model Empresa {
   secuencias         Secuencia[]
   sucursales         Sucursal[]
   usuarios           Usuario[]
+  proveedores        Proveedor[]
+  compras            Compra[]
+  pagosProveedores   PagoProveedor[]
   subscription       Subscription?
   documentUsages     DocumentUsage[]
   posIntegrations    PosIntegration[]
@@ -118,8 +121,10 @@ model Usuario {
   auditorias   Auditoria[]
   cotizaciones Cotizacion[]
   facturas     Factura[]    @relation("FacturaCreador")
-  pagos        Pago[]
-  empresa      Empresa      @relation(fields: [empresaId], references: [id])
+  pagos            Pago[]
+  comprasCreadas   Compra[]          @relation("CompraCreador")
+  pagosProveedores PagoProveedor[]   @relation("PagoProveedorUsuario")
+  empresa          Empresa           @relation(fields: [empresaId], references: [id])
 
   @@index([empresaId])
 }
@@ -170,6 +175,7 @@ model Producto {
   imagenUrl        String?
   cotizacionItems  CotizacionItem[]
   items            FacturaItem[]
+  compraItems      CompraItem[]
   empresa          Empresa          @relation(fields: [empresaId], references: [id])
   productImages    ProductImage[]
 
@@ -429,4 +435,98 @@ model ProductImage {
   @@index([productoId])
   @@index([empresaId])
 }
+
+model Proveedor {
+  id              String          @id @default(cuid())
+  empresaId       String
+  tipoRuc         String
+  ruc             String
+  dv              String?
+  razonSocial     String
+  nombreComercial String?
+  direccion       String?
+  email           String?
+  telefono        String?
+  saldoPendiente  Decimal         @default(0)
+  condicionPago   String          @default("Contado")
+  estado          String          @default("activo")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  empresa         Empresa         @relation(fields: [empresaId], references: [id])
+  compras         Compra[]
+  pagos           PagoProveedor[]
+
+  @@unique([empresaId, ruc])
+  @@index([empresaId])
+}
+
+model Compra {
+  id               String          @id @default(cuid())
+  empresaId        String
+  proveedorId      String
+  creadorId        String
+  numeroFactura    String
+  fechaEmision     DateTime        @default(now())
+  fechaVencimiento DateTime
+  subtotal         Decimal
+  totalDescuento   Decimal         @default(0)
+  totalItbms       Decimal
+  totalNeto        Decimal
+  saldoPendiente   Decimal
+  estadoPago       String          @default("pendiente") // pagada | pendiente | parcial | vencida
+  observaciones    String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  empresa          Empresa         @relation(fields: [empresaId], references: [id])
+  proveedor        Proveedor       @relation(fields: [proveedorId], references: [id])
+  creador          Usuario         @relation("CompraCreador", fields: [creadorId], references: [id])
+  items            CompraItem[]
+  pagos            PagoProveedor[]
+
+  @@index([empresaId, fechaEmision])
+  @@index([proveedorId])
+  @@index([estadoPago])
+}
+
+model CompraItem {
+  id              String    @id @default(cuid())
+  compraId        String
+  productoId      String?
+  descripcion     String
+  cantidad        Decimal
+  costoUnitario   Decimal
+  descuento       Decimal   @default(0)
+  codigoTasaItbms String    @default("00")
+  montoItbms      Decimal
+  montoTotal      Decimal
+  compra          Compra    @relation(fields: [compraId], references: [id], onDelete: Cascade)
+  producto        Producto? @relation(fields: [productoId], references: [id])
+
+  @@index([compraId])
+  @@index([productoId])
+}
+
+model PagoProveedor {
+  id            String    @id @default(cuid())
+  empresaId     String
+  compraId      String
+  proveedorId   String
+  usuarioId     String
+  fechaPago     DateTime  @default(now())
+  monto         Decimal
+  metodoPago    String
+  referencia    String?
+  montoAplicado Decimal
+  createdAt     DateTime  @default(now())
+  empresa       Empresa   @relation(fields: [empresaId], references: [id])
+  compra        Compra    @relation(fields: [compraId], references: [id])
+  proveedor     Proveedor @relation(fields: [proveedorId], references: [id])
+  usuario       Usuario   @relation("PagoProveedorUsuario", fields: [usuarioId], references: [id])
+
+  @@index([empresaId])
+  @@index([compraId])
+  @@index([proveedorId])
+  @@index([fechaPago])
+}
+
 
