@@ -25,6 +25,7 @@ interface AuthContextType {
     signInWithEmail: (email: string, password: string) => Promise<void>;
     signUpWithEmail: (email: string, password: string) => Promise<void>;
     signOut: () => Promise<void>;
+    resetPassword: (email: string) => Promise<void>;
     refreshUser: () => Promise<void>;
 }
 
@@ -262,6 +263,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const resetPassword = async (email: string) => {
+        const { sendPasswordResetEmail } = await import('firebase/auth');
+        await sendPasswordResetEmail(auth, email);
+    };
+
     return (
         <AuthContext.Provider value={{
             user: user || mockUserRef.current,
@@ -273,6 +279,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             signInWithEmail,
             signUpWithEmail,
             signOut,
+            resetPassword,
             refreshUser
         }}>
             {children}
