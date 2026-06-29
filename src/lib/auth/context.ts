@@ -1,4 +1,4 @@
-import { headers, cookies } from 'next/headers';
+import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import { getUserRole } from '@/lib/actions/auth'; // Reusing this or similar logic
@@ -44,6 +44,14 @@ export async function getTenantContext(): Promise<TenantContext> {
 
     if (!devUser) {
         redirect('/login');
+    }
+
+    if (!devUser.activo) {
+        redirect('/login?error=inactive');
+    }
+
+    if (!devUser.empresaId && devUser.rol !== 'super_admin') {
+        redirect('/login?error=no-company');
     }
 
     // 2. Check Impersonation (Strictly for Super Admin)

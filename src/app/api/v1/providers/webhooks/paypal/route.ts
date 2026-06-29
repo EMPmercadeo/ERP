@@ -6,6 +6,15 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
+
+        // Basic webhook verification: check for PayPal transmission headers
+        const transmissionId = request.headers.get('paypal-transmission-id');
+        const transmissionSig = request.headers.get('paypal-transmission-sig');
+        if (!transmissionId || !transmissionSig) {
+            console.warn('[PayPal Webhook] Missing verification headers');
+            return NextResponse.json({ error: 'Missing webhook verification headers' }, { status: 401 });
+        }
+
         const { event_type, resource } = body;
 
         console.log(`[PayPal Webhook] Recibido evento: ${event_type}`, JSON.stringify(resource));
@@ -96,23 +105,25 @@ export async function POST(request: NextRequest) {
             where: { empresaId, rol: { in: ['admin', 'super_admin'] } }
         });
 
-        await prisma.auditoria.create({
-            data: {
-                usuarioId: adminUser?.id || 'paypal-webhook',
-                entidad: 'Empresa',
-                entidadId: empresaId,
-                accion: 'editar',
-                datosDespues: {
-                    planType,
-                    subscriptionStatus,
-                    event_type,
-                    source: 'paypal-webhook'
+        if (adminUser) {
+            await prisma.auditoria.create({
+                data: {
+                    usuarioId: adminUser.id,
+                    entidad: 'Empresa',
+                    entidadId: empresaId,
+                    accion: 'editar',
+                    datosDespues: {
+                        planType,
+                        subscriptionStatus,
+                        event_type,
+                        source: 'paypal-webhook'
+                    }
                 }
-            }
-        });
+            });
+        }
 
         console.log(`[PayPal Webhook] Empresa ${empresaId} actualizada exitosamente. Plan: ${planType}, Estado: ${subscriptionStatus}`);
-        return NextResponse.json({ success: true, planType, subscriptionStatus });
+        return NextResponse.json({ received: true });
     } catch (error) {
         console.error('[PayPal Webhook] Error:', error);
         return NextResponse.json({ error: 'Error procesando el webhook de PayPal.' }, { status: 500 });

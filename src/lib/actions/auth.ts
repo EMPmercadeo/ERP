@@ -62,7 +62,7 @@ export async function getCurrentUserWithPlan(email: string | null | undefined) {
                 }
             }
         });
-        if (!user) return null;
+        if (!user || !user.empresa) return null;
         return {
             id: user.id,
             email: user.email,
@@ -84,6 +84,7 @@ export async function setSessionEmail(email: string) {
     cookieStore.set('session_email', email, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
         path: '/',
         maxAge: 60 * 60 * 24 * 7, // 1 week
     });

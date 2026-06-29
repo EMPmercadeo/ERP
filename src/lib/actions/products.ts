@@ -433,19 +433,25 @@ export async function uploadProductImage(productId: string, formData: FormData) 
             return { success: false, message: 'Formato de imagen no permitido. Solo se aceptan .jpg, .jpeg, .png y .webp.' };
         }
 
+        // File size limit
+        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+        if (file.size > MAX_FILE_SIZE) {
+            return { success: false, message: 'El archivo excede el tamaño máximo de 5MB.' };
+        }
+
         // Convert to Buffer
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
         // Define file path
-        const filename = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+        const safeFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}${path.extname(file.name)}`;
         const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products');
         await fs.mkdir(uploadDir, { recursive: true });
-        const filepath = path.join(uploadDir, filename);
+        const filepath = path.join(uploadDir, safeFilename);
 
         // Write file
         await fs.writeFile(filepath, buffer);
-        const imageUrl = `/uploads/products/${filename}`;
+        const imageUrl = `/uploads/products/${safeFilename}`;
 
         // Save in DB
         const result = await prisma.$transaction(async (tx) => {

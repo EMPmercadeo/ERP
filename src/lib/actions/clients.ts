@@ -128,6 +128,21 @@ export async function deleteClient(id: string) {
             return { success: false, error: 'Cliente no encontrado o acceso denegado.' };
         }
 
+        // Check for related invoices before hard delete
+        const relatedInvoices = await prisma.factura.count({
+            where: { clienteId: id, empresaId }
+        });
+
+        if (relatedInvoices > 0) {
+            // Soft delete: mark as inactive instead of deleting
+            await prisma.cliente.update({
+                where: { id },
+                data: { estado: 'inactivo' }
+            });
+            revalidatePath('/clients');
+            return { success: true, message: 'Cliente desactivado (tiene facturas asociadas).' };
+        }
+
         await prisma.cliente.delete({
             where: { id }
         });

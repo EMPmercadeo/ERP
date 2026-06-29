@@ -40,6 +40,7 @@ interface SettingsClientProps {
         certificadoDgi: string | null;
         usuarioPac: string;
         passwordPac: string;
+        hasPacPassword?: boolean;
         planType: string;
         fiscalEnabled: boolean;
         subscriptionStatus: string;
@@ -811,7 +812,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                             </label>
                                             <Input
                                                 type="password"
-                                                placeholder="••••••••"
+                                                placeholder={company.hasPacPassword ? "•••••••• (Configurada)" : "••••••••"}
                                                 value={passwordPac}
                                                 onChange={(e) => setPasswordPac(e.target.value)}
                                             />

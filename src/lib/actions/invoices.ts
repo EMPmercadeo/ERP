@@ -74,7 +74,14 @@ async function getDefaults(empresaId: string) {
 
 export async function createInvoice(prevState: any, formData: FormData) {
     const rawItems = formData.get('items');
-    const items = rawItems ? JSON.parse(rawItems as string) : [];
+    let items: any[] = [];
+    if (rawItems) {
+        try {
+            items = JSON.parse(rawItems as string);
+        } catch {
+            return { success: false, message: 'Formato de ítems inválido.' };
+        }
+    }
 
     const rawData = {
         clienteId: formData.get('clienteId'),
@@ -208,7 +215,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
     } catch (error) {
         console.error('Database Error:', error);
         return {
-            message: 'Error al crear la factura. ' + (error instanceof Error ? error.message : ''),
+            message: 'Error al crear la factura. Por favor intente nuevamente.',
         };
     }
 
@@ -243,7 +250,7 @@ export async function voidInvoice(id: string) {
         return { success: true, message: 'Factura anulada correctamente (Nota de Crédito aplicada).' };
     } catch (error) {
         console.error('Void invoice error:', error);
-        return { success: false, message: 'Error al intentar anular la factura. ' + (error instanceof Error ? error.message : '') };
+        return { success: false, message: 'Error al intentar anular la factura. Por favor intente nuevamente.' };
     }
 }
 
@@ -337,7 +344,7 @@ export async function recordInvoicePayment(
         console.error('Record payment error:', error);
         return { 
             success: false, 
-            error: 'Error al intentar registrar el pago. ' + (error instanceof Error ? error.message : '') 
+            error: 'Error al intentar registrar el pago. Por favor intente nuevamente.' 
         };
     }
 }
@@ -397,69 +404,84 @@ export async function createInvoicePOS(rawData: {
         }, 0);
         const totalNeto = subtotal + totalItbms;
 
-        // Create Invoice
-        const invoice = await prisma.factura.create({
-            data: {
-                empresaId: empresa.id,
-                sucursalId: sucursal.id,
-                cajaId: caja.id,
-                clienteId: rawData.clienteId,
-                creadorId: userId,
-                tipoDocumento: tipoDoc,
-                numeroSecuencial,
-                numeroCompleto,
-                subtotal,
-                totalItbms,
-                totalNeto,
-                saldoPendiente: rawData.condicionPago === 'contado' ? 0 : totalNeto,
-                totalPagado: rawData.condicionPago === 'contado' ? totalNeto : 0,
-                estadoDgi: isFiscal ? 'pendiente' : 'local',
-                items: {
-                    create: rawData.items.map(item => {
-                        const tasa = item.codigoTasaItbms === '01' ? 0.07 :
-                            item.codigoTasaItbms === '02' ? 0.10 :
-                                item.codigoTasaItbms === '03' ? 0.15 : 0;
-                        return {
-                            productoId: item.productoId,
-                            descripcion: item.descripcion,
-                            cantidad: item.cantidad,
-                            precioUnitario: item.precioUnitario,
-                            costoUnitario: 0,
-                            codigoTasaItbms: item.codigoTasaItbms,
-                            montoItbms: item.cantidad * item.precioUnitario * tasa,
-                            montoTotal: item.cantidad * item.precioUnitario * (1 + tasa)
-                        };
-                    })
-                }
+        // Validate all products belong to tenant BEFORE creating invoice
+        const productIds = rawData.items.map((i: any) => i.productoId).filter(Boolean);
+        if (productIds.length > 0) {
+            const validProducts = await prisma.producto.count({
+                where: { id: { in: productIds }, empresaId }
+            });
+            if (validProducts !== productIds.length) {
+                return { success: false, error: 'Producto no válido para esta empresa.' };
             }
-        });
+        }
 
-        // Update stock
-        for (const item of rawData.items) {
-            await prisma.producto.update({
-                where: { id: item.productoId },
+        const invoice = await prisma.$transaction(async (tx) => {
+            // Create Invoice
+            const inv = await tx.factura.create({
                 data: {
-                    stockActual: {
-                        decrement: item.cantidad
+                    empresaId: empresa.id,
+                    sucursalId: sucursal.id,
+                    cajaId: caja.id,
+                    clienteId: rawData.clienteId,
+                    creadorId: userId,
+                    tipoDocumento: tipoDoc,
+                    numeroSecuencial,
+                    numeroCompleto,
+                    subtotal,
+                    totalItbms,
+                    totalNeto,
+                    saldoPendiente: rawData.condicionPago === 'contado' ? 0 : totalNeto,
+                    totalPagado: rawData.condicionPago === 'contado' ? totalNeto : 0,
+                    estadoDgi: isFiscal ? 'pendiente' : 'local',
+                    items: {
+                        create: rawData.items.map(item => {
+                            const tasa = item.codigoTasaItbms === '01' ? 0.07 :
+                                item.codigoTasaItbms === '02' ? 0.10 :
+                                    item.codigoTasaItbms === '03' ? 0.15 : 0;
+                            return {
+                                productoId: item.productoId,
+                                descripcion: item.descripcion,
+                                cantidad: item.cantidad,
+                                precioUnitario: item.precioUnitario,
+                                costoUnitario: 0,
+                                codigoTasaItbms: item.codigoTasaItbms,
+                                montoItbms: item.cantidad * item.precioUnitario * tasa,
+                                montoTotal: item.cantidad * item.precioUnitario * (1 + tasa)
+                            };
+                        })
                     }
                 }
             });
-        }
 
-        // If payment is made, record it in Pago model
-        if (rawData.condicionPago === 'contado') {
-            await prisma.pago.create({
-                data: {
-                    empresaId,
-                    facturaId: invoice.id,
-                    clienteId: rawData.clienteId,
-                    usuarioId: userId,
-                    monto: totalNeto,
-                    metodoPago: rawData.metodoPago || 'efectivo',
-                    montoAplicado: totalNeto,
-                }
-            });
-        }
+            // Update stock
+            for (const item of rawData.items) {
+                await tx.producto.update({
+                    where: { id: item.productoId },
+                    data: {
+                        stockActual: {
+                            decrement: item.cantidad
+                        }
+                    }
+                });
+            }
+
+            // If payment is made, record it in Pago model
+            if (rawData.condicionPago === 'contado') {
+                await tx.pago.create({
+                    data: {
+                        empresaId,
+                        facturaId: inv.id,
+                        clienteId: rawData.clienteId,
+                        usuarioId: userId,
+                        monto: totalNeto,
+                        metodoPago: rawData.metodoPago || 'efectivo',
+                        montoAplicado: totalNeto,
+                    }
+                });
+            }
+
+            return inv;
+        });
 
         // Increment usage
         await incrementDocumentUsage(empresaId);
@@ -476,6 +498,6 @@ export async function createInvoicePOS(rawData: {
 
     } catch (error) {
         console.error('POS Checkout Error:', error);
-        return { success: false, error: 'Error de base de datos: ' + (error instanceof Error ? error.message : '') };
+        return { success: false, error: 'Error al crear la factura POS. Por favor intente nuevamente.' };
     }
 }

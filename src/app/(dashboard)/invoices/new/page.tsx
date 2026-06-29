@@ -11,11 +11,11 @@ export default async function NewInvoicePage() {
 
     const [clients, products, documentUsage] = await Promise.all([
         prisma.cliente.findMany({
-            where: { estado: 'activo' },
+            where: { empresaId, estado: 'activo' },
             select: { id: true, razonSocial: true, ruc: true }
         }),
         prisma.producto.findMany({
-            where: { activo: true },
+            where: { empresaId, activo: true },
             select: { id: true, codigoInterno: true, descripcion: true, precioVenta: true, codigoTasaItbms: true }
         }),
         getDocumentUsage(empresaId)

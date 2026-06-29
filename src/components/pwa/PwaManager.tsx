@@ -12,16 +12,14 @@ export function PwaManager() {
 
     useEffect(() => {
         // Register Service Worker
-        if ('serviceWorker' in navigator && window.location.protocol === 'https:' || window.location.hostname === 'localhost') {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then((reg) => {
-                        console.log('Service Worker registrado con éxito:', reg.scope);
-                    })
-                    .catch((err) => {
-                        console.error('Error al registrar Service Worker:', err);
-                    });
-            });
+        if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+            navigator.serviceWorker.register('/sw.js')
+                .then((reg) => {
+                    console.log('Service Worker registrado con éxito:', reg.scope);
+                })
+                .catch((err) => {
+                    console.error('Error al registrar Service Worker:', err);
+                });
         }
 
         // Listen for Install Prompt

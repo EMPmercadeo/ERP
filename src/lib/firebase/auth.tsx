@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initializedRef = useRef(false);
 
     // Stable mock user – created once, never triggers re-renders
-    const mockUserRef = useRef<User | null>({
+    const mockUserRef = useRef<User | null>(process.env.NODE_ENV === 'development' ? {
         uid: 'force-admin-xyz',
         email: 'empsignature@gmail.com',
         emailVerified: true,
@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         phoneNumber: null,
         photoURL: null,
         providerId: 'password',
-    } as unknown as User);
+    } as unknown as User : null);
 
     const refreshUser = useCallback(async () => {
         const currentUser = user || mockUserRef.current;
@@ -84,23 +84,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         initializedRef.current = true;
 
         const initAuth = async () => {
-            // Sync mock user session on mount
-            const mock = mockUserRef.current;
-            if (mock?.email) {
-                await setSessionEmail(mock.email);
-                // Fetch role once
-                const r = await getUserRole(mock.email);
-                setRole(r || null);
+            if (process.env.NODE_ENV === 'development') {
+                // Sync mock user session on mount
+                const mock = mockUserRef.current;
+                if (mock?.email) {
+                    await setSessionEmail(mock.email);
+                    // Fetch role once
+                    const r = await getUserRole(mock.email);
+                    setRole(r || null);
 
-                // Update display name from DB
-                const dbUser = await getCurrentUser(mock.email);
-                if (dbUser?.nombre) {
-                    mockUserRef.current = {
-                        ...mock,
-                        displayName: dbUser.nombre,
-                    } as User;
+                    // Update display name from DB
+                    const dbUser = await getCurrentUser(mock.email);
+                    if (dbUser?.nombre) {
+                        mockUserRef.current = {
+                            ...mock,
+                            displayName: dbUser.nombre,
+                        } as User;
+                    }
+                    setUser(mockUserRef.current);
                 }
-                setUser(mockUserRef.current);
             }
             setLoading(false);
         };
@@ -149,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await signInWithEmailAndPassword(auth, email, password);
             await setSessionEmail(email);
         } catch (error: any) {
-            if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            if (process.env.NODE_ENV === 'development' && (error.code === 'auth/operation-not-allowed' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password')) {
                 console.warn('Dev Mode: Bypassing Auth Error', error.code);
 
                 const dbUser = await getCurrentUser(email);
@@ -175,7 +177,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 } as unknown as User;
 
                 mockUserRef.current = fakeUser;
-                localStorage.setItem('mockUser', JSON.stringify(fakeUser));
                 setUser(fakeUser);
                 await setSessionEmail(email);
 
@@ -202,7 +203,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             await firebaseSignOut(auth);
             mockUserRef.current = null;
-            localStorage.removeItem('mockUser');
             setRole(null);
             await deleteSessionEmail();
         } catch (error: unknown) {

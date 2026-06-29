@@ -75,7 +75,8 @@ async function ImpersonationWrapper() {
       return <ImpersonationBanner isImpersonating={true} tenantName={tenant?.razonSocial || 'Unknown'} />;
     }
   } catch (e) {
-    // Ignore auth errors in root layout to allow public pages or login to work
+    console.error('[ImpersonationWrapper] Error:', e);
+    return null;
   }
   return null;
 }

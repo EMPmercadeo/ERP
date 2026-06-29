@@ -53,7 +53,7 @@ export function BottomNavigation() {
                 }
             });
         }
-    }, [user]);
+    }, [user?.email]);
 
     // Close menu on click outside
     useEffect(() => {
@@ -66,6 +66,16 @@ export function BottomNavigation() {
             document.addEventListener('mousedown', handleClickOutside);
         }
         return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isMenuOpen]);
+
+    // Lock body scroll when drawer is open
+    useEffect(() => {
+        if (isMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
     }, [isMenuOpen]);
 
     const handleLogout = async () => {
@@ -89,8 +99,9 @@ export function BottomNavigation() {
     const getPlanLabel = (plan: string) => {
         switch (plan) {
             case 'pro': return 'Pro';
-            case 'basic': return 'Básico';
-            case 'enterprise': return 'Enterprise';
+            case 'emprendedor': return 'Emprendedor';
+            case 'negocio': return 'Negocio';
+            case 'empresa': return 'Empresa';
             case 'free':
             default:
                 return 'Free';
@@ -146,7 +157,7 @@ export function BottomNavigation() {
                         <div className="sticky top-0 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between z-10">
                             <div className="flex items-center gap-3">
                                 <div className="h-9 w-9 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
-                                    {userName ? userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
+                                    {userName ? userName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
                                 </div>
                                 <div className="min-w-0">
                                     <h4 className="text-xs font-bold text-slate-800 truncate max-w-[150px]">{userName}</h4>
@@ -155,8 +166,9 @@ export function BottomNavigation() {
                                 <Badge className={cn(
                                     "text-[9px] px-1.5 py-0 border-none font-bold uppercase shrink-0",
                                     userPlan === 'pro' && "bg-amber-500 text-white",
-                                    userPlan === 'basic' && "bg-indigo-500 text-white",
-                                    userPlan === 'enterprise' && "bg-slate-700 text-white",
+                                    userPlan === 'emprendedor' && "bg-indigo-500 text-white",
+                                    userPlan === 'negocio' && "bg-cyan-600 text-white",
+                                    userPlan === 'empresa' && "bg-slate-700 text-white",
                                     userPlan === 'free' && "bg-slate-200 text-slate-700"
                                 )}>
                                     {planLabel}

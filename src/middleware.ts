@@ -12,7 +12,7 @@ const allowedOrigins = [
 export function middleware(request: NextRequest) {
   // Solo aplicamos las reglas CORS a las rutas del API (/api/*)
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    const origin = request.headers.get('origin') || request.headers.get('referer');
+    const origin = request.headers.get('origin');
 
     let isAllowedOrigin = false;
     let responseOrigin = '';
@@ -28,7 +28,7 @@ export function middleware(request: NextRequest) {
         // Permitimos la lista explícita y subdominios de despliegue en Vercel de la app (.vercel.app)
         if (
           allowedOrigins.includes(originClean) ||
-          originClean.endsWith('.vercel.app')
+          /^https:\/\/erp-.*\.vercel\.app$/.test(originClean)
         ) {
           isAllowedOrigin = true;
           responseOrigin = originClean;

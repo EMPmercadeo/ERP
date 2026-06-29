@@ -48,6 +48,7 @@ export default async function SettingsPage() {
                 certificadoDgi: true,
                 usuarioPac: true,
                 passwordPac: true,
+
                 planType: true,
                 fiscalEnabled: true,
                 subscriptionStatus: true,
@@ -145,7 +146,8 @@ export default async function SettingsPage() {
         ambienteDgi: empresa.ambienteDgi,
         certificadoDgi: empresa.certificadoDgi,
         usuarioPac: empresa.usuarioPac || '',
-        passwordPac: empresa.passwordPac || '',
+        passwordPac: '',
+        hasPacPassword: !!empresa.passwordPac,
         planType: empresa.planType,
         fiscalEnabled: empresa.fiscalEnabled,
         subscriptionStatus: empresa.subscriptionStatus,

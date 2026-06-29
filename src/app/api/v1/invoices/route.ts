@@ -24,6 +24,26 @@ export async function POST(request: NextRequest) {
 
         const itemsList = items as InvoiceItemInput[];
 
+        // Validate client belongs to tenant
+        const client = await prisma.cliente.findFirst({
+            where: { id: clienteId, empresaId },
+            select: { id: true }
+        });
+        if (!client) {
+            return NextResponse.json({ error: 'Cliente no encontrado o no pertenece a esta empresa' }, { status: 400 });
+        }
+
+        // Validate all products belong to tenant
+        const productIds = itemsList.map((i: any) => i.productoId).filter(Boolean);
+        if (productIds.length > 0) {
+            const validProducts = await prisma.producto.count({
+                where: { id: { in: productIds }, empresaId }
+            });
+            if (validProducts !== productIds.length) {
+                return NextResponse.json({ error: 'Uno o más productos no pertenecen a esta empresa' }, { status: 400 });
+            }
+        }
+
         const empresa = await prisma.empresa.findUnique({
             where: { id: empresaId },
             include: { sucursales: { include: { cajas: true } } }
@@ -91,8 +111,8 @@ export async function POST(request: NextRequest) {
                             precioUnitario: item.precioUnitario,
                             costoUnitario: 0,
                             codigoTasaItbms: item.codigoTasaItbms,
-                            montoItbms: item.cantidad * item.precioUnitario * (item.codigoTasaItbms === '01' ? 0.07 : 0),
-                            montoTotal: item.cantidad * item.precioUnitario * (1 + (item.codigoTasaItbms === '01' ? 0.07 : 0))
+                            montoItbms: (() => { const tasaItbms = item.codigoTasaItbms === '01' ? 0.07 : item.codigoTasaItbms === '02' ? 0.10 : item.codigoTasaItbms === '03' ? 0.15 : 0; return item.cantidad * item.precioUnitario * tasaItbms; })(),
+                            montoTotal: (() => { const tasaItbms = item.codigoTasaItbms === '01' ? 0.07 : item.codigoTasaItbms === '02' ? 0.10 : item.codigoTasaItbms === '03' ? 0.15 : 0; return item.cantidad * item.precioUnitario * (1 + tasaItbms); })()
                         }))
                     }
                 },
