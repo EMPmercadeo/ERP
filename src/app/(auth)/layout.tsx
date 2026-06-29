@@ -12,20 +12,14 @@ export default function AuthLayout({
 }) {
     return (
         <div className="flex min-h-screen">
-            {/* Left side - Form panel (white) */}
-            <div className="flex w-full lg:w-1/2 flex-col items-center justify-between bg-white p-8 min-h-screen">
-                <div className="w-full max-w-md flex-1 flex flex-col justify-center py-8">
-                    {/* Mobile logo */}
-                    <div className="lg:hidden mb-8">
-                        <div className="flex items-center gap-2 text-foreground">
-                            <Home className="h-6 w-6" />
-                            <span className="text-xl font-semibold">ERP Panamá</span>
-                        </div>
-                    </div>
-
+            {/* Left side - Form panel (blue on mobile, white on desktop) */}
+            <div className="flex w-full lg:w-1/2 flex-col items-center justify-between bg-gradient-to-b from-[#0056b3] via-[#004899] to-[#003366] lg:bg-none lg:bg-white p-4 sm:p-8 min-h-screen text-white lg:text-foreground">
+                <div className="w-full max-w-md flex-1 flex flex-col justify-center py-4 sm:py-8">
                     {children}
                 </div>
-                <Footer />
+                <div className="hidden lg:block w-full">
+                    <Footer />
+                </div>
             </div>
 
             {/* Right side - Brand panel (dark blue) */}
