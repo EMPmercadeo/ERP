@@ -135,6 +135,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     if (dbUser && dbUser.nombre !== u.displayName) {
                         await firebaseUpdateProfile(u, { displayName: dbUser.nombre });
                     }
+                    if (typeof window !== 'undefined' && (window.location.pathname === '/login' || window.location.pathname === '/register')) {
+                        window.location.href = '/dashboard';
+                    }
                 }
             } else {
                 // No Firebase user – keep mock

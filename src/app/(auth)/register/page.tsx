@@ -18,7 +18,7 @@ import { useAuth } from '@/lib/firebase/auth';
 
 export default function RegisterPage() {
     const router = useRouter();
-    const { signUpWithEmail, signInWithGoogle } = useAuth();
+    const { signUpWithEmail, signInWithGoogle, user, loading } = useAuth();
     const [mounted, setMounted] = useState(false);
     const [tipoCuenta, setTipoCuenta] = useState('empresa');
     const [nombreComercial, setNombreComercial] = useState('');
@@ -34,7 +34,10 @@ export default function RegisterPage() {
 
     useEffect(() => {
         setMounted(true);
-    }, []);
+        if (!loading && user) {
+            router.push('/dashboard');
+        }
+    }, [user, loading, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
@@ -11,7 +11,13 @@ import { useAuth } from '@/lib/firebase/auth';
 
 export default function LoginPage() {
     const router = useRouter();
-    const { signInWithGoogle, signInWithEmail } = useAuth();
+    const { signInWithGoogle, signInWithEmail, user, loading } = useAuth();
+
+    useEffect(() => {
+        if (!loading && user) {
+            router.push('/dashboard');
+        }
+    }, [user, loading, router]);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
