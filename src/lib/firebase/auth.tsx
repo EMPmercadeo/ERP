@@ -130,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         }).catch((err) => {
             console.error('Error procesando getRedirectResult de Google:', err);
-            setAuthError('Error procesando redirección de Google: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+            // No bloqueamos la UI con setAuthError aquí en el montaje para evitar falsos positivos por bloqueo de cookies de terceros del navegador
         });
 
         const unsubscribe = onAuthStateChanged(auth, async (u) => {
