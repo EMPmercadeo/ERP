@@ -82,9 +82,18 @@ export default function RegisterPage() {
             await signInWithGoogle();
             router.push('/dashboard');
         } catch (err: unknown) {
-            const error = err as { code?: string };
-            if (error.code !== 'auth/popup-closed-by-user') {
-                setError('Error al registrarse con Google');
+            const error = err as { code?: string; message?: string };
+            console.error('Google SignUp Error:', error);
+            if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+                // User closed the popup, not an error
+            } else if (error.code === 'auth/unauthorized-domain') {
+                setError('Dominio no autorizado en Firebase. Añade este dominio en Firebase Console -> Authentication -> Settings -> Authorized domains.');
+            } else if (error.code === 'auth/operation-not-allowed') {
+                setError('El registro con Google no está habilitado en Firebase Console -> Authentication -> Sign-in method.');
+            } else if (error.code === 'auth/popup-blocked') {
+                setError('El navegador bloqueó la ventana emergente (popup). Por favor, permite ventanas emergentes para este sitio.');
+            } else {
+                setError(`Error al registrarse con Google (${error.code || error.message || 'Error desconocido'}).`);
             }
         } finally {
             setIsGoogleLoading(false);
