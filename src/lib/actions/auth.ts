@@ -80,8 +80,9 @@ export async function getCurrentUserWithPlan(email: string | null | undefined) {
 }
 
 export async function setSessionEmail(email: string) {
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
     const cookieStore = await cookies();
-    cookieStore.set('session_email', email, {
+    cookieStore.set('session_email', cleanEmail, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',

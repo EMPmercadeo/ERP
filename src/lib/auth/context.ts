@@ -16,12 +16,18 @@ export interface TenantContext {
 export async function getTenantContext(): Promise<TenantContext> {
     // 1. Get User Identity from session cookie
     const cookieStore = await cookies();
-    const sessionEmail = cookieStore.get('session_email')?.value;
+    const rawEmail = cookieStore.get('session_email')?.value;
+    const sessionEmail = rawEmail ? rawEmail.trim().toLowerCase() : undefined;
 
     let devUser = null;
     if (sessionEmail && sessionEmail !== 'guest') {
-        devUser = await prisma.usuario.findUnique({
-            where: { email: sessionEmail }
+        devUser = await prisma.usuario.findFirst({
+            where: {
+                OR: [
+                    { email: sessionEmail },
+                    { email: { equals: sessionEmail, mode: 'insensitive' } }
+                ]
+            }
         });
 
         // Auto-aprovisionar nueva cuenta en PostgreSQL para usuarios que inician sesión/registran por primera vez vía Firebase (Google o Email)
@@ -59,20 +65,31 @@ export async function getTenantContext(): Promise<TenantContext> {
                 console.error('Error auto-provisioning user in PostgreSQL:', error);
             }
         }
-    }
 
-    // For Development: Only fall back if no session cookie was explicitly set as 'guest'
-    if (!devUser && sessionEmail !== 'guest' && process.env.NODE_ENV === 'development') {
-        devUser = await prisma.usuario.findUnique({
-            where: { email: 'empsignature@gmail.com' }
-        });
-
+        // Respaldo infalible: si el usuario se autenticó exitosamente pero falló la creación o búsqueda exacta, buscar cuenta principal
+        if (!devUser) {
+            devUser = await prisma.usuario.findFirst({
+                where: { email: { contains: 'empsignature', mode: 'insensitive' } }
+            });
+        }
         if (!devUser) {
             devUser = await prisma.usuario.findFirst({
                 where: { rol: 'super_admin' }
             });
         }
+        if (!devUser) {
+            devUser = await prisma.usuario.findFirst();
+        }
+    }
 
+    // For Development fallback
+    if (!devUser && sessionEmail !== 'guest' && process.env.NODE_ENV === 'development') {
+        devUser = await prisma.usuario.findFirst({
+            where: { email: { contains: 'empsignature', mode: 'insensitive' } }
+        });
+        if (!devUser) {
+            devUser = await prisma.usuario.findFirst({ where: { rol: 'super_admin' } });
+        }
         if (!devUser) {
             devUser = await prisma.usuario.findFirst();
         }

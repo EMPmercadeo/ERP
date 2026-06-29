@@ -15,7 +15,7 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (!loading && user) {
-            router.push('/dashboard');
+            window.location.href = '/dashboard';
         }
     }, [user, loading, router]);
     const [email, setEmail] = useState('');
@@ -33,7 +33,7 @@ export default function LoginPage() {
 
         try {
             await signInWithEmail(email, password);
-            router.push('/dashboard');
+            window.location.href = '/dashboard';
         } catch (err: unknown) {
             const error = err as { code?: string };
             if (error.code === 'auth/user-not-found') {
@@ -56,7 +56,7 @@ export default function LoginPage() {
 
         try {
             await signInWithGoogle();
-            router.push('/dashboard');
+            window.location.href = '/dashboard';
         } catch (err: unknown) {
             const error = err as { code?: string; message?: string };
             console.error('Google Login Error:', error);

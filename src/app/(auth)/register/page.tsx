@@ -35,7 +35,7 @@ export default function RegisterPage() {
     useEffect(() => {
         setMounted(true);
         if (!loading && user) {
-            router.push('/dashboard');
+            window.location.href = '/dashboard';
         }
     }, [user, loading, router]);
 
@@ -62,7 +62,7 @@ export default function RegisterPage() {
 
         try {
             await signUpWithEmail(email, password);
-            router.push('/dashboard');
+            window.location.href = '/dashboard';
         } catch (err: unknown) {
             const error = err as { code?: string };
             if (error.code === 'auth/email-already-in-use') {
@@ -83,7 +83,7 @@ export default function RegisterPage() {
 
         try {
             await signInWithGoogle();
-            router.push('/dashboard');
+            window.location.href = '/dashboard';
         } catch (err: unknown) {
             const error = err as { code?: string; message?: string };
             console.error('Google SignUp Error:', error);
