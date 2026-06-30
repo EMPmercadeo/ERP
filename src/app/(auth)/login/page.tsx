@@ -86,7 +86,6 @@ export default function LoginPage() {
 
         try {
             if (isRegistered) {
-                // Si ya se dio permiso en este dispositivo, verificamos huella para entrar
                 const challenge = new Uint8Array(32);
                 window.crypto.getRandomValues(challenge);
                 const credential = await navigator.credentials.get({
@@ -102,7 +101,6 @@ export default function LoginPage() {
                     return;
                 }
             } else {
-                // Si es la primera vez en este dominio, creamos/registramos el permiso nativo con la huella
                 const challenge = new Uint8Array(32);
                 window.crypto.getRandomValues(challenge);
                 const userId = new Uint8Array(16);
@@ -159,7 +157,7 @@ export default function LoginPage() {
 
                         {activeModal === 'bio_info' && (
                             <div className="text-center space-y-3">
-                                <div className="w-12 h-12 bg-blue-100 text-[#0052cc] rounded-full flex items-center justify-center mx-auto">
+                                <div className="w-12 h-12 bg-blue-100 text-[#073674] rounded-full flex items-center justify-center mx-auto">
                                     <Fingerprint className="h-6 w-6" />
                                 </div>
                                 <h3 className="text-lg font-black text-gray-900">Permiso Biométrico DGI</h3>
@@ -172,7 +170,7 @@ export default function LoginPage() {
                                         setActiveModal(null);
                                         localStorage.removeItem('erp_passkey_saved');
                                     }}
-                                    className="w-full bg-[#002855] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#001f42] transition-all cursor-pointer"
+                                    className="w-full bg-[#052550] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#073674] transition-all cursor-pointer"
                                 >
                                     Entendido, autorizar ahora
                                 </button>
@@ -208,7 +206,7 @@ export default function LoginPage() {
                                 </p>
                                 <Link
                                     href="/privacy"
-                                    className="block w-full bg-[#002855] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#001f42] transition-all text-center"
+                                    className="block w-full bg-[#052550] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#073674] transition-all text-center"
                                 >
                                     Ver Políticas de Seguridad
                                 </Link>
@@ -227,15 +225,15 @@ export default function LoginPage() {
                                             <strong className="text-gray-900 block font-bold">Emprendedor</strong>
                                             <span className="text-gray-500">1 Usuario • Facturas ilimitadas</span>
                                         </div>
-                                        <span className="font-extrabold text-[#0052cc]">$25/mes</span>
+                                        <span className="font-extrabold text-[#073674]">$25/mes</span>
                                     </div>
-                                    <div className="p-2.5 rounded-xl bg-blue-50 border-2 border-[#0052cc] flex justify-between items-center shadow-sm">
+                                    <div className="p-2.5 rounded-xl bg-blue-50 border-2 border-[#073674] flex justify-between items-center shadow-sm">
                                         <div>
-                                            <span className="bg-[#0052cc] text-white text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Recomendado</span>
+                                            <span className="bg-[#073674] text-white text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Recomendado</span>
                                             <strong className="text-gray-900 block font-bold mt-0.5">Pyme Pro</strong>
                                             <span className="text-gray-500">5 Usuarios • Inventario • Reportes</span>
                                         </div>
-                                        <span className="font-extrabold text-[#0052cc]">$50/mes</span>
+                                        <span className="font-extrabold text-[#073674]">$50/mes</span>
                                     </div>
                                     <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-200 flex justify-between items-center">
                                         <div>
@@ -247,7 +245,7 @@ export default function LoginPage() {
                                 </div>
                                 <Link
                                     href="/register"
-                                    className="block w-full bg-[#002855] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#001f42] transition-all text-center shadow-md"
+                                    className="block w-full bg-[#052550] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#073674] transition-all text-center shadow-md"
                                 >
                                     Comenzar Prueba Gratis
                                 </Link>
@@ -266,7 +264,7 @@ export default function LoginPage() {
                                 <button
                                     type="button"
                                     onClick={() => { setActiveModal(null); }}
-                                    className="w-full bg-[#002855] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#001f42] transition-all cursor-pointer"
+                                    className="w-full bg-[#052550] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#073674] transition-all cursor-pointer"
                                 >
                                     Ingresar para Escanear
                                 </button>
@@ -343,7 +341,7 @@ export default function LoginPage() {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="text-xs font-bold text-[#0052cc] hover:text-[#003366] px-2 shrink-0 transition-colors cursor-pointer"
+                                className="text-xs font-bold text-[#073674] hover:text-[#052550] px-2 shrink-0 transition-colors cursor-pointer"
                             >
                                 {showPassword ? 'Ocultar' : 'Mostrar'}
                             </button>
@@ -354,7 +352,7 @@ export default function LoginPage() {
                             type="button"
                             onClick={handleBiometricLogin}
                             title="Ingresar con Huella Digital"
-                            className="bg-white rounded-2xl p-3 sm:p-3.5 shadow-md flex items-center justify-center text-[#0052cc] hover:bg-blue-50 transition-all shrink-0 active:scale-95 cursor-pointer"
+                            className="bg-white rounded-2xl p-3 sm:p-3.5 shadow-md flex items-center justify-center text-[#073674] hover:bg-blue-50 transition-all shrink-0 active:scale-95 cursor-pointer"
                         >
                             <Fingerprint className="h-5 w-5 sm:h-6 sm:w-6" />
                         </button>
@@ -364,7 +362,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-[#002855] hover:bg-[#001f42] text-white font-extrabold text-base sm:text-lg py-3.5 rounded-2xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide"
+                            className="w-full bg-[#052550] hover:bg-[#073674] text-white font-extrabold text-base sm:text-lg py-3.5 rounded-2xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide"
                         >
                             {isLoading ? 'Iniciando sesión...' : 'Entrar'}
                         </button>
@@ -426,84 +424,94 @@ export default function LoginPage() {
 
 
             {/* =========================================================
-                VISTA ESCRITORIO / LAPTOP (>= lg) - Referencia Adjunta
+                VISTA ESCRITORIO / LAPTOP (>= lg) - Formal Institucional
             ========================================================= */}
             <div className="hidden lg:flex w-full max-w-md mx-auto flex-col justify-center text-left">
-                {/* Asterisco / Star Icon */}
-                <div className="mb-4">
-                    <Star className="h-8 w-8 text-[#4f46e5] fill-[#4f46e5]" />
-                </div>
-
-                {/* Título & Subtítulo */}
-                <h2 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tight mb-2">
-                    Iniciar sesión
+                {/* Título & Subtítulo Formal */}
+                <h2 className="text-3xl font-extrabold text-[#052550] tracking-tight mb-1">
+                    Iniciar Sesión
                 </h2>
                 <p className="text-sm text-gray-500 font-medium leading-relaxed mb-6">
-                    Accede a tus facturas, reportes fiscales DGI y control de inventario en un solo lugar.
+                    Ingresa a tu portal de facturación y gestión fiscal
                 </p>
 
                 {/* Formulario Escritorio */}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-xs font-extrabold text-gray-700 uppercase tracking-wider mb-1.5">
-                            Tu correo electrónico o usuario DGI
-                        </label>
+                <form onSubmit={handleSubmit} className="space-y-3.5">
+                    <div className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 flex items-center gap-3 focus-within:border-[#073674] focus-within:ring-2 focus-within:ring-[#073674]/10 transition-all shadow-sm">
+                        <User className="h-5 w-5 text-gray-400 shrink-0" />
                         <input
                             type="email"
-                            placeholder="usuario@empresa.com"
+                            placeholder="Usuario o Correo DGI"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="w-full bg-gray-50/80 border border-gray-200 focus:bg-white focus:border-[#4f46e5] focus:ring-4 focus:ring-[#4f46e5]/10 rounded-xl px-4 py-3 text-sm text-gray-900 transition-all font-medium placeholder:text-gray-400 outline-none"
+                            className="w-full bg-transparent text-sm text-gray-900 font-medium placeholder:text-gray-400 outline-none"
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-extrabold text-gray-700 uppercase tracking-wider mb-1.5">
-                            Contraseña
-                        </label>
-                        <div className="relative">
+                    <div className="flex gap-2.5 items-center">
+                        <div className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 flex items-center gap-3 flex-1 focus-within:border-[#073674] focus-within:ring-2 focus-within:ring-[#073674]/10 transition-all shadow-sm">
+                            <Lock className="h-5 w-5 text-gray-400 shrink-0" />
                             <input
                                 type={showPassword ? 'text' : 'password'}
-                                placeholder="••••••••••••"
+                                placeholder="Contraseña"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="w-full bg-gray-50/80 border border-gray-200 focus:bg-white focus:border-[#4f46e5] focus:ring-4 focus:ring-[#4f46e5]/10 rounded-xl px-4 py-3 text-sm text-gray-900 transition-all font-medium placeholder:text-gray-400 outline-none pr-10"
+                                className="w-full bg-transparent text-sm text-gray-900 font-medium placeholder:text-gray-400 outline-none"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                                className="text-xs font-bold text-[#073674] hover:text-[#052550] px-1 shrink-0 transition-colors cursor-pointer"
                             >
-                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                {showPassword ? 'Mostrar' : 'Mostrar'}
                             </button>
                         </div>
+
+                        {/* Botón biométrico lateral idéntico al screenshot */}
+                        <button
+                            type="button"
+                            onClick={handleBiometricLogin}
+                            title="Ingresar con Huella Digital / Passkey"
+                            className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm flex items-center justify-center text-[#073674] hover:bg-blue-50/60 transition-all shrink-0 active:scale-95 cursor-pointer"
+                        >
+                            <Fingerprint className="h-5 w-5" />
+                        </button>
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-[#4f46e5] hover:bg-[#4338ca] text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-indigo-500/25 transition-all active:scale-[0.99] disabled:opacity-70 text-sm tracking-wide mt-2 cursor-pointer"
-                    >
-                        {isLoading ? 'Conectando...' : 'Comenzar'}
-                    </button>
+                    <div className="pt-2">
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full bg-[#052550] hover:bg-[#073674] text-white font-extrabold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.99] disabled:opacity-70 text-sm tracking-wide cursor-pointer"
+                        >
+                            {isLoading ? 'Conectando...' : 'Entrar'}
+                        </button>
+                    </div>
                 </form>
 
-                {/* Divider */}
-                <div className="relative flex py-6 items-center">
-                    <div className="flex-grow border-t border-gray-200"></div>
-                    <span className="flex-shrink mx-4 text-gray-400 text-xs font-bold uppercase tracking-wider">o continuar con</span>
-                    <div className="flex-grow border-t border-gray-200"></div>
+                {/* Enlace Olvidaste Contraseña */}
+                <div className="text-center my-4">
+                    <Link href="/forgot-password" className="text-xs font-bold text-[#073674] hover:underline">
+                        ¿Olvidaste tu contraseña?
+                    </Link>
                 </div>
 
-                {/* Social & Biometric Row (Estilo Pastillas) */}
-                <div className="flex gap-3">
+                {/* Botones secundarios */}
+                <div className="space-y-3">
+                    <Link
+                        href="/register"
+                        className="block w-full border border-[#073674] text-[#073674] font-bold py-3 rounded-xl text-sm hover:bg-blue-50/50 transition-all text-center shadow-sm"
+                    >
+                        Crea tu usuario o abre tu cuenta
+                    </Link>
+
                     <button
                         type="button"
                         onClick={handleGoogleLogin}
                         disabled={isGoogleLoading}
-                        className="flex-1 bg-gray-100/80 hover:bg-gray-200/80 text-gray-700 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all border border-gray-200/50 cursor-pointer"
+                        className="w-full bg-white border border-gray-200 text-gray-700 font-semibold py-3 rounded-xl shadow-sm hover:bg-gray-50 flex items-center justify-center gap-2.5 text-sm transition-all cursor-pointer"
                     >
                         <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -511,32 +519,8 @@ export default function LoginPage() {
                             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                         </svg>
-                        <span>Google</span>
+                        <span>{isGoogleLoading ? 'Conectando...' : 'O continuar con Google'}</span>
                     </button>
-
-                    <button
-                        type="button"
-                        onClick={handleBiometricLogin}
-                        className="flex-1 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-700 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all border border-indigo-200/60 cursor-pointer"
-                    >
-                        <Fingerprint className="h-4 w-4" />
-                        <span>Huella / Passkey</span>
-                    </button>
-                </div>
-
-                {/* Footer links */}
-                <div className="mt-8 text-center space-y-2">
-                    <p className="text-xs text-gray-500 font-medium">
-                        ¿No tienes una cuenta?{' '}
-                        <Link href="/register" className="text-[#4f46e5] font-extrabold hover:underline">
-                            Regístrate gratis
-                        </Link>
-                    </p>
-                    <p>
-                        <Link href="/forgot-password" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-                            ¿Olvidaste tu contraseña?
-                        </Link>
-                    </p>
                 </div>
             </div>
         </div>
