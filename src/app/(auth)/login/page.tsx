@@ -283,9 +283,9 @@ export default function LoginPage() {
             {/* =========================================================
                 VISTA MÓVIL (< lg) - Estilo Banco General
             ========================================================= */}
-            <div className="flex lg:hidden w-full max-w-md mx-auto h-full flex-col justify-between overflow-hidden py-1.5">
+            <div className="flex lg:hidden w-full max-w-md mx-auto h-full flex-col justify-between overflow-hidden">
                 {/* Cabecera & Logo Mobile */}
-                <div className="flex items-center justify-center gap-2 shrink-0 py-0.5">
+                <div className="flex items-center justify-center gap-2 shrink-0 pt-1">
                     <div className="bg-white/20 p-1.5 rounded-xl backdrop-blur-sm">
                         <Star className="h-5 w-5 fill-white text-white" />
                     </div>
@@ -295,7 +295,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Banner de Imagen (Exactamente 25vh según requerimiento) */}
-                <div className="h-[25vh] min-h-[140px] w-full bg-white/10 border border-white/25 rounded-2xl p-3.5 flex flex-col items-center justify-center text-center backdrop-blur-md shadow-md shrink-0 my-1">
+                <div className="h-[25vh] min-h-[140px] w-full bg-white/10 border border-white/25 rounded-2xl p-3.5 flex flex-col items-center justify-center text-center backdrop-blur-md shadow-md shrink-0 my-1.5">
                     <div className="inline-block px-3 py-0.5 rounded-full bg-white/25 text-[10px] font-bold text-white uppercase tracking-wider mb-2">
                         Espacio para Imagen (25vh)
                     </div>
@@ -304,81 +304,83 @@ export default function LoginPage() {
                     </p>
                 </div>
 
-                {/* Formulario Principal Distribuido Uniformemente */}
-                <form onSubmit={handleSubmit} className="flex flex-col justify-around flex-1 my-1">
-                    <div className="bg-white rounded-xl p-2 shadow-md flex items-center gap-2 text-gray-800 shrink-0">
-                        <User className="h-4.5 w-4.5 text-gray-400 ml-2 shrink-0" />
-                        <input
-                            type="email"
-                            placeholder="Usuario o Correo DGI"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full py-1 text-xs sm:text-sm font-medium"
-                        />
-                        {email && (
-                            <button
-                                type="button"
-                                onClick={() => setEmail('')}
-                                className="text-gray-400 hover:text-gray-600 px-2 text-xs font-bold cursor-pointer"
-                            >
-                                ✕
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="flex gap-2 items-center shrink-0">
-                        <div className="bg-white rounded-xl p-2 shadow-md flex items-center gap-2 flex-1 text-gray-800">
-                            <Lock className="h-4.5 w-4.5 text-gray-400 ml-2 shrink-0" />
+                {/* Formulario Principal Distribuido en Todo el Espacio Restante */}
+                <form onSubmit={handleSubmit} className="flex flex-col justify-between flex-1 my-1">
+                    <div className="space-y-2 shrink-0">
+                        <div className="bg-white rounded-xl p-2 shadow-md flex items-center gap-2 text-gray-800">
+                            <User className="h-4.5 w-4.5 text-gray-400 ml-2 shrink-0" />
                             <input
-                                type={showPassword ? 'text' : 'password'}
-                                placeholder="Contraseña"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                type="email"
+                                placeholder="Usuario o Correo DGI"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                                 className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full py-1 text-xs sm:text-sm font-medium"
                             />
+                            {email && (
+                                <button
+                                    type="button"
+                                    onClick={() => setEmail('')}
+                                    className="text-gray-400 hover:text-gray-600 px-2 text-xs font-bold cursor-pointer"
+                                >
+                                    ✕
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="flex gap-2 items-center">
+                            <div className="bg-white rounded-xl p-2 shadow-md flex items-center gap-2 flex-1 text-gray-800">
+                                <Lock className="h-4.5 w-4.5 text-gray-400 ml-2 shrink-0" />
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="Contraseña"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full py-1 text-xs sm:text-sm font-medium"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="text-[11px] font-bold text-[#073674] hover:text-[#052550] px-2 shrink-0 transition-colors cursor-pointer"
+                                >
+                                    {showPassword ? 'Ocultar' : 'Mostrar'}
+                                </button>
+                            </div>
+
+                            {/* Botón biométrico Huella Digital */}
                             <button
                                 type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="text-[11px] font-bold text-[#073674] hover:text-[#052550] px-2 shrink-0 transition-colors cursor-pointer"
+                                onClick={handleBiometricLogin}
+                                title="Ingresar con Huella Digital"
+                                className="bg-white rounded-xl p-2.5 sm:p-3 shadow-md flex items-center justify-center text-[#073674] hover:bg-blue-50 transition-all shrink-0 active:scale-95 cursor-pointer"
                             >
-                                {showPassword ? 'Ocultar' : 'Mostrar'}
+                                <Fingerprint className="h-5 w-5" />
                             </button>
                         </div>
 
-                        {/* Botón biométrico Huella Digital */}
-                        <button
-                            type="button"
-                            onClick={handleBiometricLogin}
-                            title="Ingresar con Huella Digital"
-                            className="bg-white rounded-xl p-2.5 sm:p-3 shadow-md flex items-center justify-center text-[#073674] hover:bg-blue-50 transition-all shrink-0 active:scale-95 cursor-pointer"
-                        >
-                            <Fingerprint className="h-5 w-5" />
-                        </button>
+                        <div className="pt-1">
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full bg-[#052550] hover:bg-[#073674] text-white font-extrabold text-sm sm:text-base py-2.5 rounded-xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide"
+                            >
+                                {isLoading ? 'Iniciando sesión...' : 'Entrar'}
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="shrink-0">
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full bg-[#052550] hover:bg-[#073674] text-white font-extrabold text-sm sm:text-base py-2.5 rounded-xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide"
-                        >
-                            {isLoading ? 'Iniciando sesión...' : 'Entrar'}
-                        </button>
-                    </div>
+                    {/* Enlaces secundarios y botón Google en la parte inferior del formulario */}
+                    <div className="space-y-2 shrink-0">
+                        <div className="flex items-center justify-between text-[11px] font-bold px-1">
+                            <Link href="/forgot-password" className="text-white hover:underline">
+                                ¿Olvidaste contraseña?
+                            </Link>
+                            <Link href="/register" className="text-white/90 hover:text-white bg-white/10 px-2.5 py-1 rounded-lg border border-white/20">
+                                Crear cuenta nueva
+                            </Link>
+                        </div>
 
-                    {/* Enlaces secundarios equidistantes */}
-                    <div className="flex items-center justify-between text-[11px] font-bold px-1 shrink-0 py-0.5">
-                        <Link href="/forgot-password" className="text-white hover:underline">
-                            ¿Olvidaste contraseña?
-                        </Link>
-                        <Link href="/register" className="text-white/90 hover:text-white bg-white/10 px-2.5 py-1 rounded-lg border border-white/20">
-                            Crear cuenta nueva
-                        </Link>
-                    </div>
-
-                    <div className="shrink-0">
                         <button
                             type="button"
                             onClick={handleGoogleLogin}
@@ -396,8 +398,8 @@ export default function LoginPage() {
                     </div>
                 </form>
 
-                {/* Barra Inferior Uniforme y Equidistante */}
-                <div className="shrink-0 pt-1">
+                {/* Barra Inferior Alineada al Fondo de la Pantalla */}
+                <div className="shrink-0 pt-1.5 pb-0.5">
                     <div className="grid grid-cols-4 gap-1.5 bg-white/10 p-1 rounded-xl border border-white/20 backdrop-blur-md">
                         <button type="button" onClick={() => setActiveModal('soporte')} className="flex flex-col items-center justify-center py-1.5 px-1 rounded-lg hover:bg-white/15 transition-all text-[10px] font-semibold text-white cursor-pointer">
                             <MessageSquare className="h-4 w-4 mb-0.5 text-blue-200" />
