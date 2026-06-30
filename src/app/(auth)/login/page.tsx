@@ -283,9 +283,9 @@ export default function LoginPage() {
             {/* =========================================================
                 VISTA MÓVIL (< lg) - Estilo Banco General
             ========================================================= */}
-            <div className="flex lg:hidden w-full max-w-md mx-auto h-full flex-col justify-between overflow-hidden py-1">
+            <div className="flex lg:hidden w-full max-w-md mx-auto h-full flex-col justify-between overflow-hidden py-1.5">
                 {/* Cabecera & Logo Mobile */}
-                <div className="flex items-center justify-center gap-2 shrink-0">
+                <div className="flex items-center justify-center gap-2 shrink-0 py-0.5">
                     <div className="bg-white/20 p-1.5 rounded-xl backdrop-blur-sm">
                         <Star className="h-5 w-5 fill-white text-white" />
                     </div>
@@ -295,7 +295,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Banner de Imagen (Exactamente 25vh según requerimiento) */}
-                <div className="h-[25vh] min-h-[140px] w-full bg-white/10 border border-white/25 rounded-2xl p-3.5 flex flex-col items-center justify-center text-center backdrop-blur-md shadow-md shrink-0">
+                <div className="h-[25vh] min-h-[140px] w-full bg-white/10 border border-white/25 rounded-2xl p-3.5 flex flex-col items-center justify-center text-center backdrop-blur-md shadow-md shrink-0 my-1">
                     <div className="inline-block px-3 py-0.5 rounded-full bg-white/25 text-[10px] font-bold text-white uppercase tracking-wider mb-2">
                         Espacio para Imagen (25vh)
                     </div>
@@ -305,8 +305,8 @@ export default function LoginPage() {
                 </div>
 
                 {/* Formulario Principal Distribuido Uniformemente */}
-                <form onSubmit={handleSubmit} className="flex flex-col justify-evenly flex-1 my-1 space-y-2">
-                    <div className="bg-white rounded-xl p-1.5 shadow-md flex items-center gap-2 text-gray-800 shrink-0">
+                <form onSubmit={handleSubmit} className="flex flex-col justify-around flex-1 my-1">
+                    <div className="bg-white rounded-xl p-2 shadow-md flex items-center gap-2 text-gray-800 shrink-0">
                         <User className="h-4.5 w-4.5 text-gray-400 ml-2 shrink-0" />
                         <input
                             type="email"
@@ -314,7 +314,7 @@ export default function LoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full py-1.5 text-xs sm:text-sm font-medium"
+                            className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full py-1 text-xs sm:text-sm font-medium"
                         />
                         {email && (
                             <button
@@ -328,7 +328,7 @@ export default function LoginPage() {
                     </div>
 
                     <div className="flex gap-2 items-center shrink-0">
-                        <div className="bg-white rounded-xl p-1.5 shadow-md flex items-center gap-2 flex-1 text-gray-800">
+                        <div className="bg-white rounded-xl p-2 shadow-md flex items-center gap-2 flex-1 text-gray-800">
                             <Lock className="h-4.5 w-4.5 text-gray-400 ml-2 shrink-0" />
                             <input
                                 type={showPassword ? 'text' : 'password'}
@@ -336,7 +336,7 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full py-1.5 text-xs sm:text-sm font-medium"
+                                className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full py-1 text-xs sm:text-sm font-medium"
                             />
                             <button
                                 type="button"
@@ -369,7 +369,7 @@ export default function LoginPage() {
                     </div>
 
                     {/* Enlaces secundarios equidistantes */}
-                    <div className="flex items-center justify-between text-[11px] font-bold px-1 shrink-0">
+                    <div className="flex items-center justify-between text-[11px] font-bold px-1 shrink-0 py-0.5">
                         <Link href="/forgot-password" className="text-white hover:underline">
                             ¿Olvidaste contraseña?
                         </Link>

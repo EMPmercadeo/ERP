@@ -14,8 +14,8 @@ export default function AuthLayout({
             {/* =========================================================
                 VISTA MÓVIL (< lg) - Tema Azul Banco General 100% Pantalla
             ========================================================= */}
-            <div className="flex lg:hidden w-full flex-col items-center justify-between bg-gradient-to-b from-[#0056b3] via-[#004899] to-[#003366] p-2 sm:p-3 h-[100dvh] max-h-[100dvh] overflow-hidden text-white">
-                <div className="w-full max-w-md flex-1 flex flex-col justify-between py-1 h-full overflow-hidden">
+            <div className="flex lg:hidden w-full flex-col items-center justify-center bg-gradient-to-b from-[#0056b3] via-[#004899] to-[#003366] p-3 min-h-[100dvh] max-h-[100dvh] overflow-hidden text-white">
+                <div className="w-full max-w-md flex flex-col justify-between h-full my-auto py-1">
                     {children}
                 </div>
             </div>
