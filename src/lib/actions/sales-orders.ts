@@ -160,10 +160,11 @@ export async function createSalesOrder(prevState: any, formData: FormData) {
     }
 }
 
-export async function getSalesOrders() {
+export async function getSalesOrders(limit: number = 100) {
     const { empresaId } = await getTenantContext();
     return await prisma.pedidoVenta.findMany({
         where: { empresaId },
+        take: limit,
         include: {
             cliente: { select: { razonSocial: true, ruc: true } },
             items: true

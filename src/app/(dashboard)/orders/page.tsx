@@ -10,6 +10,7 @@ export default async function OrdersPage() {
 
     const orders = await prisma.pedidoVenta.findMany({
         where: { empresaId },
+        take: 100,
         include: {
             cliente: {
                 select: {

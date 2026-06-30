@@ -66,33 +66,13 @@ export async function getTenantContext(): Promise<TenantContext> {
             }
         }
 
-        // Respaldo infalible: si el usuario se autenticó exitosamente pero falló la creación o búsqueda exacta, buscar cuenta principal
-        if (!devUser) {
-            devUser = await prisma.usuario.findFirst({
-                where: { email: { contains: 'empsignature', mode: 'insensitive' } }
-            });
-        }
-        if (!devUser) {
-            devUser = await prisma.usuario.findFirst({
-                where: { rol: 'super_admin' }
-            });
-        }
-        if (!devUser) {
-            devUser = await prisma.usuario.findFirst();
-        }
     }
 
-    // For Development fallback
-    if (!devUser && sessionEmail !== 'guest' && process.env.NODE_ENV === 'development') {
+    // En entorno de desarrollo exclusivo, permitir un usuario demo solo si se configuró explícitamente
+    if (!devUser && process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_FALLBACK === 'true') {
         devUser = await prisma.usuario.findFirst({
             where: { email: { contains: 'empsignature', mode: 'insensitive' } }
         });
-        if (!devUser) {
-            devUser = await prisma.usuario.findFirst({ where: { rol: 'super_admin' } });
-        }
-        if (!devUser) {
-            devUser = await prisma.usuario.findFirst();
-        }
     }
 
     if (!devUser) {

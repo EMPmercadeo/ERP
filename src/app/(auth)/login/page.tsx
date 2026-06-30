@@ -465,7 +465,7 @@ export default function LoginPage() {
                                 onClick={() => setShowPassword(!showPassword)}
                                 className="text-xs font-bold text-[#073674] hover:text-[#052550] px-1 shrink-0 transition-colors cursor-pointer"
                             >
-                                {showPassword ? 'Mostrar' : 'Mostrar'}
+                                {showPassword ? 'Ocultar' : 'Mostrar'}
                             </button>
                         </div>
 

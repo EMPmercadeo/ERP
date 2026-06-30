@@ -10,6 +10,7 @@ export default async function SuppliersPage() {
 
     const suppliers = await prisma.proveedor.findMany({
         where: { empresaId },
+        take: 200,
         orderBy: { razonSocial: 'asc' }
     });
 

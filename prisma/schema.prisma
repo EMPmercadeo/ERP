@@ -238,7 +238,6 @@ model Factura {
   @@index([empresaId, fechaEmision])
   @@index([clienteId])
   @@index([estadoDgi])
-  @@index([empresaId])
   @@index([empresaId, tipoDocumento])
   @@index([creadorId])
 }
@@ -345,6 +344,9 @@ model CotizacionItem {
   montoTotal      Decimal
   cotizacion      Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
   producto        Producto   @relation(fields: [productoId], references: [id])
+
+  @@index([cotizacionId])
+  @@index([productoId])
 }
 
 model Plan {

@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const clearError = () => setAuthError(null);
 
     // Stable mock user – created once, never triggers re-renders
-    const mockUserRef = useRef<User | null>(process.env.NODE_ENV === 'development' ? {
+    const mockUserRef = useRef<User | null>((process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_FALLBACK === 'true') ? {
         uid: 'force-admin-xyz',
         email: 'empsignature@gmail.com',
         emailVerified: true,
@@ -202,7 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await signInWithEmailAndPassword(auth, email, password);
             await setSessionEmail(email);
         } catch (error: any) {
-            if (process.env.NODE_ENV === 'development' && (error.code === 'auth/operation-not-allowed' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password')) {
+            if (process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_FALLBACK === 'true' && (error.code === 'auth/operation-not-allowed' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password')) {
                 console.warn('Dev Mode: Bypassing Auth Error', error.code);
 
                 const dbUser = await getCurrentUser(email);

@@ -156,15 +156,18 @@ export async function createInvoice(prevState: any, formData: FormData) {
             numeroCompleto = `${prefix}-${String(numeroSecuencial).padStart(8, '0')}`;
         }
 
-        // Calculate totals
+        // Calculate totals with discount per DGI fiscal rules
         const subtotal = data.items.reduce((sum, item) => sum + (item.cantidad * item.precioUnitario), 0);
+        const totalDescuento = data.items.reduce((sum, item) => sum + (item.descuento || 0), 0);
         const totalItbms = data.items.reduce((sum, item) => {
             const tasa = item.codigoTasaItbms === '01' ? 0.07 :
                 item.codigoTasaItbms === '02' ? 0.10 :
                     item.codigoTasaItbms === '03' ? 0.15 : 0;
-            return sum + (item.cantidad * item.precioUnitario * tasa);
+            const montoBruto = item.cantidad * item.precioUnitario;
+            const montoNeto = Math.max(0, montoBruto - (item.descuento || 0));
+            return sum + (montoNeto * tasa);
         }, 0);
-        const totalNeto = subtotal + totalItbms;
+        const totalNeto = subtotal - totalDescuento + totalItbms;
 
         // Create Invoice with items
         const invoice = await prisma.factura.create({
@@ -180,6 +183,7 @@ export async function createInvoice(prevState: any, formData: FormData) {
                 numeroCompleto, // Generated based on Tier
 
                 subtotal,
+                totalDescuento,
                 totalItbms,
                 totalNeto,
                 saldoPendiente: data.condicionPago === 'contado' ? 0 : totalNeto,
@@ -192,15 +196,20 @@ export async function createInvoice(prevState: any, formData: FormData) {
                         const tasa = item.codigoTasaItbms === '01' ? 0.07 :
                             item.codigoTasaItbms === '02' ? 0.10 :
                                 item.codigoTasaItbms === '03' ? 0.15 : 0;
+                        const desc = item.descuento || 0;
+                        const montoBruto = item.cantidad * item.precioUnitario;
+                        const montoNeto = Math.max(0, montoBruto - desc);
+                        const montoItbms = montoNeto * tasa;
                         return {
                             productoId: item.productoId,
                             descripcion: item.descripcion,
                             cantidad: item.cantidad,
                             precioUnitario: item.precioUnitario,
                             costoUnitario: 0,
+                            descuento: desc,
                             codigoTasaItbms: item.codigoTasaItbms,
-                            montoItbms: item.cantidad * item.precioUnitario * tasa,
-                            montoTotal: item.cantidad * item.precioUnitario * (1 + tasa)
+                            montoItbms: montoItbms,
+                            montoTotal: montoNeto + montoItbms
                         };
                     })
                 }

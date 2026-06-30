@@ -10,6 +10,7 @@ export default async function PurchasesPage() {
 
     const purchases = await prisma.compra.findMany({
         where: { empresaId },
+        take: 100,
         include: {
             proveedor: {
                 select: {

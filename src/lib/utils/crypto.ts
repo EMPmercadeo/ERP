@@ -1,6 +1,21 @@
 import crypto from 'crypto';
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'panama-erp-secret-key-32-chars-!'; // Must be 32 bytes
+function getEncryptionKey(): string {
+    const key = process.env.ENCRYPTION_KEY;
+    if (!key) {
+        if (process.env.NODE_ENV === 'production') {
+            throw new Error('CRITICAL: ENCRYPTION_KEY no está definida en el entorno de producción.');
+        }
+        console.warn('⚠️ ADVERTENCIA: Usando clave de encriptación por defecto de desarrollo.');
+        return 'panama-erp-secret-key-32-chars-!';
+    }
+    if (Buffer.from(key).length !== 32) {
+        throw new Error('CRITICAL: ENCRYPTION_KEY debe tener exactamente 32 bytes.');
+    }
+    return key;
+}
+
+const ENCRYPTION_KEY = getEncryptionKey();
 const IV_LENGTH = 12; // For GCM, 12 bytes is standard
 
 export function encrypt(text: string): string {
