@@ -154,20 +154,20 @@ export function BottomNavigation() {
                     {/* Bottom Drawer Container */}
                     <div 
                         ref={menuRef}
-                        className="fixed bottom-0 left-0 right-0 bg-slate-50 rounded-t-2xl shadow-2xl max-h-[85vh] overflow-y-auto flex flex-col font-sans transition-transform duration-300 translate-y-0 pb-10"
+                        className="fixed bottom-0 left-0 right-0 bg-slate-50 rounded-t-2xl shadow-2xl max-h-[94dvh] overflow-hidden flex flex-col font-sans transition-transform duration-300 translate-y-0 pb-3 border-t border-slate-200"
                     >
-                        {/* Header */}
-                        <div className="sticky top-0 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between z-10">
-                            <div className="flex items-center gap-3">
-                                <div className="h-9 w-9 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
+                        {/* Header Compacto */}
+                        <div className="bg-white border-b border-slate-100 px-3.5 py-2.5 flex items-center justify-between shrink-0">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="h-8 w-8 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-sm shrink-0">
                                     {userName ? userName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
                                 </div>
                                 <div className="min-w-0">
-                                    <h4 className="text-xs font-bold text-slate-800 truncate max-w-[150px]">{userName}</h4>
-                                    <p className="text-[10px] text-slate-500 truncate max-w-[150px]">{user?.email}</p>
+                                    <h4 className="text-xs font-bold text-slate-800 truncate max-w-[140px]">{userName}</h4>
+                                    <p className="text-[10px] text-slate-500 truncate max-w-[140px]">{user?.email}</p>
                                 </div>
                                 <Badge className={cn(
-                                    "text-[9px] px-1.5 py-0 border-none font-bold uppercase shrink-0",
+                                    "text-[8px] px-1.5 py-0 border-none font-bold uppercase shrink-0",
                                     userPlan === 'pro' && "bg-amber-500 text-white",
                                     userPlan === 'emprendedor' && "bg-indigo-500 text-white",
                                     userPlan === 'negocio' && "bg-cyan-600 text-white",
@@ -179,48 +179,48 @@ export function BottomNavigation() {
                             </div>
                             <button
                                 onClick={() => setIsMenuOpen(false)}
-                                className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 active:scale-90 transition-transform"
+                                className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 active:scale-90 transition-transform shrink-0"
                             >
-                                <X className="h-5 w-5" />
+                                <X className="h-4.5 w-4.5" />
                             </button>
                         </div>
 
-                        {/* Menu Options Grid */}
-                        <div className="p-4 space-y-4">
+                        {/* Menu Options Grid (3 Columnas Ultra Compactas) */}
+                        <div className="p-3 space-y-3 overflow-y-auto flex-1">
                             {/* App Sections */}
                             <div className="space-y-1">
-                                <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1">Módulos</h5>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Link href="/pos" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
-                                        <ShoppingCart className="h-4.5 w-4.5 text-brand-1" />
-                                        <span>Venta POS</span>
+                                <h5 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">Módulos Principales</h5>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    <Link href="/pos" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                        <ShoppingCart className="h-4 w-4 text-brand-1" />
+                                        <span>POS</span>
                                     </Link>
-                                    <Link href="/quotes" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
-                                        <FileText className="h-4.5 w-4.5 text-brand-1" />
-                                        <span>Cotizaciones</span>
+                                    <Link href="/quotes" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                        <FileText className="h-4 w-4 text-brand-1" />
+                                        <span>Cotizar</span>
                                     </Link>
-                                    <Link href="/orders" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
-                                        <ClipboardList className="h-4.5 w-4.5 text-brand-1" />
+                                    <Link href="/orders" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                        <ClipboardList className="h-4 w-4 text-brand-1" />
                                         <span>Pedidos</span>
                                     </Link>
-                                    <Link href="/delivery-notes" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
-                                        <Truck className="h-4.5 w-4.5 text-brand-1" />
+                                    <Link href="/delivery-notes" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                        <Truck className="h-4 w-4 text-brand-1" />
                                         <span>Albaranes</span>
                                     </Link>
-                                    <Link href="/suppliers" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
-                                        <Building2 className="h-4.5 w-4.5 text-brand-1" />
+                                    <Link href="/suppliers" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                        <Building2 className="h-4 w-4 text-brand-1" />
                                         <span>Proveedores</span>
                                     </Link>
-                                    <Link href="/purchases" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
-                                        <ShoppingCart className="h-4.5 w-4.5 text-brand-1" />
+                                    <Link href="/purchases" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                        <Package className="h-4 w-4 text-brand-1" />
                                         <span>Compras</span>
                                     </Link>
-                                    <Link href="/receivables" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
-                                        <CreditCard className="h-4.5 w-4.5 text-brand-1" />
-                                        <span>Por Cobrar</span>
+                                    <Link href="/receivables" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                        <CreditCard className="h-4 w-4 text-brand-1" />
+                                        <span>Cobros</span>
                                     </Link>
-                                    <Link href="/reports" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
-                                        <BarChart3 className="h-4.5 w-4.5 text-brand-1" />
+                                    <Link href="/reports" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                        <BarChart3 className="h-4 w-4 text-brand-1" />
                                         <span>Reportes</span>
                                     </Link>
                                 </div>
@@ -228,23 +228,19 @@ export function BottomNavigation() {
 
                             {/* Settings & Support */}
                             <div className="space-y-1">
-                                <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1">Cuenta y Soporte</h5>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Link href="/profile" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
-                                        <User className="h-4.5 w-4.5 text-slate-500" />
+                                <h5 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">Cuenta y Ayuda</h5>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    <Link href="/profile" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                        <User className="h-4 w-4 text-slate-500" />
                                         <span>Mi Cuenta</span>
                                     </Link>
-                                    <Link href="/settings" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all">
-                                        <Settings className="h-4.5 w-4.5 text-slate-500" />
-                                        <span>Configuración</span>
+                                    <Link href="/settings" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                        <Settings className="h-4 w-4 text-slate-500" />
+                                        <span>Ajustes</span>
                                     </Link>
-                                    <Link href="/help" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all col-span-2">
-                                        <HelpCircle className="h-4.5 w-4.5 text-slate-500" />
-                                        <span>Centro de Ayuda y Guías</span>
-                                    </Link>
-                                    <Link href="/research-hub" className="flex items-center gap-2.5 p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-xs font-semibold text-slate-700 active:scale-98 transition-all col-span-2">
-                                        <BookOpen className="h-4.5 w-4.5 text-slate-500" />
-                                        <span>Directorio Research Hub</span>
+                                    <Link href="/help" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                        <HelpCircle className="h-4 w-4 text-slate-500" />
+                                        <span>Ayuda 24/7</span>
                                     </Link>
                                 </div>
                             </div>
@@ -252,38 +248,32 @@ export function BottomNavigation() {
                             {/* Super Admin Console (If Admin) */}
                             {isSuperAdmin && (
                                 <div className="space-y-1">
-                                    <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1">Administración (Super Admin)</h5>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <Link href="/admin/empresas" className="flex items-center gap-2 p-2.5 bg-white border border-slate-100 rounded-xl text-[11px] font-semibold text-slate-700">
-                                            <Users className="h-4 w-4 mr-1.5 text-indigo-500" />
+                                    <h5 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">Super Admin</h5>
+                                    <div className="grid grid-cols-3 gap-1.5">
+                                        <Link href="/admin/empresas" className="flex flex-col items-center justify-center gap-1 p-1.5 bg-white border border-slate-100 rounded-xl text-[10px] font-semibold text-slate-700 text-center">
+                                            <Users className="h-3.5 w-3.5 text-indigo-500" />
                                             <span>Empresas</span>
                                         </Link>
-                                        <Link href="/admin/users" className="flex items-center gap-2 p-2.5 bg-white border border-slate-100 rounded-xl text-[11px] font-semibold text-slate-700">
-                                            <UserCog className="h-4 w-4 mr-1.5 text-indigo-500" />
+                                        <Link href="/admin/users" className="flex flex-col items-center justify-center gap-1 p-1.5 bg-white border border-slate-100 rounded-xl text-[10px] font-semibold text-slate-700 text-center">
+                                            <UserCog className="h-3.5 w-3.5 text-indigo-500" />
                                             <span>Usuarios</span>
                                         </Link>
-                                        <Link href="/admin/audit" className="flex items-center gap-2 p-2.5 bg-white border border-slate-100 rounded-xl text-[11px] font-semibold text-slate-700">
-                                            <FileClock className="h-4 w-4 mr-1.5 text-indigo-500" />
+                                        <Link href="/admin/audit" className="flex flex-col items-center justify-center gap-1 p-1.5 bg-white border border-slate-100 rounded-xl text-[10px] font-semibold text-slate-700 text-center">
+                                            <FileClock className="h-3.5 w-3.5 text-indigo-500" />
                                             <span>Auditoría</span>
-                                        </Link>
-                                        <Link href="/admin/billing" className="flex items-center gap-2 p-2.5 bg-white border border-slate-100 rounded-xl text-[11px] font-semibold text-slate-700">
-                                            <CreditCard className="h-4 w-4 mr-1.5 text-indigo-500" />
-                                            <span>Facturación</span>
-                                        </Link>
-                                        <Link href="/admin/support" className="flex items-center gap-2 p-2.5 bg-white border border-slate-100 rounded-xl text-[11px] font-semibold text-slate-700 col-span-2">
-                                            <MessageSquare className="h-4 w-4 mr-1.5 text-indigo-500" />
-                                            <span>Tickets y Feedback General</span>
                                         </Link>
                                     </div>
                                 </div>
                             )}
+                        </div>
 
-                            {/* Logout */}
+                        {/* Logout Compacto */}
+                        <div className="px-3 pt-1 shrink-0">
                             <Button
                                 onClick={handleLogout}
-                                className="w-full h-11 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-bold text-xs rounded-xl flex items-center justify-center gap-2 active:scale-98 transition-all"
+                                className="w-full h-9 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-bold text-xs rounded-xl flex items-center justify-center gap-2 active:scale-98 transition-all"
                             >
-                                <LogOut className="h-4 w-4" />
+                                <LogOut className="h-3.5 w-3.5" />
                                 <span>Cerrar Sesión</span>
                             </Button>
                         </div>
