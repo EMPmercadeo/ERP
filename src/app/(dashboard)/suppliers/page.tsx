@@ -4,13 +4,15 @@ import { SupplierList } from '@/components/suppliers/SupplierList';
 import { getTenantContext } from '@/lib/auth/context';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 export default async function SuppliersPage() {
     const { empresaId } = await getTenantContext();
 
     const suppliers = await prisma.proveedor.findMany({
         where: { empresaId },
-        take: 200,
+        take: 1000,
         orderBy: { razonSocial: 'asc' },
         include: {
             compras: {
