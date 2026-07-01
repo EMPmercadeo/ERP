@@ -48,6 +48,12 @@ async function main() {
     for (const empresa of empresas) {
         console.log(`🏢 Creando proveedores para la empresa: ${empresa.razonSocial} (ID: ${empresa.id})`);
 
+        const usuario = await prisma.usuario.findFirst({ where: { empresaId: empresa.id } }) || await prisma.usuario.findFirst();
+        if (!usuario) {
+            console.error(`❌ No hay usuarios para la empresa ${empresa.razonSocial}. Saltando...`);
+            continue;
+        }
+
         let creadosCount = 0;
         let comprasCount = 0;
         let pagosCount = 0;
@@ -146,11 +152,12 @@ async function main() {
                         data: {
                             empresaId: empresa.id,
                             proveedorId: proveedor.id,
+                            creadorId: usuario.id,
                             numeroFactura: `F-${getRandomInt(100, 999)}-${getRandomInt(10000, 99999)}`,
                             fechaEmision,
                             fechaVencimiento,
                             subtotal: new Prisma.Decimal(subtotal),
-                            impuesto: new Prisma.Decimal(impuesto),
+                            totalItbms: new Prisma.Decimal(impuesto),
                             totalNeto: new Prisma.Decimal(totalNeto),
                             saldoPendiente: new Prisma.Decimal(saldoFactura),
                             estadoPago
@@ -168,8 +175,10 @@ async function main() {
                                 empresaId: empresa.id,
                                 proveedorId: proveedor.id,
                                 compraId: compra.id,
+                                usuarioId: usuario.id,
                                 fechaPago: fechaPago > new Date() ? new Date() : fechaPago,
                                 monto: new Prisma.Decimal(montoPagado),
+                                montoAplicado: new Prisma.Decimal(montoPagado),
                                 metodoPago: getRandomItem(['ACH / Transferencia', 'Cheque', 'Tarjeta de Crédito Corporativa']),
                                 referencia: `REF-${getRandomInt(100000, 999999)}`
                             }

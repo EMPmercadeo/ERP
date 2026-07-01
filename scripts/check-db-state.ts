@@ -11,6 +11,11 @@ async function main() {
 
     console.log(`Companies: ${companies.length}`);
     if (companies.length > 0) console.log('First Company:', companies[0].razonSocial, 'Plan:', companies[0].planType, 'Fiscal:', companies[0].fiscalEnabled);
+
+    const proveedores = await prisma.proveedor.count();
+    const compras = await prisma.compra.count();
+    const pagos = await prisma.pagoProveedor.count();
+    console.log(`Proveedores: ${proveedores} | Compras: ${compras} | Pagos: ${pagos}`);
 }
 
 main().catch(console.error);
