@@ -78,6 +78,12 @@ async function main() {
     console.log('🗑️  Limpiando base de datos...');
 
     // Clean up in order
+    await prisma.albaranVentaItem.deleteMany().catch(() => { });
+    await prisma.albaranVenta.deleteMany().catch(() => { });
+    await prisma.pagoProveedor.deleteMany().catch(() => { });
+    await prisma.compraItem.deleteMany().catch(() => { });
+    await prisma.compra.deleteMany().catch(() => { });
+    await prisma.proveedor.deleteMany().catch(() => { });
     await prisma.productImage.deleteMany().catch(() => { });
     await prisma.posSyncLog.deleteMany().catch(() => { });
     await prisma.posIntegration.deleteMany().catch(() => { });
@@ -339,8 +345,8 @@ async function main() {
                 email: `cliente${i}@${razonSocial.split(' ')[0].toLowerCase()}.com`,
                 telefono: `+507 ${randomInt(200, 399)}-${randomInt(1000, 9999)}`,
                 limiteCredito: randomDecimal(1000, 50000),
-                saldoPendiente: randomDecimal(0, 5000),
-                saldoAFavor: randomDecimal(0, 500),
+                saldoPendiente: new Prisma.Decimal(0),
+                saldoAFavor: new Prisma.Decimal(0),
                 condicionPago: randomItem(condicionesPago),
                 estado: Math.random() > 0.9 ? 'moroso' : 'activo',
             },
@@ -621,6 +627,217 @@ async function main() {
         });
 
         cotizaciones.push(cotizacion);
+    }
+
+    // 11. Create 10 Proveedores, 30 Compras, 20 PagoProveedor, and 20 AlbaranVenta
+    console.log('🏢 Creando 10 proveedores...');
+    const proveedores = [];
+    const nombresProveedores = ['Distribuidora El Machetazo', 'Importadora Rodelag', 'Constructora Cochez', 'Tecnología Corp', 'Logística Global Panamá', 'Papelera Istmeña', 'Suministros Corporativos S.A.', 'Ferretería Novey', 'Panamá Office Supplies', 'Alimentos del Istmo'];
+    
+    for (let i = 0; i < 10; i++) {
+        const { ruc, dv } = generateRuc('02');
+        const prov = await prisma.proveedor.create({
+            data: {
+                empresaId: empresa.id,
+                tipoRuc: '02',
+                ruc: `${ruc}-P${i}`,
+                dv,
+                razonSocial: nombresProveedores[i],
+                nombreComercial: nombresProveedores[i].split(' ')[0],
+                direccion: `Área Industrial de Costa del Este, Local ${10 + i}, Panamá`,
+                email: `proveedor${i}@${nombresProveedores[i].split(' ')[0].toLowerCase().replace('ñ', 'n')}.com`,
+                telefono: `+507 200-${1000 + i}`,
+                condicionPago: randomItem(condicionesPago),
+                estado: 'activo',
+                saldoPendiente: new Prisma.Decimal(0)
+            }
+        });
+        proveedores.push(prov);
+    }
+
+    console.log('🧾 Creando 30 facturas de compra...');
+    const compras = [];
+    for (let i = 1; i <= 30; i++) {
+        const prov = randomItem(proveedores);
+        const creador = randomItem(usuarios);
+        
+        const numItems = randomInt(1, 3);
+        let subtotal = 0;
+        let totalItbms = 0;
+        const purchaseItems = [];
+
+        for (let j = 0; j < numItems; j++) {
+            const prod = productos[(i + j) % productos.length];
+            const qty = randomInt(5, 20);
+            const cost = parseFloat(prod.costoUnitario.toString());
+            const desc = randomInt(0, 5);
+            const base = qty * cost - desc;
+            const tasa = prod.codigoTasaItbms === '01' ? 0.07 :
+                         prod.codigoTasaItbms === '02' ? 0.10 : 0;
+            const itbms = base * tasa;
+
+            subtotal += qty * cost;
+            totalItbms += itbms;
+
+            purchaseItems.push({
+                productoId: prod.id,
+                descripcion: prod.descripcion,
+                cantidad: new Prisma.Decimal(qty),
+                costoUnitario: new Prisma.Decimal(cost),
+                descuento: new Prisma.Decimal(desc),
+                codigoTasaItbms: prod.codigoTasaItbms,
+                montoItbms: new Prisma.Decimal(itbms.toFixed(2)),
+                montoTotal: new Prisma.Decimal((base + itbms).toFixed(2))
+            });
+        }
+
+        const totalNeto = subtotal + totalItbms;
+        const fechaEmision = new Date();
+        fechaEmision.setDate(fechaEmision.getDate() - randomInt(0, 90));
+
+        const comp = await prisma.compra.create({
+            data: {
+                empresaId: empresa.id,
+                proveedorId: prov.id,
+                creadorId: creador.id,
+                numeroFactura: `FAC-COMP-${1000 + i}`,
+                fechaEmision,
+                fechaVencimiento: new Date(fechaEmision.getTime() + 30 * 24 * 60 * 60 * 1000),
+                subtotal: new Prisma.Decimal(subtotal.toFixed(2)),
+                totalDescuento: new Prisma.Decimal(0),
+                totalItbms: new Prisma.Decimal(totalItbms.toFixed(2)),
+                totalNeto: new Prisma.Decimal(totalNeto.toFixed(2)),
+                saldoPendiente: new Prisma.Decimal(totalNeto.toFixed(2)),
+                estadoPago: 'pendiente',
+                observaciones: `Compra de inventario lote #${i}`,
+                items: {
+                    create: purchaseItems
+                }
+            }
+        });
+        compras.push(comp);
+    }
+
+    console.log('💰 Creando pagos a proveedores...');
+    for (let i = 0; i < 20; i++) {
+        const comp = compras[i % compras.length];
+        const prov = proveedores.find(p => p.id === comp.proveedorId)!;
+        const usr = randomItem(usuarios);
+        const amount = parseFloat(comp.saldoPendiente.toString()) * (Math.random() > 0.5 ? 1 : 0.5);
+
+        if (amount <= 0) continue;
+
+        await prisma.pagoProveedor.create({
+            data: {
+                empresaId: empresa.id,
+                compraId: comp.id,
+                proveedorId: prov.id,
+                usuarioId: usr.id,
+                fechaPago: new Date(comp.fechaEmision.getTime() + randomInt(1, 15) * 24 * 60 * 60 * 1000),
+                monto: new Prisma.Decimal(amount.toFixed(2)),
+                metodoPago: randomItem(metodoPago),
+                referencia: `ACH-TRANSF-${10000 + i}`,
+                montoAplicado: new Prisma.Decimal(amount.toFixed(2))
+            }
+        });
+
+        // Update purchase balance
+        const nextPending = Math.max(0, parseFloat(comp.saldoPendiente.toString()) - amount);
+        await prisma.compra.update({
+            where: { id: comp.id },
+            data: {
+                saldoPendiente: new Prisma.Decimal(nextPending.toFixed(2)),
+                estadoPago: nextPending === 0 ? 'pagada' : 'parcial'
+            }
+        });
+    }
+
+    console.log('🚚 Creando 20 albaranes de venta...');
+    for (let i = 1; i <= 20; i++) {
+        const cli = randomItem(clientes);
+        const usr = randomItem(usuarios);
+        const caja = cajas[i % cajas.length] || firstCaja;
+        const sucursal = sucursales.find(s => s.id === caja.sucursalId) || firstSucursal;
+        
+        const numItems = randomInt(1, 3);
+        let subtotal = 0;
+        let totalItbms = 0;
+        const albaranItems = [];
+
+        for (let j = 0; j < numItems; j++) {
+            const prod = productos[(i + j) % productos.length];
+            const qty = randomInt(1, 5);
+            const price = parseFloat(prod.precioVenta.toString());
+            const base = qty * price;
+            const tasa = prod.codigoTasaItbms === '01' ? 0.07 :
+                         prod.codigoTasaItbms === '02' ? 0.10 : 0;
+            const itbms = base * tasa;
+
+            subtotal += base;
+            totalItbms += itbms;
+
+            albaranItems.push({
+                productoId: prod.id,
+                descripcion: prod.descripcion,
+                cantidad: new Prisma.Decimal(qty),
+                precioUnitario: new Prisma.Decimal(price),
+                descuento: new Prisma.Decimal(0),
+                codigoTasaItbms: prod.codigoTasaItbms,
+                montoItbms: new Prisma.Decimal(itbms.toFixed(2)),
+                montoTotal: new Prisma.Decimal((base + itbms).toFixed(2))
+            });
+        }
+
+        await prisma.albaranVenta.create({
+            data: {
+                empresaId: empresa.id,
+                sucursalId: sucursal.id,
+                cajaId: caja.id,
+                clienteId: cli.id,
+                creadorId: usr.id,
+                numero: `ALB-${sucursal.codigo}-${String(i).padStart(6, '0')}`,
+                subtotal: new Prisma.Decimal(subtotal.toFixed(2)),
+                totalDescuento: new Prisma.Decimal(0),
+                totalItbms: new Prisma.Decimal(totalItbms.toFixed(2)),
+                totalNeto: new Prisma.Decimal((subtotal + totalItbms).toFixed(2)),
+                estado: i % 3 === 0 ? 'facturado' : 'pendiente',
+                observaciones: `Entrega parcial de mercadería #${i}`,
+                items: {
+                    create: albaranItems
+                }
+            }
+        });
+    }
+
+    // 12. Recalculate and update final balances for Cliente and Proveedor records
+    console.log('🔄 Actualizando saldos de clientes y proveedores...');
+    const allDbClientes = await prisma.cliente.findMany({
+        include: { facturas: true }
+    });
+
+    for (const cli of allDbClientes) {
+        const actualSaldo = cli.facturas.reduce((sum, f) => sum + parseFloat(f.saldoPendiente.toString()), 0);
+        await prisma.cliente.update({
+            where: { id: cli.id },
+            data: {
+                saldoPendiente: new Prisma.Decimal(actualSaldo.toFixed(2)),
+                saldoAFavor: new Prisma.Decimal(0)
+            }
+        });
+    }
+
+    const allDbProveedores = await prisma.proveedor.findMany({
+        include: { compras: true }
+    });
+
+    for (const prov of allDbProveedores) {
+        const actualSaldo = prov.compras.reduce((sum, c) => sum + parseFloat(c.saldoPendiente.toString()), 0);
+        await prisma.proveedor.update({
+            where: { id: prov.id },
+            data: {
+                saldoPendiente: new Prisma.Decimal(actualSaldo.toFixed(2))
+            }
+        });
     }
 
     console.log('\n✅ ¡Seed completado exitosamente!');

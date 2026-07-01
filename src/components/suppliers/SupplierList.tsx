@@ -18,6 +18,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { NewSupplierModal } from './NewSupplierModal';
+import { Badge } from '@/components/ui/badge';
 
 export interface SupplierData {
     id: string;
@@ -71,7 +72,8 @@ export function SupplierList({ initialData }: { initialData: SupplierData[] }) {
     const filtered = suppliers.filter(s => 
         s.razonSocial.toLowerCase().includes(search.toLowerCase()) ||
         s.ruc.toLowerCase().includes(search.toLowerCase()) ||
-        (s.email && s.email.toLowerCase().includes(search.toLowerCase()))
+        (s.email && s.email.toLowerCase().includes(search.toLowerCase())) ||
+        (s.telefono && s.telefono.toLowerCase().includes(search.toLowerCase()))
     );
 
     const handleDelete = async (id: string) => {
@@ -94,7 +96,7 @@ export function SupplierList({ initialData }: { initialData: SupplierData[] }) {
                 <div>
                     <h2 className="text-2xl font-bold tracking-tight">Gestión de Proveedores</h2>
                     <p className="text-muted-foreground text-sm">
-                        Directorio de cuentas por pagar y saldos pendientes (Peachtree)
+                        Directorio de cuentas por pagar y saldos pendientes
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -123,6 +125,7 @@ export function SupplierList({ initialData }: { initialData: SupplierData[] }) {
                                     <TableHead>RUC / DV</TableHead>
                                     <TableHead>Contacto</TableHead>
                                     <TableHead>Términos</TableHead>
+                                    <TableHead>Estado</TableHead>
                                     <TableHead className="text-right">Saldo Pendiente</TableHead>
                                     <TableHead className="text-right">Acciones</TableHead>
                                 </TableRow>
@@ -152,6 +155,11 @@ export function SupplierList({ initialData }: { initialData: SupplierData[] }) {
                                                     {s.telefono && <div className="flex items-center gap-1.5"><Phone className="h-3 w-3 text-muted-foreground" /> {s.telefono}</div>}
                                                 </TableCell>
                                                 <TableCell className="text-xs">{s.condicionPago}</TableCell>
+                                                <TableCell className="text-xs">
+                                                    <Badge variant={s.estado === 'activo' ? 'success' : 'destructive'}>
+                                                        {s.estado === 'activo' ? 'Activo' : 'Inactivo'}
+                                                    </Badge>
+                                                </TableCell>
                                                 <TableCell className="text-right font-mono font-bold">
                                                     <span className={s.saldoPendiente > 0 ? 'text-amber-600 font-bold' : 'text-slate-600'}>
                                                         {formatCurrency(s.saldoPendiente)}
@@ -159,12 +167,12 @@ export function SupplierList({ initialData }: { initialData: SupplierData[] }) {
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex items-center justify-end gap-1">
-                                                        <Link href={`/purchases?proveedorId=${s.id}`}>
-                                                            <Button variant="ghost" size="sm" className="h-8 text-xs font-medium text-brand-1">
-                                                                <FileText className="mr-1 h-3.5 w-3.5" />
-                                                                Compras
-                                                            </Button>
-                                                        </Link>
+                                                         <Link href={`/suppliers/${s.id}`}>
+                                                             <Button variant="ghost" size="sm" className="h-8 text-xs font-medium text-brand-1">
+                                                                 <FileText className="mr-1 h-3.5 w-3.5" />
+                                                                 Detalle
+                                                             </Button>
+                                                         </Link>
                                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(s.id)}>
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
@@ -217,9 +225,9 @@ export function SupplierList({ initialData }: { initialData: SupplierData[] }) {
                                         )}
 
                                         <div className="flex gap-2 pt-1 border-t border-slate-100/80">
-                                            <Link href={`/purchases?proveedorId=${s.id}`} className="flex-1">
+                                            <Link href={`/suppliers/${s.id}`} className="flex-1">
                                                 <Button variant="outline" size="sm" className="w-full h-9 text-xs font-bold text-brand-1 rounded-lg">
-                                                    Ver Compras / Facturas
+                                                    Ver Detalle / Estado Cuenta
                                                 </Button>
                                             </Link>
                                             <Button variant="outline" size="icon" className="h-9 w-9 text-red-500 rounded-lg shrink-0" onClick={() => handleDelete(s.id)}>

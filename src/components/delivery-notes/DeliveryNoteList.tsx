@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Search, FileText, CheckSquare } from 'lucide-react';
+import { Search, FileText, CheckSquare, Plus } from 'lucide-react';
 import { invoiceGroupedDeliveryNotes, updateDeliveryNoteStatus } from '@/lib/actions/delivery-notes';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
@@ -40,6 +42,7 @@ function formatCurrency(value: number) {
 }
 
 export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteData[] }) {
+    const router = useRouter();
     const [notes, setNotes] = useState<DeliveryNoteData[]>(initialData);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -101,7 +104,7 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Albaranes de Venta (Remisiones)</h1>
                     <p className="text-sm text-gray-500 mt-1">
-                        Control de entregas físicas, rebaja inmediata de stock y facturación por agrupación al estilo Sage 50
+                        Control de entregas físicas, rebaja inmediata de stock y facturación por agrupación
                     </p>
                 </div>
                 <div className="flex gap-2">
@@ -115,6 +118,12 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
                             Facturar {selectedIds.length} Agrupados
                         </Button>
                     )}
+                    <Link href="/delivery-notes/new">
+                        <Button className="bg-brand-1 text-white hover:bg-brand-1/90 gap-2 shadow-sm">
+                            <Plus className="h-4 w-4" />
+                            Nuevo Albarán
+                        </Button>
+                    </Link>
                 </div>
             </div>
 
@@ -164,8 +173,12 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
                                     filteredNotes.map((note) => {
                                         const isFacturado = note.estado === 'facturado';
                                         return (
-                                            <TableRow key={note.id} className="hover:bg-gray-50/50 transition-colors">
-                                                <TableCell className="text-center">
+                                            <TableRow 
+                                                key={note.id} 
+                                                className="hover:bg-gray-50/50 transition-colors cursor-pointer"
+                                                onClick={() => router.push(`/delivery-notes/${note.id}`)}
+                                            >
+                                                <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                                                     {!isFacturado && (
                                                         <input
                                                             type="checkbox"

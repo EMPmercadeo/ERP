@@ -41,7 +41,7 @@ export default async function ClientDetailPage(props: { params: Promise<{ id: st
         email: client.email || '',
         telefono: client.telefono || '',
         limiteCredito: client.limiteCredito.toNumber(),
-        saldoPendiente: client.saldoPendiente.toNumber(),
+        saldoPendiente: client.facturas.reduce((sum, f) => sum + f.saldoPendiente.toNumber(), 0),
         saldoAFavor: client.saldoAFavor.toNumber(),
         condicionPago: client.condicionPago,
         estado: client.estado,
