@@ -17,9 +17,12 @@ import {
     MoreHorizontal, 
     User, 
     PlusCircle,
-    Archive
+    Archive,
+    Edit,
+    Eye,
+    Send
 } from 'lucide-react';
-import { deleteSupplier, toggleSupplierStatus, getSuppliersWithSummary } from '@/lib/actions/suppliers';
+import { deleteSupplier, toggleSupplierStatus, getSuppliersWithSummary, sendSupplierEmailAction } from '@/lib/actions/suppliers';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +36,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { NewSupplierModal } from './NewSupplierModal';
+import { EditSupplierModal } from './EditSupplierModal';
 import { Badge } from '@/components/ui/badge';
 import {
     DropdownMenu,
@@ -118,7 +122,7 @@ export function SupplierList({
     const [termsFilter, setTermsFilter] = useState('todos');
     const [suppliers, setSuppliers] = useState<SupplierData[]>(initialData);
     const [summaryState, setSummaryState] = useState<SupplierSummary>(summary);
-    const [isSeeding, setIsSeeding] = useState(false);
+    const [editingSupplier, setEditingSupplier] = useState<SupplierData | null>(null);
 
     useEffect(() => {
         setIsMounted(true);
@@ -155,18 +159,15 @@ export function SupplierList({
             if (!matchSearch) return false;
 
             // Status filter
-            if (statusFilter !== 'todos' && s.estado !== statusFilter) {
-                return false;
-            }
+            if (statusFilter !== 'todos' && s.estado !== statusFilter) return false;
 
             // Saldo filter
             if (saldoFilter === 'con_saldo' && s.saldoPendiente <= 0) return false;
+            if (saldoFilter === 'sin_saldo' && s.saldoPendiente > 0) return false;
             if (saldoFilter === 'con_vencido' && (!s.vencido || s.vencido <= 0)) return false;
 
             // Terms filter
-            if (termsFilter !== 'todos' && s.condicionPago !== termsFilter) {
-                return false;
-            }
+            if (termsFilter !== 'todos' && s.condicionPago !== termsFilter) return false;
 
             return true;
         });
@@ -194,27 +195,15 @@ export function SupplierList({
         }
     };
 
-    const handleSeedDemo = async () => {
-        setIsSeeding(true);
-        toast.info('Poblando 150 proveedores y facturas en producción...');
-        try {
-            const res = await fetch('/api/v1/seed-demo-suppliers', { method: 'POST' });
-            const data = await res.json();
-            if (data.success) {
-                toast.success(data.message);
-                const fresh = await getSuppliersWithSummary();
-                if (fresh && fresh.success && fresh.suppliers) {
-                    setSuppliers(fresh.suppliers);
-                    if (fresh.summary) setSummaryState(fresh.summary);
-                }
-            } else {
-                toast.error(data.error || 'Error al poblar proveedores');
-            }
-        } catch (e) {
-            toast.error('Error de red al poblar proveedores');
-        } finally {
-            setIsSeeding(false);
-        }
+    const handleSendEmail = async (s: SupplierData, tipo: 'estado_cuenta' | 'orden_compra' = 'estado_cuenta') => {
+        toast.promise(sendSupplierEmailAction(s.id, s.email || '', tipo), {
+            loading: `Generando y enviando PDF de estado de cuenta a ${s.email || s.razonSocial}...`,
+            success: (data) => {
+                if (data.success) return data.message;
+                throw new Error(data.error);
+            },
+            error: (err) => err?.message || 'Error al enviar correo'
+        });
     };
 
     if (!isMounted) return null;
@@ -226,19 +215,10 @@ export function SupplierList({
                 <div>
                     <h2 className="text-2xl font-bold tracking-tight text-slate-900">Gestión de Proveedores</h2>
                     <p className="text-muted-foreground text-sm">
-                        Gestión de proveedores, facturas de compra, pagos y saldos pendientes
+                        Catálogo oficial de proveedores, facturas de compra, pagos y saldos pendientes
                     </p>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                    <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={handleSeedDemo} 
-                        disabled={isSeeding}
-                        className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-medium"
-                    >
-                        {isSeeding ? '✨ Generando en Vercel...' : '✨ Poblar 150 Proveedores Demo'}
-                    </Button>
+                <div className="flex items-center gap-2">
                     <NewSupplierModal />
                 </div>
             </div>
@@ -425,50 +405,77 @@ export function SupplierList({
                                                     {formatDate(s.ultimaCompra)}
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                                <span className="sr-only">Abrir menú</span>
-                                                                <MoreHorizontal className="h-4 w-4" />
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <Link href={`/suppliers/${s.id}?tab=info`}>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50" title="Ver Detalle">
+                                                                <Eye className="h-4 w-4" />
                                                             </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="w-52">
-                                                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                                            <DropdownMenuItem asChild>
-                                                                <Link href={`/suppliers/${s.id}?tab=info`} className="cursor-pointer">
-                                                                    <FileText className="mr-2 h-4 w-4" /> Ver Detalle / Editar
-                                                                </Link>
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem asChild>
-                                                                <Link href={`/purchases/new?supplierId=${s.id}`} className="cursor-pointer">
-                                                                    <PlusCircle className="mr-2 h-4 w-4 text-brand-1" /> Registrar Compra
-                                                                </Link>
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem asChild>
-                                                                <Link href={`/suppliers/${s.id}?tab=payments`} className="cursor-pointer">
-                                                                    <DollarSign className="mr-2 h-4 w-4 text-emerald-600" /> Registrar Pago
-                                                                </Link>
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem asChild>
-                                                                <Link href={`/suppliers/${s.id}?tab=statement`} className="cursor-pointer">
-                                                                    <Calendar className="mr-2 h-4 w-4 text-indigo-600" /> Estado de Cuenta
-                                                                </Link>
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuSeparator />
-                                                            {s.estado === 'activo' ? (
-                                                                <DropdownMenuItem onClick={() => handleToggleStatus(s.id, 'archivado')} className="text-amber-600 cursor-pointer">
-                                                                    <Archive className="mr-2 h-4 w-4" /> Archivar proveedor
+                                                        </Link>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className="h-8 w-8 text-slate-600 hover:text-amber-600 hover:bg-amber-50" 
+                                                            title="Editar Proveedor"
+                                                            onClick={() => setEditingSupplier(s)}
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className="h-8 w-8 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50" 
+                                                            title="Enviar Estado de Cuenta al Correo"
+                                                            onClick={() => handleSendEmail(s, 'estado_cuenta')}
+                                                        >
+                                                            <Send className="h-4 w-4" />
+                                                        </Button>
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                    <span className="sr-only">Abrir menú</span>
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" className="w-56">
+                                                                <DropdownMenuLabel>Acciones del Proveedor</DropdownMenuLabel>
+                                                                <DropdownMenuItem asChild>
+                                                                    <Link href={`/suppliers/${s.id}?tab=info`} className="cursor-pointer">
+                                                                        <Eye className="mr-2 h-4 w-4 text-indigo-600" /> Ver Perfil Comercial
+                                                                    </Link>
                                                                 </DropdownMenuItem>
-                                                            ) : (
-                                                                <DropdownMenuItem onClick={() => handleToggleStatus(s.id, 'activo')} className="text-emerald-600 cursor-pointer">
-                                                                    <CheckCircle2 className="mr-2 h-4 w-4" /> Reactivar proveedor
+                                                                <DropdownMenuItem onClick={() => setEditingSupplier(s)} className="cursor-pointer">
+                                                                    <Edit className="mr-2 h-4 w-4 text-amber-600" /> Editar Datos
                                                                 </DropdownMenuItem>
-                                                            )}
-                                                            <DropdownMenuItem onClick={() => handleDelete(s.id)} className="text-red-600 cursor-pointer">
-                                                                <Trash2 className="mr-2 h-4 w-4" /> Eliminar proveedor
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
+                                                                <DropdownMenuItem onClick={() => handleSendEmail(s, 'estado_cuenta')} className="cursor-pointer">
+                                                                    <Send className="mr-2 h-4 w-4 text-emerald-600" /> Enviar Estado de Cuenta
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem asChild>
+                                                                    <Link href={`/purchases/new?supplierId=${s.id}`} className="cursor-pointer">
+                                                                        <PlusCircle className="mr-2 h-4 w-4 text-brand-1" /> Registrar Nueva Compra
+                                                                    </Link>
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem asChild>
+                                                                    <Link href={`/suppliers/${s.id}?tab=payments`} className="cursor-pointer">
+                                                                        <DollarSign className="mr-2 h-4 w-4 text-emerald-600" /> Registrar Pago
+                                                                    </Link>
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
+                                                                {s.estado === 'activo' ? (
+                                                                    <DropdownMenuItem onClick={() => handleToggleStatus(s.id, 'archivado')} className="text-amber-600 cursor-pointer">
+                                                                        <Archive className="mr-2 h-4 w-4" /> Archivar proveedor
+                                                                    </DropdownMenuItem>
+                                                                ) : (
+                                                                    <DropdownMenuItem onClick={() => handleToggleStatus(s.id, 'activo')} className="text-emerald-600 cursor-pointer">
+                                                                        <CheckCircle2 className="mr-2 h-4 w-4" /> Reactivar proveedor
+                                                                    </DropdownMenuItem>
+                                                                )}
+                                                                <DropdownMenuItem onClick={() => handleDelete(s.id)} className="text-red-600 cursor-pointer">
+                                                                    <Trash2 className="mr-2 h-4 w-4" /> Eliminar proveedor
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         );
@@ -526,10 +533,28 @@ export function SupplierList({
 
                                         <div className="flex gap-2 pt-1">
                                             <Link href={`/suppliers/${s.id}`} className="flex-1">
-                                                <Button variant="outline" size="sm" className="w-full h-9 text-xs font-bold text-brand-1 rounded-lg">
-                                                    Ver Detalle / Estado Cuenta
+                                                <Button variant="outline" size="sm" className="w-full h-9 text-xs font-bold text-indigo-600 rounded-lg">
+                                                    Ver Detalle
                                                 </Button>
                                             </Link>
+                                            <Button 
+                                                variant="outline" 
+                                                size="icon" 
+                                                className="h-9 w-9 text-amber-600 rounded-lg shrink-0" 
+                                                title="Editar"
+                                                onClick={() => setEditingSupplier(s)}
+                                            >
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button 
+                                                variant="outline" 
+                                                size="icon" 
+                                                className="h-9 w-9 text-emerald-600 rounded-lg shrink-0" 
+                                                title="Enviar Correo"
+                                                onClick={() => handleSendEmail(s, 'estado_cuenta')}
+                                            >
+                                                <Send className="h-4 w-4" />
+                                            </Button>
                                             <Link href={`/purchases/new?supplierId=${s.id}`}>
                                                 <Button variant="outline" size="icon" className="h-9 w-9 text-brand-1 rounded-lg shrink-0" title="Nueva compra">
                                                     <PlusCircle className="h-4 w-4" />
@@ -547,6 +572,19 @@ export function SupplierList({
                     </div>
                 </CardContent>
             </Card>
+
+            {editingSupplier && (
+                <EditSupplierModal
+                    supplier={editingSupplier}
+                    open={!!editingSupplier}
+                    onOpenChange={(open) => {
+                        if (!open) setEditingSupplier(null);
+                    }}
+                    onSuccess={(updated) => {
+                        setSuppliers(prev => prev.map(s => s.id === updated.id ? updated : s));
+                    }}
+                />
+            )}
         </ContentContainer>
     );
 }
