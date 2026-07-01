@@ -188,3 +188,92 @@ export async function deleteSupplier(id: string) {
         return { success: false, error: 'Error al eliminar el proveedor.' };
     }
 }
+
+export async function getSuppliersWithSummary() {
+    try {
+        const { empresaId } = await getTenantContext();
+
+        const suppliers = await prisma.proveedor.findMany({
+            where: { empresaId },
+            take: 1000,
+            orderBy: { razonSocial: 'asc' },
+            include: {
+                compras: {
+                    where: { estadoPago: { not: 'anulada' } },
+                    select: {
+                        id: true,
+                        fechaEmision: true,
+                        fechaVencimiento: true,
+                        saldoPendiente: true,
+                        totalNeto: true,
+                    }
+                }
+            }
+        });
+
+        const now = new Date();
+        let totalPorPagar = 0;
+        let saldoVencido = 0;
+        let proximosVencimientos = 0;
+        let proveedoresActivos = 0;
+
+        const formattedSuppliers = suppliers.map((p) => {
+            if (p.estado === 'activo') proveedoresActivos++;
+
+            let saldo = 0;
+            let facturasPendientes = 0;
+            let facturasVencidas = 0;
+
+            for (const c of p.compras) {
+                const pend = Number(c.saldoPendiente || 0);
+                if (pend > 0.01) {
+                    saldo += pend;
+                    facturasPendientes++;
+                    totalPorPagar += pend;
+
+                    const venc = new Date(c.fechaVencimiento);
+                    if (venc < now) {
+                        facturasVencidas++;
+                        saldoVencido += pend;
+                    } else {
+                        proximosVencimientos += pend;
+                    }
+                }
+            }
+
+            return {
+                id: p.id,
+                tipoRuc: p.tipoRuc,
+                ruc: p.ruc,
+                dv: p.dv || '',
+                razonSocial: p.razonSocial,
+                nombreComercial: p.nombreComercial || '',
+                nombreContacto: p.nombreContacto || '',
+                email: p.email || '',
+                telefono: p.telefono || '',
+                direccion: p.direccion || '',
+                limiteCredito: p.limiteCredito ? Number(p.limiteCredito) : 0,
+                condicionPago: p.condicionPago || 'Contado',
+                saldoPendiente: saldo,
+                totalFacturas: p.compras.length,
+                facturasPendientes,
+                facturasVencidas,
+                observaciones: p.observaciones || '',
+                estado: p.estado || 'activo',
+            };
+        });
+
+        const summary = {
+            totalPorPagar,
+            saldoVencido,
+            proximosVencimientos,
+            proveedoresActivos
+        };
+
+        return { success: true, suppliers: formattedSuppliers, summary };
+    } catch (error) {
+        console.error('Error fetching suppliers action:', error);
+        return { success: false };
+    }
+}
+

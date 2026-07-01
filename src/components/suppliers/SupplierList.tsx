@@ -19,7 +19,7 @@ import {
     PlusCircle,
     Archive
 } from 'lucide-react';
-import { deleteSupplier, toggleSupplierStatus } from '@/lib/actions/suppliers';
+import { deleteSupplier, toggleSupplierStatus, getSuppliersWithSummary } from '@/lib/actions/suppliers';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -117,11 +117,28 @@ export function SupplierList({
     const [saldoFilter, setSaldoFilter] = useState('todos');
     const [termsFilter, setTermsFilter] = useState('todos');
     const [suppliers, setSuppliers] = useState<SupplierData[]>(initialData);
+    const [summaryState, setSummaryState] = useState<SupplierSummary>(summary);
+    const [isSeeding, setIsSeeding] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
-        setSuppliers(initialData);
-    }, [initialData]);
+        if (initialData && initialData.length > 0) {
+            setSuppliers(initialData);
+        }
+        if (summary) {
+            setSummaryState(summary);
+        }
+
+        // Siempre obtener la lista y resumen más recientes en el cliente al montar el componente
+        getSuppliersWithSummary().then((res) => {
+            if (res && res.success && res.suppliers) {
+                setSuppliers(res.suppliers);
+                if (res.summary) {
+                    setSummaryState(res.summary);
+                }
+            }
+        });
+    }, [initialData, summary]);
 
     const filtered = useMemo(() => {
         return suppliers.filter(s => {
@@ -177,6 +194,29 @@ export function SupplierList({
         }
     };
 
+    const handleSeedDemo = async () => {
+        setIsSeeding(true);
+        toast.info('Poblando 150 proveedores y facturas en producción...');
+        try {
+            const res = await fetch('/api/v1/seed-demo-suppliers', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                toast.success(data.message);
+                const fresh = await getSuppliersWithSummary();
+                if (fresh && fresh.success && fresh.suppliers) {
+                    setSuppliers(fresh.suppliers);
+                    if (fresh.summary) setSummaryState(fresh.summary);
+                }
+            } else {
+                toast.error(data.error || 'Error al poblar proveedores');
+            }
+        } catch (e) {
+            toast.error('Error de red al poblar proveedores');
+        } finally {
+            setIsSeeding(false);
+        }
+    };
+
     if (!isMounted) return null;
 
     return (
@@ -189,7 +229,16 @@ export function SupplierList({
                         Gestión de proveedores, facturas de compra, pagos y saldos pendientes
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleSeedDemo} 
+                        disabled={isSeeding}
+                        className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-medium"
+                    >
+                        {isSeeding ? '✨ Generando en Vercel...' : '✨ Poblar 150 Proveedores Demo'}
+                    </Button>
                     <NewSupplierModal />
                 </div>
             </div>
@@ -202,7 +251,7 @@ export function SupplierList({
                         <DollarSign className="h-4 w-4 text-amber-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-slate-900">{formatCurrency(summary.totalPorPagar)}</div>
+                        <div className="text-2xl font-bold text-slate-900">{formatCurrency(summaryState.totalPorPagar)}</div>
                         <p className="text-xs text-muted-foreground mt-1">Saldo acumulado en facturas vivas</p>
                     </CardContent>
                 </Card>
@@ -213,7 +262,7 @@ export function SupplierList({
                         <AlertCircle className="h-4 w-4 text-red-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-600">{formatCurrency(summary.saldoVencido)}</div>
+                        <div className="text-2xl font-bold text-red-600">{formatCurrency(summaryState.saldoVencido)}</div>
                         <p className="text-xs text-muted-foreground mt-1">Facturas expiradas pendientes de pago</p>
                     </CardContent>
                 </Card>
@@ -224,7 +273,7 @@ export function SupplierList({
                         <Calendar className="h-4 w-4 text-indigo-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-indigo-600">{formatCurrency(summary.proximosVencimientos)}</div>
+                        <div className="text-2xl font-bold text-indigo-600">{formatCurrency(summaryState.proximosVencimientos)}</div>
                         <p className="text-xs text-muted-foreground mt-1">Por vencer en próximos periodos</p>
                     </CardContent>
                 </Card>
@@ -235,7 +284,7 @@ export function SupplierList({
                         <Building2 className="h-4 w-4 text-emerald-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-slate-900">{summary.proveedoresActivos}</div>
+                        <div className="text-2xl font-bold text-slate-900">{summaryState.proveedoresActivos}</div>
                         <p className="text-xs text-muted-foreground mt-1">De un total de {suppliers.length} registrados</p>
                     </CardContent>
                 </Card>
