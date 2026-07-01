@@ -72,12 +72,12 @@ export default async function DeliveryNoteDetailPage(props: {
     const formattedNote = {
         id: note.id,
         numero: note.numero,
-        fechaEmision: note.fechaEmision.toISOString(),
-        estado: note.estado,
-        subtotal: note.subtotal.toNumber(),
-        totalDescuento: note.totalDescuento.toNumber(),
-        totalItbms: note.totalItbms.toNumber(),
-        totalNeto: note.totalNeto.toNumber(),
+        fechaEmision: note.fechaEmision ? note.fechaEmision.toISOString() : new Date().toISOString(),
+        estado: note.estado || 'pendiente',
+        subtotal: note.subtotal ? note.subtotal.toNumber() : 0,
+        totalDescuento: note.totalDescuento ? note.totalDescuento.toNumber() : 0,
+        totalItbms: note.totalItbms ? note.totalItbms.toNumber() : 0,
+        totalNeto: note.totalNeto ? note.totalNeto.toNumber() : 0,
         observaciones: note.observaciones || '', // customer notes
         direccionEntrega: note.direccionEntrega || '',
         nombreContacto: note.nombreContacto || '',
@@ -86,16 +86,16 @@ export default async function DeliveryNoteDetailPage(props: {
         fechaRealEntrega: note.fechaRealEntrega ? note.fechaRealEntrega.toISOString() : null,
         notasInternas: note.notasInternas || '',
         cliente: {
-            id: note.cliente.id,
-            razonSocial: note.cliente.razonSocial,
-            ruc: note.cliente.ruc,
-            dv: note.cliente.dv || '',
-            email: note.cliente.email || '',
-            telefono: note.cliente.telefono || '',
-            direccion: note.cliente.direccion || ''
+            id: note.cliente?.id || '',
+            razonSocial: note.cliente?.razonSocial || 'Cliente Desconocido',
+            ruc: note.cliente?.ruc || 'N/A',
+            dv: note.cliente?.dv || '',
+            email: note.cliente?.email || '',
+            telefono: note.cliente?.telefono || '',
+            direccion: note.cliente?.direccion || ''
         },
         creador: {
-            nombre: note.creador.nombre
+            nombre: note.creador?.nombre || 'Sistema'
         },
         responsable: note.responsable ? {
             nombre: note.responsable.nombre
@@ -104,31 +104,31 @@ export default async function DeliveryNoteDetailPage(props: {
             id: note.cotizacion.id,
             numero: note.cotizacion.numero
         } : null,
-        items: note.items.map(item => ({
+        items: note.items ? note.items.map(item => ({
             id: item.id,
             descripcion: item.descripcion,
-            cantidad: item.cantidad.toNumber(), // quantity delivered
-            cantidadPedida: item.cantidadPedida.toNumber(),
-            cantidadPendiente: item.cantidadPendiente.toNumber(),
-            precioUnitario: item.precioUnitario.toNumber(),
-            descuento: item.descuento.toNumber(),
-            montoItbms: item.montoItbms.toNumber(),
-            montoTotal: item.montoTotal.toNumber()
-        })),
+            cantidad: item.cantidad ? item.cantidad.toNumber() : 0, // quantity delivered
+            cantidadPedida: item.cantidadPedida ? item.cantidadPedida.toNumber() : 0,
+            cantidadPendiente: item.cantidadPendiente ? item.cantidadPendiente.toNumber() : 0,
+            precioUnitario: item.precioUnitario ? item.precioUnitario.toNumber() : 0,
+            descuento: item.descuento ? item.descuento.toNumber() : 0,
+            montoItbms: item.montoItbms ? item.montoItbms.toNumber() : 0,
+            montoTotal: item.montoTotal ? item.montoTotal.toNumber() : 0
+        })) : [],
         factura: note.factura ? {
             id: note.factura.id,
             numeroCompleto: note.factura.numeroCompleto
         } : null,
-        historialEstados: note.historialEstados.map(h => ({
+        historialEstados: note.historialEstados ? note.historialEstados.map(h => ({
             id: h.id,
-            estadoAnterior: h.estadoAnterior,
-            estadoNuevo: h.estadoNuevo,
-            fechaCambio: h.fechaCambio.toISOString(),
+            estadoAnterior: h.estadoAnterior || '',
+            estadoNuevo: h.estadoNuevo || '',
+            fechaCambio: h.fechaCambio ? h.fechaCambio.toISOString() : new Date().toISOString(),
             notas: h.notas || '',
             usuario: {
-                nombre: h.usuario.nombre
+                nombre: h.usuario?.nombre || 'Sistema'
             }
-        }))
+        })) : []
     };
 
     return (

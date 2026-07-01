@@ -24,14 +24,14 @@ export default async function DeliveryNotesPage() {
     const formattedNotes = notes.map(n => ({
         id: n.id,
         numero: n.numero,
-        fechaEmision: n.fechaEmision.toISOString().split('T')[0],
-        totalNeto: Number(n.totalNeto),
-        estado: n.estado,
-        observaciones: n.observaciones,
+        fechaEmision: n.fechaEmision ? n.fechaEmision.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        totalNeto: n.totalNeto ? Number(n.totalNeto) : 0,
+        estado: n.estado || 'pendiente',
+        observaciones: n.observaciones || '',
         clienteId: n.clienteId,
         cliente: {
-            razonSocial: n.cliente.razonSocial,
-            ruc: n.cliente.ruc
+            razonSocial: n.cliente?.razonSocial || 'Cliente Desconocido',
+            ruc: n.cliente?.ruc || 'N/A'
         }
     }));
 

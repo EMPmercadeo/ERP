@@ -75,9 +75,9 @@ export default async function ClientDetailPage(props: { params: Promise<{ id: st
     const formattedDeliveryNotes = client.albaranesVenta.map(a => ({
         id: a.id,
         numero: a.numero,
-        fechaEmision: a.fechaEmision.toISOString(),
-        totalNeto: a.totalNeto.toNumber(),
-        estado: a.estado
+        fechaEmision: a.fechaEmision ? a.fechaEmision.toISOString() : new Date().toISOString(),
+        totalNeto: a.totalNeto ? a.totalNeto.toNumber() : 0,
+        estado: a.estado || 'pendiente'
     }));
 
     return (
