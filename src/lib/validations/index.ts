@@ -60,10 +60,14 @@ export const SupplierSchema = z.object({
     dv: z.string().max(2).optional(),
     razonSocial: z.string().min(2, { message: "La razón social es requerida" }),
     nombreComercial: z.string().optional().or(z.literal('')),
-    email: z.string().email().optional().or(z.literal('')),
+    nombreContacto: z.string().optional().or(z.literal('')),
+    email: z.string().email({ message: "Correo inválido" }).optional().or(z.literal('')),
     telefono: z.string().optional().or(z.literal('')),
     direccion: z.string().optional().or(z.literal('')),
+    limiteCredito: z.number().min(0, { message: "El límite de crédito no puede ser negativo" }).optional(),
     condicionPago: z.string().default("Contado"),
+    observaciones: z.string().optional().or(z.literal('')),
+    estado: z.string().optional().default("activo"),
 });
 
 export const PurchaseItemSchema = z.object({

@@ -466,11 +466,14 @@ model Proveedor {
   dv              String?
   razonSocial     String
   nombreComercial String?
+  nombreContacto  String?
   direccion       String?
   email           String?
   telefono        String?
   saldoPendiente  Decimal         @default(0)
+  limiteCredito   Decimal?
   condicionPago   String          @default("Contado")
+  observaciones   String?
   estado          String          @default("activo")
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
@@ -480,6 +483,7 @@ model Proveedor {
 
   @@unique([empresaId, ruc])
   @@index([empresaId])
+  @@index([empresaId, estado])
 }
 
 model Compra {
@@ -495,7 +499,7 @@ model Compra {
   totalItbms       Decimal
   totalNeto        Decimal
   saldoPendiente   Decimal
-  estadoPago       String          @default("pendiente") // pagada | pendiente | parcial | vencida
+  estadoPago       String          @default("pendiente") // pagada | pendiente | parcial | vencida | anulada
   observaciones    String?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
@@ -505,7 +509,9 @@ model Compra {
   items            CompraItem[]
   pagos            PagoProveedor[]
 
+  @@unique([empresaId, proveedorId, numeroFactura])
   @@index([empresaId, fechaEmision])
+  @@index([empresaId, fechaVencimiento])
   @@index([proveedorId])
   @@index([estadoPago])
 }

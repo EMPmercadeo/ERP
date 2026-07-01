@@ -13,10 +13,14 @@ export async function createSupplier(prevState: any, formData: FormData) {
         dv: formData.get('dv') || null,
         razonSocial: formData.get('razonSocial'),
         nombreComercial: formData.get('nombreComercial') || null,
+        nombreContacto: formData.get('nombreContacto') || null,
         email: formData.get('email') || null,
         telefono: formData.get('telefono') || null,
         direccion: formData.get('direccion') || null,
+        limiteCredito: formData.get('limiteCredito') ? Number(formData.get('limiteCredito')) : undefined,
         condicionPago: formData.get('condicionPago') || 'Contado',
+        observaciones: formData.get('observaciones') || null,
+        estado: formData.get('estado') || 'activo',
     };
 
     const validatedFields = SupplierSchema.safeParse(rawData);
@@ -40,11 +44,14 @@ export async function createSupplier(prevState: any, formData: FormData) {
                 dv: data.dv || '',
                 razonSocial: data.razonSocial,
                 nombreComercial: data.nombreComercial || '',
+                nombreContacto: data.nombreContacto || '',
                 email: data.email || '',
                 telefono: data.telefono || '',
                 direccion: data.direccion || '',
+                limiteCredito: data.limiteCredito,
                 condicionPago: data.condicionPago,
-                estado: 'activo'
+                observaciones: data.observaciones || '',
+                estado: data.estado || 'activo'
             },
         });
     } catch (error) {
@@ -65,10 +72,14 @@ export async function updateSupplier(id: string, prevState: any, formData: FormD
         dv: formData.get('dv') || null,
         razonSocial: formData.get('razonSocial'),
         nombreComercial: formData.get('nombreComercial') || null,
+        nombreContacto: formData.get('nombreContacto') || null,
         email: formData.get('email') || null,
         telefono: formData.get('telefono') || null,
         direccion: formData.get('direccion') || null,
+        limiteCredito: formData.get('limiteCredito') ? Number(formData.get('limiteCredito')) : undefined,
         condicionPago: formData.get('condicionPago') || 'Contado',
+        observaciones: formData.get('observaciones') || null,
+        estado: formData.get('estado') || 'activo',
     };
 
     const validatedFields = SupplierSchema.safeParse(rawData);
@@ -99,10 +110,14 @@ export async function updateSupplier(id: string, prevState: any, formData: FormD
                 dv: data.dv || '',
                 razonSocial: data.razonSocial,
                 nombreComercial: data.nombreComercial || '',
+                nombreContacto: data.nombreContacto || '',
                 email: data.email || '',
                 telefono: data.telefono || '',
                 direccion: data.direccion || '',
+                limiteCredito: data.limiteCredito,
                 condicionPago: data.condicionPago,
+                observaciones: data.observaciones || '',
+                estado: data.estado || 'activo',
             },
         });
     } catch (error) {
@@ -111,7 +126,32 @@ export async function updateSupplier(id: string, prevState: any, formData: FormD
     }
 
     revalidatePath('/suppliers');
+    revalidatePath(`/suppliers/${id}`);
     redirect('/suppliers');
+}
+
+export async function toggleSupplierStatus(id: string, nuevoEstado: string) {
+    try {
+        const { empresaId } = await getTenantContext();
+        const existing = await prisma.proveedor.findFirst({
+            where: { id, empresaId }
+        });
+        if (!existing) {
+            return { success: false, error: 'Proveedor no encontrado o acceso denegado.' };
+        }
+
+        await prisma.proveedor.update({
+            where: { id },
+            data: { estado: nuevoEstado }
+        });
+
+        revalidatePath('/suppliers');
+        revalidatePath(`/suppliers/${id}`);
+        return { success: true, message: `Estado cambiado a ${nuevoEstado}.` };
+    } catch (error) {
+        console.error('Database Error:', error);
+        return { success: false, error: 'Error al cambiar estado del proveedor.' };
+    }
 }
 
 export async function deleteSupplier(id: string) {
@@ -131,10 +171,11 @@ export async function deleteSupplier(id: string) {
         if (relatedPurchases > 0) {
             await prisma.proveedor.update({
                 where: { id },
-                data: { estado: 'inactivo' }
+                data: { estado: 'archivado' }
             });
             revalidatePath('/suppliers');
-            return { success: true, message: 'Proveedor desactivado (tiene compras asociadas).' };
+            revalidatePath(`/suppliers/${id}`);
+            return { success: true, message: 'Proveedor archivado (tiene compras asociadas).' };
         }
 
         await prisma.proveedor.delete({

@@ -114,9 +114,15 @@ export function NewSupplierModal({ onSuccess }: { onSuccess?: () => void }) {
                         </div>
                     </div>
 
-                    <div>
-                        <Label htmlFor="nombreComercial">Nombre Comercial (Opcional)</Label>
-                        <Input id="nombreComercial" name="nombreComercial" placeholder="Nombre de marca o tienda" />
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <Label htmlFor="nombreComercial">Nombre Comercial (Opcional)</Label>
+                            <Input id="nombreComercial" name="nombreComercial" placeholder="Nombre de marca o tienda" />
+                        </div>
+                        <div>
+                            <Label htmlFor="nombreContacto">Contacto Principal</Label>
+                            <Input id="nombreContacto" name="nombreContacto" placeholder="Nombre del representante o vendedor" />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -135,19 +141,30 @@ export function NewSupplierModal({ onSuccess }: { onSuccess?: () => void }) {
                         <Input id="direccion" name="direccion" placeholder="Ciudad, Calle, Local..." />
                     </div>
 
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <Label htmlFor="condicionPago">Términos de Pago</Label>
+                            <Select value={condicionPago} onValueChange={setCondicionPago}>
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Contado">Contado</SelectItem>
+                                    <SelectItem value="Crédito 15 días">Crédito 15 días</SelectItem>
+                                    <SelectItem value="Crédito 30 días">Crédito 30 días</SelectItem>
+                                    <SelectItem value="Crédito 60 días">Crédito 60 días</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="limiteCredito">Límite de Crédito ($)</Label>
+                            <Input id="limiteCredito" name="limiteCredito" type="number" step="0.01" placeholder="0.00" />
+                        </div>
+                    </div>
+
                     <div>
-                        <Label htmlFor="condicionPago">Términos de Pago por Defecto</Label>
-                        <Select value={condicionPago} onValueChange={setCondicionPago}>
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Contado">Contado</SelectItem>
-                                <SelectItem value="Crédito 15 días">Crédito 15 días</SelectItem>
-                                <SelectItem value="Crédito 30 días">Crédito 30 días</SelectItem>
-                                <SelectItem value="Crédito 60 días">Crédito 60 días</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <Label htmlFor="observaciones">Observaciones / Notas internas</Label>
+                        <Input id="observaciones" name="observaciones" placeholder="Condiciones especiales, horarios de cobro..." />
                     </div>
 
                     <DialogFooter className="pt-4">

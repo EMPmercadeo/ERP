@@ -98,6 +98,16 @@ const statusConfig: Record<string, {
         variant: "success",
         icon: CheckCircle2,
     },
+    parcialmente_entregado: {
+        label: "Parcialmente Entregado",
+        variant: "warning",
+        icon: Clock,
+    },
+    "parcialmente entregado": {
+        label: "Parcialmente Entregado",
+        variant: "warning",
+        icon: Clock,
+    },
     facturado: {
         label: "Facturado",
         variant: "success",
@@ -126,6 +136,8 @@ const statusClassMap: Record<string, string> = {
     // Order / Delivery statuses
     en_proceso: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
     entregado: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
+    parcialmente_entregado: "bg-warning-bg text-warning border-transparent hover:bg-warning-bg/90",
+    "parcialmente entregado": "bg-warning-bg text-warning border-transparent hover:bg-warning-bg/90",
     facturado: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
 }
 

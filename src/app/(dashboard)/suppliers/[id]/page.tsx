@@ -37,10 +37,13 @@ export default async function SupplierDetailPage(props: { params: Promise<{ id: 
         dv: supplier.dv || '',
         razonSocial: supplier.razonSocial,
         nombreComercial: supplier.nombreComercial || '',
+        nombreContacto: supplier.nombreContacto || '',
         direccion: supplier.direccion || '',
         email: supplier.email || '',
         telefono: supplier.telefono || '',
         saldoPendiente: supplier.saldoPendiente.toNumber(),
+        limiteCredito: supplier.limiteCredito ? supplier.limiteCredito.toNumber() : null,
+        observaciones: supplier.observaciones || '',
         condicionPago: supplier.condicionPago,
         estado: supplier.estado,
         createdAt: supplier.createdAt.toISOString()

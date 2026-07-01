@@ -28,22 +28,29 @@ export async function createSupplierPayment(prevState: any, formData: FormData) 
     const { empresaId, userId } = await getTenantContext();
 
     try {
-        const compra = await prisma.compra.findFirst({
-            where: { id: data.compraId, empresaId }
-        });
-
-        if (!compra) {
-            return { message: 'Factura de compra no encontrada o acceso denegado.' };
-        }
-
-        if (Number(data.monto) > Number(compra.saldoPendiente) + 0.01) {
-            return { message: 'El monto a pagar no puede ser mayor al saldo pendiente de la factura.' };
-        }
-
-        const nuevoSaldoCompra = Math.max(0, Number(compra.saldoPendiente) - Number(data.monto));
-        const nuevoEstadoPago = nuevoSaldoCompra === 0 ? 'pagada' : 'parcial';
-
         await prisma.$transaction(async (tx) => {
+            const compra = await tx.compra.findFirst({
+                where: { id: data.compraId, empresaId }
+            });
+
+            if (!compra) {
+                throw new Error('Factura de compra no encontrada o acceso denegado.');
+            }
+
+            const sumPagos = await tx.pagoProveedor.aggregate({
+                _sum: { montoAplicado: true },
+                where: { compraId: data.compraId }
+            });
+
+            const saldoRealCompra = Number(compra.totalNeto) - Number(sumPagos._sum.montoAplicado || 0);
+
+            if (Number(data.monto) > saldoRealCompra + 0.005) {
+                throw new Error(`Sobrepago rechazado: El monto a pagar ($${data.monto.toFixed(2)}) excede el saldo disponible ($${saldoRealCompra.toFixed(2)}) de la factura.`);
+            }
+
+            const nuevoSaldoCompra = Math.max(0, saldoRealCompra - Number(data.monto));
+            const nuevoEstadoPago = nuevoSaldoCompra <= 0.005 ? 'pagada' : 'parcial';
+
             // Create payment record
             await tx.pagoProveedor.create({
                 data: {
@@ -78,12 +85,18 @@ export async function createSupplierPayment(prevState: any, formData: FormData) 
             });
         });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Create Supplier Payment Error:', error);
-        return { message: 'Error al registrar el pago al proveedor.' };
+        return { success: false, message: error?.message || 'Error al registrar el pago al proveedor.' };
     }
 
     revalidatePath('/purchases');
     revalidatePath('/suppliers');
+    revalidatePath(`/suppliers/${data.proveedorId}`);
+
+    if (formData.get('noRedirect') === 'true') {
+        return { success: true, message: 'Pago aplicado exitosamente.' };
+    }
+
     redirect('/purchases');
 }

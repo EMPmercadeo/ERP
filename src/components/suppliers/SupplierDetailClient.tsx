@@ -31,10 +31,13 @@ interface SupplierDetailProps {
         dv: string;
         razonSocial: string;
         nombreComercial: string;
+        nombreContacto?: string;
         direccion: string;
         email: string;
         telefono: string;
         saldoPendiente: number;
+        limiteCredito?: number | null;
+        observaciones?: string;
         condicionPago: string;
         estado: string;
         createdAt: string;
@@ -98,13 +101,15 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
     );
 
     // Calculate metrics dynamically
+    const validPurchases = useMemo(() => purchases.filter(p => p.estadoPago !== 'anulada'), [purchases]);
+
     const totalComprado = useMemo(() => {
-        return purchases.reduce((sum, p) => sum + p.totalNeto, 0);
-    }, [purchases]);
+        return validPurchases.reduce((sum, p) => sum + p.totalNeto, 0);
+    }, [validPurchases]);
 
     const calculatedSaldoPendiente = useMemo(() => {
-        return purchases.reduce((sum, p) => sum + p.saldoPendiente, 0);
-    }, [purchases]);
+        return validPurchases.reduce((sum, p) => sum + p.saldoPendiente, 0);
+    }, [validPurchases]);
 
     // Build Contable Ledger (Chronological transactions statement)
     const ledger = useMemo(() => {
@@ -112,9 +117,9 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
             ...purchases.map(p => ({
                 id: p.id,
                 date: new Date(p.fechaEmision),
-                description: `Compra Factura #${p.numeroFactura}`,
-                type: 'charge' as const, // Cargo (deuda aumenta)
-                amount: p.totalNeto,
+                description: `Compra Factura #${p.numeroFactura}${p.estadoPago === 'anulada' ? ' [ANULADA]' : ''}`,
+                type: 'charge' as const,
+                amount: p.estadoPago === 'anulada' ? 0 : p.totalNeto,
             })),
             ...payments.map(pay => {
                 const purchase = purchases.find(pur => pur.id === pay.compraId);
@@ -292,6 +297,13 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2.5">
+                                        <Building2 className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
+                                        <div>
+                                            <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Contacto Principal</span>
+                                            <span className="text-slate-800 font-medium">{supplier.nombreContacto || 'No especificado'}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-2.5">
                                         <Mail className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Correo Electrónico</span>
@@ -319,6 +331,20 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Términos de Pago</span>
                                             <span className="text-slate-800 font-medium">{supplier.condicionPago}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-2.5">
+                                        <DollarSign className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
+                                        <div>
+                                            <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Límite de Crédito</span>
+                                            <span className="text-slate-800 font-medium">{supplier.limiteCredito ? formatCurrency(supplier.limiteCredito) : 'Sin límite definido'}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-2.5">
+                                        <FileText className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
+                                        <div>
+                                            <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Observaciones</span>
+                                            <span className="text-slate-800 font-medium">{supplier.observaciones || 'Sin notas adicionales'}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2.5">

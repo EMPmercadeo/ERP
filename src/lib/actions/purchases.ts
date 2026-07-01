@@ -47,6 +47,10 @@ export async function createPurchase(prevState: any, formData: FormData) {
             return { message: 'Proveedor no encontrado o acceso denegado.' };
         }
 
+        if (proveedor.estado === 'archivado' || proveedor.estado === 'inactivo' || proveedor.estado === 'bloqueado') {
+            return { message: `No se puede registrar compras a un proveedor en estado "${proveedor.estado}". Reactívelo en la gestión de proveedores.` };
+        }
+
         // Calculate totals
         let subtotal = 0;
         let totalDescuento = 0;
@@ -128,14 +132,23 @@ export async function createPurchase(prevState: any, formData: FormData) {
             }
         });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Create Purchase Error:', error);
+        if (error?.code === 'P2002') {
+            return { message: 'Este número de factura ya fue registrado para este proveedor.' };
+        }
         return { message: 'Error al registrar la factura de compra.' };
     }
 
     revalidatePath('/purchases');
     revalidatePath('/suppliers');
+    revalidatePath(`/suppliers/${data.proveedorId}`);
     revalidatePath('/products');
+
+    if (formData.get('noRedirect') === 'true') {
+        return { success: true, message: 'Factura registrada exitosamente.' };
+    }
+
     redirect('/purchases');
 }
 
@@ -189,5 +202,68 @@ export async function deletePurchase(id: string) {
     } catch (error) {
         console.error('Delete Purchase Error:', error);
         return { success: false, error: 'Error al eliminar la compra.' };
+    }
+}
+
+export async function anularPurchase(id: string, motivo?: string) {
+    try {
+        const { empresaId } = await getTenantContext();
+        const compra = await prisma.compra.findFirst({
+            where: { id, empresaId },
+            include: { items: true, pagos: true }
+        });
+
+        if (!compra) {
+            return { success: false, error: 'Compra no encontrada o acceso denegado.' };
+        }
+
+        if (compra.estadoPago === 'anulada') {
+            return { success: false, error: 'Esta factura ya se encuentra anulada.' };
+        }
+
+        if (compra.pagos && compra.pagos.length > 0) {
+            return { success: false, error: 'No se puede anular una factura con pagos aplicados. Anule primero los pagos.' };
+        }
+
+        await prisma.$transaction(async (tx) => {
+            // Revert inventory stock
+            for (const item of compra.items) {
+                if (item.productoId) {
+                    await tx.producto.updateMany({
+                        where: { id: item.productoId, empresaId },
+                        data: {
+                            stockActual: { decrement: Math.round(Number(item.cantidad)) }
+                        }
+                    });
+                }
+            }
+
+            // Decrement supplier pending balance
+            await tx.proveedor.update({
+                where: { id: compra.proveedorId },
+                data: {
+                    saldoPendiente: { decrement: compra.saldoPendiente }
+                }
+            });
+
+            // Mark purchase as voided
+            await tx.compra.update({
+                where: { id },
+                data: {
+                    estadoPago: 'anulada',
+                    saldoPendiente: 0,
+                    observaciones: motivo ? `${compra.observaciones || ''} [Anulada: ${motivo}]`.trim() : (compra.observaciones || 'Factura Anulada')
+                }
+            });
+        });
+
+        revalidatePath('/purchases');
+        revalidatePath('/suppliers');
+        revalidatePath(`/suppliers/${compra.proveedorId}`);
+        revalidatePath('/products');
+        return { success: true, message: 'Factura de compra anulada correctamente.' };
+    } catch (error) {
+        console.error('Anular Purchase Error:', error);
+        return { success: false, error: 'Error al anular la compra.' };
     }
 }

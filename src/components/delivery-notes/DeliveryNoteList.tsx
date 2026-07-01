@@ -4,13 +4,20 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Search, FileText, CheckSquare, Plus } from 'lucide-react';
-import { invoiceGroupedDeliveryNotes, updateDeliveryNoteStatus } from '@/lib/actions/delivery-notes';
+import { Search, CheckSquare, Plus, Eye, FileText, ArrowRight } from 'lucide-react';
+import { invoiceGroupedDeliveryNotes } from '@/lib/actions/delivery-notes';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -24,6 +31,7 @@ export interface DeliveryNoteData {
     id: string;
     numero: string;
     fechaEmision: string;
+    fechaEntrega: string;
     totalNeto: number;
     estado: string;
     observaciones: string | null;
@@ -32,6 +40,12 @@ export interface DeliveryNoteData {
         razonSocial: string;
         ruc: string;
     };
+    factura: {
+        id: string;
+        numero: string;
+    } | null;
+    itemsCount: number;
+    itemsSummary: string;
 }
 
 function formatCurrency(value: number) {
@@ -45,6 +59,10 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
     const router = useRouter();
     const [notes, setNotes] = useState<DeliveryNoteData[]>(initialData);
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('todos');
+    const [invoicedFilter, setInvoicedFilter] = useState('todas');
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
@@ -56,15 +74,41 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
 
     if (!isMounted) return null;
 
-    const filteredNotes = notes.filter((n) =>
-        n.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        n.cliente.razonSocial.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        n.cliente.ruc.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredNotes = notes.filter((n) => {
+        // Search term filter
+        const matchesSearch = 
+            n.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            n.cliente.razonSocial.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            n.cliente.ruc.toLowerCase().includes(searchTerm.toLowerCase());
+        if (!matchesSearch) return false;
+
+        // Status filter
+        if (statusFilter !== 'todos' && n.estado !== statusFilter) {
+            return false;
+        }
+
+        // Invoiced filter
+        if (invoicedFilter === 'facturadas' && !n.factura && n.estado !== 'facturado') {
+            return false;
+        }
+        if (invoicedFilter === 'no_facturadas' && (n.factura || n.estado === 'facturado')) {
+            return false;
+        }
+
+        // Date range filter
+        if (dateFrom && n.fechaEmision < dateFrom) {
+            return false;
+        }
+        if (dateTo && n.fechaEmision > dateTo) {
+            return false;
+        }
+
+        return true;
+    });
 
     const handleSelectAll = (checked: boolean) => {
         if (checked) {
-            const pending = filteredNotes.filter(n => n.estado !== 'facturado').map(n => n.id);
+            const pending = filteredNotes.filter(n => n.estado !== 'facturado' && !n.factura).map(n => n.id);
             setSelectedIds(pending);
         } else {
             setSelectedIds([]);
@@ -104,7 +148,7 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Notas de Entrega (Remisiones)</h1>
                     <p className="text-sm text-gray-500 mt-1">
-                        Control de entregas físicas, rebaja inmediata de stock y facturación por agrupación
+                        Control de entregas, inventario y documentos relacionados
                     </p>
                 </div>
                 <div className="flex gap-2">
@@ -129,14 +173,61 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
 
             <Card className="mb-6 shadow-sm border-gray-200">
                 <CardContent className="p-4">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                            placeholder="Buscar por número, cliente o RUC..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 w-full md:w-96"
-                        />
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="relative md:col-span-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                                placeholder="Buscar número, cliente o RUC..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-9 w-full"
+                            />
+                        </div>
+                        <div>
+                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Estado" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="todos">Todos los estados</SelectItem>
+                                    <SelectItem value="borrador">Borrador</SelectItem>
+                                    <SelectItem value="pendiente">Pendiente</SelectItem>
+                                    <SelectItem value="parcialmente_entregado">Parcialmente entregado</SelectItem>
+                                    <SelectItem value="entregado">Entregado</SelectItem>
+                                    <SelectItem value="facturado">Facturado</SelectItem>
+                                    <SelectItem value="anulado">Anulado</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Select value={invoicedFilter} onValueChange={setInvoicedFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Facturación" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="todas">Todas</SelectItem>
+                                    <SelectItem value="facturadas">Facturadas</SelectItem>
+                                    <SelectItem value="no_facturadas">No facturadas</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex gap-2 items-center">
+                            <Input
+                                type="date"
+                                value={dateFrom}
+                                onChange={(e) => setDateFrom(e.target.value)}
+                                className="text-xs"
+                                placeholder="Desde"
+                            />
+                            <span className="text-gray-400 text-xs">-</span>
+                            <Input
+                                type="date"
+                                value={dateTo}
+                                onChange={(e) => setDateTo(e.target.value)}
+                                className="text-xs"
+                                placeholder="Hasta"
+                            />
+                        </div>
                     </div>
                 </CardContent>
             </Card>
@@ -152,26 +243,34 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
                                             type="checkbox"
                                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                             onChange={(e) => handleSelectAll(e.target.checked)}
-                                            checked={selectedIds.length > 0 && selectedIds.length === filteredNotes.filter(n => n.estado !== 'facturado').length}
+                                            checked={selectedIds.length > 0 && selectedIds.length === filteredNotes.filter(n => n.estado !== 'facturado' && !n.factura).length}
                                         />
                                     </TableHead>
                                     <TableHead className="font-semibold text-gray-600">Número</TableHead>
                                     <TableHead className="font-semibold text-gray-600">Cliente</TableHead>
-                                    <TableHead className="font-semibold text-gray-600">Emisión</TableHead>
-                                    <TableHead className="font-semibold text-gray-600 text-right">Total Neto</TableHead>
+                                    <TableHead className="font-semibold text-gray-600">Fecha de emisión</TableHead>
+                                    <TableHead className="font-semibold text-gray-600">Fecha de entrega</TableHead>
+                                    <TableHead className="font-semibold text-gray-600">Items</TableHead>
                                     <TableHead className="font-semibold text-gray-600">Estado</TableHead>
+                                    <TableHead className="font-semibold text-gray-600">Factura asociada</TableHead>
+                                    <TableHead className="font-semibold text-gray-600 text-right">Total</TableHead>
+                                    <TableHead className="font-semibold text-gray-600 text-right">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {filteredNotes.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-12 text-gray-500">
-                                            No se encontraron notas de entrega registradas.
+                                        <TableCell colSpan={10} className="text-center py-14 text-gray-500">
+                                            <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+                                                <FileText className="h-10 w-10 text-gray-300 mb-2" />
+                                                <p className="font-medium text-gray-700 mb-1">No hay notas de entrega registradas.</p>
+                                                <p className="text-sm text-gray-500">Crea una nota para documentar una entrega física a un cliente.</p>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ) : (
                                     filteredNotes.map((note) => {
-                                        const isFacturado = note.estado === 'facturado';
+                                        const isFacturado = note.estado === 'facturado' || !!note.factura;
                                         return (
                                             <TableRow 
                                                 key={note.id} 
@@ -179,7 +278,7 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
                                                 onClick={() => router.push(`/delivery-notes/${note.id}`)}
                                             >
                                                 <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-                                                    {!isFacturado && (
+                                                    {!isFacturado && note.estado !== 'anulado' && (
                                                         <input
                                                             type="checkbox"
                                                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -194,13 +293,44 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
                                                     <div className="text-xs text-gray-500">RUC: {note.cliente.ruc}</div>
                                                 </TableCell>
                                                 <TableCell className="text-gray-600">{note.fechaEmision}</TableCell>
+                                                <TableCell className="text-gray-600">{note.fechaEntrega}</TableCell>
+                                                <TableCell>
+                                                    <div className="text-sm text-gray-900 font-medium">{note.itemsCount} ítem{note.itemsCount !== 1 ? 's' : ''}</div>
+                                                    <div className="text-xs text-gray-500 truncate max-w-[160px]" title={note.itemsSummary}>
+                                                        {note.itemsSummary}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <StatusBadge status={note.estado} />
+                                                </TableCell>
+                                                <TableCell>
+                                                    {note.factura ? (
+                                                        <span 
+                                                            className="inline-flex items-center text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-200 hover:underline"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                router.push(`/invoices/${note.factura?.id}`);
+                                                            }}
+                                                        >
+                                                            {note.factura.numero}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-xs text-gray-400">No facturada</span>
+                                                    )}
+                                                </TableCell>
                                                 <TableCell className="text-right font-semibold text-gray-900">
                                                     {formatCurrency(note.totalNeto)}
                                                 </TableCell>
-                                                <TableCell>
-                                                    <StatusBadge
-                                                        status={note.estado}
-                                                    />
+                                                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => router.push(`/delivery-notes/${note.id}`)}
+                                                        className="text-gray-600 hover:text-gray-900"
+                                                        title="Ver detalle"
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
                                                 </TableCell>
                                             </TableRow>
                                         );

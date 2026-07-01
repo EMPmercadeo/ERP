@@ -198,8 +198,9 @@ export async function createDeliveryNote(prevState: any, formData: FormData) {
                 }
             });
 
-            // If state is entregado, decrease inventory stock & register Kardex movement
-            if (finalEstado === 'entregado') {
+            // If state is entregado, parcialmente entregado or despachado, decrease inventory stock & register Kardex movement
+            const isDeliveredState = ['entregado', 'parcialmente_entregado', 'parcialmente entregado', 'despachado'].includes(finalEstado);
+            if (isDeliveredState) {
                 for (const item of processedItems) {
                     if (item.productoId && item.cantidad > 0) {
                         await tx.producto.updateMany({
@@ -282,8 +283,9 @@ export async function updateDeliveryNoteStatus(id: string, nuevoEstado: string, 
             });
 
             // 1. Inventory Logic: Deduct stock when delivering
-            const wasDelivered = estadoAnterior === 'entregado' || estadoAnterior === 'facturado';
-            const isNowDelivered = nuevoEstado === 'entregado' || nuevoEstado === 'facturado';
+            const deliveredStates = ['entregado', 'parcialmente_entregado', 'parcialmente entregado', 'despachado', 'facturado'];
+            const wasDelivered = deliveredStates.includes(estadoAnterior);
+            const isNowDelivered = deliveredStates.includes(nuevoEstado);
 
             if (!wasDelivered && isNowDelivered) {
                 // Deduct stock and log salida
