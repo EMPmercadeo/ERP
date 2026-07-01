@@ -51,6 +51,8 @@ model Empresa {
   productImages      ProductImage[]
   pedidosVenta       PedidoVenta[]
   albaranesVenta     AlbaranVenta[]
+  movimientosInventario MovimientoInventario[]
+  historialEstadosAlbaranes AlbaranEstadoHistorial[]
 
   @@index([createdAt])
 }
@@ -132,6 +134,8 @@ model Usuario {
   pagosProveedores PagoProveedor[]   @relation("PagoProveedorUsuario")
   pedidosVenta     PedidoVenta[]     @relation("PedidoCreador")
   albaranesVenta   AlbaranVenta[]    @relation("AlbaranCreador")
+  albaranesResponsable AlbaranVenta[] @relation("AlbaranResponsable")
+  historialEstadosModificados AlbaranEstadoHistorial[]
   empresa          Empresa           @relation(fields: [empresaId], references: [id])
 
   @@index([empresaId])
@@ -190,6 +194,7 @@ model Producto {
   albaranItems     AlbaranVentaItem[]
   empresa          Empresa          @relation(fields: [empresaId], references: [id])
   productImages    ProductImage[]
+  movimientos      MovimientoInventario[]
 
   @@unique([empresaId, codigoInterno])
   @@index([empresaId])
@@ -326,6 +331,7 @@ model Cotizacion {
   sucursal       Sucursal         @relation(fields: [sucursalId], references: [id])
   items          CotizacionItem[]
   pedidos        PedidoVenta[]
+  albaranes      AlbaranVenta[]
 
   @@index([empresaId, fechaEmision])
   @@index([clienteId])
@@ -611,22 +617,36 @@ model AlbaranVenta {
   estado          String             @default("pendiente") // pendiente | entregado | facturado | anulado
   pedidoId        String?
   facturaId       String?
+  cotizacionId    String?
   firmaClienteUrl String?
   observaciones   String?
+  fechaEstimadaEntrega DateTime?
+  fechaRealEntrega     DateTime?
+  direccionEntrega     String?
+  nombreContacto       String?
+  telefonoContacto     String?
+  notasInternas        String?
+  notasCliente         String?
+  responsableId        String?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   caja            Caja               @relation(fields: [cajaId], references: [id])
   cliente         Cliente            @relation(fields: [clienteId], references: [id])
   creador         Usuario            @relation("AlbaranCreador", fields: [creadorId], references: [id])
+  responsable     Usuario?           @relation("AlbaranResponsable", fields: [responsableId], references: [id])
   empresa         Empresa            @relation(fields: [empresaId], references: [id])
   sucursal        Sucursal           @relation(fields: [sucursalId], references: [id])
   pedido          PedidoVenta?       @relation(fields: [pedidoId], references: [id])
   factura         Factura?           @relation(fields: [facturaId], references: [id])
+  cotizacion      Cotizacion?        @relation(fields: [cotizacionId], references: [id])
   items           AlbaranVentaItem[]
+  historialEstados AlbaranEstadoHistorial[]
 
   @@index([empresaId, fechaEmision])
   @@index([clienteId])
   @@index([estado])
+  @@index([cotizacionId])
+  @@index([responsableId])
 }
 
 model AlbaranVentaItem {
@@ -635,6 +655,8 @@ model AlbaranVentaItem {
   productoId      String
   descripcion     String
   cantidad        Decimal
+  cantidadPedida  Decimal      @default(0)
+  cantidadPendiente Decimal    @default(0)
   precioUnitario  Decimal
   descuento       Decimal      @default(0)
   codigoTasaItbms String
@@ -645,6 +667,41 @@ model AlbaranVentaItem {
 
   @@index([albaranId])
   @@index([productoId])
+}
+
+model AlbaranEstadoHistorial {
+  id             String       @id @default(cuid())
+  empresaId      String
+  albaranId      String
+  estadoAnterior String
+  estadoNuevo    String
+  usuarioId      String
+  fechaCambio    DateTime     @default(now())
+  notas          String?
+  albaran        AlbaranVenta @relation(fields: [albaranId], references: [id], onDelete: Cascade)
+  usuario        Usuario      @relation(fields: [usuarioId], references: [id])
+  empresa        Empresa      @relation(fields: [empresaId], references: [id])
+
+  @@index([empresaId])
+  @@index([albaranId])
+}
+
+model MovimientoInventario {
+  id           String    @id @default(cuid())
+  empresaId    String
+  productoId   String
+  tipo         String    // entrada | salida
+  cantidad     Int
+  concepto     String    // compra | venta | albaran_entrega | albaran_anulado | ajuste
+  referenciaId String?   // ID del documento relacionado
+  fecha        DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  producto     Producto  @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  empresa      Empresa   @relation(fields: [empresaId], references: [id])
+
+  @@index([empresaId])
+  @@index([productoId])
+  @@index([fecha])
 }
 
 

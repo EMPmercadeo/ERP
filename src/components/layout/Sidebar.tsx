@@ -52,7 +52,7 @@ const mainNavigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Cotizaciones', href: '/quotes', icon: FileText },
     { name: 'Pedidos', href: '/orders', icon: ClipboardList },
-    { name: 'Albaranes', href: '/delivery-notes', icon: Truck },
+    { name: 'Notas de Entrega', href: '/delivery-notes', icon: Truck },
     { name: 'Facturas', href: '/invoices', icon: FileText },
     { name: 'Clientes', href: '/clients', icon: Users },
     { name: 'Proveedores', href: '/suppliers', icon: Building2 },

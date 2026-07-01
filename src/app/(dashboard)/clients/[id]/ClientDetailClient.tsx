@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 interface ClientDetailProps {
     client: {
@@ -61,6 +62,13 @@ interface ClientDetailProps {
         metodoPago: string;
         referencia: string;
     }>;
+    deliveryNotes?: Array<{
+        id: string;
+        numero: string;
+        fechaEmision: string;
+        totalNeto: number;
+        estado: string;
+    }>;
     initialTab: string;
 }
 
@@ -91,10 +99,10 @@ function formatDate(dateStr: string) {
     });
 }
 
-export function ClientDetailClient({ client, invoices, payments, initialTab }: ClientDetailProps) {
+export function ClientDetailClient({ client, invoices, payments, deliveryNotes = [], initialTab }: ClientDetailProps) {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<'info' | 'invoices' | 'statement'>(
-        (initialTab === 'invoices' || initialTab === 'statement') ? initialTab : 'info'
+    const [activeTab, setActiveTab] = useState<'info' | 'invoices' | 'statement' | 'delivery-notes'>(
+        (initialTab === 'invoices' || initialTab === 'statement' || initialTab === 'delivery-notes') ? initialTab : 'info'
     );
 
     // Calculate metrics
@@ -252,6 +260,15 @@ export function ClientDetailClient({ client, invoices, payments, initialTab }: C
                                 }`}
                         >
                             Estado de Cuenta
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('delivery-notes')}
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'delivery-notes'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                                }`}
+                        >
+                            Notas de Entrega ({deliveryNotes.length})
                         </button>
                     </div>
 
@@ -431,6 +448,53 @@ export function ClientDetailClient({ client, invoices, payments, initialTab }: C
                                             <TableRow>
                                                 <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
                                                     Sin movimientos contables registrados.
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {activeTab === 'delivery-notes' && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Notas de Entrega</CardTitle>
+                                <CardDescription>Documentos de entrega física y remisiones</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Número de Documento</TableHead>
+                                            <TableHead>Fecha Emisión</TableHead>
+                                            <TableHead className="text-right">Monto Estimado</TableHead>
+                                            <TableHead>Estado</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {deliveryNotes.length > 0 ? deliveryNotes.map(note => (
+                                            <TableRow 
+                                                key={note.id} 
+                                                className="cursor-pointer hover:bg-slate-50/80"
+                                                onClick={() => router.push(`/delivery-notes/${note.id}`)}
+                                            >
+                                                <TableCell className="font-semibold text-slate-800">
+                                                    {note.numero}
+                                                </TableCell>
+                                                <TableCell>{formatDate(note.fechaEmision)}</TableCell>
+                                                <TableCell className="text-right font-medium">
+                                                    {formatCurrency(note.totalNeto)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <StatusBadge status={note.estado} />
+                                                </TableCell>
+                                            </TableRow>
+                                        )) : (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+                                                    No se encontraron notas de entrega registradas.
                                                 </TableCell>
                                             </TableRow>
                                         )}

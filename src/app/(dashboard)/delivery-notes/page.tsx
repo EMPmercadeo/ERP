@@ -37,7 +37,7 @@ export default async function DeliveryNotesPage() {
 
     return (
         <>
-            <Topbar title="Albaranes de Venta" />
+            <Topbar title="Notas de Entrega" />
             <DeliveryNoteList initialData={formattedNotes} />
         </>
     );

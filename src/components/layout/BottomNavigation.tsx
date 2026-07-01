@@ -205,7 +205,7 @@ export function BottomNavigation() {
                                     </Link>
                                     <Link href="/delivery-notes" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
                                         <Truck className="h-4 w-4 text-brand-1" />
-                                        <span>Albaranes</span>
+                                        <span>Entregas</span>
                                     </Link>
                                     <Link href="/suppliers" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
                                         <Building2 className="h-4 w-4 text-brand-1" />

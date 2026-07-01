@@ -5,9 +5,14 @@ import { DeliveryNoteDetailClient } from '@/components/delivery-notes/DeliveryNo
 
 export const dynamic = 'force-dynamic';
 
-export default async function DeliveryNoteDetailPage(props: { params: Promise<{ id: string }> }) {
+export default async function DeliveryNoteDetailPage(props: { 
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ print?: string }>;
+}) {
     const params = await props.params;
+    const searchParams = await props.searchParams;
     const { id } = params;
+    const printParam = searchParams.print;
     const { empresaId } = await getTenantContext();
 
     const note = await prisma.albaranVenta.findFirst({
@@ -29,11 +34,32 @@ export default async function DeliveryNoteDetailPage(props: { params: Promise<{ 
                     nombre: true
                 }
             },
+            responsable: {
+                select: {
+                    nombre: true
+                }
+            },
+            cotizacion: {
+                select: {
+                    id: true,
+                    numero: true
+                }
+            },
             items: true,
             factura: {
                 select: {
                     id: true,
                     numeroCompleto: true
+                }
+            },
+            historialEstados: {
+                orderBy: { fechaCambio: 'asc' },
+                include: {
+                    usuario: {
+                        select: {
+                            nombre: true
+                        }
+                    }
                 }
             }
         }
@@ -52,7 +78,13 @@ export default async function DeliveryNoteDetailPage(props: { params: Promise<{ 
         totalDescuento: note.totalDescuento.toNumber(),
         totalItbms: note.totalItbms.toNumber(),
         totalNeto: note.totalNeto.toNumber(),
-        observaciones: note.observaciones || '',
+        observaciones: note.observaciones || '', // customer notes
+        direccionEntrega: note.direccionEntrega || '',
+        nombreContacto: note.nombreContacto || '',
+        telefonoContacto: note.telefonoContacto || '',
+        fechaEstimadaEntrega: note.fechaEstimadaEntrega ? note.fechaEstimadaEntrega.toISOString() : null,
+        fechaRealEntrega: note.fechaRealEntrega ? note.fechaRealEntrega.toISOString() : null,
+        notasInternas: note.notasInternas || '',
         cliente: {
             id: note.cliente.id,
             razonSocial: note.cliente.razonSocial,
@@ -65,10 +97,19 @@ export default async function DeliveryNoteDetailPage(props: { params: Promise<{ 
         creador: {
             nombre: note.creador.nombre
         },
+        responsable: note.responsable ? {
+            nombre: note.responsable.nombre
+        } : null,
+        cotizacion: note.cotizacion ? {
+            id: note.cotizacion.id,
+            numero: note.cotizacion.numero
+        } : null,
         items: note.items.map(item => ({
             id: item.id,
             descripcion: item.descripcion,
-            cantidad: item.cantidad.toNumber(),
+            cantidad: item.cantidad.toNumber(), // quantity delivered
+            cantidadPedida: item.cantidadPedida.toNumber(),
+            cantidadPendiente: item.cantidadPendiente.toNumber(),
             precioUnitario: item.precioUnitario.toNumber(),
             descuento: item.descuento.toNumber(),
             montoItbms: item.montoItbms.toNumber(),
@@ -77,10 +118,20 @@ export default async function DeliveryNoteDetailPage(props: { params: Promise<{ 
         factura: note.factura ? {
             id: note.factura.id,
             numeroCompleto: note.factura.numeroCompleto
-        } : null
+        } : null,
+        historialEstados: note.historialEstados.map(h => ({
+            id: h.id,
+            estadoAnterior: h.estadoAnterior,
+            estadoNuevo: h.estadoNuevo,
+            fechaCambio: h.fechaCambio.toISOString(),
+            notas: h.notas || '',
+            usuario: {
+                nombre: h.usuario.nombre
+            }
+        }))
     };
 
     return (
-        <DeliveryNoteDetailClient note={formattedNote} />
+        <DeliveryNoteDetailClient note={formattedNote} printMode={printParam === 'true'} />
     );
 }

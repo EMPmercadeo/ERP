@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, startTransition } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Plus, Trash, ArrowLeft, Save } from 'lucide-react';
+import { Plus, Trash, ArrowLeft, Save, FileText } from 'lucide-react';
 import { createDeliveryNote } from '@/lib/actions/delivery-notes';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
@@ -24,13 +24,29 @@ import { Textarea } from '@/components/ui/textarea';
 interface FormProps {
     clients: Array<{ id: string; razonSocial: string; ruc: string }>;
     products: Array<{ id: string; codigo: string; descripcion: string; precio: number; itbms: string }>;
+    quotes: Array<{
+        id: string;
+        numero: string;
+        clienteId: string;
+        items: Array<{
+            productoId: string | null;
+            descripcion: string;
+            cantidad: number;
+            precioUnitario: number;
+            codigoTasaItbms: string;
+            descuento: number;
+        }>;
+    }>;
+    users: Array<{ id: string; nombre: string }>;
     companyId: string;
 }
 
 interface FormItem {
-    productoId: string;
+    productoId: string | null;
     descripcion: string;
-    cantidad: number;
+    cantidadPedida: number;
+    cantidadEntregada: number;
+    cantidadPendiente: number;
     precioUnitario: number;
     descuento: number;
     codigoTasaItbms: string;
@@ -43,17 +59,24 @@ function formatCurrency(value: number) {
     }).format(value);
 }
 
-export function DeliveryNoteForm({ clients, products }: FormProps) {
+export function DeliveryNoteForm({ clients, products, quotes, users }: FormProps) {
     const router = useRouter();
     const [clienteId, setClienteId] = useState('');
-    const [observaciones, setObservaciones] = useState('');
+    const [cotizacionId, setCotizacionId] = useState('');
+    const [direccionEntrega, setDireccionEntrega] = useState('');
+    const [nombreContacto, setNombreContacto] = useState('');
+    const [telefonoContacto, setTelefonoContacto] = useState('');
+    const [fechaEstimadaEntrega, setFechaEstimadaEntrega] = useState('');
+    const [notasInternas, setNotasInternas] = useState('');
+    const [notasCliente, setNotasCliente] = useState('');
+    const [responsableId, setResponsableId] = useState('');
+    const [estado, setEstado] = useState('pendiente'); // borrador | pendiente
     const [items, setItems] = useState<FormItem[]>([]);
     const [loading, setLoading] = useState(false);
 
     // Selected product state for add item form
     const [selProductId, setSelProductId] = useState('');
     const [selQty, setSelQty] = useState('1');
-    const [selDiscount, setSelDiscount] = useState('0');
 
     // Totals calculation
     const totals = useMemo(() => {
@@ -62,7 +85,8 @@ export function DeliveryNoteForm({ clients, products }: FormProps) {
         let totalItbms = 0;
 
         items.forEach(item => {
-            const base = item.cantidad * item.precioUnitario;
+            // Totals based on quantity ordered
+            const base = item.cantidadPedida * item.precioUnitario;
             const desc = item.descuento;
             const baseImponible = base - desc;
             const tasa = item.codigoTasaItbms === '01' ? 0.07 :
@@ -83,45 +107,52 @@ export function DeliveryNoteForm({ clients, products }: FormProps) {
         };
     }, [items]);
 
-    function useMemo<T>(factory: () => T, deps: any[]): T {
-        // Simple client-side useMemo mock or just use React's useMemo
-        return React_useMemo(factory, deps);
-    }
-    
-    function React_useMemo<T>(factory: () => T, deps: any[]): T {
-        const [state, setState] = useState<T>(factory);
-        const [prevDeps, setPrevDeps] = useState(deps);
-        const changed = deps.some((dep, i) => dep !== prevDeps[i]);
-        if (changed) {
-            const next = factory();
-            setState(next);
-            setPrevDeps(deps);
-            return next;
+    // Handle quote selection & autofill
+    const handleQuoteChange = (quoteId: string) => {
+        setCotizacionId(quoteId);
+        const quote = quotes.find(q => q.id === quoteId);
+        if (quote) {
+            setClienteId(quote.clienteId);
+            
+            // Auto fill items
+            const newItems: FormItem[] = quote.items.map(item => ({
+                productoId: item.productoId,
+                descripcion: item.descripcion,
+                cantidadPedida: item.cantidad,
+                cantidadEntregada: item.cantidad, // default to complete delivery
+                cantidadPendiente: 0,
+                precioUnitario: item.precioUnitario,
+                descuento: item.descuento,
+                codigoTasaItbms: item.codigoTasaItbms
+            }));
+            setItems(newItems);
+            toast.success(`Datos cargados desde Cotización ${quote.numero}`);
         }
-        return state;
-    }
+    };
 
     const handleAddProduct = () => {
         const prod = products.find(p => p.id === selProductId);
         if (!prod) return;
 
         const qty = parseFloat(selQty) || 1;
-        const desc = parseFloat(selDiscount) || 0;
 
         // Check if product already exists in items
         const existingIdx = items.findIndex(i => i.productoId === prod.id);
-        if (existingIdx > 0 || existingIdx === 0) {
+        if (existingIdx !== -1) {
             const updated = [...items];
-            updated[existingIdx].cantidad += qty;
-            updated[existingIdx].descuento += desc;
+            updated[existingIdx].cantidadPedida += qty;
+            updated[existingIdx].cantidadEntregada += qty;
+            updated[existingIdx].cantidadPendiente = Math.max(0, updated[existingIdx].cantidadPedida - updated[existingIdx].cantidadEntregada);
             setItems(updated);
         } else {
             setItems([...items, {
                 productoId: prod.id,
                 descripcion: prod.descripcion,
-                cantidad: qty,
+                cantidadPedida: qty,
+                cantidadEntregada: qty,
+                cantidadPendiente: 0,
                 precioUnitario: prod.precio,
-                descuento: desc,
+                descuento: 0,
                 codigoTasaItbms: prod.itbms
             }]);
         }
@@ -129,7 +160,14 @@ export function DeliveryNoteForm({ clients, products }: FormProps) {
         // Reset add item form
         setSelProductId('');
         setSelQty('1');
-        setSelDiscount('0');
+    };
+
+    const handleItemQtyChange = (index: number, field: 'cantidadPedida' | 'cantidadEntregada', value: string) => {
+        const val = parseFloat(value) || 0;
+        const updated = [...items];
+        updated[index][field] = val;
+        updated[index].cantidadPendiente = Math.max(0, updated[index].cantidadPedida - updated[index].cantidadEntregada);
+        setItems(updated);
     };
 
     const handleRemoveItem = (index: number) => {
@@ -147,10 +185,25 @@ export function DeliveryNoteForm({ clients, products }: FormProps) {
             return;
         }
 
+        // Validation: delivery quantities shouldn't exceed ordered quantities
+        const invalidItem = items.find(item => item.cantidadEntregada > item.cantidadPedida);
+        if (invalidItem) {
+            toast.error(`La cantidad entregada de "${invalidItem.descripcion}" no puede superar la cantidad solicitada.`);
+            return;
+        }
+
         setLoading(true);
         const formData = new FormData();
         formData.append('clienteId', clienteId);
-        formData.append('observaciones', observaciones);
+        formData.append('cotizacionId', cotizacionId);
+        formData.append('direccionEntrega', direccionEntrega);
+        formData.append('nombreContacto', nombreContacto);
+        formData.append('telefonoContacto', telefonoContacto);
+        formData.append('fechaEstimadaEntrega', fechaEstimadaEntrega);
+        formData.append('notasInternas', notasInternas);
+        formData.append('notasCliente', notasCliente);
+        formData.append('responsableId', responsableId);
+        formData.append('estado', estado);
         formData.append('items', JSON.stringify(items));
 
         try {
@@ -160,10 +213,10 @@ export function DeliveryNoteForm({ clients, products }: FormProps) {
                 router.push('/delivery-notes');
                 router.refresh();
             } else {
-                toast.error(res?.message || 'Error al guardar el albarán.');
+                toast.error(res?.message || 'Error al guardar el documento de entrega.');
             }
         } catch (error) {
-            toast.error('Error de red al guardar el albarán.');
+            toast.error('Error de red al guardar el documento de entrega.');
         } finally {
             setLoading(false);
         }
@@ -174,7 +227,7 @@ export function DeliveryNoteForm({ clients, products }: FormProps) {
             <div className="flex items-center justify-between">
                 <Link href="/delivery-notes" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
                     <ArrowLeft className="h-4 w-4 mr-1" />
-                    Volver a Albaranes
+                    Volver a Notas de Entrega
                 </Link>
             </div>
 
@@ -183,46 +236,112 @@ export function DeliveryNoteForm({ clients, products }: FormProps) {
                 <div className="lg:col-span-2 space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Datos del Albarán</CardTitle>
+                            <CardTitle>Cabecera del Documento</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div>
-                                <Label htmlFor="clienteId">Cliente *</Label>
-                                <Select value={clienteId} onValueChange={setClienteId}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Selecciona un cliente para la entrega..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {clients.map(c => (
-                                            <SelectItem key={c.id} value={c.id}>
-                                                {c.razonSocial} (RUC: {c.ruc})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="cotizacionId">Cargar desde Cotización (Opcional)</Label>
+                                    <Select value={cotizacionId} onValueChange={handleQuoteChange}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecciona cotización..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">Ninguna</SelectItem>
+                                            {quotes.map(q => (
+                                                <SelectItem key={q.id} value={q.id}>
+                                                    Cotización #{q.numero}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="clienteId">Cliente *</Label>
+                                    <Select value={clienteId} onValueChange={setClienteId} disabled={!!cotizacionId}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecciona un cliente..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {clients.map(c => (
+                                                <SelectItem key={c.id} value={c.id}>
+                                                    {c.razonSocial} (RUC: {c.ruc})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
 
-                            <div>
-                                <Label htmlFor="observaciones">Observaciones de Entrega</Label>
-                                <Textarea 
-                                    id="observaciones" 
-                                    placeholder="Indique detalles de envío, dirección exacta de entrega, transportista, etc." 
-                                    value={observaciones}
-                                    onChange={(e) => setObservaciones(e.target.value)}
-                                />
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
+                                <div>
+                                    <Label htmlFor="direccionEntrega">Dirección de Entrega</Label>
+                                    <Input 
+                                        id="direccionEntrega" 
+                                        placeholder="Calle, Local, Edificio" 
+                                        value={direccionEntrega} 
+                                        onChange={(e) => setDireccionEntrega(e.target.value)} 
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="nombreContacto">Persona de Contacto</Label>
+                                    <Input 
+                                        id="nombreContacto" 
+                                        placeholder="Nombre del receptor" 
+                                        value={nombreContacto} 
+                                        onChange={(e) => setNombreContacto(e.target.value)} 
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="telefonoContacto">Teléfono de Contacto</Label>
+                                    <Input 
+                                        id="telefonoContacto" 
+                                        placeholder="Ej. +507 6655-4433" 
+                                        value={telefonoContacto} 
+                                        onChange={(e) => setTelefonoContacto(e.target.value)} 
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+                                <div>
+                                    <Label htmlFor="fechaEstimadaEntrega">Fecha Estimada de Entrega</Label>
+                                    <Input 
+                                        id="fechaEstimadaEntrega" 
+                                        type="date" 
+                                        value={fechaEstimadaEntrega} 
+                                        onChange={(e) => setFechaEstimadaEntrega(e.target.value)} 
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="responsableId">Responsable de la Entrega</Label>
+                                    <Select value={responsableId} onValueChange={setResponsableId}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Asigna un responsable..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {users.map(u => (
+                                                <SelectItem key={u.id} value={u.id}>
+                                                    {u.nombre}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Add Item form card */}
+                    {/* Add Item Form Card */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Productos a Entregar</CardTitle>
+                            <CardTitle>Productos o Servicios a Entregar</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                                 <div className="sm:col-span-2">
-                                    <Label>Producto / Servicio</Label>
+                                    <Label>Agregar Producto del Catálogo</Label>
                                     <Select value={selProductId} onValueChange={setSelProductId}>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Selecciona un producto..." />
@@ -261,10 +380,12 @@ export function DeliveryNoteForm({ clients, products }: FormProps) {
                                 <Table>
                                     <TableHeader className="bg-muted/50">
                                         <TableRow>
-                                            <TableHead>Producto</TableHead>
-                                            <TableHead className="text-right">Cantidad</TableHead>
+                                            <TableHead>Descripción</TableHead>
+                                            <TableHead className="text-right w-32">Cant. Solicitada</TableHead>
+                                            <TableHead className="text-right w-32">Cant. Entregada</TableHead>
+                                            <TableHead className="text-right w-24">Pendiente</TableHead>
                                             <TableHead className="text-right">Precio</TableHead>
-                                            <TableHead className="text-right">Total</TableHead>
+                                            <TableHead className="text-right">Subtotal</TableHead>
                                             <TableHead className="w-12 text-center"></TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -272,9 +393,33 @@ export function DeliveryNoteForm({ clients, products }: FormProps) {
                                         {items.length > 0 ? items.map((item, idx) => (
                                             <TableRow key={idx}>
                                                 <TableCell className="font-medium">{item.descripcion}</TableCell>
-                                                <TableCell className="text-right">{item.cantidad}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Input 
+                                                        type="number" 
+                                                        min="0.0001" 
+                                                        step="any"
+                                                        value={item.cantidadPedida} 
+                                                        onChange={(e) => handleItemQtyChange(idx, 'cantidadPedida', e.target.value)}
+                                                        className="w-24 text-right ml-auto h-8"
+                                                    />
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Input 
+                                                        type="number" 
+                                                        min="0" 
+                                                        step="any"
+                                                        value={item.cantidadEntregada} 
+                                                        onChange={(e) => handleItemQtyChange(idx, 'cantidadEntregada', e.target.value)}
+                                                        className="w-24 text-right ml-auto h-8"
+                                                    />
+                                                </TableCell>
+                                                <TableCell className="text-right font-semibold text-amber-600">
+                                                    {item.cantidadPendiente}
+                                                </TableCell>
                                                 <TableCell className="text-right">{formatCurrency(item.precioUnitario)}</TableCell>
-                                                <TableCell className="text-right">{formatCurrency(item.cantidad * item.precioUnitario)}</TableCell>
+                                                <TableCell className="text-right font-medium">
+                                                    {formatCurrency(item.cantidadPedida * item.precioUnitario)}
+                                                </TableCell>
                                                 <TableCell className="text-center">
                                                     <Button 
                                                         type="button" 
@@ -289,8 +434,8 @@ export function DeliveryNoteForm({ clients, products }: FormProps) {
                                             </TableRow>
                                         )) : (
                                             <TableRow>
-                                                <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                                                    Ningún producto agregado al albarán.
+                                                <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                                                    Ningún producto o servicio agregado.
                                                 </TableCell>
                                             </TableRow>
                                         )}
@@ -301,11 +446,49 @@ export function DeliveryNoteForm({ clients, products }: FormProps) {
                     </Card>
                 </div>
 
-                {/* Right Side: Summary & Actions */}
+                {/* Right Side: Notes, Status & Summary */}
                 <div className="space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Resumen del Albarán</CardTitle>
+                            <CardTitle>Observaciones y Notas</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div>
+                                <Label htmlFor="notasCliente">Notas para el Cliente (Visibles)</Label>
+                                <Textarea 
+                                    id="notasCliente" 
+                                    placeholder="Mensaje de agradecimiento, términos de entrega..." 
+                                    value={notasCliente} 
+                                    onChange={(e) => setNotasCliente(e.target.value)} 
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="notasInternas">Notas Internas (Ocultas)</Label>
+                                <Textarea 
+                                    id="notasInternas" 
+                                    placeholder="Detalles confidenciales, instrucciones internas..." 
+                                    value={notasInternas} 
+                                    onChange={(e) => setNotasInternas(e.target.value)} 
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="estado">Estado Inicial</Label>
+                                <Select value={estado} onValueChange={setEstado}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="borrador">Borrador</SelectItem>
+                                        <SelectItem value="pendiente">Pendiente (Aprobado)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Resumen Estimado</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
@@ -334,7 +517,7 @@ export function DeliveryNoteForm({ clients, products }: FormProps) {
                                 className="w-full bg-brand-1 text-white hover:bg-brand-1/90 gap-2"
                             >
                                 <Save className="h-4.5 w-4.5" />
-                                {loading ? 'Creando...' : 'Crear Albarán'}
+                                {loading ? 'Guardando...' : 'Crear Nota de Entrega'}
                             </Button>
                         </CardContent>
                     </Card>

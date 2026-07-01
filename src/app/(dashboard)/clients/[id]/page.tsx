@@ -21,6 +21,9 @@ export default async function ClientDetailPage(props: { params: Promise<{ id: st
             },
             pagos: {
                 orderBy: { fechaPago: 'desc' }
+            },
+            albaranesVenta: {
+                orderBy: { fechaEmision: 'desc' }
             }
         }
     });
@@ -68,11 +71,21 @@ export default async function ClientDetailPage(props: { params: Promise<{ id: st
         referencia: p.referencia || ''
     }));
 
+    // 5. Format delivery notes list
+    const formattedDeliveryNotes = client.albaranesVenta.map(a => ({
+        id: a.id,
+        numero: a.numero,
+        fechaEmision: a.fechaEmision.toISOString(),
+        totalNeto: a.totalNeto.toNumber(),
+        estado: a.estado
+    }));
+
     return (
         <ClientDetailClient 
             client={formattedClient} 
             invoices={formattedInvoices} 
             payments={formattedPayments}
+            deliveryNotes={formattedDeliveryNotes}
             initialTab={initialTab}
         />
     );

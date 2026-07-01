@@ -89,7 +89,7 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
                 setNotes(notes.map(n => selectedIds.includes(n.id) ? { ...n, estado: 'facturado' } : n));
                 setSelectedIds([]);
             } else {
-                toast.error(res.message || 'Error al agrupar albaranes');
+                toast.error(res.message || 'Error al agrupar notas de entrega');
             }
         } catch (e: any) {
             toast.error(e.message || 'Error inesperado');
@@ -102,7 +102,7 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
         <ContentContainer>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Albaranes de Venta (Remisiones)</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Notas de Entrega (Remisiones)</h1>
                     <p className="text-sm text-gray-500 mt-1">
                         Control de entregas físicas, rebaja inmediata de stock y facturación por agrupación
                     </p>
@@ -121,7 +121,7 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
                     <Link href="/delivery-notes/new">
                         <Button className="bg-brand-1 text-white hover:bg-brand-1/90 gap-2 shadow-sm">
                             <Plus className="h-4 w-4" />
-                            Nuevo Albarán
+                            Nueva Nota de Entrega
                         </Button>
                     </Link>
                 </div>
@@ -166,7 +166,7 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
                                 {filteredNotes.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={6} className="text-center py-12 text-gray-500">
-                                            No se encontraron albaranes registrados.
+                                            No se encontraron notas de entrega registradas.
                                         </TableCell>
                                     </TableRow>
                                 ) : (

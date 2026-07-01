@@ -752,7 +752,7 @@ async function main() {
         });
     }
 
-    console.log('🚚 Creando 20 albaranes de venta...');
+    console.log('🚚 Creando 20 notas de entrega...');
     for (let i = 1; i <= 20; i++) {
         const cli = randomItem(clientes);
         const usr = randomItem(usuarios);
@@ -763,12 +763,16 @@ async function main() {
         let subtotal = 0;
         let totalItbms = 0;
         const albaranItems = [];
+        const estado = i % 3 === 0 ? 'facturado' : i % 4 === 0 ? 'entregado' : 'pendiente';
+        const isDelivered = (estado === 'facturado' || estado === 'entregado');
 
         for (let j = 0; j < numItems; j++) {
             const prod = productos[(i + j) % productos.length];
-            const qty = randomInt(1, 5);
+            const qtyPedida = randomInt(5, 10);
+            const qtyEntregada = isDelivered ? qtyPedida : Math.random() > 0.5 ? randomInt(1, 4) : 0;
+            const qtyPendiente = Math.max(0, qtyPedida - qtyEntregada);
             const price = parseFloat(prod.precioVenta.toString());
-            const base = qty * price;
+            const base = qtyPedida * price;
             const tasa = prod.codigoTasaItbms === '01' ? 0.07 :
                          prod.codigoTasaItbms === '02' ? 0.10 : 0;
             const itbms = base * tasa;
@@ -779,34 +783,105 @@ async function main() {
             albaranItems.push({
                 productoId: prod.id,
                 descripcion: prod.descripcion,
-                cantidad: new Prisma.Decimal(qty),
+                cantidad: new Prisma.Decimal(qtyEntregada), // delivered qty
+                cantidadPedida: new Prisma.Decimal(qtyPedida),
+                cantidadPendiente: new Prisma.Decimal(qtyPendiente),
                 precioUnitario: new Prisma.Decimal(price),
                 descuento: new Prisma.Decimal(0),
                 codigoTasaItbms: prod.codigoTasaItbms,
                 montoItbms: new Prisma.Decimal(itbms.toFixed(2)),
                 montoTotal: new Prisma.Decimal((base + itbms).toFixed(2))
             });
+
+            // Kardex inventory movement if something was delivered
+            if (qtyEntregada > 0) {
+                await prisma.producto.update({
+                    where: { id: prod.id },
+                    data: {
+                        stockActual: { decrement: qtyEntregada }
+                    }
+                });
+            }
         }
 
-        await prisma.albaranVenta.create({
+        const note = await prisma.albaranVenta.create({
             data: {
                 empresaId: empresa.id,
                 sucursalId: sucursal.id,
                 cajaId: caja.id,
                 clienteId: cli.id,
                 creadorId: usr.id,
+                responsableId: usr.id,
                 numero: `ALB-${sucursal.codigo}-${String(i).padStart(6, '0')}`,
                 subtotal: new Prisma.Decimal(subtotal.toFixed(2)),
                 totalDescuento: new Prisma.Decimal(0),
                 totalItbms: new Prisma.Decimal(totalItbms.toFixed(2)),
                 totalNeto: new Prisma.Decimal((subtotal + totalItbms).toFixed(2)),
-                estado: i % 3 === 0 ? 'facturado' : 'pendiente',
-                observaciones: `Entrega parcial de mercadería #${i}`,
+                estado,
+                direccionEntrega: `Panamá Pacífico, Edificio ${100 + i}, Local A`,
+                nombreContacto: `Contacto Entrega #${i}`,
+                telefonoContacto: `+507 6600-${1000 + i}`,
+                fechaEstimadaEntrega: new Date(),
+                fechaRealEntrega: isDelivered ? new Date() : null,
+                notasInternas: `Instrucciones de entrega interna #${i}`,
+                observaciones: `Notas visibles para el cliente en el documento #${i}`,
                 items: {
                     create: albaranItems
                 }
             }
         });
+
+        // Log status history
+        await prisma.albaranEstadoHistorial.create({
+            data: {
+                empresaId: empresa.id,
+                albaranId: note.id,
+                estadoAnterior: '',
+                estadoNuevo: 'pendiente',
+                usuarioId: usr.id,
+                notas: 'Creación del documento en estado pendiente.'
+            }
+        });
+
+        if (estado === 'facturado') {
+            await prisma.albaranEstadoHistorial.create({
+                data: {
+                    empresaId: empresa.id,
+                    albaranId: note.id,
+                    estadoAnterior: 'pendiente',
+                    estadoNuevo: 'facturado',
+                    usuarioId: usr.id,
+                    notas: 'Convertido automáticamente en factura.'
+                }
+            });
+        } else if (estado === 'entregado') {
+            await prisma.albaranEstadoHistorial.create({
+                data: {
+                    empresaId: empresa.id,
+                    albaranId: note.id,
+                    estadoAnterior: 'pendiente',
+                    estadoNuevo: 'entregado',
+                    usuarioId: usr.id,
+                    notas: 'Mercadería entregada completamente al cliente.'
+                }
+            });
+        }
+
+        // Register Kardex movement records
+        for (const item of albaranItems) {
+            if (item.cantidad.toNumber() > 0) {
+                await prisma.movimientoInventario.create({
+                    data: {
+                        empresaId: empresa.id,
+                        productoId: item.productoId,
+                        tipo: 'salida',
+                        cantidad: item.cantidad.toNumber(),
+                        concepto: 'albaran_entrega',
+                        referenciaId: note.id
+                    }
+                });
+            }
+        }
     }
 
     // 12. Recalculate and update final balances for Cliente and Proveedor records

@@ -91,3 +91,29 @@ export const SupplierPaymentSchema = z.object({
     metodoPago: z.string().min(1, { message: "Selecciona método de pago" }),
     referencia: z.string().optional(),
 });
+
+export const DeliveryNoteItemSchema = z.object({
+    productoId: z.string().min(1, { message: "Producto requerido" }),
+    descripcion: z.string().min(1, { message: "Descripción requerida" }),
+    cantidadPedida: z.number().min(0.0001, { message: "Cantidad pedida mayor a 0" }),
+    cantidadEntregada: z.number().min(0, { message: "Cantidad entregada no puede ser negativa" }),
+    cantidadPendiente: z.number().min(0),
+    precioUnitario: z.number().min(0).default(0),
+    codigoTasaItbms: z.string().default("00"),
+    descuento: z.number().default(0),
+});
+
+export const DeliveryNoteSchema = z.object({
+    clienteId: z.string().min(1, { message: "Selecciona un cliente" }),
+    cotizacionId: z.string().optional().nullable(),
+    pedidoId: z.string().optional().nullable(),
+    direccionEntrega: z.string().optional().or(z.literal('')),
+    nombreContacto: z.string().optional().or(z.literal('')),
+    telefonoContacto: z.string().optional().or(z.literal('')),
+    fechaEstimadaEntrega: z.string().optional().nullable(),
+    notasInternas: z.string().optional().or(z.literal('')),
+    notasCliente: z.string().optional().or(z.literal('')),
+    responsableId: z.string().optional().nullable(),
+    items: z.array(DeliveryNoteItemSchema).min(1, { message: "Agrega al menos un ítem" }),
+});
+
