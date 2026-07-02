@@ -18,7 +18,7 @@ import { useAuth } from '@/lib/firebase/auth';
 
 export default function RegisterPage() {
     const router = useRouter();
-    const { signUpWithEmail, signInWithGoogle } = useAuth();
+    const { signUpWithEmail, signInWithGoogle, user, loading, error: authError } = useAuth();
     const [mounted, setMounted] = useState(false);
     const [tipoCuenta, setTipoCuenta] = useState('empresa');
     const [nombreComercial, setNombreComercial] = useState('');
@@ -34,7 +34,16 @@ export default function RegisterPage() {
 
     useEffect(() => {
         setMounted(true);
-    }, []);
+        if (!loading && user) {
+            window.location.href = '/dashboard';
+        }
+    }, [user, loading]);
+
+    useEffect(() => {
+        if (authError) {
+            setError(authError);
+        }
+    }, [authError]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -59,7 +68,7 @@ export default function RegisterPage() {
 
         try {
             await signUpWithEmail(email, password);
-            router.push('/dashboard');
+            window.location.href = '/dashboard';
         } catch (err: unknown) {
             const error = err as { code?: string };
             if (error.code === 'auth/email-already-in-use') {
@@ -80,11 +89,22 @@ export default function RegisterPage() {
 
         try {
             await signInWithGoogle();
-            router.push('/dashboard');
+            window.location.href = '/dashboard';
         } catch (err: unknown) {
-            const error = err as { code?: string };
-            if (error.code !== 'auth/popup-closed-by-user') {
-                setError('Error al registrarse con Google');
+            const error = err as { code?: string; message?: string };
+            console.error('Google SignUp Error:', error);
+            if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+                // User closed the popup, not an error
+            } else if (error.code === 'auth/unauthorized-domain') {
+                setError('Dominio no autorizado en Firebase. Añade este dominio en Firebase Console -> Authentication -> Settings -> Authorized domains.');
+            } else if (error.code === 'auth/operation-not-allowed') {
+                setError('El registro con Google no está habilitado en Firebase Console -> Authentication -> Sign-in method.');
+            } else if (error.code === 'auth/popup-blocked') {
+                setError('El navegador bloqueó la ventana emergente (popup). Por favor, permite ventanas emergentes para este sitio.');
+            } else if (error.code === 'auth/internal-error') {
+                setError('Error interno de Firebase (auth/internal-error). En Firebase Console ve a Project Settings -> General y asegúrate de seleccionar un "Correo electrónico de asistencia" (Support email). Luego en Authentication -> Sign-in method -> Google, verifica que esté habilitado y guardado.');
+            } else {
+                setError(`Error al registrarse con Google (${error.code || error.message || 'Error desconocido'}).`);
             }
         } finally {
             setIsGoogleLoading(false);

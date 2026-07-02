@@ -3,12 +3,20 @@
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { hash, compare } from 'bcryptjs';
+import { getTenantContext } from '@/lib/auth/context';
 
 export async function updatePersonalInfo(email: string, formData: FormData) {
     const name = formData.get('fullName') as string;
-    // const phone = formData.get('phone') as string;
 
     try {
+        const ctx = await getTenantContext();
+        const loggedInUser = await prisma.usuario.findUnique({
+            where: { id: ctx.userId }
+        });
+        if (!loggedInUser || loggedInUser.email !== email) {
+            return { success: false, message: 'Acceso denegado.' };
+        }
+
         await prisma.usuario.update({
             where: { email },
             data: {
@@ -42,6 +50,14 @@ export async function changePassword(email: string, formData: FormData) {
     }
 
     try {
+        const ctx = await getTenantContext();
+        const loggedInUser = await prisma.usuario.findUnique({
+            where: { id: ctx.userId }
+        });
+        if (!loggedInUser || loggedInUser.email !== email) {
+            return { success: false, message: 'Acceso denegado.' };
+        }
+
         // Fetch user to get current hash
         const user = await prisma.usuario.findUnique({
             where: { email }

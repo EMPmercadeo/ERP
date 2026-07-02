@@ -17,7 +17,7 @@ export function Content({ children, className }: ContentProps) {
     return (
         <main
             className={cn(
-                'min-h-screen bg-background transition-all duration-300',
+                'min-h-screen w-full max-w-full overflow-x-hidden bg-background transition-all duration-300 pb-20 lg:pb-0',
                 isCollapsed ? 'lg:pl-16' : 'lg:pl-64',
                 className
             )}

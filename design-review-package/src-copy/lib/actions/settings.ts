@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { getTenantContext } from '@/lib/auth/context';
 
 export async function updateDgiSettings(empresaId: string, data: {
     razonSocial: string;
@@ -13,6 +14,11 @@ export async function updateDgiSettings(empresaId: string, data: {
     ambienteDgi?: string;
 }) {
     try {
+        const { empresaId: authEmpresaId } = await getTenantContext();
+        if (authEmpresaId !== empresaId) {
+            return { success: false, message: 'Acceso denegado. No está autorizado para modificar esta empresa.' };
+        }
+
         // Fetch current plan to check if they attempt to set production
         const empresa = await prisma.empresa.findUnique({
             where: { id: empresaId }
@@ -53,7 +59,12 @@ export async function updateDgiSettings(empresaId: string, data: {
 
 export async function updateCompanyPlan(empresaId: string, planType: string) {
     try {
-        if (!['free', 'pro', 'enterprise'].includes(planType)) {
+        const { empresaId: authEmpresaId } = await getTenantContext();
+        if (authEmpresaId !== empresaId) {
+            return { success: false, message: 'Acceso denegado. No está autorizado para modificar esta empresa.' };
+        }
+
+        if (!['free', 'basic', 'pro', 'enterprise'].includes(planType)) {
             return { success: false, message: 'Plan no válido.' };
         }
 
@@ -79,5 +90,35 @@ export async function updateCompanyPlan(empresaId: string, planType: string) {
     } catch (error) {
         console.error('Error updating plan:', error);
         return { success: false, message: 'Error al cambiar de plan.' };
+    }
+}
+
+export async function updateIntegrationSettings(empresaId: string, data: {
+    whatsappPhone?: string;
+    whatsappToken?: string;
+    webhookUrl?: string;
+    webhookToken?: string;
+}) {
+    try {
+        const { empresaId: authEmpresaId } = await getTenantContext();
+        if (authEmpresaId !== empresaId) {
+            return { success: false, message: 'Acceso denegado. No está autorizado para modificar esta empresa.' };
+        }
+
+        await prisma.empresa.update({
+            where: { id: empresaId },
+            data: {
+                whatsappPhone: data.whatsappPhone || null,
+                whatsappToken: data.whatsappToken || null,
+                webhookUrl: data.webhookUrl || null,
+                webhookToken: data.webhookToken || null
+            }
+        });
+
+        revalidatePath('/settings');
+        return { success: true, message: 'Configuración de integraciones guardada correctamente.' };
+    } catch (error) {
+        console.error('Error updating integration settings:', error);
+        return { success: false, message: 'Error al guardar la configuración de integraciones.' };
     }
 }

@@ -1,21 +1,25 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
     ColumnDef,
     SortingState,
     flexRender,
     getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
     Search,
     Plus,
-    MoreHorizontal,
     ChevronLeft,
     ChevronRight,
     ArrowUpDown,
@@ -23,15 +27,20 @@ import {
     Trash2,
     Package,
     Download,
-    History
+    History,
+    FileUp,
+    RotateCcw,
+    X
 } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import ExcelJS from 'exceljs';
 import { ImportProductsDialog } from './ImportProductsDialog';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
@@ -48,10 +57,9 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { deleteProduct } from '@/lib/actions/products';
+import { deleteProduct, getProductsForExport } from '@/lib/actions/products';
 import { toast } from 'sonner';
 
-// Types match Prisma model structure roughly
 export interface ProductData {
     id: string;
     codigoInterno: string;
@@ -61,14 +69,33 @@ export interface ProductData {
     codigoTasaItbms: string;
     stockActual: number;
     activo: boolean;
+    unidadMedida: string;
+    imagenUrl?: string | null;
 }
 
 const itbmsConfig: Record<string, string> = {
-    '00': 'Exento',
+    '00': 'Exento (0%)',
     '01': '7%',
     '02': '10%',
     '03': '15%',
 };
+
+const taxRates: Record<string, number> = {
+    '00': 0.00,
+    '01': 0.07,
+    '02': 0.10,
+    '03': 0.15,
+};
+
+const commonUnits = [
+    { value: 'UND', label: 'Unidad (UND)' },
+    { value: 'HRS', label: 'Hora (HRS)' },
+    { value: 'KG', label: 'Kilogramo (KG)' },
+    { value: 'LT', label: 'Litro (LT)' },
+    { value: 'MT', label: 'Metro (MT)' },
+    { value: 'CJ', label: 'Caja (CJ)' },
+    { value: 'SRV', label: 'Servicio (SRV)' },
+];
 
 function formatCurrency(value: number) {
     return new Intl.NumberFormat('es-PA', {
@@ -82,31 +109,116 @@ function calculateMargin(cost: number, price: number): number {
     return ((price - cost) / price) * 100;
 }
 
-export function ProductList({ initialData }: { initialData: ProductData[] }) {
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [globalFilter, setGlobalFilter] = useState('');
+export function ProductList({
+    initialData,
+    pageCount,
+    currentPage,
+    pageSize,
+    totalCount,
+    initialSearch,
+    initialSortBy,
+    initialSortOrder,
+    initialStatus,
+    initialTax,
+    initialStockStatus,
+    initialUnidad
+}: {
+    initialData: ProductData[];
+    pageCount: number;
+    currentPage: number;
+    pageSize: number;
+    totalCount: number;
+    initialSearch: string;
+    initialSortBy: string;
+    initialSortOrder: 'asc' | 'desc';
+    initialStatus: string;
+    initialTax: string;
+    initialStockStatus: string;
+    initialUnidad: string;
+}) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const [sorting, setSorting] = useState<SortingState>(
+        initialSortBy && initialSortOrder
+            ? [{ id: initialSortBy, desc: initialSortOrder === 'desc' }]
+            : []
+    );
+
+    // Active local filter states
+    const [globalFilter, setGlobalFilter] = useState(initialSearch);
+    const status = initialStatus || 'all';
+    const tax = initialTax || 'all';
+    const stockStatus = initialStockStatus || 'all';
+    const unidad = initialUnidad || 'all';
+
+    const createQueryString = (params: Record<string, string | null>) => {
+        const newParams = new URLSearchParams(searchParams.toString());
+        for (const [key, value] of Object.entries(params)) {
+            if (value === null) {
+                newParams.delete(key);
+            } else {
+                newParams.set(key, value);
+            }
+        }
+        return newParams.toString();
+    };
+
+    // Debounce search update to URL
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const currentSearch = searchParams.get('search') || '';
+            if (globalFilter !== currentSearch) {
+                const query = createQueryString({ search: globalFilter || null, page: '1' });
+                router.push(`${pathname}?${query}`);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [globalFilter]);
+
+    const handleFilterChange = (key: string, value: string) => {
+        const query = createQueryString({ [key]: value === 'all' ? null : value, page: '1' });
+        router.push(`${pathname}?${query}`);
+    };
+
+    const handleResetFilters = () => {
+        setGlobalFilter('');
+        router.push(pathname);
+    };
 
     const handleDelete = async (id: string, descripcion: string) => {
         if (confirm(`¿Estás seguro de que quieres eliminar el producto "${descripcion}"?`)) {
             const result = await deleteProduct(id);
             if (result.success) {
-                toast.success('Producto eliminado correctamente');
+                if (result.deactivated) {
+                    toast.warning(result.message || 'Producto desactivado lógicamente.');
+                } else {
+                    toast.success('Producto eliminado correctamente');
+                }
             } else {
-                toast.error('Error al eliminar producto');
+                toast.error(result.error || 'Error al eliminar producto');
             }
         }
-    };
-
-    const handleHistory = () => {
-        toast.info('La función de historial estará disponible pronto.');
     };
 
     const columns: ColumnDef<ProductData>[] = useMemo(() => [
         {
             accessorKey: 'codigoInterno',
-            header: 'Código',
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    className="-ml-4 font-semibold text-xs text-slate-700 hover:bg-transparent"
+                >
+                    Código
+                    <ArrowUpDown className="ml-1 h-3 w-3" />
+                </Button>
+            ),
             cell: ({ row }) => (
-                <span className="font-mono text-sm">{row.getValue('codigoInterno')}</span>
+                <span className="font-mono text-xs font-bold text-slate-700 tracking-tight">
+                    {row.getValue('codigoInterno')}
+                </span>
             ),
         },
         {
@@ -115,65 +227,105 @@ export function ProductList({ initialData }: { initialData: ProductData[] }) {
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4"
+                    className="-ml-4 font-semibold text-xs text-slate-700 hover:bg-transparent"
                 >
                     Producto / Servicio
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                    <ArrowUpDown className="ml-1 h-3 w-3" />
                 </Button>
             ),
             cell: ({ row }) => (
                 <div className="flex items-center gap-2">
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                    <span>{row.getValue('descripcion')}</span>
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center bg-slate-100 text-slate-500 shrink-0 select-none">
+                        <Package className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="font-semibold text-slate-800 text-xs sm:text-sm truncate max-w-[280px]" title={row.getValue('descripcion')}>
+                        {row.getValue('descripcion')}
+                    </span>
                 </div>
             ),
         },
         {
             accessorKey: 'precioVenta',
-            header: ({ column }) => (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4"
-                >
-                    Precio
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
+            header: () => (
+                <div className="text-right font-semibold text-xs text-slate-700 pr-2">Precio Venta</div>
             ),
-            cell: ({ row }) => (
-                <div>
-                    <div className="font-medium">{formatCurrency(row.getValue('precioVenta'))}</div>
-                    <div className="text-xs text-muted-foreground">
-                        Margen: {calculateMargin(row.original.costoUnitario, row.original.precioVenta).toFixed(1)}%
+            cell: ({ row }) => {
+                const cost = row.original.costoUnitario;
+                const price = row.getValue('precioVenta') as number;
+                const margin = cost > 0 ? calculateMargin(cost, price) : null;
+                return (
+                    <div className="text-right pr-2">
+                        <span className="font-mono text-xs sm:text-sm font-bold tabular-nums text-slate-800 block">
+                            {formatCurrency(price)}
+                        </span>
+                        {margin !== null && (
+                            <span className="text-[10px] text-emerald-600 font-bold leading-none mt-0.5 inline-block">
+                                Margen: {margin.toFixed(1)}%
+                            </span>
+                        )}
                     </div>
-                </div>
-            ),
+                );
+            },
         },
         {
             accessorKey: 'codigoTasaItbms',
             header: 'ITBMS',
             cell: ({ row }) => {
                 const code = row.getValue('codigoTasaItbms') as string;
+                const label = itbmsConfig[code] || code;
+                const isExempt = code === '00';
                 return (
-                    <Badge variant={code === '00' ? 'secondary' : 'default'}>
-                        {itbmsConfig[code] || code}
+                    <Badge variant={isExempt ? "secondary" : "outline"} className={cn(
+                        "text-[10px] font-bold px-2 py-0.5 rounded",
+                        isExempt 
+                            ? "bg-slate-100 text-slate-600 border-transparent" 
+                            : "bg-brand-1/5 text-brand-1 border-brand-1/20"
+                    )}>
+                        {label}
                     </Badge>
                 );
             },
         },
         {
             accessorKey: 'stockActual',
-            header: 'Stock',
+            header: () => <div className="text-center">Stock</div>,
             cell: ({ row }) => {
                 const stock = row.getValue('stockActual') as number;
-                if (stock === 0) {
-                    return <Badge variant="destructive">Agotado</Badge>;
+                if (stock <= 0) {
+                    return (
+                        <div className="text-center">
+                            <Badge className="bg-red-50 text-red-600 border-transparent hover:bg-red-50 text-[10px] font-bold px-2 py-0.5 rounded">
+                                Agotado
+                            </Badge>
+                        </div>
+                    );
                 }
                 if (stock < 10) {
-                    return <Badge className="bg-yellow-500 hover:bg-yellow-600">{stock} uds</Badge>;
+                    return (
+                        <div className="text-center">
+                            <Badge className="bg-amber-50 text-amber-600 border-transparent hover:bg-amber-50 text-[10px] font-bold px-2 py-0.5 rounded">
+                                {stock} uds
+                            </Badge>
+                        </div>
+                    );
                 }
-                return <span>{stock} uds</span>;
+                return (
+                    <div className="text-center">
+                        <Badge className="bg-emerald-50 text-emerald-600 border-transparent hover:bg-emerald-50 text-[10px] font-bold px-2 py-0.5 rounded">
+                            {stock} uds
+                        </Badge>
+                    </div>
+                );
             },
+        },
+        {
+            accessorKey: 'unidadMedida',
+            header: 'Unidad',
+            cell: ({ row }) => (
+                <span className="text-slate-600 font-semibold text-xs">
+                    {row.getValue('unidadMedida') || 'UND'}
+                </span>
+            ),
         },
         {
             accessorKey: 'activo',
@@ -181,7 +333,12 @@ export function ProductList({ initialData }: { initialData: ProductData[] }) {
             cell: ({ row }) => {
                 const active = row.getValue('activo') as boolean;
                 return (
-                    <Badge variant={active ? 'outline' : 'destructive'} className={active ? "bg-green-50 text-green-700 border-green-200" : ""}>
+                    <Badge className={cn(
+                        "text-[10px] font-bold px-2 py-0.5 rounded border-transparent hover:bg-transparent",
+                        active 
+                            ? "bg-emerald-50 text-emerald-600" 
+                            : "bg-red-50 text-red-600"
+                    )}>
                         {active ? 'Activo' : 'Inactivo'}
                     </Badge>
                 );
@@ -192,31 +349,28 @@ export function ProductList({ initialData }: { initialData: ProductData[] }) {
             cell: ({ row }) => {
                 const product = row.original;
                 return (
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-brand-1 hover:bg-slate-100 rounded-lg" asChild>
                                         <Link href={`/products/${product.id}`}>
-                                            <Edit className="h-4 w-4" />
+                                            <Edit className="h-3.5 w-3.5" />
                                         </Link>
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Editar</TooltipContent>
+                                <TooltipContent className="text-xs">Editar</TooltipContent>
                             </Tooltip>
 
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-muted-foreground hover:text-primary"
-                                        onClick={handleHistory}
-                                    >
-                                        <History className="h-4 w-4" />
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-brand-1 hover:bg-slate-100 rounded-lg" asChild>
+                                        <Link href={`/products/${product.id}?tab=history`}>
+                                            <History className="h-3.5 w-3.5" />
+                                        </Link>
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Historial</TooltipContent>
+                                <TooltipContent className="text-xs">Historial</TooltipContent>
                             </Tooltip>
 
                             <Tooltip>
@@ -224,13 +378,13 @@ export function ProductList({ initialData }: { initialData: ProductData[] }) {
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
                                         onClick={() => handleDelete(product.id, product.descripcion)}
                                     >
-                                        <Trash2 className="h-4 w-4" />
+                                        <Trash2 className="h-3.5 w-3.5" />
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Eliminar</TooltipContent>
+                                <TooltipContent className="text-xs">Eliminar</TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                     </div>
@@ -242,183 +396,490 @@ export function ProductList({ initialData }: { initialData: ProductData[] }) {
     const table = useReactTable({
         data: initialData,
         columns,
-        onSortingChange: setSorting,
+        pageCount: pageCount,
+        manualPagination: true,
+        manualSorting: true,
+        onSortingChange: (updater) => {
+            const nextSorting = typeof updater === 'function' ? updater(sorting) : updater;
+            setSorting(nextSorting);
+            if (nextSorting.length > 0) {
+                const { id, desc } = nextSorting[0];
+                const query = createQueryString({
+                    sortBy: id,
+                    sortOrder: desc ? 'desc' : 'asc',
+                    page: '1'
+                });
+                router.push(`${pathname}?${query}`);
+            } else {
+                const query = createQueryString({
+                    sortBy: null,
+                    sortOrder: null,
+                    page: '1'
+                });
+                router.push(`${pathname}?${query}`);
+            }
+        },
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        onGlobalFilterChange: setGlobalFilter,
-        globalFilterFn: 'includesString',
         state: {
             sorting,
             globalFilter,
-        },
-        initialState: {
             pagination: {
-                pageSize: 10,
-            },
+                pageIndex: currentPage - 1,
+                pageSize: pageSize,
+            }
         },
     });
 
     const handleExport = async () => {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Productos');
-
-        worksheet.columns = [
-            { header: 'Código', key: 'codigo', width: 15 },
-            { header: 'Descripción', key: 'descripcion', width: 30 },
-            { header: 'Precio Venta', key: 'precio', width: 15 },
-            { header: 'Costo', key: 'costo', width: 15 },
-            { header: 'ITBMS', key: 'itbms', width: 10 },
-            { header: 'Stock', key: 'stock', width: 10 },
-            { header: 'Activo', key: 'activo', width: 10 },
-        ];
-
-        table.getFilteredRowModel().rows.forEach((row) => {
-            const p = row.original;
-            worksheet.addRow({
-                codigo: p.codigoInterno,
-                descripcion: p.descripcion,
-                precio: p.precioVenta,
-                costo: p.costoUnitario,
-                itbms: p.codigoTasaItbms,
-                stock: p.stockActual,
-                activo: p.activo ? 'Sí' : 'No'
+        try {
+            toast.loading('Generando exportación de productos...');
+            
+            // Retrieve all matching products from database via Server Action
+            const productsToExport = await getProductsForExport({
+                search: globalFilter,
+                status,
+                tax,
+                stockStatus,
             });
-        });
 
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        saveAs(blob, `productos-${new Date().toISOString().split('T')[0]}.xlsx`);
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Catálogo de Productos');
+
+            // Set report styling metadata headers
+            worksheet.addRow(['ERP PANAMÁ SOLUTIONS - CATÁLOGO DE PRODUCTOS']);
+            worksheet.addRow([`Fecha de Generación: ${new Date().toLocaleString('es-PA')}`]);
+            worksheet.addRow([
+                `Filtros Aplicados: Búsqueda: "${globalFilter || 'Ninguna'}", ` +
+                `Estado: "${status === 'all' ? 'Todos' : status}", ` +
+                `ITBMS: "${tax === 'all' ? 'Todos' : itbmsConfig[tax] || tax}", ` +
+                `Stock: "${stockStatus === 'all' ? 'Todos' : stockStatus}"`
+            ]);
+            worksheet.addRow([]); // Blank spacing
+
+            const headerRow = worksheet.addRow([
+                'Código', 'Producto / Servicio', 'Descripción Detallada', 
+                'Costo Unitario', 'Precio Venta', 'Tasa ITBMS', 
+                'Stock Actual', 'Unidad de Medida', 'Estado', 
+                'Fecha Creación', 'Fecha Modificación'
+            ]);
+            headerRow.font = { bold: true };
+            
+            productsToExport.forEach((p) => {
+                const row = worksheet.addRow([
+                    p.codigoInterno,
+                    p.descripcion,
+                    p.descripcionLarga,
+                    p.costoUnitario,
+                    p.precioVenta,
+                    itbmsConfig[p.codigoTasaItbms] || p.codigoTasaItbms,
+                    p.stockActual,
+                    p.unidadMedida,
+                    p.activo ? 'Activo' : 'Inactivo',
+                    new Date(p.createdAt).toLocaleDateString('es-PA'),
+                    new Date(p.updatedAt).toLocaleDateString('es-PA')
+                ]);
+
+                // Cell Formatting rules
+                row.getCell(4).numFmt = '$#,##0.00';
+                row.getCell(5).numFmt = '$#,##0.00';
+                row.getCell(7).numFmt = '#,##0';
+            });
+
+            // Width columns setup
+            worksheet.getColumn(1).width = 16;
+            worksheet.getColumn(2).width = 30;
+            worksheet.getColumn(3).width = 35;
+            worksheet.getColumn(4).width = 16;
+            worksheet.getColumn(5).width = 16;
+            worksheet.getColumn(6).width = 15;
+            worksheet.getColumn(7).width = 12;
+            worksheet.getColumn(8).width = 12;
+            worksheet.getColumn(9).width = 12;
+            worksheet.getColumn(10).width = 16;
+            worksheet.getColumn(11).width = 16;
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            
+            toast.dismiss();
+            toast.success('Catálogo de productos exportado exitosamente.');
+            saveAs(blob, `catalogo-productos-${new Date().toISOString().split('T')[0]}.xlsx`);
+        } catch (error) {
+            toast.dismiss();
+            toast.error('Error al exportar productos.');
+            console.error(error);
+        }
     };
 
     return (
         <ContentContainer>
             <div className="space-y-4">
-                {/* Header with actions */}
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                {/* Header with Title and actions (Unified Row) */}
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between py-2">
                     <div>
-                        <h2 className="text-2xl font-bold tracking-tight">Catálogo de Productos</h2>
-                        <p className="text-muted-foreground">
-                            Gestiona tus productos y servicios con precios e ITBMS
+                        <h2 className="text-xl font-bold tracking-tight text-slate-800">Catálogo de Productos</h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                            Gestiona productos y servicios con precios e ITBMS
                         </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <ImportProductsDialog />
-                        <Button variant="outline" onClick={handleExport}>
-                            <Download className="mr-2 h-4 w-4" />
+                        <Button variant="outline" onClick={handleExport} className="h-9 font-semibold text-xs border-slate-200">
+                            <Download className="mr-1.5 h-3.5 w-3.5 text-slate-500" />
                             Exportar Excel
                         </Button>
-                        <Button asChild>
+                        <Button asChild className="h-9 bg-brand-1 hover:bg-brand-2 text-white font-bold text-xs shadow-sm">
                             <Link href="/products/new">
-                                <Plus className="mr-2 h-4 w-4" />
+                                <Plus className="mr-1.5 h-3.5 w-3.5" />
                                 Nuevo Producto
                             </Link>
                         </Button>
                     </div>
                 </div>
 
-                {/* Search */}
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="relative max-w-md">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Buscar por código o descripción..."
-                                value={globalFilter}
-                                onChange={(e) => setGlobalFilter(e.target.value)}
-                                className="pl-8"
-                            />
+                {/* Compact Filters Grid (h-10 controls) */}
+                <Card className="bg-white shadow-sm border border-slate-100 rounded-xl overflow-visible">
+                    <CardContent className="p-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-x-4">
+                            {/* Buscar */}
+                            <div className="lg:col-span-2 space-y-1">
+                                <Label htmlFor="globalSearch" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Buscar producto</Label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                    <Input
+                                        id="globalSearch"
+                                        placeholder="Código, descripción..."
+                                        value={globalFilter}
+                                        onChange={(e) => setGlobalFilter(e.target.value)}
+                                        className="h-10 text-xs sm:text-sm pl-9 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                    />
+                                    {globalFilter && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setGlobalFilter('')}
+                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Estado */}
+                            <div className="space-y-1">
+                                <Label htmlFor="statusFilter" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Estado</Label>
+                                <Select value={status} onValueChange={(val) => handleFilterChange('status', val)}>
+                                    <SelectTrigger id="statusFilter" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                        <SelectValue placeholder="Estado" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-lg">
+                                        <SelectItem value="all" className="text-xs sm:text-sm cursor-pointer">Todos</SelectItem>
+                                        <SelectItem value="activo" className="text-xs sm:text-sm cursor-pointer">Activo</SelectItem>
+                                        <SelectItem value="inactivo" className="text-xs sm:text-sm cursor-pointer">Inactivo</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* ITBMS */}
+                            <div className="space-y-1">
+                                <Label htmlFor="taxFilter" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">ITBMS</Label>
+                                <Select value={tax} onValueChange={(val) => handleFilterChange('tax', val)}>
+                                    <SelectTrigger id="taxFilter" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                        <SelectValue placeholder="ITBMS" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-lg">
+                                        <SelectItem value="all" className="text-xs sm:text-sm cursor-pointer">Todos</SelectItem>
+                                        <SelectItem value="00" className="text-xs sm:text-sm cursor-pointer">Exento (0%)</SelectItem>
+                                        <SelectItem value="01" className="text-xs sm:text-sm cursor-pointer">ITBMS 7%</SelectItem>
+                                        <SelectItem value="02" className="text-xs sm:text-sm cursor-pointer">ITBMS 10%</SelectItem>
+                                        <SelectItem value="03" className="text-xs sm:text-sm cursor-pointer">ITBMS 15%</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Stock */}
+                            <div className="space-y-1">
+                                <Label htmlFor="stockFilter" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Stock</Label>
+                                <Select value={stockStatus} onValueChange={(val) => handleFilterChange('stockStatus', val)}>
+                                    <SelectTrigger id="stockFilter" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                        <SelectValue placeholder="Stock" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-lg">
+                                        <SelectItem value="all" className="text-xs sm:text-sm cursor-pointer">Todos</SelectItem>
+                                        <SelectItem value="con_stock" className="text-xs sm:text-sm cursor-pointer">Con Stock</SelectItem>
+                                        <SelectItem value="sin_stock" className="text-xs sm:text-sm cursor-pointer">Sin Stock</SelectItem>
+                                        <SelectItem value="bajo_stock" className="text-xs sm:text-sm cursor-pointer">Bajo Stock</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Unidad */}
+                            <div className="space-y-1">
+                                <Label htmlFor="unitFilter" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Unidad</Label>
+                                <Select value={unidad} onValueChange={(val) => handleFilterChange('unidad', val)}>
+                                    <SelectTrigger id="unitFilter" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                        <SelectValue placeholder="Unidad" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-lg">
+                                        <SelectItem value="all" className="text-xs sm:text-sm cursor-pointer">Todas</SelectItem>
+                                        {commonUnits.map((u) => (
+                                            <SelectItem key={u.value} value={u.value} className="text-xs sm:text-sm cursor-pointer">
+                                                {u.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Table */}
-                <Card>
+                <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
                     <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                {table.getHeaderGroups().map((headerGroup) => (
-                                    <TableRow key={headerGroup.id}>
-                                        {headerGroup.headers.map((header) => (
-                                            <TableHead key={header.id}>
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(
-                                                        header.column.columnDef.header,
-                                                        header.getContext()
-                                                    )}
-                                            </TableHead>
-                                        ))}
-                                    </TableRow>
-                                ))}
-                            </TableHeader>
-                            <TableBody>
-                                {table.getRowModel().rows?.length ? (
-                                    table.getRowModel().rows.map((row) => (
-                                        <TableRow
-                                            key={row.id}
-                                            className="cursor-pointer hover:bg-accent"
-                                        >
-                                            {row.getVisibleCells().map((cell) => (
-                                                <TableCell key={cell.id}>
-                                                    {flexRender(
-                                                        cell.column.columnDef.cell,
-                                                        cell.getContext()
-                                                    )}
-                                                </TableCell>
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block overflow-x-auto min-h-[300px]">
+                            <Table className="border-b border-slate-100">
+                                <TableHeader className="bg-slate-50 border-b border-slate-100">
+                                    {table.getHeaderGroups().map((headerGroup) => (
+                                        <TableRow key={headerGroup.id} className="hover:bg-transparent">
+                                            {headerGroup.headers.map((header) => (
+                                                <TableHead key={header.id} className="h-10 font-bold text-slate-700 text-xs">
+                                                    {header.isPlaceholder
+                                                        ? null
+                                                        : flexRender(
+                                                            header.column.columnDef.header,
+                                                            header.getContext()
+                                                        )}
+                                                </TableHead>
                                             ))}
                                         </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={columns.length}
-                                            className="h-48"
-                                        >
-                                            <EmptyState
-                                                icon={Package}
-                                                title="No hay productos"
-                                                description="Crea tu primer producto para comenzar a facturar."
-                                                action={
-                                                    <Button asChild>
-                                                        <Link href="/products/new">
-                                                            <Plus className="mr-2 h-4 w-4" />
-                                                            Nuevo Producto
-                                                        </Link>
-                                                    </Button>
-                                                }
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                                    ))}
+                                </TableHeader>
+                                <TableBody>
+                                    {table.getRowModel().rows?.length ? (
+                                        table.getRowModel().rows.map((row) => (
+                                            <TableRow
+                                                key={row.id}
+                                                className="hover:bg-slate-50/50 border-b border-slate-100 last:border-0 cursor-pointer"
+                                                onClick={() => router.push(`/products/${row.original.id}`)}
+                                            >
+                                                {row.getVisibleCells().map((cell) => (
+                                                    <TableCell key={cell.id} className="py-2.5 text-xs text-slate-600">
+                                                        {flexRender(
+                                                            cell.column.columnDef.cell,
+                                                            cell.getContext()
+                                                        )}
+                                                    </TableCell>
+                                                ))}
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell
+                                                colSpan={columns.length}
+                                                className="h-64"
+                                            >
+                                                <EmptyState
+                                                    icon={Package}
+                                                    title="No se encontraron productos"
+                                                    description={globalFilter || status !== 'all' || tax !== 'all' || stockStatus !== 'all' || unidad !== 'all'
+                                                        ? "Ningún producto coincide con los filtros aplicados."
+                                                        : "Aún no has registrado ningún producto en tu catálogo."}
+                                                    action={
+                                                        (globalFilter || status !== 'all' || tax !== 'all' || stockStatus !== 'all' || unidad !== 'all') ? (
+                                                            <Button onClick={handleResetFilters} variant="outline" className="h-9 font-semibold text-xs border-slate-200 gap-1.5">
+                                                                <RotateCcw className="h-3.5 w-3.5" />
+                                                                 Restablecer Filtros
+                                                            </Button>
+                                                        ) : (
+                                                            <Button asChild className="h-9 bg-brand-1 hover:bg-brand-2 text-white font-bold text-xs shadow-sm">
+                                                                <Link href="/products/new">
+                                                                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                                                                    Nuevo Producto
+                                                                </Link>
+                                                            </Button>
+                                                        )
+                                                    }
+                                                />
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
 
-                        {/* Pagination */}
-                        <div className="flex items-center justify-between border-t px-4 py-4">
-                            <div className="text-sm text-muted-foreground">
-                                {table.getFilteredRowModel().rows.length} productos
+                        {/* Mobile Grid View */}
+                        <div className="grid grid-cols-2 gap-3 md:hidden p-4 max-h-[calc(100vh-300px)] overflow-y-auto min-h-[300px] border-b font-sans">
+                            {initialData.length > 0 ? (
+                                initialData.map((product) => {
+                                    const taxRate = taxRates[product.codigoTasaItbms] || 0.00;
+                                    const priceWithTax = product.precioVenta * (1 + taxRate);
+                                    
+                                    return (
+                                        <div 
+                                            key={product.id}
+                                            onClick={() => router.push(`/products/${product.id}`)}
+                                            className="bg-slate-50/50 border border-slate-100 rounded-xl p-3 flex flex-col justify-between shadow-sm active:scale-98 transition-transform cursor-pointer relative"
+                                        >
+                                            <div>
+                                                {/* Image Thumbnail Container */}
+                                                <div className="w-full aspect-square rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden mb-2 border border-slate-200/50 relative">
+                                                    {product.imagenUrl ? (
+                                                        <img 
+                                                            src={product.imagenUrl} 
+                                                            alt={product.descripcion} 
+                                                            className="w-full h-full object-cover" 
+                                                        />
+                                                    ) : (
+                                                        <Package className="h-7 w-7 text-slate-400" />
+                                                    )}
+                                                    
+                                                    {/* ITBMS Badge */}
+                                                    <span className="absolute top-1.5 left-1.5 bg-white/95 text-slate-800 backdrop-blur-sm text-[9px] font-bold px-1.5 py-0.5 rounded border border-slate-200 shadow-sm leading-none">
+                                                        {product.codigoTasaItbms === '00' ? 'Exento' : `${itbmsConfig[product.codigoTasaItbms] || product.codigoTasaItbms}`}
+                                                    </span>
+
+                                                    {/* Stock Status Badge */}
+                                                    <span className="absolute top-1.5 right-1.5 leading-none">
+                                                        {product.stockActual <= 0 ? (
+                                                            <Badge className="bg-red-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
+                                                                Agotado
+                                                            </Badge>
+                                                        ) : product.stockActual < 10 ? (
+                                                            <Badge className="bg-amber-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
+                                                                {product.stockActual} uds
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge className="bg-emerald-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
+                                                                {product.stockActual} uds
+                                                            </Badge>
+                                                        )}
+                                                    </span>
+                                                </div>
+
+                                                {/* SKU */}
+                                                <span className="font-mono text-[9px] font-bold text-slate-400 block tracking-tight truncate">
+                                                    {product.codigoInterno}
+                                                </span>
+
+                                                {/* Name */}
+                                                <h4 className="font-bold text-slate-800 text-[11px] leading-tight line-clamp-2 mt-0.5 min-h-[2rem]" title={product.descripcion}>
+                                                    {product.descripcion}
+                                                </h4>
+                                            </div>
+
+                                            <div>
+                                                {/* Price */}
+                                                <div className="mt-2 border-t border-slate-100/60 pt-2 flex items-baseline justify-between">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-mono text-xs font-bold text-slate-800">
+                                                            {formatCurrency(priceWithTax)}
+                                                        </span>
+                                                        <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider leading-none">
+                                                            c/Impuesto
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1 py-0.5 rounded">
+                                                        {product.unidadMedida || 'UND'}
+                                                    </span>
+                                                </div>
+
+                                                {/* Actions */}
+                                                <div className="flex gap-1 mt-2.5" onClick={(e) => e.stopPropagation()}>
+                                                    <Link href={`/products/${product.id}`} className="flex-1">
+                                                        <Button variant="outline" size="sm" className="w-full h-8 text-[9px] font-bold text-slate-600 rounded-lg p-0">
+                                                            <Edit className="h-3 w-3 mr-1 text-slate-500" />
+                                                            Editar
+                                                        </Button>
+                                                    </Link>
+                                                    <Link href={`/products/${product.id}?tab=history`} className="flex-1">
+                                                        <Button variant="outline" size="sm" className="w-full h-8 text-[9px] font-bold text-slate-600 rounded-lg p-0">
+                                                            <History className="h-3 w-3 mr-1 text-slate-500" />
+                                                            Ver
+                                                        </Button>
+                                                    </Link>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg p-0 shrink-0"
+                                                        onClick={() => handleDelete(product.id, product.descripcion)}
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="col-span-2 py-12 text-center text-xs text-slate-400 font-semibold">
+                                    No hay productos registrados
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Pagination (Backend Powered) */}
+                        <div className="flex items-center justify-between px-4 py-3 bg-slate-50/30">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-slate-500">
+                                <span>
+                                    Mostrando {totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0} a{' '}
+                                    {Math.min(currentPage * pageSize, totalCount)} de {totalCount} productos
+                                </span>
+                                <span className="hidden sm:inline text-slate-200">|</span>
+                                <span className="font-semibold text-slate-700">
+                                    Página {currentPage} de {pageCount || 1}
+                                </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => table.previousPage()}
-                                    disabled={!table.getCanPreviousPage()}
-                                >
-                                    <ChevronLeft className="h-4 w-4" />
-                                    Anterior
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => table.nextPage()}
-                                    disabled={!table.getCanNextPage()}
-                                >
-                                    Siguiente
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2 text-xs text-slate-500">
+                                    <span className="hidden sm:inline">Filas por página:</span>
+                                    <Select
+                                        value={String(pageSize)}
+                                        onValueChange={(val) => {
+                                            const query = createQueryString({ limit: val, page: '1' });
+                                            router.push(`${pathname}?${query}`);
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-8 w-[65px] text-xs rounded-lg">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-lg">
+                                            <SelectItem value="10" className="text-xs cursor-pointer">10</SelectItem>
+                                            <SelectItem value="20" className="text-xs cursor-pointer">20</SelectItem>
+                                            <SelectItem value="50" className="text-xs cursor-pointer">50</SelectItem>
+                                            <SelectItem value="100" className="text-xs cursor-pointer">100</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const query = createQueryString({ page: String(currentPage - 1) });
+                                            router.push(`${pathname}?${query}`);
+                                        }}
+                                        disabled={currentPage <= 1}
+                                        className="h-8 text-xs font-semibold px-3 border-slate-200 rounded-lg"
+                                    >
+                                        <ChevronLeft className="h-3.5 w-3.5 mr-1 text-slate-500" />
+                                        Anterior
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const query = createQueryString({ page: String(currentPage + 1) });
+                                            router.push(`${pathname}?${query}`);
+                                        }}
+                                        disabled={currentPage >= pageCount}
+                                        className="h-8 text-xs font-semibold px-3 border-slate-200 rounded-lg"
+                                    >
+                                        Siguiente
+                                        <ChevronRight className="h-3.5 w-3.5 ml-1 text-slate-500" />
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </CardContent>

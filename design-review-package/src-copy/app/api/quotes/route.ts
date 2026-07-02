@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getTenantContext } from '@/lib/auth/context';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
     try {
+        const { empresaId: companyId, userId } = await getTenantContext();
         const body = await request.json();
         const { client, items, totals, notes, terms, validUntil } = body;
-
-        // Mock Auth
-        const companyId = "cm6s25dti000008l102cz361a";
-        // We need a valid user ID. Let's find one or use a real mock from seed if known.
-        // For robustness, let's find the first user of the company.
-        const user = await prisma.usuario.findFirst({ where: { empresaId: companyId } });
-        if (!user) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 500 });
 
         const sucursal = await prisma.sucursal.findFirst({ where: { empresaId: companyId } });
         if (!sucursal) return NextResponse.json({ error: 'Configuración de empresa incompleta (Sucursal)' }, { status: 500 });
@@ -30,7 +25,6 @@ export async function POST(request: NextRequest) {
         }
 
         // 2. Handle Ad-Hoc Items (Generic Product Fallback)
-        // Check if we have a generic product, else create/find one.
         let genericProduct = await prisma.producto.findFirst({
             where: {
                 empresaId: companyId,
@@ -39,28 +33,25 @@ export async function POST(request: NextRequest) {
         });
 
         if (!genericProduct) {
-            // Fallback: try to find ANY product or create one
             const anyProduct = await prisma.producto.findFirst({ where: { empresaId: companyId } });
             if (anyProduct) genericProduct = anyProduct;
             else {
-                // Create a dummy product if table is empty (unlikely with seed)
                 return NextResponse.json({ error: 'No hay productos configurados en el sistema' }, { status: 500 });
             }
         }
 
-        // 3. Generate Number
-        const count = await prisma.cotizacion.count({ where: { empresaId: companyId } });
-        const quoteNumber = `QT-${new Date().getFullYear()}-${String(count + 1).padStart(5, '0')}`;
-
-        // 4. Transaction
+        // 3. Transaction with secure number generation
         const newQuote = await prisma.$transaction(async (tx) => {
+            const count = await tx.cotizacion.count({ where: { empresaId: companyId } });
+            const quoteNumber = `QT-${new Date().getFullYear()}-${String(count + 1).padStart(5, '0')}`;
+
             return await tx.cotizacion.create({
                 data: {
                     empresaId: companyId,
                     sucursalId: sucursal.id,
                     cajaId: caja.id,
                     clienteId: client.id,
-                    creadorId: user.id,
+                    creadorId: userId,
                     numero: quoteNumber,
                     fechaEmision: new Date(),
                     validaHasta: new Date(validUntil || Date.now() + 86400000 * 15), // Default 15 days

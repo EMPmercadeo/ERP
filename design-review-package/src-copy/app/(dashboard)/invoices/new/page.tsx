@@ -1,19 +1,24 @@
 import { prisma } from '@/lib/db';
 import { Topbar } from '@/components/layout/Topbar';
 import { InvoiceForm } from '@/components/invoices/InvoiceForm';
+import { getTenantContext } from '@/lib/auth/context';
+import { getDocumentUsage } from '@/lib/actions/billing';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NewInvoicePage() {
-    const [clients, products] = await Promise.all([
+    const { empresaId } = await getTenantContext();
+
+    const [clients, products, documentUsage] = await Promise.all([
         prisma.cliente.findMany({
-            where: { estado: 'activo' },
+            where: { empresaId, estado: 'activo' },
             select: { id: true, razonSocial: true, ruc: true }
         }),
         prisma.producto.findMany({
-            where: { activo: true },
+            where: { empresaId, activo: true },
             select: { id: true, codigoInterno: true, descripcion: true, precioVenta: true, codigoTasaItbms: true }
-        })
+        }),
+        getDocumentUsage(empresaId)
     ]);
 
     const formattedClients = clients.map(c => ({
@@ -33,7 +38,12 @@ export default async function NewInvoicePage() {
     return (
         <>
             <Topbar title="Nueva Factura" />
-            <InvoiceForm clients={formattedClients} products={formattedProducts} />
+            <InvoiceForm 
+                clients={formattedClients} 
+                products={formattedProducts} 
+                companyId={empresaId}
+                remainingDocuments={documentUsage.remainingDocuments}
+            />
         </>
     );
 }

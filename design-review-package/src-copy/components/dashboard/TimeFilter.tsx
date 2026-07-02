@@ -112,7 +112,7 @@ export function TimeFilter({ className }: TimeFilterProps) {
     };
 
     return (
-        <div className={cn("inline-flex h-9 items-center justify-center rounded-lg border bg-background p-0", className)}>
+        <div className={cn("inline-flex max-w-full overflow-x-auto scrollbar-none h-9 items-center justify-start sm:justify-center rounded-lg border bg-background p-0", className)}>
             {/* Quick Actions */}
             {quickOptions.map((option) => {
                 const isSelected = currentPeriod === option.value;
@@ -121,14 +121,14 @@ export function TimeFilter({ className }: TimeFilterProps) {
                         key={option.value}
                         onClick={() => handleInlineSelect(option.value)}
                         className={cn(
-                            "inline-flex h-full items-center justify-center whitespace-nowrap px-4 text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
+                            "inline-flex h-full shrink-0 items-center justify-center whitespace-nowrap px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
                             isSelected
-                                ? "bg-blue-50 text-blue-700 hover:bg-blue-100/70"
+                                ? "bg-brand-1 text-white hover:bg-brand-1/90"
                                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                             "border-r"
                         )}
                     >
-                        {isSelected && <Check className="mr-2 h-3.5 w-3.5" />}
+                        {isSelected && <Check className="mr-1.5 sm:mr-2 h-3.5 w-3.5" />}
                         {option.label}
                     </button>
                 );
@@ -139,9 +139,9 @@ export function TimeFilter({ className }: TimeFilterProps) {
                 <DialogTrigger asChild>
                     <button
                         className={cn(
-                            "inline-flex h-full items-center justify-center whitespace-nowrap px-4 text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
+                            "inline-flex h-full shrink-0 items-center justify-center whitespace-nowrap px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
                             !quickOptions.some(o => o.value === currentPeriod)
-                                ? "bg-blue-50 text-blue-700 hover:bg-blue-100/70"
+                                ? "bg-brand-1 text-white hover:bg-brand-1/90"
                                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                             "border-l"
                         )}
@@ -152,7 +152,7 @@ export function TimeFilter({ className }: TimeFilterProps) {
                             if (currentPeriod === 'custom') return "Personalizado";
                             return extendedOptions.find(o => o.value === currentPeriod)?.label || "Más información";
                         })()}
-                        <ChevronDown className={cn("ml-2 h-4 w-4", !quickOptions.some(o => o.value === currentPeriod) ? "text-blue-700" : "opacity-50")} />
+                        <ChevronDown className={cn("ml-2 h-4 w-4", !quickOptions.some(o => o.value === currentPeriod) ? "text-white" : "opacity-50")} />
                     </button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[500px] p-0 gap-0 overflow-hidden">

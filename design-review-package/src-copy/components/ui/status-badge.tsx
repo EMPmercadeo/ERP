@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Badge, badgeVariants } from "./badge"
-import { CheckCircle2, Clock, XCircle, AlertCircle, Ban, Loader2, FileEdit, HelpCircle } from "lucide-react"
+import { CheckCircle2, Clock, XCircle, AlertCircle, Ban, Loader2, FileEdit, HelpCircle, Send } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { type VariantProps } from "class-variance-authority"
 
@@ -65,6 +65,80 @@ const statusConfig: Record<string, {
         variant: "destructive",
         icon: AlertCircle,
     },
+    // Client statuses
+    activo: {
+        label: "Activo",
+        variant: "success",
+        icon: CheckCircle2,
+    },
+    moroso: {
+        label: "Moroso",
+        variant: "warning",
+        icon: Clock,
+    },
+    bloqueado: {
+        label: "Bloqueado",
+        variant: "destructive",
+        icon: XCircle,
+    },
+    // Quote statuses
+    enviada: {
+        label: "Enviada",
+        variant: "info",
+        icon: Send,
+    },
+    // Order / Delivery statuses
+    en_proceso: {
+        label: "En Proceso",
+        variant: "info",
+        icon: Loader2,
+    },
+    entregado: {
+        label: "Entregado",
+        variant: "success",
+        icon: CheckCircle2,
+    },
+    parcialmente_entregado: {
+        label: "Parcialmente Entregado",
+        variant: "warning",
+        icon: Clock,
+    },
+    "parcialmente entregado": {
+        label: "Parcialmente Entregado",
+        variant: "warning",
+        icon: Clock,
+    },
+    facturado: {
+        label: "Facturado",
+        variant: "success",
+        icon: CheckCircle2,
+    },
+}
+
+const statusClassMap: Record<string, string> = {
+    // DGI statuses
+    aceptada: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
+    pendiente: "bg-warning-bg text-warning border-transparent hover:bg-warning-bg/90",
+    rechazada: "bg-danger-bg text-danger border-transparent hover:bg-danger-bg/90",
+    procesando: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
+    anulada: "bg-secondary text-muted-foreground border-border hover:bg-secondary/90",
+    borrador: "bg-secondary text-muted-foreground border-border hover:bg-secondary/90",
+    // Payment statuses
+    pagada: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
+    parcial: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
+    vencida: "bg-danger-bg text-danger border-transparent hover:bg-danger-bg/90",
+    // Client statuses
+    activo: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
+    moroso: "bg-warning-bg text-warning border-transparent hover:bg-warning-bg/90",
+    bloqueado: "bg-danger-bg text-danger border-transparent hover:bg-danger-bg/90",
+    // Quote statuses
+    enviada: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
+    // Order / Delivery statuses
+    en_proceso: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
+    entregado: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
+    parcialmente_entregado: "bg-warning-bg text-warning border-transparent hover:bg-warning-bg/90",
+    "parcialmente entregado": "bg-warning-bg text-warning border-transparent hover:bg-warning-bg/90",
+    facturado: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
 }
 
 // Fallback for unknown statuses
@@ -87,15 +161,16 @@ function StatusBadge({
 }: StatusBadgeProps) {
     const config = statusConfig[status] || fallbackConfig
     const Icon = config.icon
+    const colorClass = statusClassMap[status] || "bg-secondary text-muted-foreground border-border hover:bg-secondary/90"
 
     return (
         <Badge
             variant={config.variant}
-            className={cn(className)}
+            className={cn("min-w-[118px] justify-center font-semibold gap-1.5 py-1 px-3 rounded-full text-xs transition-colors", colorClass, className)}
             {...props}
         >
             {showIcon && (
-                <Icon className={cn("h-3 w-3", status === "procesando" && "animate-spin")} />
+                <Icon className={cn("h-3.5 w-3.5 shrink-0", status === "procesando" && "animate-spin")} />
             )}
             {config.label}
         </Badge>

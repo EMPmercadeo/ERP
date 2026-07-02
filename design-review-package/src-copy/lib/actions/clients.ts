@@ -4,42 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { ClientSchema } from '@/lib/validations';
-
-// Helper to get or create default enterprise
-async function getCompanyId() {
-    const company = await prisma.empresa.findFirst();
-    if (company) return company.id;
-
-    const newCompany = await prisma.empresa.create({
-        data: {
-            ruc: '123456789',
-            dv: '00',
-            razonSocial: 'Mi Empresa Default',
-            direccion: 'Ciudad de Panamá',
-            ambienteDgi: '1',
-        }
-    });
-
-    const sucursal = await prisma.sucursal.create({
-        data: {
-            empresaId: newCompany.id,
-            codigo: '001',
-            nombre: 'Sucursal Principal',
-            direccion: 'Ciudad de Panamá',
-        }
-    });
-
-    await prisma.caja.create({
-        data: {
-            empresaId: newCompany.id,
-            sucursalId: sucursal.id,
-            codigo: '01',
-            nombre: 'Caja Principal'
-        }
-    });
-
-    return newCompany.id;
-}
+import { getTenantContext } from '@/lib/auth/context';
 
 export async function createClient(prevState: any, formData: FormData) {
     const rawData = {
@@ -64,7 +29,7 @@ export async function createClient(prevState: any, formData: FormData) {
     }
 
     const { data } = validatedFields;
-    const empresaId = await getCompanyId();
+    const { empresaId } = await getTenantContext();
 
     try {
         await prisma.cliente.create({
@@ -116,8 +81,18 @@ export async function updateClient(id: string, prevState: any, formData: FormDat
     }
 
     const { data } = validatedFields;
+    const { empresaId } = await getTenantContext();
 
     try {
+        const existing = await prisma.cliente.findFirst({
+            where: { id, empresaId }
+        });
+        if (!existing) {
+            return {
+                message: 'Cliente no encontrado o acceso denegado.'
+            };
+        }
+
         await prisma.cliente.update({
             where: { id },
             data: {
@@ -145,6 +120,29 @@ export async function updateClient(id: string, prevState: any, formData: FormDat
 
 export async function deleteClient(id: string) {
     try {
+        const { empresaId } = await getTenantContext();
+        const existing = await prisma.cliente.findFirst({
+            where: { id, empresaId }
+        });
+        if (!existing) {
+            return { success: false, error: 'Cliente no encontrado o acceso denegado.' };
+        }
+
+        // Check for related invoices before hard delete
+        const relatedInvoices = await prisma.factura.count({
+            where: { clienteId: id, empresaId }
+        });
+
+        if (relatedInvoices > 0) {
+            // Soft delete: mark as inactive instead of deleting
+            await prisma.cliente.update({
+                where: { id },
+                data: { estado: 'inactivo' }
+            });
+            revalidatePath('/clients');
+            return { success: true, message: 'Cliente desactivado (tiene facturas asociadas).' };
+        }
+
         await prisma.cliente.delete({
             where: { id }
         });
@@ -152,7 +150,7 @@ export async function deleteClient(id: string) {
         return { success: true, message: 'Cliente eliminado correctamente.' };
     } catch (error) {
         console.error('Database Error:', error);
-        return { success: false, message: 'Error al eliminar el cliente. Podría tener facturas asociadas.' };
+        return { success: false, error: 'Error al eliminar el cliente. Podría tener facturas asociadas.' };
     }
 }
 

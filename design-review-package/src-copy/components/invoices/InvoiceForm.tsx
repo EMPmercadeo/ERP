@@ -11,7 +11,10 @@ import {
     Trash2,
     Search,
     User,
-    Package
+    Package,
+    AlertTriangle,
+    X,
+    Zap
 } from 'lucide-react';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
@@ -36,7 +39,9 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { createInvoice } from '@/lib/actions/invoices';
+import { purchaseDocumentBlock } from '@/lib/actions/billing';
 import { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 
 // Interfaces for Props
 export interface ClientOption {
@@ -84,9 +89,25 @@ const initialState = {
     errors: {},
 };
 
-export function InvoiceForm({ clients, products }: { clients: ClientOption[], products: ProductOption[] }) {
+export function InvoiceForm({ 
+    clients, 
+    products,
+    companyId,
+    remainingDocuments = 10
+}: { 
+    clients: ClientOption[]; 
+    products: ProductOption[];
+    companyId: string;
+    remainingDocuments: number;
+}) {
     const router = useRouter();
     const [state, formAction] = useFormState(createInvoice, initialState);
+
+    // Billing and Limits state
+    const [currentRemaining, setCurrentRemaining] = useState(remainingDocuments);
+    const [showPurchaseBlockModal, setShowPurchaseBlockModal] = useState(false);
+    const [selectedBlockSize, setSelectedBlockSize] = useState<number>(100);
+    const [isPurchasingBlock, setIsPurchasingBlock] = useState(false);
 
     // Form state
     const [clienteId, setClienteId] = useState('');
@@ -116,6 +137,24 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
             c.ruc.toLowerCase().includes(clientSearch.toLowerCase())
         ).slice(0, 8);
     }, [clientSearch, clients]);
+
+    const handlePurchaseBlock = async () => {
+        setIsPurchasingBlock(true);
+        try {
+            const res = await purchaseDocumentBlock(companyId, selectedBlockSize);
+            if (res.success) {
+                toast.success(res.message);
+                setCurrentRemaining(prev => prev + selectedBlockSize);
+                setShowPurchaseBlockModal(false);
+            } else {
+                toast.error(res.message);
+            }
+        } catch (error) {
+            toast.error('Error al procesar la compra del bloque de documentos.');
+        } finally {
+            setIsPurchasingBlock(false);
+        }
+    };
 
     const selectedClient = clients.find(c => c.id === clienteId);
 
@@ -191,6 +230,44 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
                     <Alert variant="error">{state.message}</Alert>
                 )}
 
+                {currentRemaining <= 0 && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in fade-in duration-200">
+                        <div className="flex items-start gap-3">
+                            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                            <div>
+                                <h4 className="font-bold text-amber-950 text-sm">Límite mensual de facturación alcanzado</h4>
+                                <p className="text-xs text-amber-900/80 mt-0.5">
+                                    Has agotado los documentos de facturación electrónica incluidos en tu plan para este mes.
+                                    Para continuar facturando y timbrando con la DGI, adquiere un bloque adicional o actualiza tu plan.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                            <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs"
+                                onClick={() => setShowPurchaseBlockModal(true)}
+                            >
+                                <Zap className="h-3.5 w-3.5 mr-1.5 fill-white" />
+                                Comprar Bloque
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="border-amber-200 text-amber-800 hover:bg-amber-100/50 text-xs font-semibold"
+                                asChild
+                            >
+                                <Link href="/settings">
+                                    Ver Planes
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Form */}
                 <form action={formAction}>
                     {/* Hidden Input for Items JSON */}
@@ -213,13 +290,13 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
                                     {!clienteId ? (
                                         <div className="space-y-2">
                                             <div className="relative">
-                                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Search className="absolute left-2.5 top-3.5 md:top-2.5 h-4 w-4 text-muted-foreground" />
                                                 <Input
                                                     type="text"
                                                     placeholder="Buscar cliente por nombre o RUC..."
                                                     value={clientSearch}
                                                     onChange={(e) => setClientSearch(e.target.value)}
-                                                    className={`pl-8 ${state?.errors?.clienteId ? 'border-red-500' : ''}`}
+                                                    className={`pl-8 h-11 md:h-10 ${state?.errors?.clienteId ? 'border-red-500' : ''}`}
                                                 />
                                             </div>
                                             {clientSearch && (
@@ -233,7 +310,7 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
                                                                     setClienteId(client.id);
                                                                     setClientSearch('');
                                                                 }}
-                                                                className="w-full px-4 py-2.5 text-left hover:bg-slate-50 transition-colors flex justify-between items-center"
+                                                                className="w-full px-4 py-3 md:py-2.5 text-left hover:bg-slate-50 transition-colors flex justify-between items-center"
                                                             >
                                                                 <div>
                                                                     <div className="font-medium text-slate-800 text-sm">{client.razonSocial}</div>
@@ -270,7 +347,7 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
                                                     variant="ghost" 
                                                     size="sm" 
                                                     onClick={() => setClienteId('')}
-                                                    className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50"
+                                                    className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 h-11 md:h-9"
                                                 >
                                                     Cambiar Cliente
                                                 </Button>
@@ -296,12 +373,12 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
                                     {showProductSearch ? (
                                         <div className="space-y-2">
                                             <div className="relative">
-                                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Search className="absolute left-2.5 top-3.5 md:top-2.5 h-4 w-4 text-muted-foreground" />
                                                 <Input
                                                     placeholder="Buscar producto..."
                                                     value={productSearch}
                                                     onChange={(e) => setProductSearch(e.target.value)}
-                                                    className="pl-8"
+                                                    className="pl-8 h-11 md:h-10"
                                                     autoFocus
                                                 />
                                             </div>
@@ -311,7 +388,7 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
                                                         key={product.id}
                                                         type="button"
                                                         onClick={() => addProduct(product)}
-                                                        className="w-full px-3 py-2 text-left hover:bg-accent flex justify-between items-center border-b last:border-0"
+                                                        className="w-full px-3 py-3 md:py-2 text-left hover:bg-accent flex justify-between items-center border-b last:border-0"
                                                     >
                                                         <span>{product.descripcion}</span>
                                                         <span className="text-muted-foreground">{formatCurrency(product.precio)}</span>
@@ -322,12 +399,12 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
                                                     </div>
                                                 )}
                                             </div>
-                                            <Button type="button" variant="ghost" size="sm" onClick={() => setShowProductSearch(false)}>
+                                            <Button type="button" variant="ghost" size="sm" onClick={() => setShowProductSearch(false)} className="h-11 md:h-9">
                                                 Cancelar
                                             </Button>
                                         </div>
                                     ) : (
-                                        <Button type="button" variant="outline" onClick={() => setShowProductSearch(true)}>
+                                        <Button type="button" variant="outline" onClick={() => setShowProductSearch(true)} className="h-11 md:h-10 font-bold text-xs">
                                             <Plus className="h-4 w-4 mr-2" />
                                             Agregar Producto
                                         </Button>
@@ -337,49 +414,106 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
 
                                     {/* Items table */}
                                     {items.length > 0 && (
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Producto</TableHead>
-                                                    <TableHead className="w-24">Cant.</TableHead>
-                                                    <TableHead className="text-right">Precio</TableHead>
-                                                    <TableHead className="text-right">ITBMS</TableHead>
-                                                    <TableHead className="text-right">Total</TableHead>
-                                                    <TableHead className="w-12"></TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
+                                        <>
+                                            {/* Desktop Items Table */}
+                                            <div className="hidden md:block">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead>Producto</TableHead>
+                                                            <TableHead className="w-24">Cant.</TableHead>
+                                                            <TableHead className="text-right">Precio</TableHead>
+                                                            <TableHead className="text-right">ITBMS</TableHead>
+                                                            <TableHead className="text-right">Total</TableHead>
+                                                            <TableHead className="w-12"></TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {items.map(item => (
+                                                            <TableRow key={item.id}>
+                                                                <TableCell className="font-medium">{item.descripcion}</TableCell>
+                                                                <TableCell>
+                                                                    <Input
+                                                                        type="number"
+                                                                        min="0.01"
+                                                                        step="0.01"
+                                                                        value={item.cantidad}
+                                                                        onChange={(e) => updateItemQuantity(item.id, parseFloat(e.target.value) || 0)}
+                                                                        className="w-20"
+                                                                    />
+                                                                </TableCell>
+                                                                <TableCell className="text-right">{formatCurrency(item.subtotal)}</TableCell>
+                                                                <TableCell className="text-right">{formatCurrency(item.itbms)}</TableCell>
+                                                                <TableCell className="text-right font-medium">{formatCurrency(item.total)}</TableCell>
+                                                                <TableCell>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        onClick={() => removeItem(item.id)}
+                                                                        className="text-destructive hover:text-destructive"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+
+                                            {/* Mobile Items Cards */}
+                                            <div className="block md:hidden space-y-3 font-sans">
                                                 {items.map(item => (
-                                                    <TableRow key={item.id}>
-                                                        <TableCell className="font-medium">{item.descripcion}</TableCell>
-                                                        <TableCell>
-                                                            <Input
-                                                                type="number"
-                                                                min="0.01"
-                                                                step="0.01"
-                                                                value={item.cantidad}
-                                                                onChange={(e) => updateItemQuantity(item.id, parseFloat(e.target.value) || 0)}
-                                                                className="w-20"
-                                                            />
-                                                        </TableCell>
-                                                        <TableCell className="text-right">{formatCurrency(item.subtotal)}</TableCell>
-                                                        <TableCell className="text-right">{formatCurrency(item.itbms)}</TableCell>
-                                                        <TableCell className="text-right font-medium">{formatCurrency(item.total)}</TableCell>
-                                                        <TableCell>
-                                                            <Button
-                                                                type="button"
-                                                                variant="ghost"
-                                                                size="icon"
+                                                    <div 
+                                                        key={item.id}
+                                                        className="border border-slate-100 rounded-xl p-3 bg-slate-50/50 space-y-2 flex flex-col justify-between"
+                                                    >
+                                                        <div className="flex justify-between items-start gap-2">
+                                                            <span className="font-semibold text-slate-800 text-xs sm:text-sm">{item.descripcion}</span>
+                                                            <Button 
+                                                                type="button" 
+                                                                variant="ghost" 
+                                                                size="icon" 
+                                                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0 rounded-lg" 
                                                                 onClick={() => removeItem(item.id)}
-                                                                className="text-destructive hover:text-destructive"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
                                                             </Button>
-                                                        </TableCell>
-                                                    </TableRow>
+                                                        </div>
+                                                        
+                                                        <div className="flex items-center justify-between border-t border-slate-100/60 pt-2">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">P. Unitario</span>
+                                                                <span className="font-mono text-xs text-slate-800 font-bold mt-0.5">{formatCurrency(item.precioUnitario)}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs text-slate-500">Cant:</span>
+                                                                <Input 
+                                                                    type="number" 
+                                                                    min="0.01" 
+                                                                    step="0.01" 
+                                                                    value={item.cantidad} 
+                                                                    onChange={(e) => updateItemQuantity(item.id, parseFloat(e.target.value) || 0)} 
+                                                                    className="w-20 h-10 text-xs text-center rounded-lg bg-white" 
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex justify-between items-center text-[10px] text-slate-500 border-t border-slate-100/60 pt-2">
+                                                            <div className="flex flex-col gap-0.5">
+                                                                <span>Subtotal: {formatCurrency(item.subtotal)}</span>
+                                                                <span>ITBMS ({(itbmsRates[item.codigoTasaItbms] * 100).toFixed(0)}%): {formatCurrency(item.itbms)}</span>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider leading-none">Total</span>
+                                                                <span className="font-mono font-bold text-xs text-slate-800">{formatCurrency(item.total)}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 ))}
-                                            </TableBody>
-                                        </Table>
+                                            </div>
+                                        </>
                                     )}
                                 </CardContent>
                             </Card>
@@ -397,7 +531,7 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
                                             Condición de Pago
                                         </label>
                                         <Select name="condicionPago" value={condicionPago} onValueChange={setCondicionPago}>
-                                            <SelectTrigger>
+                                            <SelectTrigger className="h-11 md:h-10">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -447,8 +581,8 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
 
                             {/* Actions */}
                             <div className="flex flex-col gap-2">
-                                <SubmitButton disabled={items.length === 0} />
-                                <Button type="button" variant="outline" onClick={() => router.back()} className="w-full">
+                                <SubmitButton disabled={items.length === 0 || currentRemaining <= 0} />
+                                <Button type="button" variant="outline" onClick={() => router.back()} className="w-full h-11 md:h-10 text-sm font-semibold">
                                     Cancelar
                                 </Button>
                             </div>
@@ -456,6 +590,96 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
                     </div>
                 </form>
             </div>
+
+            {/* Modal de Compra de Bloques de Documentos desde Formulario */}
+            {showPurchaseBlockModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="w-full max-w-md bg-card rounded-xl border border-border shadow-2xl p-6 relative font-sans">
+                        <button
+                            onClick={() => setShowPurchaseBlockModal(false)}
+                            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+                            disabled={isPurchasingBlock}
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+
+                        <div className="space-y-6">
+                            <div className="text-center">
+                                <h3 className="text-xl font-bold text-slate-900">Comprar Bloque de Documentos</h3>
+                                <p className="text-xs text-muted-foreground mt-1">Adquiere folios electrónicos adicionales para poder timbrar esta factura inmediatamente.</p>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="block text-xs font-semibold text-muted-foreground">Seleccionar Tamaño del Bloque</label>
+                                <div className="grid grid-cols-3 gap-3">
+                                    {[
+                                        { size: 100, price: 5.00, label: '100 docs' },
+                                        { size: 500, price: 25.00, label: '500 docs' },
+                                        { size: 1000, price: 50.00, label: '1,000 docs' }
+                                    ].map((block) => (
+                                        <button
+                                            key={block.size}
+                                            type="button"
+                                            onClick={() => setSelectedBlockSize(block.size)}
+                                            className={`p-3 border rounded-lg flex flex-col items-center justify-center gap-1 transition-all ${
+                                                selectedBlockSize === block.size
+                                                    ? 'border-indigo-600 bg-indigo-50/50 text-indigo-950 ring-2 ring-indigo-600/10'
+                                                    : 'border-border bg-white text-slate-700 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            <span className="text-xs font-bold">{block.label}</span>
+                                            <span className="text-xs font-semibold text-indigo-600">${block.price.toFixed(2)}</span>
+                                            <span className="text-[9px] text-muted-foreground">($0.05 c/u)</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="bg-indigo-50/30 border border-indigo-100 rounded-lg p-4 space-y-2 text-xs text-indigo-950/80">
+                                <div className="flex justify-between font-semibold">
+                                    <span>Costo del Bloque</span>
+                                    <span>${(selectedBlockSize * 0.05).toFixed(2)} USD</span>
+                                </div>
+                                <div className="flex justify-between text-[10px] text-muted-foreground">
+                                    <span>Precio por documento</span>
+                                    <span>$0.05 USD</span>
+                                </div>
+                                <p className="text-[10px] text-muted-foreground border-t pt-2 mt-1">
+                                    * Al confirmar el pago, los folios se acreditarán a tu cuenta de inmediato y podrás guardar tu factura sin salir del formulario.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Button
+                                    onClick={handlePurchaseBlock}
+                                    disabled={isPurchasingBlock}
+                                    className="w-full bg-paypal-yellow hover:bg-paypal-yellow-hover text-paypal-blue font-bold py-5 flex items-center justify-center gap-2 border-none shadow-sm hover:shadow-md"
+                                >
+                                    {isPurchasingBlock ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                            Procesando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="italic font-extrabold text-lg">PayPal</span>
+                                            <span className="text-sm font-semibold tracking-wider">COMPRAR AHORA (Simulado)</span>
+                                        </>
+                                    )}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="w-full"
+                                    onClick={() => setShowPurchaseBlockModal(false)}
+                                    disabled={isPurchasingBlock}
+                                >
+                                    Cancelar
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </ContentContainer>
     );
 }
@@ -463,7 +687,7 @@ export function InvoiceForm({ clients, products }: { clients: ClientOption[], pr
 function SubmitButton({ disabled }: { disabled: boolean }) {
     const { pending } = useFormStatus();
     return (
-        <Button type="submit" disabled={pending || disabled} className="w-full">
+        <Button type="submit" disabled={pending || disabled} className="w-full h-11 md:h-10 font-bold text-xs md:text-sm">
             {pending ? (
                 <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

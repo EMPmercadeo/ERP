@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { getTenantContext } from '@/lib/auth/context';
 
 export const dynamic = 'force-dynamic';
 import {
@@ -32,14 +33,20 @@ import Link from 'next/link';
 
 interface PageProps {
     params: Promise<{ id: string }>;
+    searchParams: Promise<{ print?: string; sent?: string }>;
 }
 
 export default async function InvoiceDetailPage(props: PageProps) {
     const params = await props.params;
+    const searchParams = await props.searchParams;
     const { id } = params;
+    const printParam = searchParams.print;
+    const sentParam = searchParams.sent;
+    const { empresaId } = await getTenantContext();
 
     const invoice = await prisma.factura.findFirst({
         where: {
+            empresaId,
             OR: [
                 { id: id },
                 { numeroCompleto: id }
@@ -103,20 +110,33 @@ export default async function InvoiceDetailPage(props: PageProps) {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
-                            <Printer className="mr-2 h-4 w-4" />
-                            Imprimir
+                        <Button variant="outline" size="sm" asChild>
+                            <Link href="?print=true">
+                                <Printer className="mr-2 h-4 w-4" />
+                                Imprimir
+                            </Link>
                         </Button>
-                        <Button variant="outline" size="sm">
-                            <Download className="mr-2 h-4 w-4" />
-                            PDF
+                        <Button variant="outline" size="sm" asChild>
+                            <Link href="?print=true">
+                                <Download className="mr-2 h-4 w-4" />
+                                PDF
+                            </Link>
                         </Button>
-                        <Button variant="outline" size="sm">
-                            <Mail className="mr-2 h-4 w-4" />
-                            Enviar
+                        <Button variant="outline" size="sm" asChild>
+                            <Link href="?sent=true">
+                                <Mail className="mr-2 h-4 w-4" />
+                                Enviar
+                            </Link>
                         </Button>
                     </div>
                 </div>
+
+                {sentParam === 'true' && (
+                    <div className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 p-4 rounded-lg flex items-center gap-2 text-sm font-semibold">
+                        <CheckCircle className="h-5 w-5" />
+                        Factura enviada por correo electrónico con éxito a {invoice.cliente.email || 'el cliente'}.
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Main Invoice Info */}
@@ -129,17 +149,17 @@ export default async function InvoiceDetailPage(props: PageProps) {
                                         <h3 className="text-sm font-medium text-muted-foreground mb-2">De</h3>
                                         <div className="font-semibold text-lg">Tu Empresa S.A.</div>
                                         <div className="text-sm text-muted-foreground">
-                                            {invoice.sucursal?.direccion}<br />
-                                            {invoice.sucursal?.nombre}
+                                            {invoice.sucursal?.direccion || '--'}<br />
+                                            {invoice.sucursal?.nombre || '--'}
                                         </div>
                                     </div>
                                     <div>
                                         <h3 className="text-sm font-medium text-muted-foreground mb-2">Para</h3>
                                         <div className="font-semibold text-lg">{invoice.cliente.razonSocial}</div>
                                         <div className="text-sm text-muted-foreground">
-                                            RUC: {invoice.cliente.ruc}-{invoice.cliente.dv}<br />
-                                            {invoice.cliente.email}<br />
-                                            {invoice.cliente.telefono}
+                                            RUC: {invoice.cliente.ruc}{invoice.cliente.dv ? `-${invoice.cliente.dv}` : ''}<br />
+                                            Email: {invoice.cliente.email || '--'}<br />
+                                            Teléfono: {invoice.cliente.telefono || '--'}
                                         </div>
                                     </div>
                                 </div>
@@ -238,6 +258,9 @@ export default async function InvoiceDetailPage(props: PageProps) {
                     </div>
                 </div>
             </div>
+            {printParam === 'true' && (
+                <script dangerouslySetInnerHTML={{ __html: 'window.print()' }} />
+            )}
         </ContentContainer>
     );
 }

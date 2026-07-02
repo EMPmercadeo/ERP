@@ -2,6 +2,8 @@ import { ContentContainer } from '@/components/layout/Content';
 import { EmptyState } from '@/components/layout/Content';
 import { Activity } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default function AdminAuditPage() {
     return (
         <ContentContainer className="py-8">

@@ -1,4 +1,4 @@
-import { headers, cookies } from 'next/headers';
+import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import { getUserRole } from '@/lib/actions/auth'; // Reusing this or similar logic
@@ -16,34 +16,75 @@ export interface TenantContext {
 export async function getTenantContext(): Promise<TenantContext> {
     // 1. Get User Identity from session cookie
     const cookieStore = await cookies();
-    const sessionEmail = cookieStore.get('session_email')?.value;
+    const rawEmail = cookieStore.get('session_email')?.value;
+    const sessionEmail = rawEmail ? rawEmail.trim().toLowerCase() : undefined;
 
     let devUser = null;
     if (sessionEmail && sessionEmail !== 'guest') {
-        devUser = await prisma.usuario.findUnique({
-            where: { email: sessionEmail }
+        devUser = await prisma.usuario.findFirst({
+            where: {
+                OR: [
+                    { email: sessionEmail },
+                    { email: { equals: sessionEmail, mode: 'insensitive' } }
+                ]
+            }
         });
+
+        // Auto-aprovisionar nueva cuenta en PostgreSQL para usuarios que inician sesión/registran por primera vez vía Firebase (Google o Email)
+        if (!devUser && sessionEmail.includes('@')) {
+            try {
+                const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+                const rucGen = `PE-${Date.now()}-${randomSuffix}`;
+                const nombreGen = sessionEmail.split('@')[0];
+                const razonGen = nombreGen.toUpperCase();
+
+                const nuevaEmpresa = await prisma.empresa.create({
+                    data: {
+                        ruc: rucGen,
+                        dv: '00',
+                        razonSocial: razonGen,
+                        direccion: 'Panamá',
+                        email: sessionEmail,
+                        planType: 'free',
+                        subscriptionStatus: 'active'
+                    }
+                });
+
+                devUser = await prisma.usuario.create({
+                    data: {
+                        empresaId: nuevaEmpresa.id,
+                        email: sessionEmail,
+                        passwordHash: 'oauth-firebase',
+                        nombre: nombreGen,
+                        rol: 'admin',
+                        activo: true
+                    }
+                });
+                console.log(`Auto-provisioned new account in PostgreSQL for ${sessionEmail}`);
+            } catch (error) {
+                console.error('Error auto-provisioning user in PostgreSQL:', error);
+            }
+        }
+
     }
 
-    // For Development: Only fall back if no session cookie was explicitly set as 'guest'
-    if (!devUser && sessionEmail !== 'guest' && process.env.NODE_ENV === 'development') {
-        devUser = await prisma.usuario.findUnique({
-            where: { email: 'empsignature@gmail.com' }
+    // En entorno de desarrollo exclusivo, permitir un usuario demo solo si se configuró explícitamente
+    if (!devUser && process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_FALLBACK === 'true') {
+        devUser = await prisma.usuario.findFirst({
+            where: { email: { contains: 'empsignature', mode: 'insensitive' } }
         });
-
-        if (!devUser) {
-            devUser = await prisma.usuario.findFirst({
-                where: { rol: 'super_admin' }
-            });
-        }
-
-        if (!devUser) {
-            devUser = await prisma.usuario.findFirst();
-        }
     }
 
     if (!devUser) {
         redirect('/login');
+    }
+
+    if (!devUser.activo) {
+        redirect('/login?error=inactive');
+    }
+
+    if (!devUser.empresaId && devUser.rol !== 'super_admin') {
+        redirect('/login?error=no-company');
     }
 
     // 2. Check Impersonation (Strictly for Super Admin)
@@ -53,9 +94,16 @@ export async function getTenantContext(): Promise<TenantContext> {
     if (devUser.rol === 'super_admin') {
         const impersonatedId = cookieStore.get('x-impersonation')?.value;
 
-        if (impersonatedId) {
-            activeEmpresaId = impersonatedId;
-            isImpersonating = true;
+        if (impersonatedId && impersonatedId !== 'undefined' && impersonatedId !== 'null' && impersonatedId !== '') {
+            // Validate that the target company actually exists in the database
+            const targetEmpresa = await prisma.empresa.findUnique({
+                where: { id: impersonatedId },
+                select: { id: true }
+            });
+            if (targetEmpresa) {
+                activeEmpresaId = impersonatedId;
+                isImpersonating = true;
+            }
         }
     }
 

@@ -5,6 +5,9 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { InvoiceSchema } from '@/lib/validations';
 
+import { getTenantContext } from '@/lib/auth/context';
+import { canCreateInvoice, incrementDocumentUsage } from '@/lib/actions/billing';
+
 // DGI Document Codes
 const DOC_TYPE_FE = 'FE'; // Factura Electrónica
 
@@ -46,8 +49,9 @@ async function getNextSequence(empresaId: string, sucursalId: string, cajaId: st
     });
 }
 
-async function getDefaults() {
-    const company = await prisma.empresa.findFirst({
+async function getDefaults(empresaId: string) {
+    const company = await prisma.empresa.findUnique({
+        where: { id: empresaId },
         include: {
             sucursales: {
                 include: {
@@ -70,7 +74,14 @@ async function getDefaults() {
 
 export async function createInvoice(prevState: any, formData: FormData) {
     const rawItems = formData.get('items');
-    const items = rawItems ? JSON.parse(rawItems as string) : [];
+    let items: any[] = [];
+    if (rawItems) {
+        try {
+            items = JSON.parse(rawItems as string);
+        } catch {
+            return { success: false, message: 'Formato de ítems inválido.' };
+        }
+    }
 
     const rawData = {
         clienteId: formData.get('clienteId'),
@@ -90,30 +101,41 @@ export async function createInvoice(prevState: any, formData: FormData) {
 
     const { data } = validatedFields;
 
+    let redirectUrl = '/invoices';
     try {
-        const { empresa, sucursal, caja } = await getDefaults();
+        const { empresaId, userId } = await getTenantContext();
+        const { empresa, sucursal, caja } = await getDefaults(empresaId);
 
-        // Check monthly document consumption limits
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const invoiceCount = await prisma.factura.count({
-            where: {
-                empresaId: empresa.id,
-                fechaEmision: {
-                    gte: startOfMonth
-                }
-            }
+        // Verify client belongs to current company
+        const client = await prisma.cliente.findFirst({
+            where: { id: data.clienteId, empresaId }
         });
-
-        if (empresa.planType === 'free' && invoiceCount >= 10) {
+        if (!client) {
             return {
-                message: 'Límite de documentos excedido para tu plan. Actualiza tu plan en Configuración > Planes y Facturación para continuar.'
+                message: 'El cliente seleccionado no pertenece a tu empresa o no existe.'
             };
         }
 
-        if (empresa.planType === 'pro' && invoiceCount >= 500) {
+        // Verify all products belong to current company
+        const productIds = data.items.map(item => item.productoId);
+        const uniqueProductIds = Array.from(new Set(productIds));
+        const products = await prisma.producto.findMany({
+            where: {
+                id: { in: uniqueProductIds },
+                empresaId
+            }
+        });
+        if (products.length !== uniqueProductIds.length) {
             return {
-                message: 'Límite de documentos excedido para tu plan. Actualiza tu plan en Configuración > Planes y Facturación para continuar.'
+                message: 'Uno o más productos seleccionados no pertenecen a tu empresa o no existen.'
+            };
+        }
+
+        // Check monthly document consumption limits
+        const hasRemainingDocs = await canCreateInvoice(empresaId);
+        if (!hasRemainingDocs) {
+            return {
+                message: 'Has alcanzado el límite mensual de documentos electrónicos de tu plan. Compra un bloque adicional o actualiza tu plan.'
             };
         }
 
@@ -134,30 +156,34 @@ export async function createInvoice(prevState: any, formData: FormData) {
             numeroCompleto = `${prefix}-${String(numeroSecuencial).padStart(8, '0')}`;
         }
 
-        // Calculate totals
+        // Calculate totals with discount per DGI fiscal rules
         const subtotal = data.items.reduce((sum, item) => sum + (item.cantidad * item.precioUnitario), 0);
+        const totalDescuento = data.items.reduce((sum, item) => sum + (item.descuento || 0), 0);
         const totalItbms = data.items.reduce((sum, item) => {
             const tasa = item.codigoTasaItbms === '01' ? 0.07 :
                 item.codigoTasaItbms === '02' ? 0.10 :
                     item.codigoTasaItbms === '03' ? 0.15 : 0;
-            return sum + (item.cantidad * item.precioUnitario * tasa);
+            const montoBruto = item.cantidad * item.precioUnitario;
+            const montoNeto = Math.max(0, montoBruto - (item.descuento || 0));
+            return sum + (montoNeto * tasa);
         }, 0);
-        const totalNeto = subtotal + totalItbms;
+        const totalNeto = subtotal - totalDescuento + totalItbms;
 
         // Create Invoice with items
-        await prisma.factura.create({
+        const invoice = await prisma.factura.create({
             data: {
                 empresaId: empresa.id,
                 sucursalId: sucursal.id,
                 cajaId: caja.id,
                 clienteId: data.clienteId,
-                creadorId: (await prisma.usuario.findFirst())?.id || '',
+                creadorId: userId,
 
                 tipoDocumento: tipoDoc,
                 numeroSecuencial,
                 numeroCompleto, // Generated based on Tier
 
                 subtotal,
+                totalDescuento,
                 totalItbms,
                 totalNeto,
                 saldoPendiente: data.condicionPago === 'contado' ? 0 : totalNeto,
@@ -166,27 +192,321 @@ export async function createInvoice(prevState: any, formData: FormData) {
                 estadoDgi: isFiscal ? 'pendiente' : 'local', // 'local' avoids DGI triggers
 
                 items: {
-                    create: data.items.map(item => ({
-                        productoId: item.productoId,
-                        descripcion: item.descripcion,
-                        cantidad: item.cantidad,
-                        precioUnitario: item.precioUnitario,
-                        costoUnitario: 0,
-                        codigoTasaItbms: item.codigoTasaItbms,
-                        montoItbms: item.cantidad * item.precioUnitario * (item.codigoTasaItbms === '01' ? 0.07 : 0),
-                        montoTotal: item.cantidad * item.precioUnitario * (1 + (item.codigoTasaItbms === '01' ? 0.07 : 0))
-                    }))
+                    create: data.items.map(item => {
+                        const tasa = item.codigoTasaItbms === '01' ? 0.07 :
+                            item.codigoTasaItbms === '02' ? 0.10 :
+                                item.codigoTasaItbms === '03' ? 0.15 : 0;
+                        const desc = item.descuento || 0;
+                        const montoBruto = item.cantidad * item.precioUnitario;
+                        const montoNeto = Math.max(0, montoBruto - desc);
+                        const montoItbms = montoNeto * tasa;
+                        return {
+                            productoId: item.productoId,
+                            descripcion: item.descripcion,
+                            cantidad: item.cantidad,
+                            precioUnitario: item.precioUnitario,
+                            costoUnitario: 0,
+                            descuento: desc,
+                            codigoTasaItbms: item.codigoTasaItbms,
+                            montoItbms: montoItbms,
+                            montoTotal: montoNeto + montoItbms
+                        };
+                    })
                 }
             }
         });
 
+        // Increment monthly document usage
+        await incrementDocumentUsage(empresaId);
+        
+        redirectUrl = `/invoices?created=true&id=${invoice.id}&num=${encodeURIComponent(invoice.numeroCompleto)}&total=${invoice.totalNeto}`;
+
     } catch (error) {
         console.error('Database Error:', error);
         return {
-            message: 'Error al crear la factura. ' + (error instanceof Error ? error.message : ''),
+            message: 'Error al crear la factura. Por favor intente nuevamente.',
         };
     }
 
     revalidatePath('/invoices');
-    redirect('/invoices');
+    redirect(redirectUrl);
+}
+
+export async function voidInvoice(id: string) {
+    try {
+        const { empresaId } = await getTenantContext();
+        const invoice = await prisma.factura.findFirst({
+            where: { id, empresaId }
+        });
+
+        if (!invoice) {
+            return { success: false, message: 'Factura no encontrada o acceso denegado.' };
+        }
+
+        if (invoice.estadoDgi === 'anulada') {
+            return { success: false, message: 'La factura ya está anulada.' };
+        }
+
+        await prisma.factura.update({
+            where: { id },
+            data: {
+                estadoDgi: 'anulada',
+                saldoPendiente: 0
+            }
+        });
+
+        revalidatePath('/invoices');
+        return { success: true, message: 'Factura anulada correctamente (Nota de Crédito aplicada).' };
+    } catch (error) {
+        console.error('Void invoice error:', error);
+        return { success: false, message: 'Error al intentar anular la factura. Por favor intente nuevamente.' };
+    }
+}
+
+export async function recordInvoicePayment(
+    invoiceId: string,
+    amount: number,
+    method: string,
+    reference?: string
+) {
+    try {
+        const { empresaId, userId } = await getTenantContext();
+
+        const result = await prisma.$transaction(async (tx) => {
+            // Find invoice
+            const invoice = await tx.factura.findFirst({
+                where: { id: invoiceId, empresaId },
+            });
+
+            if (!invoice) {
+                return { success: false, error: 'Factura no encontrada o acceso denegado.' };
+            }
+
+            const currentSaldo = Number(invoice.saldoPendiente);
+            if (currentSaldo <= 0) {
+                return { success: false, error: 'La factura ya se encuentra cancelada (sin saldo pendiente).' };
+            }
+
+            const paymentAmount = Math.min(amount, currentSaldo);
+            const newSaldo = currentSaldo - paymentAmount;
+            const newTotalPagado = Number(invoice.totalPagado) + paymentAmount;
+
+            // Update invoice
+            await tx.factura.update({
+                where: { id: invoiceId },
+                data: {
+                    saldoPendiente: newSaldo,
+                    totalPagado: newTotalPagado,
+                },
+            });
+
+            // Create Pago record
+            const payment = await tx.pago.create({
+                data: {
+                    empresaId,
+                    facturaId: invoiceId,
+                    clienteId: invoice.clienteId,
+                    usuarioId: userId,
+                    monto: paymentAmount,
+                    metodoPago: method,
+                    referencia: reference || null,
+                    montoAplicado: paymentAmount,
+                    montoCredito: 0,
+                },
+            });
+
+            // Log to Auditoria
+            await tx.auditoria.create({
+                data: {
+                    usuarioId: userId,
+                    entidad: 'Factura',
+                    entidadId: invoiceId,
+                    accion: 'registrar_pago',
+                    datosAntes: {
+                        saldoPendiente: currentSaldo,
+                        totalPagado: Number(invoice.totalPagado),
+                    },
+                    datosDespues: {
+                        saldoPendiente: newSaldo,
+                        totalPagado: newTotalPagado,
+                        pagoId: payment.id,
+                        montoPago: paymentAmount,
+                        metodoPago: method,
+                    },
+                },
+            });
+
+            return { 
+                success: true, 
+                message: `Pago de $${paymentAmount.toFixed(2)} registrado exitosamente.`,
+                remainingSaldo: newSaldo 
+            };
+        });
+
+        if (result.success) {
+            revalidatePath('/invoices');
+            revalidatePath('/receivables');
+        }
+        return result;
+
+    } catch (error) {
+        console.error('Record payment error:', error);
+        return { 
+            success: false, 
+            error: 'Error al intentar registrar el pago. Por favor intente nuevamente.' 
+        };
+    }
+}
+
+export async function createInvoicePOS(rawData: {
+    clienteId: string;
+    condicionPago: string;
+    metodoPago?: string;
+    observaciones?: string;
+    items: {
+        productoId: string;
+        descripcion: string;
+        cantidad: number;
+        precioUnitario: number;
+        codigoTasaItbms: string;
+    }[];
+}) {
+    try {
+        const { empresaId, userId } = await getTenantContext();
+        const { empresa, sucursal, caja } = await getDefaults(empresaId);
+
+        // Validate client
+        const client = await prisma.cliente.findFirst({
+            where: { id: rawData.clienteId, empresaId }
+        });
+        if (!client) {
+            return { success: false, error: 'El cliente seleccionado no existe.' };
+        }
+
+        // Check limits
+        const hasRemainingDocs = await canCreateInvoice(empresaId);
+        if (!hasRemainingDocs) {
+            return { success: false, error: 'Has alcanzado el límite mensual de documentos electrónicos de tu plan.' };
+        }
+
+        const isFiscal = empresa.fiscalEnabled && empresa.planType !== 'free';
+        const tipoDoc = isFiscal ? 'FE' : 'REC';
+        const prefix = isFiscal ? 'FE' : 'REC';
+
+        // Get next sequence number atomically
+        const numeroSecuencial = await getNextSequence(empresa.id, sucursal.id, caja.id);
+
+        let numeroCompleto = '';
+        if (isFiscal) {
+            numeroCompleto = `${prefix}-001-001-01-${String(numeroSecuencial).padStart(8, '0')}`;
+        } else {
+            numeroCompleto = `${prefix}-${String(numeroSecuencial).padStart(8, '0')}`;
+        }
+
+        // Calculate totals
+        const subtotal = rawData.items.reduce((sum, item) => sum + (item.cantidad * item.precioUnitario), 0);
+        const totalItbms = rawData.items.reduce((sum, item) => {
+            const tasa = item.codigoTasaItbms === '01' ? 0.07 :
+                item.codigoTasaItbms === '02' ? 0.10 :
+                    item.codigoTasaItbms === '03' ? 0.15 : 0;
+            return sum + (item.cantidad * item.precioUnitario * tasa);
+        }, 0);
+        const totalNeto = subtotal + totalItbms;
+
+        // Validate all products belong to tenant BEFORE creating invoice
+        const productIds = rawData.items.map((i: any) => i.productoId).filter(Boolean);
+        if (productIds.length > 0) {
+            const validProducts = await prisma.producto.count({
+                where: { id: { in: productIds }, empresaId }
+            });
+            if (validProducts !== productIds.length) {
+                return { success: false, error: 'Producto no válido para esta empresa.' };
+            }
+        }
+
+        const invoice = await prisma.$transaction(async (tx) => {
+            // Create Invoice
+            const inv = await tx.factura.create({
+                data: {
+                    empresaId: empresa.id,
+                    sucursalId: sucursal.id,
+                    cajaId: caja.id,
+                    clienteId: rawData.clienteId,
+                    creadorId: userId,
+                    tipoDocumento: tipoDoc,
+                    numeroSecuencial,
+                    numeroCompleto,
+                    subtotal,
+                    totalItbms,
+                    totalNeto,
+                    saldoPendiente: rawData.condicionPago === 'contado' ? 0 : totalNeto,
+                    totalPagado: rawData.condicionPago === 'contado' ? totalNeto : 0,
+                    estadoDgi: isFiscal ? 'pendiente' : 'local',
+                    items: {
+                        create: rawData.items.map(item => {
+                            const tasa = item.codigoTasaItbms === '01' ? 0.07 :
+                                item.codigoTasaItbms === '02' ? 0.10 :
+                                    item.codigoTasaItbms === '03' ? 0.15 : 0;
+                            return {
+                                productoId: item.productoId,
+                                descripcion: item.descripcion,
+                                cantidad: item.cantidad,
+                                precioUnitario: item.precioUnitario,
+                                costoUnitario: 0,
+                                codigoTasaItbms: item.codigoTasaItbms,
+                                montoItbms: item.cantidad * item.precioUnitario * tasa,
+                                montoTotal: item.cantidad * item.precioUnitario * (1 + tasa)
+                            };
+                        })
+                    }
+                }
+            });
+
+            // Update stock
+            for (const item of rawData.items) {
+                await tx.producto.update({
+                    where: { id: item.productoId },
+                    data: {
+                        stockActual: {
+                            decrement: item.cantidad
+                        }
+                    }
+                });
+            }
+
+            // If payment is made, record it in Pago model
+            if (rawData.condicionPago === 'contado') {
+                await tx.pago.create({
+                    data: {
+                        empresaId,
+                        facturaId: inv.id,
+                        clienteId: rawData.clienteId,
+                        usuarioId: userId,
+                        monto: totalNeto,
+                        metodoPago: rawData.metodoPago || 'efectivo',
+                        montoAplicado: totalNeto,
+                    }
+                });
+            }
+
+            return inv;
+        });
+
+        // Increment usage
+        await incrementDocumentUsage(empresaId);
+
+        revalidatePath('/invoices');
+        return {
+            success: true,
+            invoice: {
+                id: invoice.id,
+                numeroCompleto: invoice.numeroCompleto,
+                totalNeto: totalNeto
+            }
+        };
+
+    } catch (error) {
+        console.error('POS Checkout Error:', error);
+        return { success: false, error: 'Error al crear la factura POS. Por favor intente nuevamente.' };
+    }
 }

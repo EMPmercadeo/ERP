@@ -5,6 +5,8 @@ import { getCurrentUser, setSessionEmail, deleteSessionEmail, getUserRole } from
 import {
     User,
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut as firebaseSignOut,
@@ -17,10 +19,13 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     role: string | null;
+    error: string | null;
+    clearError: () => void;
     signInWithGoogle: () => Promise<void>;
     signInWithEmail: (email: string, password: string) => Promise<void>;
     signUpWithEmail: (email: string, password: string) => Promise<void>;
     signOut: () => Promise<void>;
+    resetPassword: (email: string) => Promise<void>;
     refreshUser: () => Promise<void>;
 }
 
@@ -30,10 +35,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [role, setRole] = useState<string | null>(null);
+    const [authError, setAuthError] = useState<string | null>(null);
     const initializedRef = useRef(false);
 
+    const clearError = () => setAuthError(null);
+
     // Stable mock user – created once, never triggers re-renders
-    const mockUserRef = useRef<User | null>({
+    const mockUserRef = useRef<User | null>((process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_FALLBACK === 'true') ? {
         uid: 'force-admin-xyz',
         email: 'empsignature@gmail.com',
         emailVerified: true,
@@ -51,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         phoneNumber: null,
         photoURL: null,
         providerId: 'password',
-    } as unknown as User);
+    } as unknown as User : null);
 
     const refreshUser = useCallback(async () => {
         const currentUser = user || mockUserRef.current;
@@ -84,49 +92,87 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         initializedRef.current = true;
 
         const initAuth = async () => {
-            // Sync mock user session on mount
-            const mock = mockUserRef.current;
-            if (mock?.email) {
-                await setSessionEmail(mock.email);
-                // Fetch role once
-                const r = await getUserRole(mock.email);
-                setRole(r || null);
+            if (process.env.NODE_ENV === 'development') {
+                // Sync mock user session on mount
+                const mock = mockUserRef.current;
+                if (mock?.email) {
+                    await setSessionEmail(mock.email);
+                    // Fetch role once
+                    const r = await getUserRole(mock.email);
+                    setRole(r || null);
 
-                // Update display name from DB
-                const dbUser = await getCurrentUser(mock.email);
-                if (dbUser?.nombre) {
-                    mockUserRef.current = {
-                        ...mock,
-                        displayName: dbUser.nombre,
-                    } as User;
+                    // Update display name from DB
+                    const dbUser = await getCurrentUser(mock.email);
+                    if (dbUser?.nombre) {
+                        mockUserRef.current = {
+                            ...mock,
+                            displayName: dbUser.nombre,
+                        } as User;
+                    }
+                    setUser(mockUserRef.current);
                 }
-                setUser(mockUserRef.current);
             }
             setLoading(false);
         };
 
         initAuth();
 
+        // Procesar resultado si venimos de una redirección de Google OAuth
+        getRedirectResult(auth).then(async (res) => {
+            if (res?.user?.email) {
+                try {
+                    await setSessionEmail(res.user.email);
+                } catch (e) {
+                    console.error('Error setting session email in getRedirectResult:', e);
+                }
+                if (window.location.pathname === '/login' || window.location.pathname === '/register') {
+                    window.location.href = '/dashboard';
+                }
+            }
+        }).catch((err) => {
+            console.error('Error procesando getRedirectResult de Google:', err);
+            // No bloqueamos la UI con setAuthError aquí en el montaje para evitar falsos positivos por bloqueo de cookies de terceros del navegador
+        });
+
         const unsubscribe = onAuthStateChanged(auth, async (u) => {
             if (u) {
-                setUser(u);
                 if (u.email) {
-                    await setSessionEmail(u.email);
-                    const r = await getUserRole(u.email);
-                    setRole(r || null);
-                    // Sync display name (once)
-                    const dbUser = await getCurrentUser(u.email);
-                    if (dbUser && dbUser.nombre !== u.displayName) {
-                        await firebaseUpdateProfile(u, { displayName: dbUser.nombre });
+                    try {
+                        await setSessionEmail(u.email);
+                    } catch (e) {
+                        console.error('Error setting session email in onAuthStateChanged:', e);
+                        setAuthError('Error al establecer sesión: ' + (e instanceof Error ? e.message : 'Error desconocido'));
                     }
+                    try {
+                        const r = await getUserRole(u.email);
+                        setRole(r || null);
+                        const dbUser = await getCurrentUser(u.email);
+                        if (dbUser && dbUser.nombre !== u.displayName) {
+                            await firebaseUpdateProfile(u, { displayName: dbUser.nombre });
+                        }
+                    } catch (dbErr) {
+                        console.error('Error syncing details from PostgreSQL, proceeding anyway:', dbErr);
+                    }
+                }
+                setUser(u);
+                if (typeof window !== 'undefined' && (window.location.pathname === '/login' || window.location.pathname === '/register')) {
+                    window.location.href = '/dashboard';
                 }
             } else {
                 // No Firebase user – keep mock
                 if (mockUserRef.current?.email) {
-                    await setSessionEmail(mockUserRef.current.email);
+                    try {
+                        await setSessionEmail(mockUserRef.current.email);
+                    } catch (e) {
+                        console.error('Error setting mock session email:', e);
+                    }
                 } else {
                     setUser(null);
-                    await deleteSessionEmail();
+                    try {
+                        await deleteSessionEmail();
+                    } catch (e) {
+                        console.error('Error deleting session email:', e);
+                    }
                 }
             }
             setLoading(false);
@@ -137,9 +183,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signInWithGoogle = async () => {
         try {
-            await signInWithPopup(auth, googleProvider);
-        } catch (error: unknown) {
-            console.error('Error signing in with Google:', error);
+            const res = await signInWithPopup(auth, googleProvider);
+            if (res.user?.email) {
+                await setSessionEmail(res.user.email);
+            }
+        } catch (error: any) {
+            console.error('Error signing in with Google popup, intentando redirección automática:', error);
+            if (error?.code === 'auth/internal-error' || error?.code === 'auth/popup-blocked' || error?.code === 'auth/unauthorized-domain' || error?.message?.includes('internal')) {
+                await signInWithRedirect(auth, googleProvider);
+                return new Promise<void>(() => {}); // Bloquear resolución para que el navegador complete la redirección a Google sin ser interrumpido
+            }
             throw error;
         }
     };
@@ -149,7 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await signInWithEmailAndPassword(auth, email, password);
             await setSessionEmail(email);
         } catch (error: any) {
-            if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            if (process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_FALLBACK === 'true' && (error.code === 'auth/operation-not-allowed' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password')) {
                 console.warn('Dev Mode: Bypassing Auth Error', error.code);
 
                 const dbUser = await getCurrentUser(email);
@@ -175,7 +228,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 } as unknown as User;
 
                 mockUserRef.current = fakeUser;
-                localStorage.setItem('mockUser', JSON.stringify(fakeUser));
                 setUser(fakeUser);
                 await setSessionEmail(email);
 
@@ -192,6 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const signUpWithEmail = async (email: string, password: string) => {
         try {
             await createUserWithEmailAndPassword(auth, email, password);
+            await setSessionEmail(email);
         } catch (error: any) {
             console.error('Error signing up:', error);
             throw error;
@@ -202,7 +255,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             await firebaseSignOut(auth);
             mockUserRef.current = null;
-            localStorage.removeItem('mockUser');
             setRole(null);
             await deleteSessionEmail();
         } catch (error: unknown) {
@@ -211,15 +263,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const resetPassword = async (email: string) => {
+        const { sendPasswordResetEmail } = await import('firebase/auth');
+        await sendPasswordResetEmail(auth, email);
+    };
+
     return (
         <AuthContext.Provider value={{
             user: user || mockUserRef.current,
             loading,
             role,
+            error: authError,
+            clearError,
             signInWithGoogle,
             signInWithEmail,
             signUpWithEmail,
             signOut,
+            resetPassword,
             refreshUser
         }}>
             {children}

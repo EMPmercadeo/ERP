@@ -19,7 +19,7 @@
  * PROHIBIDO: No usar hex hardcode fuera de este archivo
  */
 
-@theme inline {
+@theme {
   /* Base colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -49,9 +49,30 @@
   /* Custom Brand Colors */
   --color-brand-1: #073674;
   --color-brand-2: #052550;
+  --color-brand-3: #001835;
+  --color-brand-bg-blue: #002855;
+  --color-brand-bg-blue-hover: #001f42;
+  --color-brand-bg-blue-hover-dark: #001d3f;
+  --color-brand-light: #0056b3;
+  --color-brand-medium: #004899;
+  --color-brand-dark: #003366;
+  --color-paypal-yellow: #FFC439;
+  --color-paypal-yellow-hover: #F2BA36;
+  --color-paypal-blue: #003087;
+  --color-info-light: #2a9bdb;
   --color-surface: var(--surface);
   --color-surface-light: var(--surface-light);
   --color-surface-muted: var(--surface-muted);
+
+  /* Status Colors */
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
 
   /* Chart colors */
   --color-chart-1: var(--chart-1);
@@ -82,6 +103,16 @@
 
 :root {
   --radius: 0.5rem;
+
+  /* Status Tokens */
+  --success: #15a378;
+  --success-bg: #e9f8f1;
+  --warning: #e0901f;
+  --warning-bg: #fcf2db;
+  --info: #4178e6;
+  --info-bg: #edf2fe;
+  --danger: #ec6a64;
+  --danger-bg: #fdeeec;
 
   /* Background & Surface */
   --background: #F3F4F6;
@@ -229,8 +260,9 @@
     @apply border-border outline-ring/50;
   }
 
+  html,
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased overflow-x-hidden max-w-full;
   }
 
   /* Typography defaults */
@@ -287,5 +319,18 @@
     .content-container {
       @apply px-4;
     }
+  }
+
+  /* Premium Design Taste Utilities */
+  .transition-premium {
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .shadow-premium {
+    box-shadow: 0 4px 20px -2px rgba(7, 54, 116, 0.04), 0 2px 6px -1px rgba(7, 54, 116, 0.02);
+  }
+
+  .shadow-premium-hover {
+    box-shadow: 0 10px 30px -4px rgba(7, 54, 116, 0.08), 0 4px 12px -2px rgba(7, 54, 116, 0.03);
   }
 }

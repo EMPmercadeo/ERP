@@ -16,12 +16,22 @@ export const ClientSchema = z.object({
 export const ProductSchema = z.object({
     id: z.string().optional(),
     codigoInterno: z.string().min(1, { message: "El código interno es requerido" }),
+    codigoBarras: z.string().optional().or(z.literal('')),
     descripcion: z.string().min(1, { message: "La descripción es requerida" }),
-    descripcionLarga: z.string().optional(),
-    unidadMedida: z.string().default("UND"),
-    costoUnitario: z.string().optional(), // Can be empty string if not set
-    precioVenta: z.string().min(1, { message: "El precio es requerido" }), // Parse to float
-    codigoTasaItbms: z.string().min(2, { message: "Selecciona una tasa" }),
+    descripcionLarga: z.string().optional().or(z.literal('')),
+    imagenUrl: z.string().optional().or(z.literal('')),
+    unidadMedida: z.enum(["UND", "HRS", "KG", "LT", "MT", "CJ", "SRV"], {
+        message: "Selecciona una unidad de medida válida"
+    }).default("UND"),
+    costoUnitario: z.string().optional().refine(val => !val || parseFloat(val) >= 0, {
+        message: "El costo unitario no puede ser negativo"
+    }),
+    precioVenta: z.string().min(1, { message: "El precio de venta es requerido" }).refine(val => parseFloat(val) >= 0, {
+        message: "El precio de venta no puede ser negativo"
+    }),
+    codigoTasaItbms: z.enum(["00", "01", "02", "03"], {
+        message: "Selecciona una tasa ITBMS válida"
+    }),
     stockActual: z.string().optional(), // Parse to int
     stockMinimo: z.string().optional(), // Parse to int
     activo: z.boolean().default(true),
@@ -42,3 +52,72 @@ export const InvoiceSchema = z.object({
     observaciones: z.string().optional(),
     items: z.array(InvoiceItemSchema).min(1, { message: "Agrega al menos un ítem" }),
 });
+
+export const SupplierSchema = z.object({
+    id: z.string().optional(),
+    tipoRuc: z.string().min(1, { message: "Selecciona un tipo de RUC" }),
+    ruc: z.string().min(3, { message: "El RUC es requerido" }),
+    dv: z.string().max(2).optional(),
+    razonSocial: z.string().min(2, { message: "La razón social es requerida" }),
+    nombreComercial: z.string().optional().or(z.literal('')),
+    nombreContacto: z.string().optional().or(z.literal('')),
+    email: z.string().email({ message: "Correo inválido" }).optional().or(z.literal('')),
+    telefono: z.string().optional().or(z.literal('')),
+    direccion: z.string().optional().or(z.literal('')),
+    limiteCredito: z.number().min(0, { message: "El límite de crédito no puede ser negativo" }).optional(),
+    condicionPago: z.string().default("Contado"),
+    observaciones: z.string().optional().or(z.literal('')),
+    estado: z.string().optional().default("activo"),
+});
+
+export const PurchaseItemSchema = z.object({
+    productoId: z.string().optional(),
+    descripcion: z.string().min(1, { message: "Descripción requerida" }),
+    cantidad: z.number().min(0.0001, { message: "Cantidad mayor a 0" }),
+    costoUnitario: z.number().min(0, { message: "Costo no puede ser negativo" }),
+    codigoTasaItbms: z.string().default("00"),
+    descuento: z.number().default(0),
+});
+
+export const PurchaseSchema = z.object({
+    proveedorId: z.string().min(1, { message: "Selecciona un proveedor" }),
+    numeroFactura: z.string().min(1, { message: "El número de factura del proveedor es requerido" }),
+    fechaEmision: z.string().min(1, { message: "Fecha de emisión requerida" }),
+    fechaVencimiento: z.string().min(1, { message: "Fecha de vencimiento requerida" }),
+    observaciones: z.string().optional(),
+    items: z.array(PurchaseItemSchema).min(1, { message: "Agrega al menos un ítem o gasto" }),
+});
+
+export const SupplierPaymentSchema = z.object({
+    proveedorId: z.string().min(1, { message: "Selecciona un proveedor" }),
+    compraId: z.string().min(1, { message: "Selecciona una compra" }),
+    monto: z.number().min(0.01, { message: "El monto debe ser mayor a 0" }),
+    metodoPago: z.string().min(1, { message: "Selecciona método de pago" }),
+    referencia: z.string().optional(),
+});
+
+export const DeliveryNoteItemSchema = z.object({
+    productoId: z.string().min(1, { message: "Producto requerido" }),
+    descripcion: z.string().min(1, { message: "Descripción requerida" }),
+    cantidadPedida: z.number().min(0.0001, { message: "Cantidad pedida mayor a 0" }),
+    cantidadEntregada: z.number().min(0, { message: "Cantidad entregada no puede ser negativa" }),
+    cantidadPendiente: z.number().min(0),
+    precioUnitario: z.number().min(0).default(0),
+    codigoTasaItbms: z.string().default("00"),
+    descuento: z.number().default(0),
+});
+
+export const DeliveryNoteSchema = z.object({
+    clienteId: z.string().min(1, { message: "Selecciona un cliente" }),
+    cotizacionId: z.string().optional().nullable(),
+    pedidoId: z.string().optional().nullable(),
+    direccionEntrega: z.string().optional().or(z.literal('')),
+    nombreContacto: z.string().optional().or(z.literal('')),
+    telefonoContacto: z.string().optional().or(z.literal('')),
+    fechaEstimadaEntrega: z.string().optional().nullable(),
+    notasInternas: z.string().optional().or(z.literal('')),
+    notasCliente: z.string().optional().or(z.literal('')),
+    responsableId: z.string().optional().nullable(),
+    items: z.array(DeliveryNoteItemSchema).min(1, { message: "Agrega al menos un ítem" }),
+});
+

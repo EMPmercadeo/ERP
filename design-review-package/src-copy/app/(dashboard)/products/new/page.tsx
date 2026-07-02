@@ -3,14 +3,14 @@
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
-import { Topbar } from '@/components/layout/Topbar';
-import { ContentContainer } from '@/components/layout/Content';
+import { ArrowLeft, Save, Loader2, Package, Calculator, Percent, AlertCircle, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import {
     Select,
     SelectContent,
@@ -19,235 +19,484 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { createProduct } from '@/lib/actions/products';
-import { useState, useActionState } from 'react';
+import { useState, useActionState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import {
+    calcularITBMS,
+    calcularPrecioConImpuesto,
+    calcularMargen,
+    formatearMoneda,
+    formatearPorcentaje
+} from '@/lib/utils/fiscal';
 
 const initialState = {
     message: '',
-    errors: {},
+    errors: {} as Record<string, string[] | undefined>,
 };
+
+function formatCurrency(value: number) {
+    return formatearMoneda(value);
+}
 
 export default function NewProductPage() {
     const router = useRouter();
-    const [state, formAction] = useActionState(createProduct, initialState);
+    const [state, formAction] = useActionState(
+        async (prevState: any, formData: FormData) => {
+            const res = await createProduct(prevState, formData);
+            return {
+                message: res?.message || '',
+                errors: (res as any)?.errors || {}
+            };
+        },
+        initialState
+    );
 
-    // Controlled state for calculations and selects
+    // Controlled state for dynamic margin and tax preview
+    const [codigoInterno, setCodigoInterno] = useState('');
+    const [codigoBarras, setCodigoBarras] = useState('');
+    const [descripcion, setDescripcion] = useState('');
+    const [descripcionLarga, setDescripcionLarga] = useState('');
     const [codigoTasaItbms, setCodigoTasaItbms] = useState('01');
     const [unidadMedida, setUnidadMedida] = useState('UND');
-    const [costoUnitario, setCostoUnitario] = useState('');
-    const [precioVenta, setPrecioVenta] = useState('');
+    const [costoUnitario, setCostoUnitario] = useState('0');
+    const [precioVenta, setPrecioVenta] = useState('0');
+    const [stockActual, setStockActual] = useState('0');
+    const [stockMinimo, setStockMinimo] = useState('0');
+    const [imagenUrl, setImagenUrl] = useState('');
 
-    const margen = precioVenta && costoUnitario && parseFloat(precioVenta) > 0
-        ? (((parseFloat(precioVenta) - parseFloat(costoUnitario)) / parseFloat(precioVenta)) * 100).toFixed(1)
-        : '0.0';
+    // Derived Calculations using centralized fiscal utility
+    const costNum = parseFloat(costoUnitario) || 0;
+    const priceNum = parseFloat(precioVenta) || 0;
+
+    const { rentabilidad: rentabilidadNum, margenPorcentaje: marginNum } = calcularMargen(priceNum, costNum);
+    const rentabilidad = rentabilidadNum.toFixed(2);
+    const margin = marginNum.toFixed(1);
+
+    const itbmsEstimado = calcularITBMS(priceNum, codigoTasaItbms).toFixed(2);
+    const precioConImpuestos = calcularPrecioConImpuesto(priceNum, codigoTasaItbms).toFixed(2);
+
+    // Toast error messages
+    useEffect(() => {
+        if (state?.message && state.message.length > 0) {
+            toast.error(state.message);
+        }
+    }, [state]);
 
     return (
-        <>
-            <Topbar title="Nuevo Producto" />
-            <ContentContainer>
-                <div className="space-y-6">
-                    {/* Back link */}
-                    <Link href="/products" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-                        <ArrowLeft className="h-4 w-4 mr-1" />
-                        Volver a Productos
+        <form action={formAction} className="flex flex-col min-h-screen bg-slate-50/50">
+            <input type="hidden" name="imagenUrl" value={imagenUrl} />
+            {/* Header Sticky - Compact */}
+            <div className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 md:px-6 py-2.5 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-3">
+                    <Link href="/products" className="text-slate-500 hover:text-slate-700 transition-colors p-1.5 rounded-full hover:bg-slate-100 shrink-0">
+                        <ArrowLeft className="h-4.5 w-4.5" />
                     </Link>
-
-                    {/* Header */}
-                    <div>
-                        <h2 className="text-2xl font-bold tracking-tight">Registrar Nuevo Producto</h2>
-                        <p className="text-muted-foreground">
-                            Agrega un producto o servicio al catálogo
-                        </p>
+                    <div className="truncate">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <h1 className="text-sm md:text-base font-bold text-slate-800 truncate">
+                                Registrar Nuevo Producto
+                            </h1>
+                            <Badge className="bg-brand-1/10 text-brand-1 text-[10px] font-bold border-transparent px-2 py-0.5 rounded">
+                                NUEVO
+                            </Badge>
+                        </div>
                     </div>
+                </div>
 
-                    {state?.message && (
-                        <Alert variant="error">{state.message}</Alert>
-                    )}
+                <div className="flex items-center gap-2">
+                    <Button type="button" variant="ghost" onClick={() => router.back()} className="h-9 text-xs font-semibold text-slate-600">
+                        Cancelar
+                    </Button>
+                    <SubmitButton />
+                </div>
+            </div>
 
-                    {/* Form */}
-                    <form action={formAction}>
-                        <div className="grid gap-6 lg:grid-cols-2">
-                            {/* Información General */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Información General</CardTitle>
-                                    <CardDescription>Datos básicos del producto o servicio</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
-                                            Código Interno (SKU)
-                                        </label>
-                                        <Input
-                                            name="codigoInterno"
+            {/* Main Content */}
+            <div className="flex-1 w-full px-4 md:px-6 py-5 max-w-7xl mx-auto">
+                {state?.message && (
+                    <Alert variant="error" className="mb-4 text-xs font-semibold">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>{state.message}</span>
+                    </Alert>
+                )}
+
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+                    
+                    {/* LEFT COLUMN: General Information (8 cols) */}
+                    <div className="xl:col-span-8 space-y-4">
+                        <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-visible">
+                            <CardHeader className="py-4 px-5 border-b border-slate-100">
+                                <CardTitle className="text-sm font-bold text-slate-700 uppercase tracking-wider">Información General</CardTitle>
+                                <CardDescription className="text-xs text-slate-400">Datos básicos e identificación del producto o servicio en el sistema</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-4 sm:p-5 space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {/* Código Interno */}
+                                    <div className="space-y-1">
+                                        <Label htmlFor="codigoInterno" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Código Interno (SKU) *</Label>
+                                        <Input 
+                                            id="codigoInterno"
+                                            name="codigoInterno" 
+                                            value={codigoInterno} 
+                                            onChange={(e) => setCodigoInterno(e.target.value)}
+                                            required 
                                             placeholder="PROD-001"
-                                            required
-                                            className={state?.errors?.codigoInterno ? 'border-red-500' : ''}
+                                            className={cn("h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.codigoInterno && "border-red-500")}
                                         />
-                                        {state?.errors?.codigoInterno && <p className="text-xs text-destructive mt-1">{state.errors.codigoInterno[0]}</p>}
+                                        {state?.errors?.codigoInterno && <p className="text-[10px] text-red-500 font-bold mt-0.5">{state.errors.codigoInterno[0]}</p>}
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
-                                            Descripción Corta
-                                        </label>
-                                        <Input
-                                            name="descripcion"
-                                            placeholder="Nombre del producto"
-                                            required
-                                            className={state?.errors?.descripcion ? 'border-red-500' : ''}
-                                        />
-                                        {state?.errors?.descripcion && <p className="text-xs text-destructive mt-1">{state.errors.descripcion[0]}</p>}
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
-                                            Descripción Detallada (opcional)
-                                        </label>
-                                        <Textarea
-                                            name="descripcionLarga"
-                                            placeholder="Descripción completa para facturas..."
-                                            rows={3}
+                                    {/* Código de Barras / SKU Alterno */}
+                                    <div className="space-y-1">
+                                        <Label htmlFor="codigoBarras" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Código de Barras / SKU Alterno</Label>
+                                        <Input 
+                                            id="codigoBarras"
+                                            name="codigoBarras" 
+                                            value={codigoBarras} 
+                                            onChange={(e) => setCodigoBarras(e.target.value)}
+                                            className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                            placeholder="Opcional"
                                         />
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
-                                            Unidad de Medida
-                                        </label>
+                                    {/* Unidad de Medida */}
+                                    <div className="space-y-1">
+                                        <Label htmlFor="unidadMedida" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Unidad de Medida</Label>
                                         <Select name="unidadMedida" value={unidadMedida} onValueChange={setUnidadMedida}>
-                                            <SelectTrigger>
+                                            <SelectTrigger id="unidadMedida" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
                                                 <SelectValue />
                                             </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="UND">Unidad (UND)</SelectItem>
-                                                <SelectItem value="HRS">Hora (HRS)</SelectItem>
-                                                <SelectItem value="KG">Kilogramo (KG)</SelectItem>
-                                                <SelectItem value="LT">Litro (LT)</SelectItem>
-                                                <SelectItem value="MT">Metro (MT)</SelectItem>
-                                                <SelectItem value="CJ">Caja (CJ)</SelectItem>
-                                                <SelectItem value="SRV">Servicio (SRV)</SelectItem>
+                                            <SelectContent className="rounded-lg">
+                                                <SelectItem value="UND" className="text-xs sm:text-sm cursor-pointer">Unidad (UND)</SelectItem>
+                                                <SelectItem value="HRS" className="text-xs sm:text-sm cursor-pointer">Hora (HRS)</SelectItem>
+                                                <SelectItem value="KG" className="text-xs sm:text-sm cursor-pointer">Kilogramo (KG)</SelectItem>
+                                                <SelectItem value="LT" className="text-xs sm:text-sm cursor-pointer">Litro (LT)</SelectItem>
+                                                <SelectItem value="MT" className="text-xs sm:text-sm cursor-pointer">Metro (MT)</SelectItem>
+                                                <SelectItem value="CJ" className="text-xs sm:text-sm cursor-pointer">Caja (CJ)</SelectItem>
+                                                <SelectItem value="SRV" className="text-xs sm:text-sm cursor-pointer">Servicio (SRV)</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                </CardContent>
-                            </Card>
 
-                            {/* Precios e Impuestos */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Precios e Impuestos</CardTitle>
-                                    <CardDescription>Configuración de precios y ITBMS</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
-                                            Costo Unitario (USD)
-                                        </label>
+                                    {/* Estado predeterminado */}
+                                    <div className="space-y-1">
+                                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Estado Inicial</Label>
+                                        <Input 
+                                            value="Activo (Por Defecto)" 
+                                            disabled 
+                                            className="h-10 text-xs sm:text-sm bg-slate-100 text-slate-500 font-semibold border-slate-200 rounded-lg w-full cursor-not-allowed"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Descripción Corta */}
+                                <div className="space-y-1">
+                                    <Label htmlFor="descripcion" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Descripción Corta *</Label>
+                                    <Input 
+                                        id="descripcion"
+                                        name="descripcion" 
+                                        value={descripcion} 
+                                        onChange={(e) => setDescripcion(e.target.value)}
+                                        required 
+                                        placeholder="Nombre identificador del producto o servicio"
+                                        className={cn("h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.descripcion && "border-red-500")}
+                                    />
+                                    {state?.errors?.descripcion && <p className="text-[10px] text-red-500 font-bold mt-0.5">{state.errors.descripcion[0]}</p>}
+                                </div>
+
+                                {/* Descripción Detallada */}
+                                <div className="space-y-1">
+                                    <Label htmlFor="descripcionLarga" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Descripción Detallada / Observaciones para Facturación</Label>
+                                    <Textarea 
+                                        id="descripcionLarga"
+                                        name="descripcionLarga" 
+                                        value={descripcionLarga} 
+                                        onChange={(e) => setDescripcionLarga(e.target.value)}
+                                        rows={4} 
+                                        className="text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full resize-none p-3" 
+                                        placeholder="Detalles extendidos que aparecerán en la factura fiscal impresa..."
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Multimedia Support */}
+                        <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
+                            <CardHeader className="py-3 px-5 border-b border-slate-100 bg-slate-50">
+                                <CardTitle className="text-xs font-bold text-slate-700 uppercase tracking-wider">Multimedia</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Left side: Upload controls */}
+                                    <div className="space-y-4">
+                                        <div className="space-y-1">
+                                            <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Cargar Imagen Local</Label>
+                                            <div className="border border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50/50 hover:bg-slate-50 transition-colors relative cursor-pointer group">
+                                                <Input 
+                                                    type="file" 
+                                                    accept="image/*"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            const reader = new FileReader();
+                                                            reader.onloadend = () => {
+                                                                setImagenUrl(reader.result as string);
+                                                            };
+                                                            reader.readAsDataURL(file);
+                                                        }
+                                                    }}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                />
+                                                <ImageIcon className="mx-auto h-8 w-8 text-slate-400 group-hover:text-brand-1 transition-colors mb-2" />
+                                                <span className="text-xs font-bold text-slate-700 block">Arrastra o selecciona un archivo</span>
+                                                <span className="text-[10px] text-slate-400 block mt-0.5">PNG, JPG, GIF hasta 5MB (Se almacena en base de datos)</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="relative flex py-1 items-center">
+                                            <div className="flex-grow border-t border-slate-100"></div>
+                                            <span className="flex-shrink mx-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">O</span>
+                                            <div className="flex-grow border-t border-slate-100"></div>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <Label htmlFor="urlImagenInput" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Enlace de Imagen (URL de Red)</Label>
+                                            <Input
+                                                id="urlImagenInput"
+                                                placeholder="https://ejemplo.com/imagen.jpg"
+                                                value={imagenUrl.startsWith('data:') ? '' : imagenUrl}
+                                                onChange={(e) => setImagenUrl(e.target.value)}
+                                                className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                            />
+                                            <span className="text-[9px] text-slate-400 block leading-tight">Pega una dirección web directa de imagen si está alojada en un servidor externo.</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Right side: Image Preview */}
+                                    <div className="space-y-2">
+                                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Vista Previa</Label>
+                                        <div className="border border-slate-200 rounded-xl bg-slate-50/30 overflow-hidden flex items-center justify-center min-h-[220px] max-h-[240px] relative p-3">
+                                            {imagenUrl ? (
+                                                <>
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img 
+                                                        src={imagenUrl} 
+                                                        alt="Vista previa del producto" 
+                                                        className="max-w-full max-h-[200px] object-contain rounded shadow-sm"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setImagenUrl('')}
+                                                        className="absolute top-2 right-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-[10px] uppercase px-2 py-1 rounded border border-red-200 shadow-sm transition-colors active:scale-95"
+                                                    >
+                                                        Remover
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <div className="text-center text-slate-400 py-8">
+                                                    <ImageIcon className="mx-auto h-12 w-12 opacity-20 mb-2 text-slate-400" />
+                                                    <span className="text-xs font-semibold block">Sin imagen asignada</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* RIGHT COLUMN: Price, Tax and Initial Inventory (4 cols) */}
+                    <div className="xl:col-span-4 space-y-4">
+                        
+                        {/* Price & Margins Card */}
+                        <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
+                            {imagenUrl && (
+                                <div className="w-full h-32 bg-slate-50 border-b border-slate-100 flex items-center justify-center p-2 relative">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img 
+                                        src={imagenUrl} 
+                                        alt={descripcion || 'Nuevo Producto'} 
+                                        className="max-h-full max-w-full object-contain rounded"
+                                    />
+                                </div>
+                            )}
+                            <CardHeader className="bg-slate-50 border-b border-slate-100 py-3.5 px-4 flex flex-row items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                    <Calculator className="h-4.5 w-4.5 text-brand-1" />
+                                    <CardTitle className="text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">Precios y Márgenes</CardTitle>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-4 space-y-4">
+                                {/* Costo Unitario */}
+                                <div className="space-y-1">
+                                    <Label htmlFor="costoUnitario" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Costo Unitario (Base)</Label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">$</span>
                                         <Input
+                                            id="costoUnitario"
                                             name="costoUnitario"
                                             type="number"
-                                            placeholder="0.00"
-                                            min="0"
                                             step="0.01"
                                             value={costoUnitario}
                                             onChange={(e) => setCostoUnitario(e.target.value)}
+                                            className="h-10 text-xs sm:text-sm pl-7 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                            placeholder="0.00"
                                         />
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">USD</span>
                                     </div>
+                                </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
-                                            Precio de Venta (USD)
-                                        </label>
+                                {/* Precio de Venta */}
+                                <div className="space-y-1">
+                                    <Label htmlFor="precioVenta" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Precio de Venta (Neto) *</Label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">$</span>
                                         <Input
+                                            id="precioVenta"
                                             name="precioVenta"
                                             type="number"
-                                            placeholder="0.00"
-                                            min="0"
                                             step="0.01"
                                             value={precioVenta}
                                             onChange={(e) => setPrecioVenta(e.target.value)}
                                             required
-                                            className={state?.errors?.precioVenta ? 'border-red-500' : ''}
+                                            className={cn("h-10 text-xs sm:text-sm pl-7 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.precioVenta && "border-red-500")}
+                                            placeholder="0.00"
                                         />
-                                        {parseFloat(precioVenta) > 0 && (
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                Margen: <span className={`font-medium ${parseFloat(margen) > 20 ? 'text-emerald-600' : 'text-amber-600'}`}>{margen}%</span>
-                                            </p>
-                                        )}
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">USD</span>
                                     </div>
+                                    {state?.errors?.precioVenta && <p className="text-[10px] text-red-500 font-bold mt-0.5">{state.errors.precioVenta[0]}</p>}
+                                </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
-                                            Tasa ITBMS
-                                        </label>
-                                        <Select name="codigoTasaItbms" value={codigoTasaItbms} onValueChange={setCodigoTasaItbms}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="00">Exento (0%)</SelectItem>
-                                                <SelectItem value="01">ITBMS 7%</SelectItem>
-                                                <SelectItem value="02">ITBMS 10%</SelectItem>
-                                                <SelectItem value="03">ITBMS 15%</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                {/* Margen & Rentabilidad */}
+                                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="font-semibold text-slate-500">Rentabilidad</span>
+                                        <span className="font-bold text-emerald-600">+{formatCurrency(parseFloat(rentabilidad))}</span>
                                     </div>
-
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="block text-sm font-medium text-foreground mb-1">
-                                                Stock Actual
-                                            </label>
-                                            <Input
-                                                name="stockActual"
-                                                type="number"
-                                                placeholder="0"
-                                                min="0"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-foreground mb-1">
-                                                Stock Mínimo
-                                            </label>
-                                            <Input
-                                                name="stockMinimo"
-                                                type="number"
-                                                placeholder="0"
-                                                min="0"
-                                            />
-                                        </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[10px] text-slate-400">Margen Bruto</span>
+                                        <Badge className="bg-emerald-50 text-emerald-600 border-transparent hover:bg-emerald-50 text-[10px] font-bold py-0.5 px-2 rounded-md">
+                                            {margin}%
+                                        </Badge>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        </div>
+                                </div>
 
-                        {/* Submit buttons */}
-                        <div className="flex justify-end gap-3 mt-6">
-                            <Button type="button" variant="outline" onClick={() => router.back()}>
-                                Cancelar
-                            </Button>
-                            <SubmitButton />
-                        </div>
-                    </form>
+                                <div className="h-px bg-slate-100 w-full" />
+
+                                {/* Tasa ITBMS */}
+                                <div className="space-y-2">
+                                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Tasa de ITBMS Fiscal</Label>
+                                    <input type="hidden" name="codigoTasaItbms" value={codigoTasaItbms} />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {[
+                                            { code: '01', label: '7%', sub: 'General' },
+                                            { code: '02', label: '10%', sub: 'Licores' },
+                                            { code: '03', label: '15%', sub: 'Tabaco' },
+                                            { code: '00', label: 'Exento', sub: '0%' }
+                                        ].map((rate) => (
+                                            <div
+                                                key={rate.code}
+                                                onClick={() => setCodigoTasaItbms(rate.code)}
+                                                className={cn(
+                                                    "cursor-pointer rounded-lg border p-2 text-center transition-all select-none",
+                                                    codigoTasaItbms === rate.code
+                                                        ? "border-brand-1 bg-brand-1/5 ring-1 ring-brand-1 text-brand-1 font-bold"
+                                                        : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                                                )}
+                                            >
+                                                <div className="text-xs font-bold">{rate.label}</div>
+                                                <div className="text-[8px] font-semibold uppercase tracking-wider opacity-85">{rate.sub}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Fiscal Estimado box */}
+                                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-1 text-xs">
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Breakdown Fiscal Estimado</span>
+                                    <div className="flex justify-between text-slate-500 py-0.5">
+                                        <span>Precio Neto:</span>
+                                        <span className="font-mono text-slate-700">{formatCurrency(priceNum)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-slate-500 py-0.5">
+                                        <span>ITBMS ({codigoTasaItbms === '00' ? '0%' : codigoTasaItbms === '01' ? '7%' : codigoTasaItbms === '02' ? '10%' : '15%'}):</span>
+                                        <span className="font-mono text-slate-700">+{formatCurrency(parseFloat(itbmsEstimado))}</span>
+                                    </div>
+                                    <div className="h-px bg-slate-200 my-1" />
+                                    <div className="flex justify-between font-bold text-brand-1 py-0.5">
+                                        <span>Total al Consumidor:</span>
+                                        <span className="font-mono">{formatCurrency(parseFloat(precioConImpuestos))}</span>
+                                    </div>
+                                </div>
+
+                                {/* Advertencia de Margen Negativo */}
+                                {parseFloat(margin) < 0 && (
+                                    <Alert variant="error" className="py-2 px-3 text-xs mt-3">
+                                        <AlertCircle className="h-4 w-4 mr-2" />
+                                        <span>Advertencia: Margen negativo. El precio de venta es menor que el costo unitario.</span>
+                                    </Alert>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Inventory Card */}
+                        <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
+                            <CardHeader className="bg-slate-50 border-b border-slate-100 py-3.5 px-4 flex flex-row items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                    <Package className="h-4.5 w-4.5 text-brand-1" />
+                                    <CardTitle className="text-xs font-bold text-slate-700 uppercase tracking-wider">Inventario Inicial</CardTitle>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-4 space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label htmlFor="stockActual" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Stock Inicial</Label>
+                                        <Input
+                                            id="stockActual"
+                                            name="stockActual"
+                                            type="number"
+                                            value={stockActual}
+                                            onChange={(e) => setStockActual(e.target.value)}
+                                            className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="stockMinimo" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Stock Mínimo</Label>
+                                        <Input
+                                            id="stockMinimo"
+                                            name="stockMinimo"
+                                            type="number"
+                                            value={stockMinimo}
+                                            onChange={(e) => setStockMinimo(e.target.value)}
+                                            className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
                 </div>
-            </ContentContainer>
-        </>
+            </div>
+        </form>
     );
 }
 
 function SubmitButton() {
     const { pending } = useFormStatus();
     return (
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending} className="h-9 bg-brand-1 hover:bg-brand-2 text-white font-bold text-xs shadow-sm px-4 rounded-lg flex items-center gap-1.5 active:scale-95 transition-all">
             {pending ? (
                 <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Guardando...
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Guardando...</span>
                 </>
             ) : (
                 <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Guardar Producto
+                    <Save className="h-3.5 w-3.5" />
+                    <span>Guardar</span>
                 </>
             )}
         </Button>

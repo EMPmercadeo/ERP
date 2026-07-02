@@ -5,6 +5,7 @@ import { Topbar } from '@/components/layout/Topbar';
 import { ContentContainer } from '@/components/layout/Content';
 import { QuotesList } from '@/components/quotes/QuotesList';
 import { prisma } from '@/lib/db';
+import { getTenantContext } from '@/lib/auth/context';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,18 +16,21 @@ export default async function QuotesPage(props: {
         status?: string;
         sortBy?: string;
         sortOrder?: string;
+        limit?: string;
     }>;
 }) {
     const searchParams = await props.searchParams;
+    const { empresaId } = await getTenantContext();
     const page = Number(searchParams.page) || 1;
     const search = searchParams.search || '';
     const status = searchParams.status || 'all';
     const sortBy = searchParams.sortBy || 'createdAt';
     const sortOrder = (searchParams.sortOrder === 'asc' ? 'asc' : 'desc') as 'asc' | 'desc';
-    const limit = 10;
+    const limit = Number(searchParams.limit) || 20;
     const skip = (page - 1) * limit;
 
     const where: any = {
+        empresaId,
         AND: []
     };
 
@@ -52,7 +56,11 @@ export default async function QuotesPage(props: {
             orderBy: { [orderByField]: sortOrder },
             include: {
                 cliente: {
-                    select: { razonSocial: true }
+                    select: {
+                        razonSocial: true,
+                        ruc: true,
+                        dv: true
+                    }
                 }
             },
             skip,

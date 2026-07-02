@@ -34,7 +34,7 @@ import { ImportQuotesDialog } from './ImportQuotesDialog';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
@@ -64,7 +64,7 @@ import { toast } from 'sonner';
 interface Quote {
     id: string;
     numero: string;
-    cliente: { razonSocial: string };
+    cliente: { razonSocial: string; ruc?: string; dv?: string | null };
     fechaEmision: string;
     totalNeto: number;
     estado: string;
@@ -72,6 +72,33 @@ interface Quote {
 
 interface QuotesListProps {
     quotes: Quote[];
+}
+
+const getInitials = (name: string) => {
+    if (!name || typeof name !== 'string') return 'CF';
+    return name
+        .split(' ')
+        .filter((w) => w[0] && /[a-zA-ZÁÉÍÓÚáéíóúÑñ]/.test(w[0]))
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase();
+};
+
+const palette = [
+    'from-blue-600 to-teal-400 text-white',
+    'from-emerald-500 to-teal-400 text-white',
+    'from-amber-500 to-orange-400 text-white',
+    'from-indigo-500 to-purple-400 text-white',
+    'from-rose-500 to-red-400 text-white',
+    'from-blue-500 to-indigo-400 text-white'
+];
+
+function formatCurrency(value: number) {
+    return new Intl.NumberFormat('es-PA', {
+        style: 'currency',
+        currency: 'USD',
+    }).format(value);
 }
 
 export function QuotesList({
@@ -158,19 +185,6 @@ export function QuotesList({
         setTimeout(() => toast.success('Correo enviado correctamente'), 1500);
     };
 
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'aceptada':
-                return <Badge className="bg-green-500 hover:bg-green-600">Aceptada</Badge>;
-            case 'enviada':
-                return <Badge className="bg-blue-500 hover:bg-blue-600">Enviada</Badge>;
-            case 'rechazada':
-                return <Badge variant="destructive">Rechazada</Badge>;
-            default:
-                return <Badge variant="secondary">Borrador</Badge>;
-        }
-    };
-
     const columns: ColumnDef<Quote>[] = useMemo(() => [
         {
             accessorKey: 'numero',
@@ -178,20 +192,43 @@ export function QuotesList({
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4"
+                    className="-ml-4 font-semibold"
                 >
-                    Número
+                    Documento
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
-            cell: ({ row }) => <span className="font-medium">{row.getValue('numero')}</span>,
+            cell: ({ row }) => (
+                <span className="font-mono text-xs font-bold text-brand-1 tracking-tight">
+                    {row.getValue('numero')}
+                </span>
+            ),
         },
         {
             accessorKey: 'cliente',
             header: 'Cliente',
             cell: ({ row }) => {
-                const cliente = row.getValue('cliente') as { razonSocial: string };
-                return <span>{cliente.razonSocial}</span>;
+                const cliente = row.getValue('cliente') as { razonSocial: string; ruc?: string; dv?: string | null };
+                const name = cliente.razonSocial;
+                const initials = getInitials(name) || 'CF';
+                const gradClass = palette[row.index % palette.length];
+                return (
+                    <div className="flex items-center gap-3">
+                        <div className={`w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
+                            {initials}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-foreground text-sm truncate max-w-[200px]" title={name}>
+                                {name}
+                            </span>
+                            {cliente.ruc && (
+                                <span className="text-[11px] text-muted-foreground font-mono leading-none mt-0.5">
+                                    RUC: {cliente.ruc}{cliente.dv ? `-${cliente.dv}` : ''}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                );
             },
         },
         {
@@ -200,13 +237,16 @@ export function QuotesList({
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4"
+                    className="-ml-4 font-semibold"
                 >
-                    Fecha
+                    Emisión
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
-            cell: ({ row }) => new Date(row.getValue('fechaEmision')).toLocaleDateString('es-PA'),
+            cell: ({ row }) => {
+                const date = new Date(row.getValue('fechaEmision'));
+                return <span className="font-mono text-xs font-semibold text-muted-foreground">{date.toLocaleDateString('es-PA', { day: '2-digit', month: 'short', year: 'numeric' })}</span>;
+            },
         },
         {
             accessorKey: 'totalNeto',
@@ -214,18 +254,31 @@ export function QuotesList({
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4"
+                    className="-ml-4 font-semibold"
                 >
-                    Total
+                    Monto
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
-            cell: ({ row }) => `$${(row.getValue('totalNeto') as number).toFixed(2)}`,
+            cell: ({ row }) => {
+                const value = row.getValue('totalNeto') as number;
+                return (
+                    <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
+                        {formatCurrency(value)}
+                    </span>
+                );
+            },
         },
         {
             accessorKey: 'estado',
             header: 'Estado',
-            cell: ({ row }) => getStatusBadge(row.getValue('estado')),
+            cell: ({ row }) => (
+                <StatusBadge
+                    status={row.getValue('estado')}
+                    showIcon={false}
+                    className="h-6"
+                />
+            ),
         },
         {
             id: 'actions',
@@ -415,93 +468,121 @@ export function QuotesList({
                             )}
                         </div>
                     </CardContent>
-                </Card>
-
-                <Card>
-                    <Table>
-                        <TableHeader>
-                            {table.getHeaderGroups().map((headerGroup) => (
-                                <TableRow key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => (
-                                        <TableHead key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                        </TableHead>
+                    <Card>
+                        <div className="overflow-y-auto max-h-[calc(100vh-340px)] min-h-[300px] border-b">
+                            <Table>
+                                <TableHeader>
+                                    {table.getHeaderGroups().map((headerGroup) => (
+                                        <TableRow key={headerGroup.id}>
+                                            {headerGroup.headers.map((header) => (
+                                                <TableHead key={header.id}>
+                                                    {header.isPlaceholder
+                                                        ? null
+                                                        : flexRender(
+                                                            header.column.columnDef.header,
+                                                            header.getContext()
+                                                        )}
+                                                </TableHead>
+                                            ))}
+                                        </TableRow>
                                     ))}
-                                </TableRow>
-                            ))}
-                        </TableHeader>
-                        <TableBody>
-                            {table.getRowModel().rows?.length ? (
-                                table.getRowModel().rows.map((row) => (
-                                    <TableRow key={row.id}>
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
-                                                )}
+                                </TableHeader>
+                                <TableBody>
+                                    {table.getRowModel().rows?.length ? (
+                                        table.getRowModel().rows.map((row) => (
+                                            <TableRow key={row.id}>
+                                                {row.getVisibleCells().map((cell) => (
+                                                    <TableCell key={cell.id}>
+                                                        {flexRender(
+                                                            cell.column.columnDef.cell,
+                                                            cell.getContext()
+                                                        )}
+                                                    </TableCell>
+                                                ))}
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={columns.length} className="h-48 text-center">
+                                                <EmptyState
+                                                    title="No hay cotizaciones"
+                                                    description="Crea tu primera cotización para empezar."
+                                                    action={
+                                                        <Button asChild>
+                                                            <Link href="/quotes/new">
+                                                                Nueva Cotización
+                                                            </Link>
+                                                        </Button>
+                                                    }
+                                                />
                                             </TableCell>
-                                        ))}
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={columns.length} className="h-48 text-center">
-                                        <EmptyState
-                                            title="No hay cotizaciones"
-                                            description="Crea tu primera cotización para empezar."
-                                            action={
-                                                <Button asChild>
-                                                    <Link href="/quotes/new">
-                                                        Nueva Cotización
-                                                    </Link>
-                                                </Button>
-                                            }
-                                        />
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
 
-                    <div className="flex items-center justify-between border-t px-4 py-4">
-                        <div className="text-sm text-muted-foreground">
-                            Mostrando {totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0} a{' '}
-                            {Math.min(currentPage * pageSize, totalCount)}{' '}
-                            de {totalCount} resultados
+                        <div className="flex items-center justify-between border-t px-4 py-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
+                                <span>
+                                    Mostrando {totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0} a{' '}
+                                    {Math.min(currentPage * pageSize, totalCount)} de {totalCount} cotizaciones
+                                </span>
+                                <span className="hidden sm:inline text-muted-foreground/30">|</span>
+                                <span className="font-medium text-foreground">
+                                    Página {currentPage} de {pageCount || 1}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span className="hidden sm:inline">Filas por página:</span>
+                                    <Select
+                                        value={String(pageSize)}
+                                        onValueChange={(val) => {
+                                            const query = createQueryString({ limit: val, page: '1' });
+                                            router.push(`${pathname}?${query}`);
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-8 w-[70px]">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="20">20</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                            <SelectItem value="100">100</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const query = createQueryString({ page: String(currentPage - 1) });
+                                            router.push(`${pathname}?${query}`);
+                                        }}
+                                        disabled={currentPage <= 1}
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                        Anterior
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const query = createQueryString({ page: String(currentPage + 1) });
+                                            router.push(`${pathname}?${query}`);
+                                        }}
+                                        disabled={currentPage >= pageCount}
+                                    >
+                                        Siguiente
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                    const query = createQueryString({ page: String(currentPage - 1) });
-                                    router.push(`${pathname}?${query}`);
-                                }}
-                                disabled={currentPage <= 1}
-                             >
-                                <ChevronLeft className="h-4 w-4" />
-                                Anterior
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                    const query = createQueryString({ page: String(currentPage + 1) });
-                                    router.push(`${pathname}?${query}`);
-                                }}
-                                disabled={currentPage >= pageCount}
-                            >
-                                Siguiente
-                                <ChevronRight className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </div>
+                    </Card>
                 </Card>
             </div>
         </ContentContainer>

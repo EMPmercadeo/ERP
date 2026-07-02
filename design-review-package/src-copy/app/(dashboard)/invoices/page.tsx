@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db';
 import { Topbar } from '@/components/layout/Topbar';
 import { InvoiceList } from '@/components/invoices/InvoiceList';
+import { getTenantContext } from '@/lib/auth/context';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,18 +12,21 @@ export default async function InvoicesPage(props: {
         status?: string;
         sortBy?: string;
         sortOrder?: string;
+        limit?: string;
     }>;
 }) {
     const searchParams = await props.searchParams;
+    const { empresaId } = await getTenantContext();
     const page = Number(searchParams.page) || 1;
     const search = searchParams.search || '';
     const status = searchParams.status || 'all';
     const sortBy = searchParams.sortBy || 'createdAt';
     const sortOrder = (searchParams.sortOrder === 'asc' ? 'asc' : 'desc') as 'asc' | 'desc';
-    const limit = 10;
+    const limit = Number(searchParams.limit) || 20;
     const skip = (page - 1) * limit;
 
     const where: any = {
+        empresaId,
         AND: []
     };
 
@@ -60,6 +64,7 @@ export default async function InvoicesPage(props: {
         clientName: i.cliente.razonSocial,
         clientRuc: i.cliente.ruc,
         fechaEmision: i.fechaEmision.toISOString(),
+        fechaVencimiento: i.fechaVencimiento ? i.fechaVencimiento.toISOString() : null,
         totalNeto: i.totalNeto.toNumber(),
         saldoPendiente: i.saldoPendiente.toNumber(),
         estadoDgi: i.estadoDgi

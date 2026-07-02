@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { Eye, EyeOff, Lock, User as UserIcon } from 'lucide-react';
 
 export default function ProfilePage() {
-    const { user, refreshUser } = useAuth();
+    const { user, role, refreshUser } = useAuth();
     const [isPersonalLoading, setIsPersonalLoading] = useState(false);
     const [isPasswordLoading, setIsPasswordLoading] = useState(false);
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -28,6 +28,11 @@ export default function ProfilePage() {
         .join('')
         .toUpperCase()
         .slice(0, 2);
+
+    const roleLabel = role === 'super_admin' ? 'Super Admin' :
+        role === 'admin' ? 'Administrador' :
+            role === 'contador' ? 'Contador' :
+                role === 'vendedor' ? 'Vendedor' : 'Usuario';
 
     const handlePersonalInfoSubmit = async (formData: FormData) => {
         if (!user?.email) return;
@@ -85,8 +90,8 @@ export default function ProfilePage() {
                             <h2 className="text-3xl font-bold tracking-tight">{displayName}</h2>
                             <p className="text-muted-foreground font-medium">{user?.email}</p>
                             <div className="flex flex-wrap justify-center md:justify-start gap-2 pt-1">
-                                <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                                    Super Admin
+                                <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-700/10 uppercase tracking-wide">
+                                    {roleLabel}
                                 </span>
                                 <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
                                     Cuenta Activa

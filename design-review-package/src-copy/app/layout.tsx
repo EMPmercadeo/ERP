@@ -17,9 +17,16 @@ export const metadata: Metadata = {
   title: "ERP Panamá - Sistema de Facturación Electrónica",
   description: "Sistema ERP con integración DGI para facturación electrónica en Panamá",
   keywords: ["ERP", "Panamá", "DGI", "Facturación Electrónica", "CUFE"],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ERP Panamá"
+  }
 };
 
 import { AuthProvider } from '@/lib/firebase/auth';
+import { PwaManager } from '@/components/pwa/PwaManager';
 
 export default function RootLayout({
   children,
@@ -33,6 +40,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
+          <PwaManager />
           {/* Impersonation Banner */}
           <Suspense fallback={null}>
             <ImpersonationWrapper />
@@ -67,7 +75,8 @@ async function ImpersonationWrapper() {
       return <ImpersonationBanner isImpersonating={true} tenantName={tenant?.razonSocial || 'Unknown'} />;
     }
   } catch (e) {
-    // Ignore auth errors in root layout to allow public pages or login to work
+    console.error('[ImpersonationWrapper] Error:', e);
+    return null;
   }
   return null;
 }
