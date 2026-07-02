@@ -195,14 +195,14 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                 className={cn(
                     'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden',
                     isActive
-                        ? 'bg-white/10 text-white font-semibold shadow-inner'
-                        : 'text-white/80 hover:bg-white/5 hover:text-white'
+                        ? 'bg-brand-1/10 text-brand-1 font-semibold'
+                        : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                 )}
             >
                 {isActive && (
-                    <span className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-blue-400 rounded-r" />
+                    <span className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-1 rounded-r" />
                 )}
-                <Icon className={cn("h-5 w-5 shrink-0 transition-transform duration-200", isActive ? "scale-105 text-blue-400" : "text-white/60")} />
+                <Icon className={cn("h-5 w-5 shrink-0 transition-transform duration-200", isActive ? "scale-105 text-brand-1" : "text-sidebar-foreground/60")} />
                 {!isCollapsed && <span className="ml-1">{item.name}</span>}
             </Link>
         );

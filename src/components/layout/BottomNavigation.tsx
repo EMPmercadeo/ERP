@@ -148,135 +148,132 @@ export function BottomNavigation() {
                 </button>
             </div>
 
-            {/* Slide-up Backdrop Drawer */}
+            {/* Full-screen Slide-up Mobile Menu */}
             {isMenuOpen && (
-                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden transition-opacity duration-300 animate-in fade-in">
-                    {/* Bottom Drawer Container */}
-                    <div 
-                        ref={menuRef}
-                        className="fixed bottom-0 left-0 right-0 bg-slate-50 rounded-t-2xl shadow-2xl max-h-[94dvh] overflow-hidden flex flex-col font-sans transition-transform duration-300 translate-y-0 pb-3 border-t border-slate-200"
-                    >
-                        {/* Header Compacto */}
-                        <div className="bg-white border-b border-slate-100 px-3.5 py-2.5 flex items-center justify-between shrink-0">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                                <div className="h-8 w-8 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-sm shrink-0">
-                                    {userName ? userName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
-                                </div>
-                                <div className="min-w-0">
-                                    <h4 className="text-xs font-bold text-slate-800 truncate max-w-[140px]">{userName}</h4>
-                                    <p className="text-[10px] text-slate-500 truncate max-w-[140px]">{user?.email}</p>
-                                </div>
-                                <Badge className={cn(
-                                    "text-[8px] px-1.5 py-0 border-none font-bold uppercase shrink-0",
-                                    userPlan === 'pro' && "bg-amber-500 text-white",
-                                    userPlan === 'emprendedor' && "bg-indigo-500 text-white",
-                                    userPlan === 'negocio' && "bg-cyan-600 text-white",
-                                    userPlan === 'empresa' && "bg-slate-700 text-white",
-                                    userPlan === 'free' && "bg-slate-200 text-slate-700"
-                                )}>
-                                    {planLabel}
-                                </Badge>
+                <div 
+                    ref={menuRef}
+                    className="fixed inset-0 z-50 bg-slate-50 flex flex-col font-sans lg:hidden animate-in slide-in-from-bottom duration-300 pb-6 overflow-hidden"
+                >
+                    {/* Header Compacto */}
+                    <div className="bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between shrink-0">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="h-8.5 w-8.5 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-sm shrink-0">
+                                {userName ? userName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
                             </div>
-                            <button
-                                onClick={() => setIsMenuOpen(false)}
-                                className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 active:scale-90 transition-transform shrink-0"
-                            >
-                                <X className="h-4.5 w-4.5" />
-                            </button>
+                            <div className="min-w-0">
+                                <h4 className="text-xs font-bold text-slate-800 truncate max-w-[160px]">{userName}</h4>
+                                <p className="text-[10px] text-slate-500 truncate max-w-[160px]">{user?.email}</p>
+                            </div>
+                            <Badge className={cn(
+                                "text-[8px] px-1.5 py-0 border-none font-bold uppercase shrink-0",
+                                userPlan === 'pro' && "bg-amber-500 text-white",
+                                userPlan === 'emprendedor' && "bg-indigo-500 text-white",
+                                userPlan === 'negocio' && "bg-cyan-600 text-white",
+                                userPlan === 'empresa' && "bg-slate-700 text-white",
+                                userPlan === 'free' && "bg-slate-200 text-slate-700"
+                            )}>
+                                {planLabel}
+                            </Badge>
+                        </div>
+                        <button
+                            onClick={() => setIsMenuOpen(false)}
+                            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 active:scale-90 transition-transform shrink-0"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
+
+                    {/* Menu Options Grid (No Scroll, spaced nicely) */}
+                    <div className="p-4 flex-1 flex flex-col justify-around overflow-hidden">
+                        {/* App Sections */}
+                        <div className="space-y-1.5">
+                            <h5 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">Módulos Principales</h5>
+                            <div className="grid grid-cols-3 gap-2">
+                                <Link href="/pos" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                    <ShoppingCart className="h-4.5 w-4.5 text-brand-1" />
+                                    <span>POS</span>
+                                </Link>
+                                <Link href="/quotes" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                    <FileText className="h-4.5 w-4.5 text-brand-1" />
+                                    <span>Cotizar</span>
+                                </Link>
+                                <Link href="/orders" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                    <ClipboardList className="h-4.5 w-4.5 text-brand-1" />
+                                    <span>Pedidos</span>
+                                </Link>
+                                <Link href="/delivery-notes" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                    <Truck className="h-4.5 w-4.5 text-brand-1" />
+                                    <span>Entregas</span>
+                                </Link>
+                                <Link href="/suppliers" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                    <Building2 className="h-4.5 w-4.5 text-brand-1" />
+                                    <span>Proveedores</span>
+                                </Link>
+                                <Link href="/purchases" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                    <Package className="h-4.5 w-4.5 text-brand-1" />
+                                    <span>Compras</span>
+                                </Link>
+                                <Link href="/receivables" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                    <CreditCard className="h-4.5 w-4.5 text-brand-1" />
+                                    <span>Cobros</span>
+                                </Link>
+                                <Link href="/reports" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                    <BarChart3 className="h-4.5 w-4.5 text-brand-1" />
+                                    <span>Reportes</span>
+                                </Link>
+                            </div>
                         </div>
 
-                        {/* Menu Options Grid (3 Columnas Ultra Compactas) */}
-                        <div className="p-3 space-y-3 overflow-y-auto flex-1">
-                            {/* App Sections */}
-                            <div className="space-y-1">
-                                <h5 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">Módulos Principales</h5>
-                                <div className="grid grid-cols-3 gap-1.5">
-                                    <Link href="/pos" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                        <ShoppingCart className="h-4 w-4 text-brand-1" />
-                                        <span>POS</span>
+                        {/* Settings & Support */}
+                        <div className="space-y-1.5">
+                            <h5 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">Cuenta y Ayuda</h5>
+                            <div className="grid grid-cols-3 gap-2">
+                                <Link href="/profile" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                    <User className="h-4.5 w-4.5 text-slate-500" />
+                                    <span>Mi Cuenta</span>
+                                </Link>
+                                <Link href="/settings" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                    <Settings className="h-4.5 w-4.5 text-slate-500" />
+                                    <span>Ajustes</span>
+                                </Link>
+                                <Link href="/help" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
+                                    <HelpCircle className="h-4.5 w-4.5 text-slate-500" />
+                                    <span>Ayuda 24/7</span>
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Super Admin Console (If Admin) */}
+                        {isSuperAdmin && (
+                            <div className="space-y-1.5">
+                                <h5 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">Super Admin</h5>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <Link href="/admin/empresas" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl text-[10px] font-semibold text-slate-700 text-center shadow-2xs">
+                                        <Users className="h-4 w-4 text-indigo-500" />
+                                        <span>Empresas</span>
                                     </Link>
-                                    <Link href="/quotes" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                        <FileText className="h-4 w-4 text-brand-1" />
-                                        <span>Cotizar</span>
+                                    <Link href="/admin/users" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl text-[10px] font-semibold text-slate-700 text-center shadow-2xs">
+                                        <UserCog className="h-4 w-4 text-indigo-500" />
+                                        <span>Usuarios</span>
                                     </Link>
-                                    <Link href="/orders" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                        <ClipboardList className="h-4 w-4 text-brand-1" />
-                                        <span>Pedidos</span>
-                                    </Link>
-                                    <Link href="/delivery-notes" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                        <Truck className="h-4 w-4 text-brand-1" />
-                                        <span>Entregas</span>
-                                    </Link>
-                                    <Link href="/suppliers" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                        <Building2 className="h-4 w-4 text-brand-1" />
-                                        <span>Proveedores</span>
-                                    </Link>
-                                    <Link href="/purchases" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                        <Package className="h-4 w-4 text-brand-1" />
-                                        <span>Compras</span>
-                                    </Link>
-                                    <Link href="/receivables" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                        <CreditCard className="h-4 w-4 text-brand-1" />
-                                        <span>Cobros</span>
-                                    </Link>
-                                    <Link href="/reports" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                        <BarChart3 className="h-4 w-4 text-brand-1" />
-                                        <span>Reportes</span>
+                                    <Link href="/admin/audit" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl text-[10px] font-semibold text-slate-700 text-center shadow-2xs">
+                                        <FileClock className="h-4 w-4 text-indigo-500" />
+                                        <span>Auditoría</span>
                                     </Link>
                                 </div>
                             </div>
+                        )}
+                    </div>
 
-                            {/* Settings & Support */}
-                            <div className="space-y-1">
-                                <h5 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">Cuenta y Ayuda</h5>
-                                <div className="grid grid-cols-3 gap-1.5">
-                                    <Link href="/profile" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                        <User className="h-4 w-4 text-slate-500" />
-                                        <span>Mi Cuenta</span>
-                                    </Link>
-                                    <Link href="/settings" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                        <Settings className="h-4 w-4 text-slate-500" />
-                                        <span>Ajustes</span>
-                                    </Link>
-                                    <Link href="/help" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                        <HelpCircle className="h-4 w-4 text-slate-500" />
-                                        <span>Ayuda 24/7</span>
-                                    </Link>
-                                </div>
-                            </div>
-
-                            {/* Super Admin Console (If Admin) */}
-                            {isSuperAdmin && (
-                                <div className="space-y-1">
-                                    <h5 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">Super Admin</h5>
-                                    <div className="grid grid-cols-3 gap-1.5">
-                                        <Link href="/admin/empresas" className="flex flex-col items-center justify-center gap-1 p-1.5 bg-white border border-slate-100 rounded-xl text-[10px] font-semibold text-slate-700 text-center">
-                                            <Users className="h-3.5 w-3.5 text-indigo-500" />
-                                            <span>Empresas</span>
-                                        </Link>
-                                        <Link href="/admin/users" className="flex flex-col items-center justify-center gap-1 p-1.5 bg-white border border-slate-100 rounded-xl text-[10px] font-semibold text-slate-700 text-center">
-                                            <UserCog className="h-3.5 w-3.5 text-indigo-500" />
-                                            <span>Usuarios</span>
-                                        </Link>
-                                        <Link href="/admin/audit" className="flex flex-col items-center justify-center gap-1 p-1.5 bg-white border border-slate-100 rounded-xl text-[10px] font-semibold text-slate-700 text-center">
-                                            <FileClock className="h-3.5 w-3.5 text-indigo-500" />
-                                            <span>Auditoría</span>
-                                        </Link>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Logout Compacto */}
-                        <div className="px-3 pt-1 shrink-0">
-                            <Button
-                                onClick={handleLogout}
-                                className="w-full h-9 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-bold text-xs rounded-xl flex items-center justify-center gap-2 active:scale-98 transition-all"
-                            >
-                                <LogOut className="h-3.5 w-3.5" />
-                                <span>Cerrar Sesión</span>
-                            </Button>
-                        </div>
+                    {/* Logout Compacto */}
+                    <div className="px-4 pt-2 shrink-0">
+                        <Button
+                            onClick={handleLogout}
+                            className="w-full h-11 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-bold text-sm rounded-xl flex items-center justify-center gap-2 active:scale-98 transition-all"
+                        >
+                            <LogOut className="h-4.5 w-4.5" />
+                            <span>Cerrar Sesión</span>
+                        </Button>
                     </div>
                 </div>
             )}
