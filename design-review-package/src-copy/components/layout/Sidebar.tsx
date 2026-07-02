@@ -193,14 +193,17 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
                 className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden',
                     isActive
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                        : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                        ? 'bg-white/10 text-white font-semibold shadow-inner'
+                        : 'text-white/80 hover:bg-white/5 hover:text-white'
                 )}
             >
-                <Icon className="h-5 w-5 shrink-0" />
-                {!isCollapsed && <span>{item.name}</span>}
+                {isActive && (
+                    <span className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-blue-400 rounded-r" />
+                )}
+                <Icon className={cn("h-5 w-5 shrink-0 transition-transform duration-200", isActive ? "scale-105 text-blue-400" : "text-white/60")} />
+                {!isCollapsed && <span className="ml-1">{item.name}</span>}
             </Link>
         );
 
@@ -242,12 +245,12 @@ const handleSendFeedback = async (e: React.FormEvent) => {
             {/* Sidebar - Desktop Only */}
             <aside
                 className={cn(
-                    'fixed left-0 top-0 z-50 hidden lg:flex h-full flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300',
+                    'fixed left-0 top-0 z-50 hidden lg:flex h-full flex-col border-r border-sidebar-border/30 bg-sidebar transition-all duration-300',
                     isCollapsed ? 'w-16' : 'w-64'
                 )}
             >
                 {/* Logo */}
-                <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4 shrink-0">
+                <div className="flex h-16 items-center justify-between border-b border-sidebar-border/20 px-4 shrink-0">
                     {!isCollapsed && (
                         <Link href="/dashboard" className="flex items-center gap-2">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-1">
@@ -301,7 +304,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                 </nav>
 
                 {/* User Profile Popover & Collapse Toggle */}
-                <div className="border-t border-sidebar-border p-3 space-y-2 bg-sidebar relative font-sans">
+                <div className="border-t border-sidebar-border/20 p-3 space-y-2 bg-sidebar relative font-sans">
 
                     {/* Collapse toggle - Desktop only */}
                     <div className="hidden lg:block">
@@ -322,7 +325,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                         </Button>
                     </div>
 
-                    <div className="border-t border-sidebar-border/60 my-2" />
+                    <div className="border-t border-sidebar-border/20 my-2" />
 
                     {/* User Card with Dropdown Trigger */}
                     <div className="relative" ref={dropdownRef}>

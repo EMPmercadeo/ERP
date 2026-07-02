@@ -45,7 +45,7 @@ export function TrendChart({ data }: TrendChartProps) {
 
     if (!data || data.length === 0) {
         return (
-            <Card className="flex h-full flex-col bg-white shadow-sm border-border">
+            <Card className="flex h-full flex-col bg-white shadow-premium border border-border rounded-2xl overflow-hidden transition-premium">
                 <CardContent className="flex flex-1 items-center justify-center text-muted-foreground text-sm py-10">
                     No hay datos de tendencia disponibles
                 </CardContent>
@@ -87,8 +87,8 @@ export function TrendChart({ data }: TrendChartProps) {
     }
 
     return (
-        <Card className="flex h-full flex-col bg-white shadow-sm border-border">
-            <div className="flex flex-row items-center justify-between border-b p-5">
+        <Card className="flex h-full flex-col bg-white shadow-premium border border-border rounded-2xl overflow-hidden transition-premium">
+            <div className="flex flex-row items-center justify-between border-b border-border/50 p-5">
                 <div className="space-y-1">
                     <h3 className="text-base font-semibold text-foreground">Tendencia de Ventas</h3>
                     <p className="text-xs text-muted-foreground">Facturado vs. cobrado · últimos 6 meses</p>

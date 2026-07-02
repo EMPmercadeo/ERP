@@ -40,8 +40,8 @@ export function DgiStatusCard({ data }: DgiStatusCardProps) {
     let accumulatedOffset = 0;
 
     return (
-        <Card className="flex h-full flex-col bg-white shadow-sm border-border">
-            <CardHeader className="border-b p-5">
+        <Card className="flex h-full flex-col bg-white shadow-premium border border-border rounded-2xl overflow-hidden transition-premium">
+            <CardHeader className="border-b border-border/50 p-5">
                 <CardTitle className="text-base font-semibold">Estado DGI</CardTitle>
                 <CardDescription className="text-xs">Validación fiscal del periodo</CardDescription>
             </CardHeader>

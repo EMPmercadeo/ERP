@@ -98,8 +98,8 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
     };
 
     return (
-        <Card className="flex h-full flex-col bg-white shadow-sm border-border">
-            <CardHeader className="flex flex-row items-center justify-between border-b p-5">
+        <Card className="flex h-full flex-col bg-white shadow-premium border border-border rounded-2xl overflow-hidden transition-premium">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 p-5">
                 <div className="space-y-1">
                     <CardTitle className="text-base font-semibold">Facturas Recientes</CardTitle>
                     <CardDescription className="text-xs">

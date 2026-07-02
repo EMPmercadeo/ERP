@@ -90,17 +90,17 @@ export function KpiCard({
     const isPrimary = variant === 'primary';
 
     const cardStyles = isPrimary
-        ? 'border-0 bg-gradient-to-br from-blue-600 via-blue-500 to-teal-400 text-white shadow-md shadow-blue-500/20'
-        : 'bg-white shadow-sm border-border hover:border-slate-300';
+        ? 'border border-white/10 bg-brand-2 text-white shadow-premium'
+        : 'bg-white shadow-premium border border-border hover:border-slate-300 hover:shadow-premium-hover';
 
     const titleColor = isPrimary ? 'text-white/85' : 'text-muted-foreground';
 
     const Content = (
         <Card
             className={cn(
-                'relative flex min-h-[158px] flex-col justify-between p-5 overflow-hidden transition-all duration-200',
+                'relative flex min-h-[158px] flex-col justify-between p-5 overflow-hidden rounded-2xl transition-premium',
                 cardStyles,
-                href && 'cursor-pointer hover:-translate-y-1 hover:shadow-md'
+                href && 'cursor-pointer hover:-translate-y-0.5'
             )}
         >
             <div className="flex items-center justify-between gap-2 z-10">
