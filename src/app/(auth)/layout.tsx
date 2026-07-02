@@ -14,7 +14,7 @@ export default function AuthLayout({
             {/* =========================================================
                 VISTA MÓVIL (< lg) - Tema Azul Banco General 100% Pantalla
             ========================================================= */}
-            <div className="flex lg:hidden w-full flex-col items-center bg-gradient-to-b from-[#0056b3] via-[#004899] to-[#003366] px-4 py-3 h-[100dvh] overflow-hidden text-white">
+            <div className="flex lg:hidden w-full flex-col items-center bg-gradient-to-b from-brand-light via-brand-medium to-brand-dark px-4 py-3 h-[100dvh] overflow-hidden text-white">
                 <div className="w-full max-w-md flex-1 flex flex-col justify-between h-full overflow-hidden">
                     {children}
                 </div>
@@ -35,7 +35,7 @@ export default function AuthLayout({
                 </div>
 
                 {/* Panel Derecho - Degradado Institucional Azul DGI */}
-                <div className="w-1/2 bg-gradient-to-br from-[#073674] via-[#052550] to-[#001835] p-12 lg:p-16 text-white flex flex-col justify-between relative overflow-hidden shadow-2xl">
+                <div className="w-1/2 bg-gradient-to-br from-brand-1 via-brand-2 to-brand-3 p-12 lg:p-16 text-white flex flex-col justify-between relative overflow-hidden shadow-2xl">
                     {/* Brillo decorativo sutil */}
                     <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
                     <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />

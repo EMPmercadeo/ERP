@@ -95,7 +95,7 @@ export function TrendChart({ data }: TrendChartProps) {
                 </div>
                 <div className="flex items-center gap-4 text-xs font-semibold text-muted-foreground">
                     <span className="flex items-center gap-1.5">
-                        <i className="w-3 h-3 rounded-full" style={{ background: 'linear-gradient(135deg, var(--info), #2a9bdb)' }} />
+                        <i className="w-3 h-3 rounded-full" style={{ background: 'linear-gradient(135deg, var(--info), var(--info-light))' }} />
                         Facturado
                     </span>
                     <span className="flex items-center gap-1.5">
@@ -119,20 +119,20 @@ export function TrendChart({ data }: TrendChartProps) {
                             </linearGradient>
                             <linearGradient id="gline" x1="0" y1="0" x2="1" y2="0">
                                 <stop offset="0" stopColor="var(--info)" />
-                                <stop offset="1" stopColor="#2a9bdb" />
+                                <stop offset="1" stopColor="var(--info-light)" />
                             </linearGradient>
                         </defs>
 
                         {/* Grid lines and values */}
                         {gridLines.map((gl, i) => (
                             <g key={i}>
-                                <line x1={L} y1={gl.y} x2={W - R} y2={gl.y} stroke="#eef1f6" strokeWidth={1} />
+                                <line x1={L} y1={gl.y} x2={W - R} y2={gl.y} stroke="var(--border)" strokeWidth={1} />
                                 <text
                                     x={L - 12}
                                     y={gl.y + 4}
                                     textAnchor="end"
                                     fontSize={11}
-                                    fill="#9aa7bd"
+                                    fill="var(--muted-foreground)"
                                     fontFamily="var(--font-mono)"
                                     className="font-mono font-medium"
                                 >
@@ -149,7 +149,7 @@ export function TrendChart({ data }: TrendChartProps) {
                                 y={H - 14}
                                 textAnchor="middle"
                                 fontSize={12}
-                                fill="#6b7a92"
+                                fill="var(--muted-foreground)"
                                 fontWeight={500}
                             >
                                 {d.mes}
@@ -190,7 +190,7 @@ export function TrendChart({ data }: TrendChartProps) {
                                     cx={getX(i)}
                                     cy={getY(d.cobrado)}
                                     r={4}
-                                    fill="#fff"
+                                    fill="white"
                                     stroke="var(--success)"
                                     strokeWidth={2.5}
                                 />
@@ -198,7 +198,7 @@ export function TrendChart({ data }: TrendChartProps) {
                                     cx={getX(i)}
                                     cy={getY(d.facturado)}
                                     r={4.5}
-                                    fill="#fff"
+                                    fill="white"
                                     stroke="var(--info)"
                                     strokeWidth={2.5}
                                 />

@@ -49,6 +49,17 @@
   /* Custom Brand Colors */
   --color-brand-1: #073674;
   --color-brand-2: #052550;
+  --color-brand-3: #001835;
+  --color-brand-bg-blue: #002855;
+  --color-brand-bg-blue-hover: #001f42;
+  --color-brand-bg-blue-hover-dark: #001d3f;
+  --color-brand-light: #0056b3;
+  --color-brand-medium: #004899;
+  --color-brand-dark: #003366;
+  --color-paypal-yellow: #FFC439;
+  --color-paypal-yellow-hover: #F2BA36;
+  --color-paypal-blue: #003087;
+  --color-info-light: #2a9bdb;
   --color-surface: var(--surface);
   --color-surface-light: var(--surface-light);
   --color-surface-muted: var(--surface-muted);

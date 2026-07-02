@@ -12,7 +12,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const ALLOWED_FILES = [
-    'globals.css',  // Design tokens file
+    'globals.css',      // Design tokens file
+    'QuotePDF.tsx',     // Native inline react-pdf styling requires hex
+    'global-error.tsx', // Low-level fallback error boundary requires static styles
 ];
 
 // Google brand colors that are allowed

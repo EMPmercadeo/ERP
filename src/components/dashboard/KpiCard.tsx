@@ -81,7 +81,7 @@ export function KpiCard({
     variant = 'default',
     chipClass,
     sparkPoints,
-    sparkColor = '#ffffff',
+    sparkColor = 'white',
     sparkId = 'spark',
     href
 }: KpiCardProps) {
@@ -139,7 +139,7 @@ export function KpiCard({
             )}
 
             {sparkPoints && (
-                <Sparkline points={sparkPoints} color={isPrimary ? '#ffffff' : sparkColor} id={sparkId} />
+                <Sparkline points={sparkPoints} color={isPrimary ? 'white' : sparkColor} id={sparkId} />
             )}
         </Card>
     );

@@ -1561,7 +1561,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                             </div>
                                             <button
                                                 onClick={executePayment}
-                                                className="w-full flex items-center justify-center gap-2 py-3 bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-bold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#FFC439]"
+                                                className="w-full flex items-center justify-center gap-2 py-3 bg-paypal-yellow hover:bg-paypal-yellow-hover text-paypal-blue font-bold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-paypal-yellow"
                                             >
                                                 <span className="italic font-extrabold text-lg">PayPal</span>
                                                 <span className="text-sm font-semibold tracking-wider">SUSCRIBIRSE (Simulado)</span>
@@ -1582,7 +1582,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
 
                         {paymentStep === 'simulating' && (
                             <div className="text-center py-12 space-y-6">
-                                <Loader2 className="h-12 w-12 text-[#003087] mx-auto animate-spin" />
+                                <Loader2 className="h-12 w-12 text-paypal-blue mx-auto animate-spin" />
                                 <div className="space-y-2">
                                     <h4 className="font-bold text-slate-900">Conectando con PayPal...</h4>
                                     <p className="text-xs text-muted-foreground">Autorizando token de suscripción y vinculando cuenta...</p>
@@ -1736,7 +1736,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                 <Button
                                     onClick={handlePurchaseBlock}
                                     disabled={isPurchasingBlock}
-                                    className="w-full bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-bold py-5 flex items-center justify-center gap-2 border-none shadow-sm hover:shadow-md"
+                                    className="w-full bg-paypal-yellow hover:bg-paypal-yellow-hover text-paypal-blue font-bold py-5 flex items-center justify-center gap-2 border-none shadow-sm hover:shadow-md"
                                 >
                                     {isPurchasingBlock ? (
                                         <>

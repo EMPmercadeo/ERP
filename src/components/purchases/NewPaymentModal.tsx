@@ -134,7 +134,7 @@ export function NewPaymentModal({
 
                     <div>
                         <Label htmlFor="referencia">No. de Referencia / Cheque / ACH</Label>
-                        <Input id="referencia" name="referencia" placeholder="Ej. ACH #998877 o Cheque #1024" />
+                        <Input id="referencia" name="referencia" placeholder="Ej. ACH No. 998877 o Cheque No. 1024" />
                     </div>
 
                     <DialogFooter className="pt-3">

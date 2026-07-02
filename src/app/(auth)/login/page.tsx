@@ -157,7 +157,7 @@ export default function LoginPage() {
 
                         {activeModal === 'bio_info' && (
                             <div className="text-center space-y-3">
-                                <div className="w-12 h-12 bg-blue-100 text-[#073674] rounded-full flex items-center justify-center mx-auto">
+                                <div className="w-12 h-12 bg-blue-100 text-brand-1 rounded-full flex items-center justify-center mx-auto">
                                     <Fingerprint className="h-6 w-6" />
                                 </div>
                                 <h3 className="text-lg font-black text-gray-900">Permiso Biométrico DGI</h3>
@@ -170,7 +170,7 @@ export default function LoginPage() {
                                         setActiveModal(null);
                                         localStorage.removeItem('erp_passkey_saved');
                                     }}
-                                    className="w-full bg-[#052550] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#073674] transition-all cursor-pointer"
+                                    className="w-full bg-brand-2 text-white font-bold py-3 rounded-xl text-sm hover:bg-brand-1 transition-all cursor-pointer"
                                 >
                                     Entendido, autorizar ahora
                                 </button>
@@ -206,7 +206,7 @@ export default function LoginPage() {
                                 </p>
                                 <Link
                                     href="/privacy"
-                                    className="block w-full bg-[#052550] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#073674] transition-all text-center"
+                                    className="block w-full bg-brand-2 text-white font-bold py-3 rounded-xl text-sm hover:bg-brand-1 transition-all text-center"
                                 >
                                     Ver Políticas de Seguridad
                                 </Link>
@@ -225,15 +225,15 @@ export default function LoginPage() {
                                             <strong className="text-gray-900 block font-bold">Emprendedor</strong>
                                             <span className="text-gray-500">1 Usuario • Facturas ilimitadas</span>
                                         </div>
-                                        <span className="font-extrabold text-[#073674]">$25/mes</span>
+                                        <span className="font-extrabold text-brand-1">$25/mes</span>
                                     </div>
-                                    <div className="p-2.5 rounded-xl bg-blue-50 border-2 border-[#073674] flex justify-between items-center shadow-sm">
+                                    <div className="p-2.5 rounded-xl bg-blue-50 border-2 border-brand-1 flex justify-between items-center shadow-sm">
                                         <div>
-                                            <span className="bg-[#073674] text-white text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Recomendado</span>
+                                            <span className="bg-brand-1 text-white text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Recomendado</span>
                                             <strong className="text-gray-900 block font-bold mt-0.5">Pyme Pro</strong>
                                             <span className="text-gray-500">5 Usuarios • Inventario • Reportes</span>
                                         </div>
-                                        <span className="font-extrabold text-[#073674]">$50/mes</span>
+                                        <span className="font-extrabold text-brand-1">$50/mes</span>
                                     </div>
                                     <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-200 flex justify-between items-center">
                                         <div>
@@ -245,7 +245,7 @@ export default function LoginPage() {
                                 </div>
                                 <Link
                                     href="/register"
-                                    className="block w-full bg-[#052550] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#073674] transition-all text-center shadow-md"
+                                    className="block w-full bg-brand-2 text-white font-bold py-3 rounded-xl text-sm hover:bg-brand-1 transition-all text-center shadow-md"
                                 >
                                     Comenzar Prueba Gratis
                                 </Link>
@@ -264,7 +264,7 @@ export default function LoginPage() {
                                 <button
                                     type="button"
                                     onClick={() => { setActiveModal(null); }}
-                                    className="w-full bg-[#052550] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#073674] transition-all cursor-pointer"
+                                    className="w-full bg-brand-2 text-white font-bold py-3 rounded-xl text-sm hover:bg-brand-1 transition-all cursor-pointer"
                                 >
                                     Ingresar para Escanear
                                 </button>
@@ -343,7 +343,7 @@ export default function LoginPage() {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="text-xs font-bold text-[#004899] hover:text-[#002855] px-1 shrink-0 transition-colors cursor-pointer"
+                                className="text-xs font-bold text-brand-medium hover:text-brand-bg-blue px-1 shrink-0 transition-colors cursor-pointer"
                             >
                                 {showPassword ? 'Ocultar' : 'Mostrar'}
                             </button>
@@ -352,7 +352,7 @@ export default function LoginPage() {
                             type="button"
                             onClick={handleBiometricLogin}
                             title="Ingresar con Huella Digital"
-                            className="bg-white rounded-2xl h-11 w-11 sm:h-12 sm:w-12 shadow-sm flex items-center justify-center text-[#004899] hover:bg-blue-50 transition-all shrink-0 active:scale-95 cursor-pointer"
+                            className="bg-white rounded-2xl h-11 w-11 sm:h-12 sm:w-12 shadow-sm flex items-center justify-center text-brand-medium hover:bg-blue-50 transition-all shrink-0 active:scale-95 cursor-pointer"
                         >
                             <Fingerprint className="h-5 w-5 sm:h-6 sm:w-6" />
                         </button>
@@ -362,7 +362,7 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-[#002855] hover:bg-[#001d3f] text-white font-bold text-sm sm:text-base h-11 sm:h-12 rounded-2xl shadow-md transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide"
+                        className="w-full bg-brand-bg-blue hover:bg-brand-bg-blue-hover-dark text-white font-bold text-sm sm:text-base h-11 sm:h-12 rounded-2xl shadow-md transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide"
                     >
                         {isLoading ? 'Iniciando sesión...' : 'Entrar'}
                     </button>
@@ -428,7 +428,7 @@ export default function LoginPage() {
             ========================================================= */}
             <div className="hidden lg:flex w-full max-w-md mx-auto flex-col justify-center text-left">
                 {/* Título & Subtítulo Formal */}
-                <h2 className="text-3xl font-extrabold text-[#052550] tracking-tight mb-1">
+                <h2 className="text-3xl font-extrabold text-brand-2 tracking-tight mb-1">
                     Iniciar Sesión
                 </h2>
                 <p className="text-sm text-gray-500 font-medium leading-relaxed mb-6">
@@ -437,7 +437,7 @@ export default function LoginPage() {
 
                 {/* Formulario Escritorio */}
                 <form onSubmit={handleSubmit} className="space-y-3.5">
-                    <div className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 flex items-center gap-3 focus-within:border-[#073674] focus-within:ring-2 focus-within:ring-[#073674]/10 transition-all shadow-sm">
+                    <div className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 flex items-center gap-3 focus-within:border-brand-1 focus-within:ring-2 focus-within:ring-brand-1/10 transition-all shadow-sm">
                         <User className="h-5 w-5 text-gray-400 shrink-0" />
                         <input
                             type="email"
@@ -450,7 +450,7 @@ export default function LoginPage() {
                     </div>
 
                     <div className="flex gap-2.5 items-center">
-                        <div className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 flex items-center gap-3 flex-1 focus-within:border-[#073674] focus-within:ring-2 focus-within:ring-[#073674]/10 transition-all shadow-sm">
+                        <div className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 flex items-center gap-3 flex-1 focus-within:border-brand-1 focus-within:ring-2 focus-within:ring-brand-1/10 transition-all shadow-sm">
                             <Lock className="h-5 w-5 text-gray-400 shrink-0" />
                             <input
                                 type={showPassword ? 'text' : 'password'}
@@ -463,7 +463,7 @@ export default function LoginPage() {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="text-xs font-bold text-[#073674] hover:text-[#052550] px-1 shrink-0 transition-colors cursor-pointer"
+                                className="text-xs font-bold text-brand-1 hover:text-brand-2 px-1 shrink-0 transition-colors cursor-pointer"
                             >
                                 {showPassword ? 'Ocultar' : 'Mostrar'}
                             </button>
@@ -474,7 +474,7 @@ export default function LoginPage() {
                             type="button"
                             onClick={handleBiometricLogin}
                             title="Ingresar con Huella Digital / Passkey"
-                            className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm flex items-center justify-center text-[#073674] hover:bg-blue-50/60 transition-all shrink-0 active:scale-95 cursor-pointer"
+                            className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm flex items-center justify-center text-brand-1 hover:bg-blue-50/60 transition-all shrink-0 active:scale-95 cursor-pointer"
                         >
                             <Fingerprint className="h-5 w-5" />
                         </button>
@@ -484,7 +484,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-[#052550] hover:bg-[#073674] text-white font-extrabold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.99] disabled:opacity-70 text-sm tracking-wide cursor-pointer"
+                            className="w-full bg-brand-2 hover:bg-brand-1 text-white font-extrabold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.99] disabled:opacity-70 text-sm tracking-wide cursor-pointer"
                         >
                             {isLoading ? 'Conectando...' : 'Entrar'}
                         </button>
@@ -493,7 +493,7 @@ export default function LoginPage() {
 
                 {/* Enlace Olvidaste Contraseña */}
                 <div className="text-center my-4">
-                    <Link href="/forgot-password" className="text-xs font-bold text-[#073674] hover:underline">
+                    <Link href="/forgot-password" className="text-xs font-bold text-brand-1 hover:underline">
                         ¿Olvidaste tu contraseña?
                     </Link>
                 </div>
@@ -502,7 +502,7 @@ export default function LoginPage() {
                 <div className="space-y-3">
                     <Link
                         href="/register"
-                        className="block w-full border border-[#073674] text-[#073674] font-bold py-3 rounded-xl text-sm hover:bg-blue-50/50 transition-all text-center shadow-sm"
+                        className="block w-full border border-brand-1 text-brand-1 font-bold py-3 rounded-xl text-sm hover:bg-blue-50/50 transition-all text-center shadow-sm"
                     >
                         Crea tu usuario o abre tu cuenta
                     </Link>

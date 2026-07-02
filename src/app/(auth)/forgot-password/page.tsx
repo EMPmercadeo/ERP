@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
                     </p>
                     <Link
                         href="/login"
-                        className="block w-full bg-[#002855] lg:bg-primary text-white font-bold py-3.5 rounded-2xl transition-all shadow-md"
+                        className="block w-full bg-brand-bg-blue lg:bg-primary text-white font-bold py-3.5 rounded-2xl transition-all shadow-md"
                     >
                         Volver a Iniciar Sesión
                     </Link>
@@ -95,7 +95,7 @@ export default function ForgotPasswordPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-[#002855] hover:bg-[#001f42] lg:bg-primary lg:hover:bg-primary/90 text-white font-extrabold text-lg py-4 rounded-2xl shadow-xl transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide"
+                            className="w-full bg-brand-bg-blue hover:bg-brand-bg-blue-hover lg:bg-primary lg:hover:bg-primary/90 text-white font-extrabold text-lg py-4 rounded-2xl shadow-xl transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide"
                         >
                             {isLoading ? 'Enviando instrucciones...' : 'Enviar Enlace'}
                         </button>

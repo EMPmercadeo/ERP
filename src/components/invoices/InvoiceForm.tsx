@@ -653,7 +653,7 @@ export function InvoiceForm({
                                 <Button
                                     onClick={handlePurchaseBlock}
                                     disabled={isPurchasingBlock}
-                                    className="w-full bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-bold py-5 flex items-center justify-center gap-2 border-none shadow-sm hover:shadow-md"
+                                    className="w-full bg-paypal-yellow hover:bg-paypal-yellow-hover text-paypal-blue font-bold py-5 flex items-center justify-center gap-2 border-none shadow-sm hover:shadow-md"
                                 >
                                     {isPurchasingBlock ? (
                                         <>

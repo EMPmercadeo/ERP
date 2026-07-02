@@ -67,7 +67,7 @@ export function DgiStatusCard({ data }: DgiStatusCardProps) {
                                         cy={CY}
                                         r={RADIUS}
                                         fill="none"
-                                        stroke="#f1f4f9"
+                                        stroke="var(--secondary)"
                                         strokeWidth={14}
                                     />
                                     {/* Segment Circles */}

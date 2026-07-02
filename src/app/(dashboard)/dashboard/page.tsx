@@ -312,7 +312,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                         format="currency"
                         variant="primary"
                         sparkPoints={sparks.facturado}
-                        sparkColor="#ffffff"
+                        sparkColor="white"
                         sparkId="spark-facturado"
                         href="/invoices"
                     />

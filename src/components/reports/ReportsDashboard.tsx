@@ -727,15 +727,15 @@ export function ReportsDashboard({
                                         const val = maxValCeil - (maxValCeil / 4) * i;
                                         return (
                                             <g key={i}>
-                                                <line x1={L} y1={y} x2={W - R} y2={y} stroke="#f1f4f9" strokeWidth={1} />
-                                                <text x={L - 10} y={y + 4} textAnchor="end" fontSize={10} fill="#9aa7bd" className="font-mono">{formatInteger(val)}</text>
+                                                <line x1={L} y1={y} x2={W - R} y2={y} stroke="var(--border)" strokeWidth={1} />
+                                                <text x={L - 10} y={y + 4} textAnchor="end" fontSize={10} fill="var(--muted-foreground)" className="font-mono">{formatInteger(val)}</text>
                                             </g>
                                         );
                                     })}
 
                                     {/* Month/Day labels */}
                                     {trend.map((t, i) => (
-                                        <text key={i} x={getX(i)} y={H - 5} textAnchor="middle" fontSize={10} fill="#6b7a92" fontWeight={600}>
+                                        <text key={i} x={getX(i)} y={H - 5} textAnchor="middle" fontSize={10} fill="var(--muted-foreground)" fontWeight={600}>
                                             {t.mes}
                                         </text>
                                     ))}
@@ -769,8 +769,8 @@ export function ReportsDashboard({
                                     {/* Circles */}
                                     {trend.map((t, i) => (
                                         <g key={i}>
-                                            <circle cx={getX(i)} cy={getY(t.cobrado)} r={3} fill="#fff" stroke="var(--success)" strokeWidth={1.5} />
-                                            <circle cx={getX(i)} cy={getY(t.facturado)} r={3} fill="#fff" stroke="var(--info)" strokeWidth={1.5} />
+                                            <circle cx={getX(i)} cy={getY(t.cobrado)} r={3} fill="white" stroke="var(--success)" strokeWidth={1.5} />
+                                            <circle cx={getX(i)} cy={getY(t.facturado)} r={3} fill="white" stroke="var(--info)" strokeWidth={1.5} />
                                         </g>
                                     ))}
                                 </svg>
@@ -795,7 +795,7 @@ export function ReportsDashboard({
                                 <div className="flex justify-center py-2">
                                     <div className="relative w-[140px] h-[140px]">
                                         <svg width="140" height="140" viewBox="0 0 140 140" className="rotate-[-90deg] w-full h-full">
-                                            <circle cx="70" cy="70" r="54" fill="none" stroke="#f1f4f9" strokeWidth="12" />
+                                            <circle cx="70" cy="70" r="54" fill="none" stroke="var(--secondary)" strokeWidth="12" />
                                             {(() => {
                                                 const total = statusSales.reduce((a, b) => a + b.count, 0);
                                                 const C = 2 * Math.PI * 54;
@@ -805,7 +805,7 @@ export function ReportsDashboard({
                                                     if (s.status === 'aceptada') color = 'var(--success)';
                                                     if (s.status === 'rechazada') color = 'var(--danger)';
                                                     if (s.status === 'pendiente') color = 'var(--warning)';
-                                                    if (s.status === 'anulada') color = '#94a3b8';
+                                                    if (s.status === 'anulada') color = 'var(--muted-foreground)';
 
                                                     const len = (s.count / total) * C;
                                                     const dash = Math.max(0.1, len - 2);
