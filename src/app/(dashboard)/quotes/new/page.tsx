@@ -76,9 +76,9 @@ export default function NewQuotePage() {
 
             alert(`Cotización ${json.data.numero} guardada exitosamente`);
             router.push('/quotes');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
-            alert(error.message);
+            alert(error instanceof Error ? error.message : 'Error desconocido');
         } finally {
             setIsSaving(false);
         }

@@ -55,7 +55,7 @@ export function QuoteItemsTable({ items, onUpdate }: QuoteItemsTableProps) {
         onUpdate(items.filter((item) => item.id !== id));
     };
 
-    const handleUpdateItem = (id: string, field: keyof QuoteItem, value: any) => {
+    const handleUpdateItem = (id: string, field: keyof QuoteItem, value: QuoteItem[keyof QuoteItem]) => {
         const updatedItems = items.map((item) => {
             if (item.id === id) {
                 const updatedItem = { ...item, [field]: value };
@@ -105,7 +105,7 @@ export function QuoteItemsTable({ items, onUpdate }: QuoteItemsTableProps) {
                                 <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
                                     No hay items agregados.
                                     <br />
-                                    Presiona "Agregar Ítem" para comenzar.
+                                    Presiona &quot;Agregar Ítem&quot; para comenzar.
                                 </TableCell>
                             </TableRow>
                         ) : (

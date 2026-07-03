@@ -7,7 +7,7 @@ import { Prisma } from '@prisma/client';
 import { SupplierSchema } from '@/lib/validations';
 import { getTenantContext } from '@/lib/auth/context';
 
-export async function createSupplier(prevState: any, formData: FormData) {
+export async function createSupplier(prevState: unknown, formData: FormData) {
     const rawData = {
         tipoRuc: formData.get('tipoRuc'),
         ruc: formData.get('ruc'),
@@ -66,7 +66,7 @@ export async function createSupplier(prevState: any, formData: FormData) {
     redirect('/suppliers');
 }
 
-export async function updateSupplier(id: string, prevState: any, formData: FormData) {
+export async function updateSupplier(id: string, prevState: unknown, formData: FormData) {
     const rawData = {
         tipoRuc: formData.get('tipoRuc'),
         ruc: formData.get('ruc'),
@@ -278,7 +278,17 @@ export async function getSuppliersWithSummary() {
     }
 }
 
-export async function updateSupplierInline(id: string, data: any) {
+export async function updateSupplierInline(id: string, data: {
+    razonSocial?: string;
+    nombreComercial?: string | null;
+    ruc?: string;
+    dv?: string | null;
+    nombreContacto?: string | null;
+    email?: string | null;
+    telefono?: string | null;
+    condicionPago?: string;
+    limiteCredito?: number;
+}) {
     try {
         const { empresaId } = await getTenantContext();
         const existing = await prisma.proveedor.findFirst({
@@ -322,7 +332,7 @@ export async function updateSupplierInline(id: string, data: any) {
                 limiteCredito: updated.limiteCredito ? Number(updated.limiteCredito) : 0,
             }
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Inline update error:', error);
         return { success: false, error: 'Error al guardar en base de datos. Verifica si el RUC está duplicado.' };
     }

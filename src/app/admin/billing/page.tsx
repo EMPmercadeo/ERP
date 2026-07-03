@@ -11,8 +11,8 @@ export default async function AdminBillingPage() {
     try {
         const ctx = await getTenantContext();
         empresaId = ctx.empresaId;
-    } catch (err: any) {
-        if (err && typeof err === 'object' && 'digest' in err && String(err.digest).startsWith('NEXT_REDIRECT')) {
+    } catch (err: unknown) {
+        if (err && typeof err === 'object' && 'digest' in err && String((err as { digest?: unknown }).digest).startsWith('NEXT_REDIRECT')) {
             throw err;
         }
         console.error('[AdminBillingPage] getTenantContext failed:', err);

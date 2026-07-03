@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { Prisma } from '@prisma/client';
 import { Topbar } from '@/components/layout/Topbar';
 import { ProductList } from '@/components/products/ProductList';
 import { getTenantContext } from '@/lib/auth/context';
@@ -37,7 +38,7 @@ export default async function ProductsPage(props: PageProps) {
     const skip = (page - 1) * limit;
 
     // Build the query constraints
-    const where: any = {
+    const where: Prisma.ProductoWhereInput = {
         empresaId
     };
 

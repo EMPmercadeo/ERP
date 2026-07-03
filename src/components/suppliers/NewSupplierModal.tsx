@@ -54,7 +54,7 @@ export function NewSupplierModal({ onSuccess }: { onSuccess?: () => void }) {
             }
         } catch (error) {
             // Next.js redirect throws an error that we shouldn't catch as a failure if it's NEXT_REDIRECT
-            if ((error as any)?.message?.includes('NEXT_REDIRECT')) {
+            if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
                 toast.success('Proveedor creado exitosamente');
                 setOpen(false);
                 router.refresh();

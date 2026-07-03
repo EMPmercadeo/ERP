@@ -6,9 +6,9 @@ import { prisma } from '@/lib/db';
 import { PurchaseSchema } from '@/lib/validations';
 import { getTenantContext } from '@/lib/auth/context';
 
-export async function createPurchase(prevState: any, formData: FormData) {
+export async function createPurchase(prevState: unknown, formData: FormData) {
     const rawItems = formData.get('items');
-    let items: any[] = [];
+    let items: unknown[] = [];
     if (rawItems) {
         try {
             items = JSON.parse(rawItems as string);
@@ -132,9 +132,9 @@ export async function createPurchase(prevState: any, formData: FormData) {
             }
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Create Purchase Error:', error);
-        if (error?.code === 'P2002') {
+        if (error instanceof Error && (error as Error & { code?: string }).code === 'P2002') {
             return { message: 'Este número de factura ya fue registrado para este proveedor.' };
         }
         return { message: 'Error al registrar la factura de compra.' };

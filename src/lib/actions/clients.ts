@@ -6,7 +6,7 @@ import { prisma } from '@/lib/db';
 import { ClientSchema } from '@/lib/validations';
 import { getTenantContext } from '@/lib/auth/context';
 
-export async function createClient(prevState: any, formData: FormData) {
+export async function createClient(prevState: unknown, formData: FormData) {
     const rawData = {
         tipoRuc: formData.get('tipoRuc'),
         ruc: formData.get('ruc'),
@@ -58,7 +58,7 @@ export async function createClient(prevState: any, formData: FormData) {
     redirect('/clients');
 }
 
-export async function updateClient(id: string, prevState: any, formData: FormData) {
+export async function updateClient(id: string, prevState: unknown, formData: FormData) {
     const rawData = {
         tipoRuc: formData.get('tipoRuc'),
         ruc: formData.get('ruc'),

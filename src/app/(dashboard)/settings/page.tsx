@@ -13,8 +13,8 @@ export default async function SettingsPage() {
         const ctx = await getTenantContext();
         empresaId = ctx.empresaId;
         role = ctx.role;
-    } catch (err: any) {
-        if (err && typeof err === 'object' && 'digest' in err && String(err.digest).startsWith('NEXT_REDIRECT')) {
+    } catch (err: unknown) {
+        if (err && typeof err === 'object' && 'digest' in err && String((err as { digest?: unknown }).digest).startsWith('NEXT_REDIRECT')) {
             throw err;
         }
         console.error('[SettingsPage] getTenantContext failed:', err);

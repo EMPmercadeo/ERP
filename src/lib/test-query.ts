@@ -42,7 +42,7 @@ async function test() {
         }));
 
         console.log('Formatting success! Sample note:', formattedNotes[0]);
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('Error in test:', e);
     }
 }

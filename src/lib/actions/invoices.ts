@@ -72,9 +72,9 @@ async function getDefaults(empresaId: string) {
     };
 }
 
-export async function createInvoice(prevState: any, formData: FormData) {
+export async function createInvoice(prevState: unknown, formData: FormData) {
     const rawItems = formData.get('items');
-    let items: any[] = [];
+    let items: unknown[] = [];
     if (rawItems) {
         try {
             items = JSON.parse(rawItems as string);
@@ -414,7 +414,7 @@ export async function createInvoicePOS(rawData: {
         const totalNeto = subtotal + totalItbms;
 
         // Validate all products belong to tenant BEFORE creating invoice
-        const productIds = rawData.items.map((i: any) => i.productoId).filter(Boolean);
+        const productIds = rawData.items.map((i) => i.productoId).filter(Boolean);
         if (productIds.length > 0) {
             const validProducts = await prisma.producto.count({
                 where: { id: { in: productIds }, empresaId }

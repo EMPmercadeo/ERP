@@ -20,6 +20,7 @@ import { TrendChart } from '@/components/dashboard/TrendChart';
 import { prisma } from '@/lib/db';
 import { subHours, subDays, subMonths, startOfDay, endOfDay, parseISO } from 'date-fns';
 import { getTenantContext } from '@/lib/auth/context';
+import type { DgiStatus } from '@/components/ui/status-badge';
 
 export const dynamic = 'force-dynamic';
 
@@ -244,7 +245,7 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
             clientRuc: inv.cliente.ruc + (inv.cliente.dv ? `-${inv.cliente.dv}` : ''),
             amount: Number(inv.totalNeto),
             balance: Number(inv.saldoPendiente),
-            status: (inv.estadoDgi === 'borrador' ? 'pendiente' : inv.estadoDgi) as any,
+            status: (inv.estadoDgi === 'borrador' ? 'pendiente' : inv.estadoDgi) as DgiStatus,
             paymentStatus: (
                 inv.saldoPendiente.equals(0)
                     ? 'pagada'
@@ -253,7 +254,7 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
                         : inv.saldoPendiente.equals(inv.totalNeto)
                             ? 'pendiente'
                             : 'parcial'
-            ) as any,
+            ) as 'pagada' | 'pendiente' | 'parcial' | 'vencida',
             date: inv.fechaEmision.toLocaleDateString('es-PA', { day: '2-digit', month: 'short', year: 'numeric' })
         })),
         dgiData: { ...stats, error: 0 },

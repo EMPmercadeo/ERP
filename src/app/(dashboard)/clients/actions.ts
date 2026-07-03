@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
-export async function importClients(clients: any[]) {
+export async function importClients(clients: Record<string, string>[]) {
     try {
         const empresa = await prisma.empresa.findFirst();
 
@@ -12,7 +12,7 @@ export async function importClients(clients: any[]) {
         }
 
         let createdCount = 0;
-        let errors = [];
+        const errors: string[] = [];
 
         for (const row of clients) {
             try {

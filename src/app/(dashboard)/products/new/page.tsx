@@ -42,11 +42,11 @@ function formatCurrency(value: number) {
 export default function NewProductPage() {
     const router = useRouter();
     const [state, formAction] = useActionState(
-        async (prevState: any, formData: FormData) => {
+        async (prevState: typeof initialState, formData: FormData) => {
             const res = await createProduct(prevState, formData);
             return {
                 message: res?.message || '',
-                errors: (res as any)?.errors || {}
+                errors: (res as { errors?: Record<string, string[] | undefined> })?.errors || {}
             };
         },
         initialState

@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
-export async function importInvoices(invoices: any[]) {
+export async function importInvoices(invoices: Record<string, string>[]) {
     try {
         // 1. Get default context (Empresa, Sucursal, Caja, Usuario)
         // In a real app, this should come from session/auth
@@ -17,7 +17,7 @@ export async function importInvoices(invoices: any[]) {
         }
 
         let createdCount = 0;
-        let errors = [];
+        const errors: string[] = [];
 
         for (const row of invoices) {
             try {

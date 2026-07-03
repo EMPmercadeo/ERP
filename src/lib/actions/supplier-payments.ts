@@ -6,7 +6,7 @@ import { prisma } from '@/lib/db';
 import { SupplierPaymentSchema } from '@/lib/validations';
 import { getTenantContext } from '@/lib/auth/context';
 
-export async function createSupplierPayment(prevState: any, formData: FormData) {
+export async function createSupplierPayment(prevState: unknown, formData: FormData) {
     const rawData = {
         proveedorId: formData.get('proveedorId'),
         compraId: formData.get('compraId'),
@@ -85,9 +85,9 @@ export async function createSupplierPayment(prevState: any, formData: FormData) 
             });
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Create Supplier Payment Error:', error);
-        return { success: false, message: error?.message || 'Error al registrar el pago al proveedor.' };
+        return { success: false, message: error instanceof Error ? error.message : 'Error al registrar el pago al proveedor.' };
     }
 
     revalidatePath('/purchases');

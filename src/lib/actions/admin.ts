@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/db';
+import { Prisma } from '@prisma/client';
 import { verifySuperAdmin } from '@/lib/auth/admin';
 import { revalidatePath } from 'next/cache';
 
@@ -64,7 +65,7 @@ export async function getGlobalUsers(
     }
 
     try {
-        const where: any = {};
+        const where: Prisma.UsuarioWhereInput = {};
 
         if (search) {
             where.OR = [

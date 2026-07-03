@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { Topbar } from '@/components/layout/Topbar';
 import { ReceivablesList } from '@/components/receivables/ReceivablesList';
@@ -23,21 +24,23 @@ export default async function ReceivablesPage(props: {
     const limit = Number(searchParams.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const where: any = {
-        empresaId,
-        saldoPendiente: { gt: 0 },
-        AND: []
-    };
+    const andConditions: Prisma.FacturaWhereInput[] = [];
 
     if (search) {
-        where.AND.push({
+        andConditions.push({
             OR: [
-                { numeroCompleto: { contains: search, mode: 'insensitive' as const } },
-                { cliente: { razonSocial: { contains: search, mode: 'insensitive' as const } } },
-                { cliente: { ruc: { contains: search, mode: 'insensitive' as const } } },
+                { numeroCompleto: { contains: search, mode: 'insensitive' } },
+                { cliente: { razonSocial: { contains: search, mode: 'insensitive' } } },
+                { cliente: { ruc: { contains: search, mode: 'insensitive' } } },
             ]
         });
     }
+
+    const where: Prisma.FacturaWhereInput = {
+        empresaId,
+        saldoPendiente: { gt: 0 },
+        AND: andConditions
+    };
 
     const validSortFields = ['numeroCompleto', 'fechaEmision', 'totalNeto', 'saldoPendiente', 'fechaVencimiento'];
     const orderByField = validSortFields.includes(sortBy) ? sortBy : 'fechaEmision';

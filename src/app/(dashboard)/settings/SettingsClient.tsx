@@ -29,6 +29,31 @@ import { updateDgiSettings, updateCompanyPlan, updateIntegrationSettings } from 
 import { purchaseDocumentBlock } from '@/lib/actions/billing';
 import { getPOSIntegrations, connectPOS, disconnectPOS, syncPOSProducts, syncPOSSales, syncPOSInventory } from '@/lib/actions/pos';
 
+interface PlanOption {
+    id: string;
+    name: string;
+    price: { monthly: number; yearly: number };
+}
+
+type POSIntegrationWithLogs = Awaited<ReturnType<typeof getPOSIntegrations>>[number];
+
+interface PayPalSubscriptionActions {
+    subscription: {
+        create: (config: { plan_id: string; custom_id: string }) => Promise<string>;
+    };
+}
+
+type WindowWithPayPal = Window & {
+    paypal?: {
+        Buttons: (options: {
+            style?: Record<string, string>;
+            createSubscription?: (_data: unknown, actions: PayPalSubscriptionActions) => Promise<string>;
+            onApprove?: (_data: unknown, _actions: unknown) => Promise<void>;
+            onError?: (err: unknown) => void;
+        }) => { render: (selector: string) => void };
+    };
+};
+
 interface SettingsClientProps {
     initialCompany: {
         id: string;
@@ -94,7 +119,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
 
     // Subscription payment simulation states
     const [showPaypalModal, setShowPaypalModal] = useState(false);
-    const [selectedPlanForPay, setSelectedPlanForPay] = useState<any>(null);
+    const [selectedPlanForPay, setSelectedPlanForPay] = useState<PlanOption | null>(null);
     const [paymentStep, setPaymentStep] = useState<'details' | 'simulating' | 'success'>('details');
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [isPaypalSdkLoaded, setIsPaypalSdkLoaded] = useState(false);
@@ -103,7 +128,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
     const [isPurchasingBlock, setIsPurchasingBlock] = useState(false);
 
     // POS States
-    const [posIntegrations, setPosIntegrations] = useState<any[]>([]);
+    const [posIntegrations, setPosIntegrations] = useState<POSIntegrationWithLogs[]>([]);
     const [isLoadingPos, setIsLoadingPos] = useState(false);
     const [posProvider, setPosProvider] = useState<string>('loyverse');
     const [posApiKey, setPosApiKey] = useState('');
@@ -149,9 +174,10 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
         let script = document.getElementById(scriptId) as HTMLScriptElement;
 
         const initButtons = () => {
-            if (!(window as any).paypal) return;
+            const paypal = (window as WindowWithPayPal).paypal;
+            if (!paypal) return;
             setIsPaypalSdkLoaded(true);
-            
+
             const container = document.getElementById('paypal-button-container');
             if (container) {
                 container.innerHTML = '';
@@ -159,20 +185,20 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                 return;
             }
 
-            (window as any).paypal.Buttons({
+            paypal.Buttons({
                 style: {
                     shape: 'pill',
                     color: 'gold',
                     layout: 'vertical',
                     label: 'subscribe'
                 },
-                createSubscription: function(data: any, actions: any) {
+                createSubscription: function(_data, actions) {
                     return actions.subscription.create({
                         plan_id: planId,
                         custom_id: company.id
                     });
                 },
-                onApprove: async function(data: any, actions: any) {
+                onApprove: async function(_data, _actions) {
                     setPaymentStep('simulating');
                     try {
                         setIsPlanLoading(true);
@@ -198,7 +224,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                         setIsPlanLoading(false);
                     }
                 },
-                onError: function(err: any) {
+                onError: function(err) {
                     console.error('PayPal Checkout error:', err);
                     toast.error('Error al procesar la suscripción con PayPal.');
                 }
@@ -1470,7 +1496,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                                                         <div className="text-[10px] text-muted-foreground italic">No hay logs registrados todavía.</div>
                                                                     ) : (
                                                                         <div className="space-y-1 max-h-[120px] overflow-y-auto pr-1">
-                                                                            {integration.syncLogs?.map((log: any) => (
+                                                                            {integration.syncLogs?.map((log) => (
                                                                                 <div key={log.id} className="text-[10px] flex justify-between gap-2 p-1.5 bg-white rounded border">
                                                                                     <div className="min-w-0 flex-1">
                                                                                         <span className="font-semibold text-slate-800">

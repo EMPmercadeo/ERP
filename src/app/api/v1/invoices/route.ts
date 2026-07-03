@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Validate all products belong to tenant
-        const productIds = itemsList.map((i: any) => i.productoId).filter(Boolean);
+        const productIds = itemsList.map((i) => i.productoId).filter(Boolean);
         if (productIds.length > 0) {
             const validProducts = await prisma.producto.count({
                 where: { id: { in: productIds }, empresaId }

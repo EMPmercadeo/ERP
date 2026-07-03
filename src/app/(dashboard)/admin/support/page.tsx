@@ -23,7 +23,7 @@ export default async function SupportAdminPage() {
     let context;
     try {
         context = await getTenantContext();
-    } catch (e) {
+    } catch {
         redirect('/login');
     }
 
@@ -146,7 +146,7 @@ export default async function SupportAdminPage() {
                                             minute: '2-digit'
                                         });
 
-                                        const data = log.datosDespues as any;
+                                        const data = log.datosDespues as { subject?: string; message?: string; text?: string };
                                         const isSupport = log.entidad === 'Soporte';
 
                                         return (

@@ -3,12 +3,13 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
+import { Prisma } from '@prisma/client';
 import { ProductSchema } from '@/lib/validations';
 import { getTenantContext } from '@/lib/auth/context';
 import fs from 'fs/promises';
 import path from 'path';
 
-export async function createProduct(prevState: any, formData: FormData) {
+export async function createProduct(prevState: unknown, formData: FormData) {
     const { empresaId, userId } = await getTenantContext();
 
     const rawData = {
@@ -95,7 +96,7 @@ export async function createProduct(prevState: any, formData: FormData) {
     redirect('/products');
 }
 
-export async function updateProduct(id: string, prevState: any, formData: FormData) {
+export async function updateProduct(id: string, prevState: unknown, formData: FormData) {
     const { empresaId, userId } = await getTenantContext();
 
     const rawData = {
@@ -361,7 +362,7 @@ export async function getProductsForExport(filters: {
     try {
         const { empresaId } = await getTenantContext();
 
-        const where: any = {
+        const where: Prisma.ProductoWhereInput = {
             empresaId
         };
 

@@ -88,7 +88,7 @@ export function NewPurchaseForm({
         setItems(newItems);
     };
 
-    const handleItemChange = (index: number, field: keyof ItemRow, value: any) => {
+    const handleItemChange = (index: number, field: keyof ItemRow, value: ItemRow[keyof ItemRow]) => {
         const newItems = [...items];
         newItems[index] = { ...newItems[index], [field]: value };
         setItems(newItems);
@@ -159,7 +159,7 @@ export function NewPurchaseForm({
                 router.refresh();
             }
         } catch (error) {
-            if ((error as any)?.message?.includes('NEXT_REDIRECT')) {
+            if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
                 toast.success('Factura de compra registrada exitosamente');
                 router.push('/purchases');
                 router.refresh();

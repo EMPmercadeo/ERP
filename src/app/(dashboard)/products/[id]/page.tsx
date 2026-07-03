@@ -71,7 +71,7 @@ function formatCurrency(value: number) {
 
 export default function EditProductPage(props: { params: Promise<{ id: string }> }) {
     const params = use(props.params);
-    const [product, setProduct] = useState<any>(null);
+    const [product, setProduct] = useState<Awaited<ReturnType<typeof getProduct>>>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -104,16 +104,16 @@ export default function EditProductPage(props: { params: Promise<{ id: string }>
     return <EditProductForm product={product} />;
 }
 
-function EditProductForm({ product }: { product: any }) {
+function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<typeof getProduct>>> }) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [state, formAction] = useActionState(
-        async (prevState: any, formData: FormData) => {
+        async (prevState: typeof initialState, formData: FormData) => {
             const res = await updateProduct(product.id, prevState, formData);
             return {
                 message: res?.message || '',
-                errors: (res as any)?.errors || {},
-                success: (res as any)?.success || false
+                errors: (res as { errors?: Record<string, string[] | undefined> })?.errors || {},
+                success: (res as { success?: boolean })?.success || false
             };
         },
         initialState
@@ -136,7 +136,7 @@ function EditProductForm({ product }: { product: any }) {
     const [stockMinimo, setStockMinimo] = useState(product.stockMinimo?.toString() || '0');
     const [activo, setActivo] = useState(product.activo ? 'true' : 'false');
     const [imagenUrl, setImagenUrl] = useState(product.imagenUrl || '');
-    const [images, setImages] = useState<any[]>(product.productImages || []);
+    const [images, setImages] = useState(product.productImages || []);
     const [activePreviewUrl, setActivePreviewUrl] = useState(product.imagenUrl || '');
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -615,7 +615,7 @@ function EditProductForm({ product }: { product: any }) {
                                                     </TableHeader>
                                                     <TableBody>
                                                         {product.salesHistory && product.salesHistory.length > 0 ? (
-                                                            product.salesHistory.map((sale: any) => (
+                                                            product.salesHistory.map((sale) => (
                                                                 <TableRow 
                                                                     key={sale.id} 
                                                                     className="hover:bg-slate-50/50 border-b border-slate-100 last:border-0 cursor-pointer"
@@ -771,7 +771,7 @@ function EditProductForm({ product }: { product: any }) {
 
                                             <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
                                                 {product.auditHistory && product.auditHistory.length > 0 ? (
-                                                    product.auditHistory.map((log: any, idx: number) => (
+                                                    product.auditHistory.map((log, idx) => (
                                                         <div key={log.id} className="relative pl-6 pb-4 last:pb-0 border-l border-slate-100 last:border-transparent">
                                                             {/* Point Marker */}
                                                             <div className="absolute left-[-4.5px] top-1 h-2 w-2 rounded-full bg-brand-1 ring-4 ring-brand-1/10" />

@@ -71,7 +71,7 @@ export async function updateCompanyPlan(empresaId: string, planType: string) {
         // If plan is pro or enterprise, enable fiscal integrations.
         // If it's free, disable it, and reset ambienteDgi to test '1'.
         const fiscalEnabled = planType !== 'free';
-        const updateData: any = {
+        const updateData: { planType: string; fiscalEnabled: boolean; ambienteDgi?: string } = {
             planType,
             fiscalEnabled
         };

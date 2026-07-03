@@ -67,9 +67,9 @@ async function getDefaults(empresaId: string) {
     };
 }
 
-export async function createDeliveryNote(prevState: any, formData: FormData) {
+export async function createDeliveryNote(prevState: unknown, formData: FormData) {
     const rawItems = formData.get('items');
-    let items: any[] = [];
+    let items: unknown[] = [];
     if (rawItems) {
         try {
             items = JSON.parse(rawItems as string);
@@ -237,9 +237,9 @@ export async function createDeliveryNote(prevState: any, formData: FormData) {
         revalidatePath('/orders');
         revalidatePath('/clients');
         return { success: true, message: `Nota de entrega ${numero} creada exitosamente.` };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error creating delivery note:', error);
-        return { message: error.message || 'Error al crear la nota de entrega.' };
+        return { message: error instanceof Error ? error.message : 'Error al crear la nota de entrega.' };
     }
 }
 
@@ -341,9 +341,9 @@ export async function updateDeliveryNoteStatus(id: string, nuevoEstado: string, 
         revalidatePath('/delivery-notes');
         revalidatePath('/products');
         return { success: true };
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('Error updating delivery note status:', e);
-        return { success: false, message: e.message };
+        return { success: false, message: e instanceof Error ? e.message : 'Error al actualizar el estado.' };
     }
 }
 
@@ -377,7 +377,17 @@ export async function invoiceGroupedDeliveryNotes(albaranIds: string[]) {
         let subtotal = 0;
         let totalDescuento = 0;
         let totalItbms = 0;
-        const facturaItems: any[] = [];
+        const facturaItems: {
+            productoId: string | null | undefined;
+            descripcion: string;
+            cantidad: number;
+            precioUnitario: number;
+            costoUnitario: number;
+            descuento: number;
+            codigoTasaItbms: string;
+            montoItbms: number;
+            montoTotal: number;
+        }[] = [];
 
         for (const albaran of albaranes) {
             for (const item of albaran.items) {
@@ -397,7 +407,7 @@ export async function invoiceGroupedDeliveryNotes(albaranIds: string[]) {
                     descripcion: `[${albaran.numero}] ${item.descripcion}`,
                     cantidad: qty,
                     precioUnitario: price,
-                    costoUnitario: item.producto?.costoUnitario || 0,
+                    costoUnitario: item.producto?.costoUnitario?.toNumber() ?? 0,
                     descuento: desc,
                     codigoTasaItbms: item.codigoTasaItbms,
                     montoItbms: impuesto,
@@ -491,8 +501,8 @@ export async function invoiceGroupedDeliveryNotes(albaranIds: string[]) {
         revalidatePath('/invoices');
         revalidatePath('/clients');
         return { success: true, message: `Factura ${numeroCompleto} generada exitosamente agrupando ${albaranes.length} documento(s) de entrega.` };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error grouping delivery notes into invoice:', error);
-        return { success: false, message: error.message || 'Error al facturar documentos de entrega.' };
+        return { success: false, message: error instanceof Error ? error.message : 'Error al facturar documentos de entrega.' };
     }
 }

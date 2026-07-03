@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         tenantId: null,
         delete: async () => { },
         getIdToken: async () => 'mock-token',
-        getIdTokenResult: async () => ({ token: 'mock', claims: {} } as any),
+        getIdTokenResult: async () => ({ token: 'mock', claims: {} } as unknown as Awaited<ReturnType<User['getIdTokenResult']>>),
         reload: async () => { },
         toJSON: () => ({}),
         phoneNumber: null,
@@ -187,9 +187,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (res.user?.email) {
                 await setSessionEmail(res.user.email);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error signing in with Google popup, intentando redirección automática:', error);
-            if (error?.code === 'auth/internal-error' || error?.code === 'auth/popup-blocked' || error?.code === 'auth/unauthorized-domain' || error?.message?.includes('internal')) {
+            const firebaseError = error as { code?: string; message?: string };
+            if (firebaseError?.code === 'auth/internal-error' || firebaseError?.code === 'auth/popup-blocked' || firebaseError?.code === 'auth/unauthorized-domain' || firebaseError?.message?.includes('internal')) {
                 await signInWithRedirect(auth, googleProvider);
                 return new Promise<void>(() => {}); // Bloquear resolución para que el navegador complete la redirección a Google sin ser interrumpido
             }
@@ -201,9 +202,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             await signInWithEmailAndPassword(auth, email, password);
             await setSessionEmail(email);
-        } catch (error: any) {
-            if (process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_FALLBACK === 'true' && (error.code === 'auth/operation-not-allowed' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password')) {
-                console.warn('Dev Mode: Bypassing Auth Error', error.code);
+        } catch (error: unknown) {
+            const firebaseError = error as { code?: string; message?: string };
+            if (process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_FALLBACK === 'true' && (firebaseError.code === 'auth/operation-not-allowed' || firebaseError.code === 'auth/user-not-found' || firebaseError.code === 'auth/wrong-password')) {
+                console.warn('Dev Mode: Bypassing Auth Error', firebaseError.code);
 
                 const dbUser = await getCurrentUser(email);
 
@@ -245,7 +247,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             await createUserWithEmailAndPassword(auth, email, password);
             await setSessionEmail(email);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error signing up:', error);
             throw error;
         }

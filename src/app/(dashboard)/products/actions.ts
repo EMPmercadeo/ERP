@@ -4,12 +4,12 @@ import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { getTenantContext } from '@/lib/auth/context';
 
-export async function importProducts(products: any[]) {
+export async function importProducts(products: Record<string, string>[]) {
     try {
         const { empresaId, userId } = await getTenantContext();
 
         let createdCount = 0;
-        let errors: string[] = [];
+        const errors: string[] = [];
 
         for (let i = 0; i < products.length; i++) {
             const row = products[i];

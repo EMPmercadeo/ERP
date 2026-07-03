@@ -15,8 +15,8 @@ export default async function AdminLayout({
     let context;
     try {
         context = await getTenantContext();
-    } catch (err: any) {
-        if (err && typeof err === 'object' && 'digest' in err && String(err.digest).startsWith('NEXT_REDIRECT')) {
+    } catch (err: unknown) {
+        if (err && typeof err === 'object' && 'digest' in err && String((err as { digest?: unknown }).digest).startsWith('NEXT_REDIRECT')) {
             throw err;
         }
         console.error('[AdminLayout] getTenantContext failed:', err);

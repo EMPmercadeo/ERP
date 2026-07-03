@@ -31,7 +31,8 @@ import {
     Building2,
     ShoppingCart,
     ClipboardList,
-    Truck
+    Truck,
+    type LucideIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSidebarStore } from '@/lib/store';
@@ -184,7 +185,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
         }
     };
 
-    const NavItem = ({ item }: { item: any }) => {
+    const NavItem = ({ item }: { item: { name: string; href: string; icon: LucideIcon } }) => {
         const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
         const Icon = item.icon;
 

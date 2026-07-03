@@ -65,9 +65,16 @@ async function getDefaults(empresaId: string) {
     };
 }
 
-export async function createSalesOrder(prevState: any, formData: FormData) {
+export async function createSalesOrder(prevState: unknown, formData: FormData) {
     const rawItems = formData.get('items');
-    let items: any[] = [];
+    let items: {
+        productoId: string;
+        descripcion: string;
+        cantidad: number | string;
+        precioUnitario: number | string;
+        descuento?: number | string;
+        codigoTasaItbms: string;
+    }[] = [];
     if (rawItems) {
         try {
             items = JSON.parse(rawItems as string);
@@ -154,9 +161,9 @@ export async function createSalesOrder(prevState: any, formData: FormData) {
 
         revalidatePath('/orders');
         return { success: true, message: `Pedido ${numero} creado exitosamente.` };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error creating sales order:', error);
-        return { message: error.message || 'Error al crear el pedido.' };
+        return { message: error instanceof Error ? error.message : 'Error al crear el pedido.' };
     }
 }
 
@@ -182,8 +189,8 @@ export async function updateSalesOrderStatus(id: string, estado: string) {
         });
         revalidatePath('/orders');
         return { success: true };
-    } catch (e: any) {
-        return { success: false, message: e.message };
+    } catch (e: unknown) {
+        return { success: false, message: e instanceof Error ? e.message : 'Error al actualizar estado.' };
     }
 }
 
@@ -244,8 +251,8 @@ export async function convertQuoteToOrder(quoteId: string) {
         revalidatePath('/orders');
         revalidatePath('/quotes');
         return { success: true, message: `Pedido ${numero} creado desde la cotización ${cotizacion.numero}.` };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error converting quote to order:', error);
-        return { success: false, message: error.message || 'Error al convertir cotización.' };
+        return { success: false, message: error instanceof Error ? error.message : 'Error al convertir cotización.' };
     }
 }

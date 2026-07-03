@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
                     totalNeto: totals.total,
                     estado: 'borrador',
                     items: {
-                        create: items.map((item: any) => ({
+                        create: (items as { description: string; quantity: number; price: number; discount: number; taxRate: string; total: number }[]).map((item) => ({
                             productoId: genericProduct!.id, // Force generic product for free-text items
                             descripcion: item.description, // Store the custom description
                             cantidad: item.quantity,

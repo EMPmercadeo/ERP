@@ -200,8 +200,8 @@ async function seedHandler() {
             message: `Generados exitosamente ${creadosCount} proveedores con ${comprasCount} facturas y ${pagosCount} pagos.`,
             creadosCount
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error al poblar proveedores demo:', error);
-        return NextResponse.json({ success: false, error: error?.message || 'Error en el servidor' }, { status: 500 });
+        return NextResponse.json({ success: false, error: error instanceof Error ? error.message : 'Error en el servidor' }, { status: 500 });
     }
 }

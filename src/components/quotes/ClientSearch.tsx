@@ -143,7 +143,7 @@ export function ClientSearch({ onSelect, className }: ClientSearchProps) {
 
                         {!loading && !error && results.length === 0 && (
                             <div className="py-6 text-center text-sm text-muted-foreground">
-                                No se encontraron resultados para "{query}"
+                                No se encontraron resultados para &quot;{query}&quot;
                             </div>
                         )}
 

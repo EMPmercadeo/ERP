@@ -6,7 +6,40 @@ import { pdf } from '@react-pdf/renderer';
 import { QuotePDF } from './QuotePDF';
 import { useState } from 'react';
 
-export function QuotePDFDownloadButton({ quote }: { quote: any }) {
+interface QuoteData {
+    numero: string;
+    fechaEmision: string;
+    validaHasta: string;
+    empresa?: {
+        razonSocial?: string;
+        ruc?: string;
+        direccion?: string;
+        telefono?: string;
+        email?: string;
+    };
+    cliente: {
+        razonSocial: string;
+        ruc: string;
+        dv?: string;
+        direccion?: string;
+        telefono?: string;
+        email?: string;
+    };
+    items: {
+        descripcion: string;
+        cantidad: number | string;
+        precioUnitario: number | string;
+        descuento: number | string;
+        codigoTasaItbms: string;
+        montoTotal: number | string;
+    }[];
+    subtotal: number | string;
+    totalDescuento: number | string;
+    totalItbms: number | string;
+    totalNeto: number | string;
+}
+
+export function QuotePDFDownloadButton({ quote }: { quote: QuoteData }) {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleDownload = async () => {
@@ -32,7 +65,7 @@ export function QuotePDFDownloadButton({ quote }: { quote: any }) {
                     phone: quote.cliente.telefono,
                     email: quote.cliente.email
                 },
-                items: quote.items.map((item: any) => ({
+                items: quote.items.map((item) => ({
                     sku: 'N/A',
                     description: item.descripcion,
                     quantity: Number(item.cantidad),

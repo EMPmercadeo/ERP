@@ -70,7 +70,7 @@ export function NewPaymentModal({
                 router.refresh();
             }
         } catch (error) {
-            if ((error as any)?.message?.includes('NEXT_REDIRECT')) {
+            if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
                 toast.success('Pago aplicado exitosamente');
                 setOpen(false);
                 router.refresh();

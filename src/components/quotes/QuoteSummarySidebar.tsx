@@ -40,7 +40,14 @@ interface QuoteSummarySidebarProps {
     notes: string;
     terms: string;
     items?: QuoteItem[]; // Added for PDF
-    client?: any; // Added for PDF
+    client?: { // Added for PDF
+        razonSocial: string;
+        ruc: string;
+        dv?: string;
+        direccion?: string;
+        telefono?: string;
+        email?: string;
+    };
     onNotesChange: (value: string) => void;
     onTermsChange: (value: string) => void;
     onSave: () => void;

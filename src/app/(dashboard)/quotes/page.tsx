@@ -1,8 +1,5 @@
-import Link from 'next/link';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Prisma } from '@prisma/client';
 import { Topbar } from '@/components/layout/Topbar';
-import { ContentContainer } from '@/components/layout/Content';
 import { QuotesList } from '@/components/quotes/QuotesList';
 import { prisma } from '@/lib/db';
 import { getTenantContext } from '@/lib/auth/context';
@@ -29,23 +26,25 @@ export default async function QuotesPage(props: {
     const limit = Number(searchParams.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const where: any = {
-        empresaId,
-        AND: []
-    };
+    const andConditions: Prisma.CotizacionWhereInput[] = [];
 
     if (status && status !== 'all') {
-        where.AND.push({ estado: status });
+        andConditions.push({ estado: status });
     }
 
     if (search) {
-        where.AND.push({
+        andConditions.push({
             OR: [
-                { numero: { contains: search, mode: 'insensitive' as const } },
-                { cliente: { razonSocial: { contains: search, mode: 'insensitive' as const } } }
+                { numero: { contains: search, mode: 'insensitive' } },
+                { cliente: { razonSocial: { contains: search, mode: 'insensitive' } } }
             ]
         });
     }
+
+    const where: Prisma.CotizacionWhereInput = {
+        empresaId,
+        AND: andConditions
+    };
 
     const validSortFields = ['numero', 'fechaEmision', 'totalNeto', 'createdAt'];
     const orderByField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';

@@ -35,7 +35,7 @@ async function test() {
         } else {
             console.log('Non-200 response.');
         }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('Error rendering:', e);
     }
 }

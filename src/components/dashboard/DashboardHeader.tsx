@@ -22,10 +22,32 @@ import Link from 'next/link';
 import { saveAs } from 'file-saver';
 import ExcelJS from 'exceljs';
 
+interface KpiMetric {
+    value: number;
+    change: number;
+}
+
+interface KpiData {
+    ventas: KpiMetric;
+    cobrado: KpiMetric;
+    pendiente: KpiMetric;
+    vencido: KpiMetric;
+}
+
+interface RecentInvoice {
+    id: string;
+    client: string;
+    amount: number;
+    balance: number;
+    status: string;
+    paymentStatus: string;
+    date: string;
+}
+
 interface DashboardHeaderProps {
     title?: string;
-    kpiData?: any;
-    recentInvoices?: any[];
+    kpiData?: KpiData;
+    recentInvoices?: RecentInvoice[];
 }
 
 export function DashboardHeader({ title = 'Dashboard', kpiData, recentInvoices }: DashboardHeaderProps) {

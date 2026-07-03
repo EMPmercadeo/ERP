@@ -108,7 +108,7 @@ export function ReportFilters({
             ? filterClients.find(c => c.id === currentFilters.clienteId)?.razonSocial || ''
             : ''
     );
-    const [clientSuggestions, setClientSuggestions] = useState<any[]>([]);
+    const [clientSuggestions, setClientSuggestions] = useState<{ id: string; razonSocial: string; ruc: string; dv?: string }[]>([]);
     const [clientLoading, setClientLoading] = useState(false);
     const [showClientDropdown, setShowClientDropdown] = useState(false);
     const clientRef = useRef<HTMLDivElement>(null);
@@ -119,7 +119,7 @@ export function ReportFilters({
             ? filterProducts.find(p => p.id === currentFilters.productoId)?.descripcion || ''
             : ''
     );
-    const [productSuggestions, setProductSuggestions] = useState<any[]>([]);
+    const [productSuggestions, setProductSuggestions] = useState<{ id: string; descripcion: string }[]>([]);
     const [productLoading, setProductLoading] = useState(false);
     const [showProductDropdown, setShowProductDropdown] = useState(false);
     const productRef = useRef<HTMLDivElement>(null);
@@ -336,7 +336,7 @@ export function ReportFilters({
                     {/* Agrupar gráfico */}
                     <div className="space-y-1">
                         <Label htmlFor="groupBy" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Agrupar gráfico</Label>
-                        <Select value={groupBy} onValueChange={(val: any) => setGroupBy(val)}>
+                        <Select value={groupBy} onValueChange={(val) => setGroupBy(val as 'day' | 'week' | 'month')}>
                             <SelectTrigger id="groupBy" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
                                 <SelectValue placeholder="Agrupación" />
                             </SelectTrigger>

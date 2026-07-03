@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { Topbar } from '@/components/layout/Topbar';
 import { InvoiceList } from '@/components/invoices/InvoiceList';
@@ -25,24 +26,26 @@ export default async function InvoicesPage(props: {
     const limit = Number(searchParams.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const where: any = {
-        empresaId,
-        AND: []
-    };
+    const andConditions: Prisma.FacturaWhereInput[] = [];
 
     if (status && status !== 'all') {
-        where.AND.push({ estadoDgi: status });
+        andConditions.push({ estadoDgi: status });
     }
 
     if (search) {
-        where.AND.push({
+        andConditions.push({
             OR: [
-                { numeroCompleto: { contains: search, mode: 'insensitive' as const } },
-                { cliente: { razonSocial: { contains: search, mode: 'insensitive' as const } } },
-                { cliente: { ruc: { contains: search, mode: 'insensitive' as const } } },
+                { numeroCompleto: { contains: search, mode: 'insensitive' } },
+                { cliente: { razonSocial: { contains: search, mode: 'insensitive' } } },
+                { cliente: { ruc: { contains: search, mode: 'insensitive' } } },
             ]
         });
     }
+
+    const where: Prisma.FacturaWhereInput = {
+        empresaId,
+        AND: andConditions
+    };
 
     const validSortFields = ['numeroCompleto', 'fechaEmision', 'totalNeto', 'createdAt'];
     const orderByField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';

@@ -133,7 +133,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
             } else {
                 toast.error(res.message || 'Error al generar la factura.');
             }
-        } catch (e: any) {
+        } catch (e: unknown) {
             toast.error('Error de red al facturar el documento.');
         } finally {
             setActionLoading(false);
@@ -502,7 +502,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                     {note.observaciones && (
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-1">Notas para el Cliente (Visibles)</span>
-                                            <p className="text-slate-700 text-sm whitespace-pre-line bg-slate-50 p-3 rounded-lg border border-slate-100 italic">"{note.observaciones}"</p>
+                                            <p className="text-slate-700 text-sm whitespace-pre-line bg-slate-50 p-3 rounded-lg border border-slate-100 italic">&quot;{note.observaciones}&quot;</p>
                                         </div>
                                     )}
                                     {note.notasInternas && (

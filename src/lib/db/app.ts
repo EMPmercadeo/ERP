@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { Prisma } from '@prisma/client';
 import { getTenantContext } from '@/lib/auth/context';
 
 /**
@@ -7,7 +8,7 @@ import { getTenantContext } from '@/lib/auth/context';
  */
 export const prismaApp = {
     factura: {
-        findMany: async (args: any = {}) => {
+        findMany: async (args: Prisma.FacturaFindManyArgs = {}) => {
             const ctx = await getTenantContext();
             return prisma.factura.findMany({
                 ...args,
@@ -17,7 +18,7 @@ export const prismaApp = {
                 }
             });
         },
-        findFirst: async (args: any = {}) => {
+        findFirst: async (args: Prisma.FacturaFindFirstArgs = {}) => {
             const ctx = await getTenantContext();
             return prisma.factura.findFirst({
                 ...args,
@@ -27,7 +28,7 @@ export const prismaApp = {
                 }
             });
         },
-        create: async (args: any) => {
+        create: async (args: Prisma.FacturaCreateArgs) => {
             const ctx = await getTenantContext();
             // Force empresaId
             return prisma.factura.create({
@@ -38,7 +39,7 @@ export const prismaApp = {
                 }
             });
         },
-        count: async (args: any = {}) => {
+        count: async (args: Prisma.FacturaCountArgs = {}) => {
             const ctx = await getTenantContext();
             return prisma.factura.count({
                 ...args,
@@ -50,7 +51,7 @@ export const prismaApp = {
         }
     },
     cliente: {
-        findMany: async (args: any = {}) => {
+        findMany: async (args: Prisma.ClienteFindManyArgs = {}) => {
             const ctx = await getTenantContext();
             return prisma.cliente.findMany({
                 ...args,
@@ -60,7 +61,7 @@ export const prismaApp = {
                 }
             });
         },
-        findFirst: async (args: any = {}) => {
+        findFirst: async (args: Prisma.ClienteFindFirstArgs = {}) => {
             const ctx = await getTenantContext();
             return prisma.cliente.findFirst({
                 ...args,
@@ -73,7 +74,7 @@ export const prismaApp = {
         // ... add other methods as needed
     },
     producto: {
-        findMany: async (args: any = {}) => {
+        findMany: async (args: Prisma.ProductoFindManyArgs = {}) => {
             const ctx = await getTenantContext();
             return prisma.producto.findMany({
                 ...args,

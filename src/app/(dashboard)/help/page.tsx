@@ -174,7 +174,7 @@ export default function HelpPage() {
                                     </div>
                                     <div className="border-t pt-4">
                                         <p className="text-[10px] text-muted-foreground leading-relaxed mb-3">
-                                            Recuerda que también puedes abrir un ticket de soporte directamente haciendo clic en tu foto de perfil en la barra lateral izquierda y seleccionando **"Contactar soporte"**.
+                                            Recuerda que también puedes abrir un ticket de soporte directamente haciendo clic en tu foto de perfil en la barra lateral izquierda y seleccionando &quot;Contactar soporte&quot;.
                                         </p>
                                         <Link href="/settings" className="w-full">
                                             <Button className="w-full text-xs font-semibold" variant="outline">

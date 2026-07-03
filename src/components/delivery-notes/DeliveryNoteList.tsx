@@ -135,8 +135,8 @@ export function DeliveryNoteList({ initialData }: { initialData: DeliveryNoteDat
             } else {
                 toast.error(res.message || 'Error al agrupar notas de entrega');
             }
-        } catch (e: any) {
-            toast.error(e.message || 'Error inesperado');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Error inesperado');
         } finally {
             setIsSubmitting(false);
         }

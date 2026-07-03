@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
-export async function importQuotes(quotes: any[]) {
+export async function importQuotes(quotes: Record<string, string>[]) {
     try {
         const empresa = await prisma.empresa.findFirst();
         const sucursal = await prisma.sucursal.findFirst({ where: { empresaId: empresa?.id } });
@@ -15,7 +15,7 @@ export async function importQuotes(quotes: any[]) {
         }
 
         let createdCount = 0;
-        let errors = [];
+        const errors: string[] = [];
 
         for (const row of quotes) {
             try {

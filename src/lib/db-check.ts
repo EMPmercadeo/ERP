@@ -26,7 +26,7 @@ async function check() {
             }
         }
         console.log('--- Check Completed ---');
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('Error in check:', e);
     }
 }

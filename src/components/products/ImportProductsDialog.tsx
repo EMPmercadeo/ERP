@@ -37,7 +37,7 @@ export function ImportProductsDialog() {
         try {
             const buffer = await file.arrayBuffer();
             const workbook = new ExcelJS.Workbook();
-            let rows: any[] = [];
+            const rows: Record<string, string>[] = [];
 
             if (file.name.endsWith('.csv')) {
                 const text = await file.text();

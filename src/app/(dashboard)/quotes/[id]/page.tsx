@@ -73,7 +73,7 @@ export default async function QuoteDetailPage(props: PageProps) {
         });
     };
 
-    const formatCurrency = (amount: number | any) => {
+    const formatCurrency = (amount: number) => {
         return Number(amount).toLocaleString('en-US', {
             style: 'currency',
             currency: 'USD'
