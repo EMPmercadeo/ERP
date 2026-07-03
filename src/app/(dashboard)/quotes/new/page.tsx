@@ -186,7 +186,7 @@ export default function NewQuotePage() {
                                 notes={notes}
                                 terms={terms}
                                 items={items}
-                                client={selectedClient}
+                                client={selectedClient ?? undefined}
                                 onNotesChange={setNotes}
                                 onTermsChange={setTerms}
                                 onSave={handleSave}

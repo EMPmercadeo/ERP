@@ -69,6 +69,7 @@ export function PurchaseList({ initialData }: { initialData: PurchaseData[] }) {
     const [purchases, setPurchases] = useState<PurchaseData[]>(initialData);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsMounted(true);
     }, []);
 

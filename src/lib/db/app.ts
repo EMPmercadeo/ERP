@@ -34,7 +34,7 @@ export const prismaApp = {
             return prisma.factura.create({
                 ...args,
                 data: {
-                    ...args.data,
+                    ...(args.data as Prisma.FacturaUncheckedCreateInput),
                     empresaId: ctx.empresaId
                 }
             });

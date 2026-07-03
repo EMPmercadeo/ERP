@@ -155,7 +155,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                 if (res.success && res.image) {
                     setImages(prev => {
                         if (prev.some(img => img.id === res.image?.id)) return prev;
-                        const next = [...prev, res.image];
+                        const next = [...prev, res.image as unknown as typeof prev[0]];
                         return next.sort((a, b) => a.sortOrder - b.sortOrder);
                     });
                     if (res.image.isPrimary) {
@@ -805,9 +805,9 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                                 {/* Diff list */}
                                                                 {log.datosAntes && log.datosDespues && (
                                                                     <div className="text-[10px] font-mono text-slate-500 bg-white p-2 rounded-lg border border-slate-100 mt-1 space-y-1 leading-normal">
-                                                                        {Object.keys(log.datosDespues).map((key) => {
-                                                                            const before = log.datosAntes[key];
-                                                                            const after = log.datosDespues[key];
+                                                                        {Object.keys(log.datosDespues as Record<string, unknown>).map((key) => {
+                                                                            const before = (log.datosAntes as Record<string, unknown>)[key];
+                                                                            const after = (log.datosDespues as Record<string, unknown>)[key];
                                                                             if (JSON.stringify(before) !== JSON.stringify(after)) {
                                                                                 // Ignore metadata
                                                                                 if (['updatedAt', 'createdAt'].includes(key)) return null;

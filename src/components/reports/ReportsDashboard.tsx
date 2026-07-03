@@ -178,6 +178,7 @@ export function ReportsDashboard({
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsLoading(false);
     }, [searchParams]);
 

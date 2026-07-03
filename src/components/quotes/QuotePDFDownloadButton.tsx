@@ -8,22 +8,22 @@ import { useState } from 'react';
 
 interface QuoteData {
     numero: string;
-    fechaEmision: string;
-    validaHasta: string;
+    fechaEmision: Date | string;
+    validaHasta: Date | string;
     empresa?: {
-        razonSocial?: string;
-        ruc?: string;
-        direccion?: string;
-        telefono?: string;
-        email?: string;
+        razonSocial?: string | null;
+        ruc?: string | null;
+        direccion?: string | null;
+        telefono?: string | null;
+        email?: string | null;
     };
     cliente: {
         razonSocial: string;
         ruc: string;
-        dv?: string;
-        direccion?: string;
-        telefono?: string;
-        email?: string;
+        dv?: string | null;
+        direccion?: string | null;
+        telefono?: string | null;
+        email?: string | null;
     };
     items: {
         descripcion: string;
@@ -62,8 +62,8 @@ export function QuotePDFDownloadButton({ quote }: { quote: QuoteData }) {
                     name: quote.cliente.razonSocial,
                     ruc: quote.cliente.ruc + (quote.cliente.dv ? `-${quote.cliente.dv}` : ''),
                     address: quote.cliente.direccion || 'N/A',
-                    phone: quote.cliente.telefono,
-                    email: quote.cliente.email
+                    phone: quote.cliente.telefono ?? undefined,
+                    email: quote.cliente.email ?? undefined
                 },
                 items: quote.items.map((item) => ({
                     sku: 'N/A',

@@ -125,6 +125,7 @@ export function SupplierList({
     const [editingSupplier, setEditingSupplier] = useState<SupplierData | null>(null);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsMounted(true);
         if (initialData && initialData.length > 0) {
             setSuppliers(initialData);

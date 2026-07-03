@@ -119,7 +119,7 @@ export function ReportFilters({
             ? filterProducts.find(p => p.id === currentFilters.productoId)?.descripcion || ''
             : ''
     );
-    const [productSuggestions, setProductSuggestions] = useState<{ id: string; descripcion: string }[]>([]);
+    const [productSuggestions, setProductSuggestions] = useState<{ id: string; descripcion: string; codigoInterno?: string }[]>([]);
     const [productLoading, setProductLoading] = useState(false);
     const [showProductDropdown, setShowProductDropdown] = useState(false);
     const productRef = useRef<HTMLDivElement>(null);

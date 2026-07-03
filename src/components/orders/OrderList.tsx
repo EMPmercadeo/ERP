@@ -46,6 +46,7 @@ export function OrderList({ initialData }: { initialData: OrderData[] }) {
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsMounted(true);
         setOrders(initialData);
     }, [initialData]);

@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { getTenantContext } from '@/lib/auth/context';
 import { DeliveryNoteSchema } from '@/lib/validations';
@@ -436,7 +437,7 @@ export async function invoiceGroupedDeliveryNotes(albaranIds: string[]) {
                     saldoPendiente: totalNeto,
                     estadoDgi: 'borrador',
                     items: {
-                        create: facturaItems
+                        create: facturaItems as unknown as Prisma.FacturaItemUncheckedCreateWithoutFacturaInput[]
                     }
                 }
             });
