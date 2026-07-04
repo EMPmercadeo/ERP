@@ -242,6 +242,32 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
                 ventasServicios,
             });
 
+            // Si es de contado, registrar pago y generar asiento de cobro
+            if (data.condicionPago === 'contado') {
+                const metodoPago = (formData.get('metodoPago') as string) || 'efectivo';
+                const nuevoPago = await tx.pago.create({
+                    data: {
+                        empresaId: empresa.id,
+                        facturaId: nuevaFactura.id,
+                        clienteId: data.clienteId,
+                        usuarioId: userId,
+                        monto: totalNeto,
+                        metodoPago,
+                        montoAplicado: totalNeto,
+                    }
+                });
+
+                await generarAsientoCobro(tx, {
+                    empresaId: empresa.id,
+                    pagoId: nuevoPago.id,
+                    numeroFactura: nuevaFactura.numeroCompleto,
+                    fecha: nuevaFactura.fechaEmision,
+                    usuarioId: userId,
+                    monto: totalNeto,
+                    metodoPago,
+                });
+            }
+
             return nuevaFactura;
         });
 

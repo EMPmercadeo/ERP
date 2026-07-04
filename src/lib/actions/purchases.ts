@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { PurchaseSchema } from '@/lib/validations';
 import { getTenantContext } from '@/lib/auth/context';
+import { generarAsientoCompra } from '@/lib/contabilidad/asientos';
 
 export async function createPurchase(prevState: unknown, formData: FormData) {
     const rawItems = formData.get('items');
@@ -85,9 +86,21 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
 
         const totalNeto = subtotal - totalDescuento + totalItbms;
 
+        // Calcula el split de montos para el asiento contable: inventario (con producto) vs gasto (sin producto)
+        let montoInventario = 0;
+        let montoGastos = 0;
+        for (const item of processedItems) {
+            const baseImponible = Number(item.montoTotal) - Number(item.montoItbms);
+            if (item.productoId) {
+                montoInventario += baseImponible;
+            } else {
+                montoGastos += baseImponible;
+            }
+        }
+
         // Transaction: Create purchase, update supplier balance, and increment inventory stock
         await prisma.$transaction(async (tx) => {
-            await tx.compra.create({
+            const nuevaCompra = await tx.compra.create({
                 data: {
                     empresaId,
                     proveedorId: data.proveedorId,
@@ -106,6 +119,18 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
                         create: processedItems
                     }
                 }
+            });
+
+            await generarAsientoCompra(tx, {
+                empresaId,
+                compraId: nuevaCompra.id,
+                numeroFactura: data.numeroFactura,
+                fecha: new Date(`${data.fechaEmision}T12:00:00`),
+                usuarioId: userId,
+                totalItbms,
+                totalNeto,
+                montoInventario,
+                montoGastos,
             });
 
             // Increment supplier balance

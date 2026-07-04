@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { SupplierPaymentSchema } from '@/lib/validations';
 import { getTenantContext } from '@/lib/auth/context';
+import { generarAsientoPagoProveedor } from '@/lib/contabilidad/asientos';
 
 export async function createSupplierPayment(prevState: unknown, formData: FormData) {
     const rawData = {
@@ -52,7 +53,7 @@ export async function createSupplierPayment(prevState: unknown, formData: FormDa
             const nuevoEstadoPago = nuevoSaldoCompra <= 0.005 ? 'pagada' : 'parcial';
 
             // Create payment record
-            await tx.pagoProveedor.create({
+            const nuevoPago = await tx.pagoProveedor.create({
                 data: {
                     empresaId,
                     compraId: data.compraId,
@@ -63,6 +64,16 @@ export async function createSupplierPayment(prevState: unknown, formData: FormDa
                     referencia: data.referencia || null,
                     montoAplicado: data.monto
                 }
+            });
+
+            await generarAsientoPagoProveedor(tx, {
+                empresaId,
+                pagoProveedorId: nuevoPago.id,
+                numeroFactura: compra.numeroFactura,
+                fecha: new Date(),
+                usuarioId: userId,
+                monto: data.monto,
+                metodoPago: data.metodoPago,
             });
 
             // Update purchase pending balance and status

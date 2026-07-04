@@ -152,3 +152,70 @@ export async function generarAsientoCobro(
   });
 }
 
+export async function generarAsientoCompra(
+  tx: Prisma.TransactionClient,
+  params: {
+    empresaId: string;
+    compraId: string;
+    numeroFactura: string;
+    fecha: Date;
+    usuarioId: string;
+    totalItbms: number;
+    totalNeto: number;
+    montoInventario: number;
+    montoGastos: number;
+  }
+) {
+  const lineas: LineaAsientoInput[] = [];
+
+  if (params.montoInventario > 0) {
+    lineas.push({ codigoCuenta: "1.1.03.01", debe: params.montoInventario, descripcion: `Compra ${params.numeroFactura}` });
+  }
+  if (params.montoGastos > 0) {
+    lineas.push({ codigoCuenta: "6.1.07", debe: params.montoGastos, descripcion: `Compra ${params.numeroFactura} (gasto sin clasificar)` });
+  }
+  if (params.totalItbms > 0) {
+    lineas.push({ codigoCuenta: "1.1.04.01", debe: params.totalItbms, descripcion: `ITBMS crédito compra ${params.numeroFactura}` });
+  }
+  lineas.push({ codigoCuenta: "2.1.01", haber: params.totalNeto, descripcion: `Compra ${params.numeroFactura}` });
+
+  return crearAsientoContable(tx, {
+    empresaId: params.empresaId,
+    fecha: params.fecha,
+    concepto: `Compra según factura de proveedor ${params.numeroFactura}`,
+    origen: "COMPRA",
+    origenId: params.compraId,
+    usuarioId: params.usuarioId,
+    lineas,
+  });
+}
+
+export async function generarAsientoPagoProveedor(
+  tx: Prisma.TransactionClient,
+  params: {
+    empresaId: string;
+    pagoProveedorId: string;
+    numeroFactura: string;
+    fecha: Date;
+    usuarioId: string;
+    monto: number;
+    metodoPago: string;
+  }
+) {
+  const cuentaDestino = mapearCuentaPorMetodoPago(params.metodoPago);
+
+  return crearAsientoContable(tx, {
+    empresaId: params.empresaId,
+    fecha: params.fecha,
+    concepto: `Pago a proveedor - factura ${params.numeroFactura} (${params.metodoPago})`,
+    origen: "PAGO_PROVEEDOR",
+    origenId: params.pagoProveedorId,
+    usuarioId: params.usuarioId,
+    lineas: [
+      { codigoCuenta: "2.1.01", debe: params.monto, descripcion: `Pago factura ${params.numeroFactura}` },
+      { codigoCuenta: cuentaDestino, haber: params.monto, descripcion: `Pago factura ${params.numeroFactura}` },
+    ],
+  });
+}
+
+
