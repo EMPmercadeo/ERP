@@ -7,7 +7,7 @@ import { InvoiceSchema } from '@/lib/validations';
 
 import { getTenantContext } from '@/lib/auth/context';
 import { canCreateInvoice, incrementDocumentUsage } from '@/lib/actions/billing';
-import { generarAsientoFactura, generarAsientoCobro } from '@/lib/contabilidad/asientos';
+import { generarAsientoFactura, generarAsientoCobro, generarAsientoCostoVenta } from '@/lib/contabilidad/asientos';
 
 // DGI Document Codes
 const DOC_TYPE_FE = 'FE'; // Factura Electrónica
@@ -172,6 +172,15 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
 
         // Calcula el total de ventas por tipo (Mercancías vs Servicios) usando la unidad de medida del producto
         const mapaUnidad = new Map(products.map((p) => [p.id, p.unidadMedida]));
+        const mapaCosto = new Map(products.map((p) => [p.id, Number(p.costoUnitario)]));
+        let costoVentaTotal = 0;
+        for (const item of data.items) {
+            const unidad = mapaUnidad.get(item.productoId);
+            if (unidad !== 'SRV' && unidad !== 'HRS') {
+                const costo = mapaCosto.get(item.productoId) ?? 0;
+                costoVentaTotal += costo * item.cantidad;
+            }
+        }
         let ventasMercancias = 0;
         let ventasServicios = 0;
         for (const item of data.items) {
@@ -217,7 +226,7 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
                                 descripcion: item.descripcion,
                                 cantidad: item.cantidad,
                                 precioUnitario: item.precioUnitario,
-                                costoUnitario: 0,
+                                costoUnitario: mapaCosto.get(item.productoId) ?? 0,
                                 descuento: desc,
                                 codigoTasaItbms: item.codigoTasaItbms,
                                 montoItbms: montoItbms,
@@ -241,6 +250,25 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
                 ventasMercancias,
                 ventasServicios,
             });
+
+            await generarAsientoCostoVenta(tx, {
+                empresaId: empresa.id,
+                facturaId: nuevaFactura.id,
+                numeroCompleto: nuevaFactura.numeroCompleto,
+                fecha: nuevaFactura.fechaEmision,
+                usuarioId: userId,
+                costoTotal: costoVentaTotal,
+            });
+
+            for (const item of data.items) {
+                const unidad = mapaUnidad.get(item.productoId);
+                if (unidad !== 'SRV' && unidad !== 'HRS') {
+                    await tx.producto.update({
+                        where: { id: item.productoId },
+                        data: { stockActual: { decrement: Math.round(item.cantidad) } },
+                    });
+                }
+            }
 
             // Si es de contado, registrar pago y generar asiento de cobro
             if (data.condicionPago === 'contado') {

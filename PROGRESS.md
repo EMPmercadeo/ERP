@@ -137,6 +137,33 @@ Total Debe: 107 | Total Haber: 107
 
 ---
 
+## [2026-07-03 23:28] Tarea 1d.7: Costo de venta en createInvoice
+Estado: OK
+Alcance: exclusivamente `createInvoice` (formulario web `/invoices/new`). `createInvoicePOS` (`/pos`) no fue tocado — hoy no genera ningún asiento contable (ni FACTURA, ni COBRO, ni COSTO_VENTA) y queda pendiente para una tarea futura.
+Archivos modificados:
+- [asientos.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/contabilidad/asientos.ts) — `generarAsientoCostoVenta` ya existía, no se duplicó.
+- [invoices.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/actions/invoices.ts) — import de `generarAsientoCostoVenta`; cálculo de `mapaCosto`/`costoVentaTotal`; `costoUnitario` real en `FacturaItem` (antes hardcodeado en 0); llamada a `generarAsientoCostoVenta` tras `generarAsientoFactura`; decremento de `stockActual` para ítems no-servicio (createInvoice no tenía ningún descuento de inventario previo).
+Resultado de npm run build:
+```
+✓ Compiled successfully in 5.4s
+  Running TypeScript ...
+  Collecting page data using 23 workers ...
+✓ Generating static pages using 23 workers (17/17) in 573.0ms
+```
+Resultado de prueba de verificación (producto mercancía, costoUnitario=15, cantidad=3, stock inicial=100):
+```
+costoVentaTotal calculado = 45 (esperado: 45)
+Factura creada: REC-00000001
+PASS: AsientoContable COSTO_VENTA existe y está balanceado (Debe=45, Haber=45).
+PASS: FacturaItem.costoUnitario = 15 (esperado 15).
+PASS: stockActual = 97 (esperado 100 - 3 = 97, sin doble descuento).
+PASS: totalCostos (cuenta 5.1) = 45 (ya no es 0).
+🎉 TODAS LAS PRUEBAS DE COSTO DE VENTA PASARON CORRECTAMENTE.
+```
+Registros de prueba eliminados al finalizar.
+
+---
+
 ## Resumen de Cambios (git diff --stat)
 ```
  src/lib/actions/invoices.ts          | 26 ++++++++++++++

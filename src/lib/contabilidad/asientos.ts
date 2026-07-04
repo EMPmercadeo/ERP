@@ -218,4 +218,31 @@ export async function generarAsientoPagoProveedor(
   });
 }
 
+export async function generarAsientoCostoVenta(
+  tx: Prisma.TransactionClient,
+  params: {
+    empresaId: string;
+    facturaId: string;
+    numeroCompleto: string;
+    fecha: Date;
+    usuarioId: string;
+    costoTotal: number;
+  }
+) {
+  if (params.costoTotal <= 0) return null;
+  return crearAsientoContable(tx, {
+    empresaId: params.empresaId,
+    fecha: params.fecha,
+    concepto: `Costo de venta según factura ${params.numeroCompleto}`,
+    origen: "COSTO_VENTA",
+    origenId: params.facturaId,
+    usuarioId: params.usuarioId,
+    lineas: [
+      { codigoCuenta: "5.1", debe: params.costoTotal, descripcion: `Costo de venta factura ${params.numeroCompleto}` },
+      { codigoCuenta: "1.1.03.01", haber: params.costoTotal, descripcion: `Salida de inventario factura ${params.numeroCompleto}` },
+    ],
+  });
+}
+
+
 
