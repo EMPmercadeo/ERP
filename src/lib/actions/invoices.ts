@@ -506,14 +506,33 @@ export async function createInvoicePOS(rawData: {
         }, 0);
         const totalNeto = subtotal + totalItbms;
 
-        // Validate all products belong to tenant BEFORE creating invoice
+        // Validate all products belong to tenant BEFORE creating invoice, y traer datos necesarios para contabilidad
         const productIds = rawData.items.map((i) => i.productoId).filter(Boolean);
+        let productsData: { id: string; unidadMedida: string; costoUnitario: unknown }[] = [];
         if (productIds.length > 0) {
-            const validProducts = await prisma.producto.count({
-                where: { id: { in: productIds }, empresaId }
+            productsData = await prisma.producto.findMany({
+                where: { id: { in: productIds }, empresaId },
+                select: { id: true, unidadMedida: true, costoUnitario: true }
             });
-            if (validProducts !== productIds.length) {
+            if (productsData.length !== productIds.length) {
                 return { success: false, error: 'Producto no válido para esta empresa.' };
+            }
+        }
+
+        const mapaUnidad = new Map(productsData.map((p) => [p.id, p.unidadMedida]));
+        const mapaCosto = new Map(productsData.map((p) => [p.id, Number(p.costoUnitario)]));
+
+        let ventasMercancias = 0;
+        let ventasServicios = 0;
+        let costoVentaTotal = 0;
+        for (const item of rawData.items) {
+            const unidad = mapaUnidad.get(item.productoId);
+            const montoBrutoItem = item.cantidad * item.precioUnitario;
+            if (unidad === 'SRV' || unidad === 'HRS') {
+                ventasServicios += montoBrutoItem;
+            } else {
+                ventasMercancias += montoBrutoItem;
+                costoVentaTotal += (mapaCosto.get(item.productoId) ?? 0) * item.cantidad;
             }
         }
 
@@ -545,7 +564,7 @@ export async function createInvoicePOS(rawData: {
                                 descripcion: item.descripcion,
                                 cantidad: item.cantidad,
                                 precioUnitario: item.precioUnitario,
-                                costoUnitario: 0,
+                                costoUnitario: mapaCosto.get(item.productoId) ?? 0,
                                 codigoTasaItbms: item.codigoTasaItbms,
                                 montoItbms: item.cantidad * item.precioUnitario * tasa,
                                 montoTotal: item.cantidad * item.precioUnitario * (1 + tasa)
@@ -553,6 +572,29 @@ export async function createInvoicePOS(rawData: {
                         })
                     }
                 }
+            });
+
+            await generarAsientoFactura(tx, {
+                empresaId: empresa.id,
+                facturaId: inv.id,
+                numeroCompleto: inv.numeroCompleto,
+                fecha: inv.fechaEmision,
+                usuarioId: userId,
+                subtotal,
+                totalDescuento: 0,
+                totalItbms,
+                totalNeto,
+                ventasMercancias,
+                ventasServicios,
+            });
+
+            await generarAsientoCostoVenta(tx, {
+                empresaId: empresa.id,
+                facturaId: inv.id,
+                numeroCompleto: inv.numeroCompleto,
+                fecha: inv.fechaEmision,
+                usuarioId: userId,
+                costoTotal: costoVentaTotal,
             });
 
             // Update stock
@@ -569,7 +611,7 @@ export async function createInvoicePOS(rawData: {
 
             // If payment is made, record it in Pago model
             if (rawData.condicionPago === 'contado') {
-                await tx.pago.create({
+                const pago = await tx.pago.create({
                     data: {
                         empresaId,
                         facturaId: inv.id,
@@ -579,6 +621,16 @@ export async function createInvoicePOS(rawData: {
                         metodoPago: rawData.metodoPago || 'efectivo',
                         montoAplicado: totalNeto,
                     }
+                });
+
+                await generarAsientoCobro(tx, {
+                    empresaId,
+                    pagoId: pago.id,
+                    numeroFactura: inv.numeroCompleto,
+                    fecha: inv.fechaEmision,
+                    usuarioId: userId,
+                    monto: totalNeto,
+                    metodoPago: rawData.metodoPago || 'efectivo',
                 });
             }
 

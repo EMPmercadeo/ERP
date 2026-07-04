@@ -164,6 +164,30 @@ Registros de prueba eliminados al finalizar.
 
 ---
 
+## [2026-07-03 23:41] Tarea 1d.8: conectar contabilidad a createInvoicePOS
+Estado: OK
+Alcance: exclusivamente `createInvoicePOS` (módulo POS, `/pos`). `createInvoice` no fue tocado.
+Archivos modificados:
+- [invoices.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/actions/invoices.ts) — validación de productos ahora trae `unidadMedida`/`costoUnitario` (`findMany` en vez de `count`); cálculo de `ventasMercancias`/`ventasServicios`/`costoVentaTotal`; `costoUnitario` real en `FacturaItem` (antes hardcodeado en 0); llamadas a `generarAsientoFactura` y `generarAsientoCostoVenta` tras crear la factura; llamada a `generarAsientoCobro` cuando `condicionPago === 'contado'` (antes el pago se registraba sin generar ningún asiento). El bloque existente de decremento de stock ("Update stock") no se tocó ni se duplicó.
+Resultado de npm run build:
+```
+✓ Compiled successfully in 5.5s
+```
+Resultado de prueba de verificación (producto mercancía, costoUnitario=8, cantidad=4, condicionPago=contado, stock inicial=50):
+```
+costoVentaTotal calculado = 32 (esperado: 32 = 8*4)
+Factura POS creada: REC-00000001
+PASS a) AsientoContable FACTURA balanceado (Debe=85.6, Haber=85.6).
+PASS b) AsientoContable COSTO_VENTA balanceado (Debe=32, Haber=32).
+PASS c) AsientoContable COBRO balanceado (Debe=85.6, Haber=85.6).
+PASS d) FacturaItem.costoUnitario = 8 (esperado 8).
+PASS e) stockActual = 46 (esperado 50 - 4 = 46, sin doble descuento).
+🎉 TODAS LAS PRUEBAS DE 1d.8 PASARON CORRECTAMENTE.
+```
+Registros de prueba eliminados al finalizar.
+
+---
+
 ## Resumen de Cambios (git diff --stat)
 ```
  src/lib/actions/invoices.ts          | 26 ++++++++++++++
