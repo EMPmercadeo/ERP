@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { cookies } from 'next/headers';
+import { adminAuth } from '@/lib/firebase/admin';
 
 export async function getUserRole(email: string | null | undefined) {
     if (!email) return null;
@@ -79,20 +80,26 @@ export async function getCurrentUserWithPlan(email: string | null | undefined) {
     }
 }
 
-export async function setSessionEmail(email: string) {
-    const cleanEmail = email ? email.trim().toLowerCase() : '';
+export async function setSessionToken(idToken: string) {
+    const decoded = await adminAuth.verifyIdToken(idToken);
+    if (!decoded.email) {
+        throw new Error('El token no contiene un correo verificado.');
+    }
+    const expiresIn = 60 * 60 * 24 * 7 * 1000; // 7 días en ms
+    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
     const cookieStore = await cookies();
-    cookieStore.set('session_email', cleanEmail, {
+    cookieStore.set('session_token', sessionCookie, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         path: '/',
-        maxAge: 60 * 60 * 24 * 7, // 1 week
+        maxAge: expiresIn / 1000,
     });
 }
 
 export async function deleteSessionEmail() {
     const cookieStore = await cookies();
+    cookieStore.delete('session_token');
     cookieStore.delete('session_email');
 }
 

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import { getUserRole } from '@/lib/actions/auth'; // Reusing this or similar logic
 import { crearPlanCuentasParaEmpresa } from '@/lib/contabilidad/planCuentasDefault';
+import { adminAuth } from '@/lib/firebase/admin';
 
 // Mock session retriever. In real usage, this might decode a JWT, check cookies, or call Firebase Admin.
 // We'll simulate getting the user email/id from headers or a mock "current user".
@@ -17,8 +18,16 @@ export interface TenantContext {
 export async function getTenantContext(): Promise<TenantContext> {
     // 1. Get User Identity from session cookie
     const cookieStore = await cookies();
-    const rawEmail = cookieStore.get('session_email')?.value;
-    const sessionEmail = rawEmail ? rawEmail.trim().toLowerCase() : undefined;
+    const sessionCookieValue = cookieStore.get('session_token')?.value;
+    let sessionEmail: string | undefined;
+    if (sessionCookieValue) {
+        try {
+            const decoded = await adminAuth.verifySessionCookie(sessionCookieValue, true);
+            sessionEmail = decoded.email?.trim().toLowerCase();
+        } catch {
+            sessionEmail = undefined;
+        }
+    }
 
     let devUser = null;
     if (sessionEmail && sessionEmail !== 'guest') {

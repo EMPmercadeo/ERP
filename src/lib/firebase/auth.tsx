@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, createContext, useContext, useCallback } from 'react';
-import { getCurrentUser, setSessionEmail, deleteSessionEmail, getUserRole } from '@/lib/actions/auth';
+import { getCurrentUser, setSessionToken, deleteSessionEmail, getUserRole } from '@/lib/actions/auth';
 import {
     User,
     signInWithPopup,
@@ -96,7 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // Sync mock user session on mount
                 const mock = mockUserRef.current;
                 if (mock?.email) {
-                    await setSessionEmail(mock.email);
+                    // Modo mock (ALLOW_DEV_FALLBACK): no existe un ID Token real de Firebase que verificar.
+                    // getTenantContext() ya reconoce este caso vía NODE_ENV+ALLOW_DEV_FALLBACK sin depender de la cookie de sesión.
                     // Fetch role once
                     const r = await getUserRole(mock.email);
                     setRole(r || null);
@@ -121,7 +122,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         getRedirectResult(auth).then(async (res) => {
             if (res?.user?.email) {
                 try {
-                    await setSessionEmail(res.user.email);
+                    const idToken = await res.user.getIdToken();
+                    await setSessionToken(idToken);
                 } catch (e) {
                     console.error('Error setting session email in getRedirectResult:', e);
                 }
@@ -138,7 +140,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (u) {
                 if (u.email) {
                     try {
-                        await setSessionEmail(u.email);
+                        const idToken = await u.getIdToken();
+                        await setSessionToken(idToken);
                     } catch (e) {
                         console.error('Error setting session email in onAuthStateChanged:', e);
                         setAuthError('Error al establecer sesión: ' + (e instanceof Error ? e.message : 'Error desconocido'));
@@ -161,11 +164,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } else {
                 // No Firebase user – keep mock
                 if (mockUserRef.current?.email) {
-                    try {
-                        await setSessionEmail(mockUserRef.current.email);
-                    } catch (e) {
-                        console.error('Error setting mock session email:', e);
-                    }
+                    // Modo mock (ALLOW_DEV_FALLBACK): no existe un ID Token real de Firebase que verificar.
+                    // getTenantContext() ya reconoce este caso vía NODE_ENV+ALLOW_DEV_FALLBACK sin depender de la cookie de sesión.
                 } else {
                     setUser(null);
                     try {
@@ -185,7 +185,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             const res = await signInWithPopup(auth, googleProvider);
             if (res.user?.email) {
-                await setSessionEmail(res.user.email);
+                const idToken = await res.user.getIdToken();
+                await setSessionToken(idToken);
             }
         } catch (error: unknown) {
             console.error('Error signing in with Google popup, intentando redirección automática:', error);
@@ -200,8 +201,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signInWithEmail = async (email: string, password: string) => {
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            await setSessionEmail(email);
+            const cred = await signInWithEmailAndPassword(auth, email, password);
+            const idToken = await cred.user.getIdToken();
+            await setSessionToken(idToken);
         } catch (error: unknown) {
             const firebaseError = error as { code?: string; message?: string };
             if (process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_FALLBACK === 'true' && (firebaseError.code === 'auth/operation-not-allowed' || firebaseError.code === 'auth/user-not-found' || firebaseError.code === 'auth/wrong-password')) {
@@ -231,7 +233,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 mockUserRef.current = fakeUser;
                 setUser(fakeUser);
-                await setSessionEmail(email);
+                // Modo mock (ALLOW_DEV_FALLBACK): no existe un ID Token real de Firebase que verificar.
+                // getTenantContext() ya reconoce este caso vía NODE_ENV+ALLOW_DEV_FALLBACK sin depender de la cookie de sesión.
 
                 // Fetch role for this new user
                 const r = await getUserRole(email);
@@ -245,8 +248,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signUpWithEmail = async (email: string, password: string) => {
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
-            await setSessionEmail(email);
+            const cred = await createUserWithEmailAndPassword(auth, email, password);
+            const idToken = await cred.user.getIdToken();
+            await setSessionToken(idToken);
         } catch (error: unknown) {
             console.error('Error signing up:', error);
             throw error;
