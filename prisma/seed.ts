@@ -433,6 +433,7 @@ async function main() {
 
         const numItems = randomInt(1, 5);
         let subtotal = new Prisma.Decimal(0);
+        let totalDescuento = new Prisma.Decimal(0);
         let totalItbms = new Prisma.Decimal(0);
 
         const fechaEmision = new Date();
@@ -472,9 +473,10 @@ async function main() {
             const tasaItbms = producto.codigoTasaItbms === '01' ? 0.07 :
                 producto.codigoTasaItbms === '02' ? 0.10 : 0;
 
-            const montoBase = parseFloat(cantidad.toString()) * parseFloat(precioUnit.toString()) - parseFloat(descuento.toString());
-            const itbms = new Prisma.Decimal((montoBase * tasaItbms).toFixed(2));
-            const montoTotal = new Prisma.Decimal((montoBase + parseFloat(itbms.toString())).toFixed(2));
+            const montoBruto = parseFloat(cantidad.toString()) * parseFloat(precioUnit.toString());
+            const montoNeto = montoBruto - parseFloat(descuento.toString());
+            const itbms = new Prisma.Decimal((montoNeto * tasaItbms).toFixed(2));
+            const montoTotal = new Prisma.Decimal((montoNeto + parseFloat(itbms.toString())).toFixed(2));
 
             await prisma.facturaItem.create({
                 data: {
@@ -491,17 +493,18 @@ async function main() {
                 },
             });
 
-            subtotal = new Prisma.Decimal((parseFloat(subtotal.toString()) + montoBase).toFixed(2));
+            subtotal = new Prisma.Decimal((parseFloat(subtotal.toString()) + montoBruto).toFixed(2));
+            totalDescuento = new Prisma.Decimal((parseFloat(totalDescuento.toString()) + parseFloat(descuento.toString())).toFixed(2));
             totalItbms = new Prisma.Decimal((parseFloat(totalItbms.toString()) + parseFloat(itbms.toString())).toFixed(2));
         }
 
-        const totalNeto = new Prisma.Decimal((parseFloat(subtotal.toString()) + parseFloat(totalItbms.toString())).toFixed(2));
+        const totalNeto = new Prisma.Decimal((parseFloat(subtotal.toString()) - parseFloat(totalDescuento.toString()) + parseFloat(totalItbms.toString())).toFixed(2));
         const totalPagado = Math.random() > 0.3 ? totalNeto : randomDecimal(0, parseFloat(totalNeto.toString()));
         const saldoPendiente = new Prisma.Decimal((parseFloat(totalNeto.toString()) - parseFloat(totalPagado.toString())).toFixed(2));
 
         await prisma.factura.update({
             where: { id: factura.id },
-            data: { subtotal, totalItbms, totalNeto, totalPagado, saldoPendiente },
+            data: { subtotal, totalDescuento, totalItbms, totalNeto, totalPagado, saldoPendiente },
         });
 
         facturas.push({ ...factura, subtotal, totalNeto });
@@ -567,6 +570,7 @@ async function main() {
 
         const numItems = randomInt(1, 5);
         let subtotal = new Prisma.Decimal(0);
+        let totalDescuento = new Prisma.Decimal(0);
         let totalItbms = new Prisma.Decimal(0);
 
         const fechaEmision = new Date();
@@ -600,9 +604,10 @@ async function main() {
             const tasaItbms = producto.codigoTasaItbms === '01' ? 0.07 :
                 producto.codigoTasaItbms === '02' ? 0.10 : 0;
 
-            const montoBase = parseFloat(cantidad.toString()) * parseFloat(precioUnit.toString()) - parseFloat(descuento.toString());
-            const itbms = new Prisma.Decimal((montoBase * tasaItbms).toFixed(2));
-            const montoTotal = new Prisma.Decimal((montoBase + parseFloat(itbms.toString())).toFixed(2));
+            const montoBruto = parseFloat(cantidad.toString()) * parseFloat(precioUnit.toString());
+            const montoNeto = montoBruto - parseFloat(descuento.toString());
+            const itbms = new Prisma.Decimal((montoNeto * tasaItbms).toFixed(2));
+            const montoTotal = new Prisma.Decimal((montoNeto + parseFloat(itbms.toString())).toFixed(2));
 
             await prisma.cotizacionItem.create({
                 data: {
@@ -618,15 +623,16 @@ async function main() {
                 },
             });
 
-            subtotal = new Prisma.Decimal((parseFloat(subtotal.toString()) + montoBase).toFixed(2));
+            subtotal = new Prisma.Decimal((parseFloat(subtotal.toString()) + montoBruto).toFixed(2));
+            totalDescuento = new Prisma.Decimal((parseFloat(totalDescuento.toString()) + parseFloat(descuento.toString())).toFixed(2));
             totalItbms = new Prisma.Decimal((parseFloat(totalItbms.toString()) + parseFloat(itbms.toString())).toFixed(2));
         }
 
-        const totalNeto = new Prisma.Decimal((parseFloat(subtotal.toString()) + parseFloat(totalItbms.toString())).toFixed(2));
+        const totalNeto = new Prisma.Decimal((parseFloat(subtotal.toString()) - parseFloat(totalDescuento.toString()) + parseFloat(totalItbms.toString())).toFixed(2));
 
         await prisma.cotizacion.update({
             where: { id: cotizacion.id },
-            data: { subtotal, totalItbms, totalNeto },
+            data: { subtotal, totalDescuento, totalItbms, totalNeto },
         });
 
         cotizaciones.push(cotizacion);
@@ -666,6 +672,7 @@ async function main() {
         
         const numItems = randomInt(1, 3);
         let subtotal = 0;
+        let totalDescuento = 0;
         let totalItbms = 0;
         const purchaseItems = [];
 
@@ -680,6 +687,7 @@ async function main() {
             const itbms = base * tasa;
 
             subtotal += qty * cost;
+            totalDescuento += desc;
             totalItbms += itbms;
 
             purchaseItems.push({
@@ -694,7 +702,7 @@ async function main() {
             });
         }
 
-        const totalNeto = subtotal + totalItbms;
+        const totalNeto = subtotal - totalDescuento + totalItbms;
         const fechaEmision = new Date();
         fechaEmision.setDate(fechaEmision.getDate() - randomInt(0, 90));
 
@@ -707,7 +715,7 @@ async function main() {
                 fechaEmision,
                 fechaVencimiento: new Date(fechaEmision.getTime() + 30 * 24 * 60 * 60 * 1000),
                 subtotal: new Prisma.Decimal(subtotal.toFixed(2)),
-                totalDescuento: new Prisma.Decimal(0),
+                totalDescuento: new Prisma.Decimal(totalDescuento.toFixed(2)),
                 totalItbms: new Prisma.Decimal(totalItbms.toFixed(2)),
                 totalNeto: new Prisma.Decimal(totalNeto.toFixed(2)),
                 saldoPendiente: new Prisma.Decimal(totalNeto.toFixed(2)),
