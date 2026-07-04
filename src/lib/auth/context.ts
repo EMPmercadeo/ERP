@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import { getUserRole } from '@/lib/actions/auth'; // Reusing this or similar logic
+import { crearPlanCuentasParaEmpresa } from '@/lib/contabilidad/planCuentasDefault';
 
 // Mock session retriever. In real usage, this might decode a JWT, check cookies, or call Firebase Admin.
 // We'll simulate getting the user email/id from headers or a mock "current user".
@@ -38,27 +39,31 @@ export async function getTenantContext(): Promise<TenantContext> {
                 const nombreGen = sessionEmail.split('@')[0];
                 const razonGen = nombreGen.toUpperCase();
 
-                const nuevaEmpresa = await prisma.empresa.create({
-                    data: {
-                        ruc: rucGen,
-                        dv: '00',
-                        razonSocial: razonGen,
-                        direccion: 'Panamá',
-                        email: sessionEmail,
-                        planType: 'free',
-                        subscriptionStatus: 'active'
-                    }
-                });
+                devUser = await prisma.$transaction(async (tx) => {
+                    const nuevaEmpresa = await tx.empresa.create({
+                        data: {
+                            ruc: rucGen,
+                            dv: '00',
+                            razonSocial: razonGen,
+                            direccion: 'Panamá',
+                            email: sessionEmail,
+                            planType: 'free',
+                            subscriptionStatus: 'active'
+                        }
+                    });
 
-                devUser = await prisma.usuario.create({
-                    data: {
-                        empresaId: nuevaEmpresa.id,
-                        email: sessionEmail,
-                        passwordHash: 'oauth-firebase',
-                        nombre: nombreGen,
-                        rol: 'admin',
-                        activo: true
-                    }
+                    await crearPlanCuentasParaEmpresa(tx, nuevaEmpresa.id);
+
+                    return await tx.usuario.create({
+                        data: {
+                            empresaId: nuevaEmpresa.id,
+                            email: sessionEmail,
+                            passwordHash: 'oauth-firebase',
+                            nombre: nombreGen,
+                            rol: 'admin',
+                            activo: true
+                        }
+                    });
                 });
                 console.log(`Auto-provisioned new account in PostgreSQL for ${sessionEmail}`);
             } catch (error) {

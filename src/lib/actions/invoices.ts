@@ -7,6 +7,7 @@ import { InvoiceSchema } from '@/lib/validations';
 
 import { getTenantContext } from '@/lib/auth/context';
 import { canCreateInvoice, incrementDocumentUsage } from '@/lib/actions/billing';
+import { generarAsientoFactura, generarAsientoCobro } from '@/lib/contabilidad/asientos';
 
 // DGI Document Codes
 const DOC_TYPE_FE = 'FE'; // Factura Electrónica
@@ -169,51 +170,79 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
         }, 0);
         const totalNeto = subtotal - totalDescuento + totalItbms;
 
-        // Create Invoice with items
-        const invoice = await prisma.factura.create({
-            data: {
+        // Calcula el total de ventas por tipo (Mercancías vs Servicios) usando la unidad de medida del producto
+        const mapaUnidad = new Map(products.map((p) => [p.id, p.unidadMedida]));
+        let ventasMercancias = 0;
+        let ventasServicios = 0;
+        for (const item of data.items) {
+            const unidad = mapaUnidad.get(item.productoId);
+            const montoBrutoItem = item.cantidad * item.precioUnitario;
+            if (unidad === 'SRV' || unidad === 'HRS') {
+                ventasServicios += montoBrutoItem;
+            } else {
+                ventasMercancias += montoBrutoItem;
+            }
+        }
+
+        // Crea la factura y su asiento contable de forma atómica
+        const invoice = await prisma.$transaction(async (tx) => {
+            const nuevaFactura = await tx.factura.create({
+                data: {
+                    empresaId: empresa.id,
+                    sucursalId: sucursal.id,
+                    cajaId: caja.id,
+                    clienteId: data.clienteId,
+                    creadorId: userId,
+                    tipoDocumento: tipoDoc,
+                    numeroSecuencial,
+                    numeroCompleto,
+                    subtotal,
+                    totalDescuento,
+                    totalItbms,
+                    totalNeto,
+                    saldoPendiente: data.condicionPago === 'contado' ? 0 : totalNeto,
+                    totalPagado: data.condicionPago === 'contado' ? totalNeto : 0,
+                    estadoDgi: isFiscal ? 'pendiente' : 'local',
+                    items: {
+                        create: data.items.map(item => {
+                            const tasa = item.codigoTasaItbms === '01' ? 0.07 :
+                                item.codigoTasaItbms === '02' ? 0.10 :
+                                    item.codigoTasaItbms === '03' ? 0.15 : 0;
+                            const desc = item.descuento || 0;
+                            const montoBruto = item.cantidad * item.precioUnitario;
+                            const montoNeto = Math.max(0, montoBruto - desc);
+                            const montoItbms = montoNeto * tasa;
+                            return {
+                                productoId: item.productoId,
+                                descripcion: item.descripcion,
+                                cantidad: item.cantidad,
+                                precioUnitario: item.precioUnitario,
+                                costoUnitario: 0,
+                                descuento: desc,
+                                codigoTasaItbms: item.codigoTasaItbms,
+                                montoItbms: montoItbms,
+                                montoTotal: montoNeto + montoItbms
+                            };
+                        })
+                    }
+                }
+            });
+
+            await generarAsientoFactura(tx, {
                 empresaId: empresa.id,
-                sucursalId: sucursal.id,
-                cajaId: caja.id,
-                clienteId: data.clienteId,
-                creadorId: userId,
-
-                tipoDocumento: tipoDoc,
-                numeroSecuencial,
-                numeroCompleto, // Generated based on Tier
-
+                facturaId: nuevaFactura.id,
+                numeroCompleto: nuevaFactura.numeroCompleto,
+                fecha: nuevaFactura.fechaEmision,
+                usuarioId: userId,
                 subtotal,
                 totalDescuento,
                 totalItbms,
                 totalNeto,
-                saldoPendiente: data.condicionPago === 'contado' ? 0 : totalNeto,
-                totalPagado: data.condicionPago === 'contado' ? totalNeto : 0,
+                ventasMercancias,
+                ventasServicios,
+            });
 
-                estadoDgi: isFiscal ? 'pendiente' : 'local', // 'local' avoids DGI triggers
-
-                items: {
-                    create: data.items.map(item => {
-                        const tasa = item.codigoTasaItbms === '01' ? 0.07 :
-                            item.codigoTasaItbms === '02' ? 0.10 :
-                                item.codigoTasaItbms === '03' ? 0.15 : 0;
-                        const desc = item.descuento || 0;
-                        const montoBruto = item.cantidad * item.precioUnitario;
-                        const montoNeto = Math.max(0, montoBruto - desc);
-                        const montoItbms = montoNeto * tasa;
-                        return {
-                            productoId: item.productoId,
-                            descripcion: item.descripcion,
-                            cantidad: item.cantidad,
-                            precioUnitario: item.precioUnitario,
-                            costoUnitario: 0,
-                            descuento: desc,
-                            codigoTasaItbms: item.codigoTasaItbms,
-                            montoItbms: montoItbms,
-                            montoTotal: montoNeto + montoItbms
-                        };
-                    })
-                }
-            }
+            return nuevaFactura;
         });
 
         // Increment monthly document usage
@@ -313,6 +342,16 @@ export async function recordInvoicePayment(
                     montoAplicado: paymentAmount,
                     montoCredito: 0,
                 },
+            });
+
+            await generarAsientoCobro(tx, {
+                empresaId,
+                pagoId: payment.id,
+                numeroFactura: invoice.numeroCompleto,
+                fecha: payment.fechaPago,
+                usuarioId: userId,
+                monto: paymentAmount,
+                metodoPago: method,
             });
 
             // Log to Auditoria

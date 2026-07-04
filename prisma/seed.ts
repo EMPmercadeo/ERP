@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
+import { crearPlanCuentasParaEmpresa } from '../src/lib/contabilidad/planCuentasDefault';
 
 const prisma = new PrismaClient();
 
@@ -205,6 +206,8 @@ async function main() {
             subscriptionStatus: 'active'
         },
     });
+
+    await crearPlanCuentasParaEmpresa(prisma, empresa.id);
 
     // Create Subscription for the empresa (Default to Plan Pro)
     console.log('💳 Creando suscripción de muestra...');
