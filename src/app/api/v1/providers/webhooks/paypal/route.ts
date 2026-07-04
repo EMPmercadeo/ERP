@@ -3,16 +3,108 @@ import { prisma } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
+function getPayPalApiBase(): string {
+    return process.env.NEXT_PUBLIC_PAYPAL_MODE === 'live'
+        ? 'https://api-m.paypal.com'
+        : 'https://api-m.sandbox.paypal.com';
+}
+
+async function getPayPalAccessToken(): Promise<string> {
+    const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+    const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+    if (!clientId || !clientSecret) {
+        throw new Error('Credenciales de PayPal (client id/secret) no configuradas.');
+    }
+
+    const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    const res = await fetch(`${getPayPalApiBase()}/v1/oauth2/token`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Basic ${basicAuth}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'grant_type=client_credentials',
+    });
+
+    if (!res.ok) {
+        throw new Error(`No se pudo obtener el access token de PayPal (status ${res.status}).`);
+    }
+
+    const data = await res.json();
+    return data.access_token as string;
+}
+
+interface PayPalWebhookHeaders {
+    transmissionId: string;
+    transmissionTime: string;
+    certUrl: string;
+    authAlgo: string;
+    transmissionSig: string;
+}
+
+async function verifyPayPalWebhookSignature(headers: PayPalWebhookHeaders, webhookEvent: unknown): Promise<boolean> {
+    const webhookId = process.env.PAYPAL_WEBHOOK_ID;
+    if (!webhookId) {
+        throw new Error('PAYPAL_WEBHOOK_ID no está configurada.');
+    }
+
+    const accessToken = await getPayPalAccessToken();
+
+    const res = await fetch(`${getPayPalApiBase()}/v1/notifications/verify-webhook-signature`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            transmission_id: headers.transmissionId,
+            transmission_time: headers.transmissionTime,
+            cert_url: headers.certUrl,
+            auth_algo: headers.authAlgo,
+            transmission_sig: headers.transmissionSig,
+            webhook_id: webhookId,
+            webhook_event: webhookEvent,
+        }),
+    });
+
+    if (!res.ok) {
+        console.error(`[PayPal Webhook] verify-webhook-signature respondió status ${res.status}`);
+        return false;
+    }
+
+    const data = await res.json();
+    return data.verification_status === 'SUCCESS';
+}
+
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
 
-        // Basic webhook verification: check for PayPal transmission headers
+        // Verificación real de firma: PayPal exige estos 5 headers en cada notificación
         const transmissionId = request.headers.get('paypal-transmission-id');
         const transmissionSig = request.headers.get('paypal-transmission-sig');
-        if (!transmissionId || !transmissionSig) {
+        const transmissionTime = request.headers.get('paypal-transmission-time');
+        const certUrl = request.headers.get('paypal-cert-url');
+        const authAlgo = request.headers.get('paypal-auth-algo');
+        if (!transmissionId || !transmissionSig || !transmissionTime || !certUrl || !authAlgo) {
             console.warn('[PayPal Webhook] Missing verification headers');
             return NextResponse.json({ error: 'Missing webhook verification headers' }, { status: 401 });
+        }
+
+        let isValid = false;
+        try {
+            isValid = await verifyPayPalWebhookSignature(
+                { transmissionId, transmissionTime, certUrl, authAlgo, transmissionSig },
+                body
+            );
+        } catch (verifyError) {
+            console.error('[PayPal Webhook] Error verificando firma:', verifyError);
+            return NextResponse.json({ error: 'Error verificando la firma del webhook.' }, { status: 401 });
+        }
+
+        if (!isValid) {
+            console.warn('[PayPal Webhook] Firma inválida, evento rechazado.');
+            return NextResponse.json({ error: 'Firma de webhook inválida.' }, { status: 401 });
         }
 
         const { event_type, resource } = body;

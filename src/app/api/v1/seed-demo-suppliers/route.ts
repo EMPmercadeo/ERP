@@ -41,13 +41,12 @@ export async function POST() {
     return seedHandler();
 }
 
-export async function GET() {
-    return seedHandler();
-}
-
 async function seedHandler() {
     try {
-        const { empresaId, userId } = await getTenantContext();
+        const { empresaId, userId, role } = await getTenantContext();
+        if (role !== 'admin' && role !== 'super_admin') {
+            return NextResponse.json({ success: false, error: 'No autorizado.' }, { status: 403 });
+        }
 
         const countExistentes = await prisma.proveedor.count({ where: { empresaId } });
         if (countExistentes >= 100) {
