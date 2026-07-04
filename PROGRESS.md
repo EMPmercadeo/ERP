@@ -188,6 +188,25 @@ Registros de prueba eliminados al finalizar.
 
 ---
 
+## [2026-07-03 23:52] Fase 0: limpieza de 5 errores de lint menores
+Estado: OK
+Alcance: `scripts/check-products.ts`, `scripts/enable-rls.ts`, `src/app/(dashboard)/accounting/ledger/page.tsx`, `src/lib/contabilidad/planCuentasDefault.ts`. Los 5 errores eran todos `@typescript-eslint/no-explicit-any` (no había `prefer-const`, `react/no-unescaped-entities` ni `@next/next/no-html-link-for-pages` en estos archivos).
+Archivos modificados:
+- [check-products.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/scripts/check-products.ts) — `catch (err: any)` → `catch (err: unknown)` en dos bloques, acceso a `.message` protegido con `err instanceof Error`.
+- [enable-rls.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/scripts/enable-rls.ts) — `catch (error: any)` → `catch (error: unknown)`, acceso a `.message` protegido con `error instanceof Error`.
+- [ledger/page.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/app/(dashboard)/accounting/ledger/page.tsx) — `let movements: any[]` → `let movements: LedgerMovementView[]`, reutilizando el tipo ya exportado por `LedgerView.tsx` (coincide exactamente con la forma del objeto construido en el `.map()`).
+- [planCuentasDefault.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/contabilidad/planCuentasDefault.ts) — `crearPlanCuentasParaEmpresa(tx: any, ...)` → `crearPlanCuentasParaEmpresa(tx: Prisma.TransactionClient, ...)`, consistente con el tipo usado en `asientos.ts` para el mismo patrón.
+Resultado de npm run build:
+```
+✓ Compiled successfully in 5.7s
+```
+Resultado de verificación (`npx eslint` sobre los 4 archivos):
+```
+(sin salida — 0 errores, 0 warnings)
+```
+
+---
+
 ## Resumen de Cambios (git diff --stat)
 ```
  src/lib/actions/invoices.ts          | 26 ++++++++++++++

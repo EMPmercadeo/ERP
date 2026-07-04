@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { Topbar } from '@/components/layout/Topbar';
-import { LedgerView } from '@/components/accounting/LedgerView';
+import { LedgerView, type LedgerMovementView } from '@/components/accounting/LedgerView';
 import { getTenantContext } from '@/lib/auth/context';
 
 export const dynamic = 'force-dynamic';
@@ -28,7 +28,7 @@ export default async function LedgerPage(props: {
         naturaleza: c.naturaleza
     }));
 
-    let movements: any[] = [];
+    let movements: LedgerMovementView[] = [];
     let totalDebe = 0;
     let totalHaber = 0;
     let saldoFinal = 0;

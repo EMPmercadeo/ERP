@@ -16,8 +16,8 @@ async function main() {
                 const cost = p.costoUnitario.toNumber();
                 const price = p.precioVenta.toNumber();
                 console.log(`Product: ID=${p.id}, Code=${p.codigoInterno}, Desc=${p.descripcion.substring(0, 20)}, Cost=${cost}, Price=${price}, Active=${p.activo}`);
-            } catch (err: any) {
-                console.error(`!!! CRASH on Product ID=${p.id}:`, err.message);
+            } catch (err: unknown) {
+                console.error(`!!! CRASH on Product ID=${p.id}:`, err instanceof Error ? err.message : err);
             }
         }
 
@@ -40,7 +40,7 @@ async function main() {
         for (const item of invoiceItems) {
             console.log(`Item ID=${item.id}, Factura=${item.factura?.numeroCompleto || 'NULL'}, Cliente=${item.factura?.cliente?.razonSocial || 'NULL'}`);
         }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('Error querying DB:', e);
     }
 }

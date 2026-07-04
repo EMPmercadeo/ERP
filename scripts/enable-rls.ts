@@ -30,8 +30,8 @@ async function main() {
             console.log(`Applying RLS to table: ${table}...`);
             await prisma.$executeRawUnsafe(`ALTER TABLE "${table}" ENABLE ROW LEVEL SECURITY;`);
             console.log(`✅ RLS habilitado en "${table}"`);
-        } catch (error: any) {
-            console.error(`❌ Error al habilitar RLS en "${table}":`, error.message || error);
+        } catch (error: unknown) {
+            console.error(`❌ Error al habilitar RLS en "${table}":`, error instanceof Error ? error.message : error);
         }
     }
 

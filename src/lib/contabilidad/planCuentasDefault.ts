@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 export interface CuentaTemplate {
   codigo: string;
   nombre: string;
@@ -73,7 +75,7 @@ export const PLAN_CUENTAS_DEFAULT: CuentaTemplate[] = [
   { codigo: "6.3.02", nombre: "Comisiones Bancarias", tipo: "GASTO", naturaleza: "DEUDORA", nivel: 3, padre: "6.3", aceptaMovimiento: true },
 ];
 
-export async function crearPlanCuentasParaEmpresa(tx: any, empresaId: string) {
+export async function crearPlanCuentasParaEmpresa(tx: Prisma.TransactionClient, empresaId: string) {
   const yaExiste = await tx.planCuentas.findFirst({ where: { empresaId } });
   if (yaExiste) return;
 
