@@ -10,69 +10,72 @@ datasource db {
 }
 
 model Empresa {
-  id                 String       @id @default(cuid())
-  ruc                String       @unique
-  dv                 String
-  razonSocial        String
-  nombreComercial    String?
-  direccion          String
-  telefono           String?
-  email              String?
-  logo               String?
-  ambienteDgi        String       @default("1")
-  certificadoDgi     String?
-  usuarioPac         String?
-  passwordPac        String?
-  planType           String       @default("free")
-  fiscalEnabled      Boolean      @default(false)
-  subscriptionStatus String       @default("active")
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
-  webhookToken       String?
-  webhookUrl         String?
-  whatsappPhone      String?
-  whatsappToken      String?
-  cajas              Caja[]
-  clientes           Cliente[]
-  cotizaciones       Cotizacion[]
-  facturas           Factura[]
-  pagos              Pago[]
-  productos          Producto[]
-  secuencias         Secuencia[]
-  sucursales         Sucursal[]
-  usuarios           Usuario[]
-  proveedores        Proveedor[]
-  compras            Compra[]
-  pagosProveedores   PagoProveedor[]
-  subscription       Subscription?
-  documentUsages     DocumentUsage[]
-  posIntegrations    PosIntegration[]
-  posSyncLogs        PosSyncLog[]
-  productImages      ProductImage[]
-  pedidosVenta       PedidoVenta[]
-  albaranesVenta     AlbaranVenta[]
-  movimientosInventario MovimientoInventario[]
+  id                        String                   @id @default(cuid())
+  ruc                       String                   @unique
+  dv                        String
+  razonSocial               String
+  nombreComercial           String?
+  direccion                 String
+  telefono                  String?
+  email                     String?
+  logo                      String?
+  ambienteDgi               String                   @default("1")
+  certificadoDgi            String?
+  usuarioPac                String?
+  passwordPac               String?
+  planType                  String                   @default("free")
+  fiscalEnabled             Boolean                  @default(false)
+  subscriptionStatus        String                   @default("active")
+  createdAt                 DateTime                 @default(now())
+  updatedAt                 DateTime                 @updatedAt
+  webhookToken              String?
+  webhookUrl                String?
+  whatsappPhone             String?
+  whatsappToken             String?
+  cajas                     Caja[]
+  clientes                  Cliente[]
+  cotizaciones              Cotizacion[]
+  facturas                  Factura[]
+  pagos                     Pago[]
+  productos                 Producto[]
+  secuencias                Secuencia[]
+  sucursales                Sucursal[]
+  usuarios                  Usuario[]
+  proveedores               Proveedor[]
+  compras                   Compra[]
+  pagosProveedores          PagoProveedor[]
+  subscription              Subscription?
+  documentUsages            DocumentUsage[]
+  posIntegrations           PosIntegration[]
+  posSyncLogs               PosSyncLog[]
+  productImages             ProductImage[]
+  pedidosVenta              PedidoVenta[]
+  albaranesVenta            AlbaranVenta[]
+  movimientosInventario     MovimientoInventario[]
   historialEstadosAlbaranes AlbaranEstadoHistorial[]
+  planCuentas               PlanCuentas[]
+  asientoContables          AsientoContable[]
+  periodoContables          PeriodoContable[]
 
   @@index([createdAt])
 }
 
 model Sucursal {
-  id           String       @id @default(cuid())
-  empresaId    String
-  codigo       String
-  nombre       String
-  direccion    String
-  activa       Boolean      @default(true)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  cajas        Caja[]
+  id             String         @id @default(cuid())
+  empresaId      String
+  codigo         String
+  nombre         String
+  direccion      String
+  activa         Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  cajas          Caja[]
   cotizaciones   Cotizacion[]
   facturas       Factura[]
   secuencias     Secuencia[]
   pedidosVenta   PedidoVenta[]
   albaranesVenta AlbaranVenta[]
-  empresa        Empresa      @relation(fields: [empresaId], references: [id])
+  empresa        Empresa        @relation(fields: [empresaId], references: [id])
 
   @@unique([empresaId, codigo])
   @@index([empresaId])
@@ -114,35 +117,36 @@ model Secuencia {
 }
 
 model Usuario {
-  id           String       @id @default(cuid())
-  empresaId    String
-  email        String       @unique
-  passwordHash String
-  nombre       String
-  rol          String       @default("vendedor")
-  activo       Boolean      @default(true)
-  googleId     String?      @unique
-  avatar       String?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  lastLogin    DateTime?
-  auditorias   Auditoria[]
-  cotizaciones Cotizacion[]
-  facturas     Factura[]    @relation("FacturaCreador")
-  pagos            Pago[]
-  comprasCreadas   Compra[]          @relation("CompraCreador")
-  pagosProveedores PagoProveedor[]   @relation("PagoProveedorUsuario")
-  pedidosVenta     PedidoVenta[]     @relation("PedidoCreador")
-  albaranesVenta   AlbaranVenta[]    @relation("AlbaranCreador")
-  albaranesResponsable AlbaranVenta[] @relation("AlbaranResponsable")
+  id                          String                   @id @default(cuid())
+  empresaId                   String
+  email                       String                   @unique
+  passwordHash                String
+  nombre                      String
+  rol                         String                   @default("vendedor")
+  activo                      Boolean                  @default(true)
+  googleId                    String?                  @unique
+  avatar                      String?
+  createdAt                   DateTime                 @default(now())
+  updatedAt                   DateTime                 @updatedAt
+  lastLogin                   DateTime?
+  auditorias                  Auditoria[]
+  cotizaciones                Cotizacion[]
+  facturas                    Factura[]                @relation("FacturaCreador")
+  pagos                       Pago[]
+  comprasCreadas              Compra[]                 @relation("CompraCreador")
+  pagosProveedores            PagoProveedor[]          @relation("PagoProveedorUsuario")
+  pedidosVenta                PedidoVenta[]            @relation("PedidoCreador")
+  albaranesVenta              AlbaranVenta[]           @relation("AlbaranCreador")
+  albaranesResponsable        AlbaranVenta[]           @relation("AlbaranResponsable")
   historialEstadosModificados AlbaranEstadoHistorial[]
-  empresa          Empresa           @relation(fields: [empresaId], references: [id])
+  empresa                     Empresa                  @relation(fields: [empresaId], references: [id])
+  asientoContables            AsientoContable[]
 
   @@index([empresaId])
 }
 
 model Cliente {
-  id              String       @id @default(cuid())
+  id              String         @id @default(cuid())
   empresaId       String
   tipoRuc         String
   ruc             String
@@ -152,14 +156,14 @@ model Cliente {
   direccion       String?
   email           String?
   telefono        String?
-  limiteCredito   Decimal      @default(0)
-  saldoPendiente  Decimal      @default(0)
-  saldoAFavor     Decimal      @default(0)
-  condicionPago   String       @default("Contado")
-  estado          String       @default("activo")
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  empresa         Empresa      @relation(fields: [empresaId], references: [id])
+  limiteCredito   Decimal        @default(0)
+  saldoPendiente  Decimal        @default(0)
+  saldoAFavor     Decimal        @default(0)
+  condicionPago   String         @default("Contado")
+  estado          String         @default("activo")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  empresa         Empresa        @relation(fields: [empresaId], references: [id])
   cotizaciones    Cotizacion[]
   facturas        Factura[]
   pagos           Pago[]
@@ -171,7 +175,7 @@ model Cliente {
 }
 
 model Producto {
-  id               String           @id @default(cuid())
+  id               String                 @id @default(cuid())
   empresaId        String
   codigoInterno    String
   codigoBarras     String?
@@ -179,20 +183,20 @@ model Producto {
   descripcionLarga String?
   costoUnitario    Decimal
   precioVenta      Decimal
-  codigoTasaItbms  String           @default("00")
-  unidadMedida     String           @default("UND")
-  activo           Boolean          @default(true)
-  stockActual      Int              @default(0)
-  stockMinimo      Int              @default(0)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  codigoTasaItbms  String                 @default("00")
+  unidadMedida     String                 @default("UND")
+  activo           Boolean                @default(true)
+  stockActual      Int                    @default(0)
+  stockMinimo      Int                    @default(0)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
   imagenUrl        String?
   cotizacionItems  CotizacionItem[]
   items            FacturaItem[]
   compraItems      CompraItem[]
   pedidoItems      PedidoVentaItem[]
   albaranItems     AlbaranVentaItem[]
-  empresa          Empresa          @relation(fields: [empresaId], references: [id])
+  empresa          Empresa                @relation(fields: [empresaId], references: [id])
   productImages    ProductImage[]
   movimientos      MovimientoInventario[]
 
@@ -201,7 +205,7 @@ model Producto {
 }
 
 model Factura {
-  id               String        @id @default(cuid())
+  id               String         @id @default(cuid())
   empresaId        String
   sucursalId       String
   cajaId           String
@@ -209,16 +213,16 @@ model Factura {
   creadorId        String
   tipoDocumento    String
   numeroSecuencial Int
-  numeroCompleto   String        @unique
-  fechaEmision     DateTime      @default(now())
+  numeroCompleto   String         @unique
+  fechaEmision     DateTime       @default(now())
   fechaVencimiento DateTime?
   subtotal         Decimal
-  totalDescuento   Decimal       @default(0)
+  totalDescuento   Decimal        @default(0)
   totalItbms       Decimal
   totalNeto        Decimal
-  totalPagado      Decimal       @default(0)
+  totalPagado      Decimal        @default(0)
   saldoPendiente   Decimal
-  estadoDgi        String        @default("borrador")
+  estadoDgi        String         @default("borrador")
   cufe             String?
   qrUrl            String?
   xmlContent       String?
@@ -226,16 +230,16 @@ model Factura {
   errorDgi         String?
   facturaOrigenId  String?
   motivoAnulacion  String?
-  source           String        @default("manual")
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  caja             Caja          @relation(fields: [cajaId], references: [id])
-  cliente          Cliente       @relation(fields: [clienteId], references: [id])
-  creador          Usuario       @relation("FacturaCreador", fields: [creadorId], references: [id])
-  empresa          Empresa       @relation(fields: [empresaId], references: [id])
-  facturaOrigen    Factura?      @relation("NotasCredito", fields: [facturaOrigenId], references: [id])
-  notasCredito     Factura[]     @relation("NotasCredito")
-  sucursal         Sucursal      @relation(fields: [sucursalId], references: [id])
+  source           String         @default("manual")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  caja             Caja           @relation(fields: [cajaId], references: [id])
+  cliente          Cliente        @relation(fields: [clienteId], references: [id])
+  creador          Usuario        @relation("FacturaCreador", fields: [creadorId], references: [id])
+  empresa          Empresa        @relation(fields: [empresaId], references: [id])
+  facturaOrigen    Factura?       @relation("NotasCredito", fields: [facturaOrigenId], references: [id])
+  notasCredito     Factura[]      @relation("NotasCredito")
+  sucursal         Sucursal       @relation(fields: [sucursalId], references: [id])
   items            FacturaItem[]
   pagos            Pago[]
   albaranes        AlbaranVenta[]
@@ -370,39 +374,39 @@ model Plan {
 }
 
 model Subscription {
-  id                     String    @id @default(cuid())
-  empresaId              String    @unique
+  id                     String   @id @default(cuid())
+  empresaId              String   @unique
   planId                 String
   status                 String
   currentPeriodStart     DateTime
   currentPeriodEnd       DateTime
   paymentProvider        String
   externalSubscriptionId String?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
-  empresa                Empresa   @relation(fields: [empresaId], references: [id])
-  plan                   Plan      @relation(fields: [planId], references: [id])
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  empresa                Empresa  @relation(fields: [empresaId], references: [id])
+  plan                   Plan     @relation(fields: [planId], references: [id])
 }
 
 model DocumentUsage {
-  id                       String   @id @default(cuid())
-  empresaId                String
-  month                    Int
-  year                     Int
-  includedLimit            Int
-  usedDocuments            Int      @default(0)
-  extraDocumentsPurchased  Int      @default(0)
-  remainingDocuments       Int
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
-  empresa                  Empresa  @relation(fields: [empresaId], references: [id])
+  id                      String   @id @default(cuid())
+  empresaId               String
+  month                   Int
+  year                    Int
+  includedLimit           Int
+  usedDocuments           Int      @default(0)
+  extraDocumentsPurchased Int      @default(0)
+  remainingDocuments      Int
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  empresa                 Empresa  @relation(fields: [empresaId], references: [id])
 
   @@unique([empresaId, month, year])
   @@index([empresaId])
 }
 
 model PosIntegration {
-  id                    String        @id @default(cuid())
+  id                    String       @id @default(cuid())
   empresaId             String
   providerName          String
   providerSlug          String
@@ -410,32 +414,32 @@ model PosIntegration {
   apiSecretEncrypted    String?
   accessTokenEncrypted  String?
   refreshTokenEncrypted String?
-  status                String        @default("pending")
+  status                String       @default("pending")
   lastSyncAt            DateTime?
-  syncProductsEnabled   Boolean       @default(false)
-  syncSalesEnabled      Boolean       @default(false)
-  syncInventoryEnabled  Boolean       @default(false)
-  isPrimary             Boolean       @default(false)
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
-  empresa               Empresa       @relation(fields: [empresaId], references: [id])
+  syncProductsEnabled   Boolean      @default(false)
+  syncSalesEnabled      Boolean      @default(false)
+  syncInventoryEnabled  Boolean      @default(false)
+  isPrimary             Boolean      @default(false)
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  empresa               Empresa      @relation(fields: [empresaId], references: [id])
   syncLogs              PosSyncLog[]
 
   @@index([empresaId])
 }
 
 model PosSyncLog {
-  id                 String         @id @default(cuid())
-  empresaId          String
-  posIntegrationId   String
-  syncType           String
-  status             String
-  message            String?
-  recordsProcessed   Int            @default(0)
-  errorDetails       String?
-  createdAt          DateTime       @default(now())
-  empresa            Empresa        @relation(fields: [empresaId], references: [id])
-  posIntegration     PosIntegration @relation(fields: [posIntegrationId], references: [id], onDelete: Cascade)
+  id               String         @id @default(cuid())
+  empresaId        String
+  posIntegrationId String
+  syncType         String
+  status           String
+  message          String?
+  recordsProcessed Int            @default(0)
+  errorDetails     String?
+  createdAt        DateTime       @default(now())
+  empresa          Empresa        @relation(fields: [empresaId], references: [id])
+  posIntegration   PosIntegration @relation(fields: [posIntegrationId], references: [id], onDelete: Cascade)
 
   @@index([empresaId])
 }
@@ -608,24 +612,24 @@ model PedidoVentaItem {
 }
 
 model AlbaranVenta {
-  id              String             @id @default(cuid())
-  empresaId       String
-  sucursalId      String
-  cajaId          String
-  clienteId       String
-  creadorId       String
-  numero          String             @unique
-  fechaEmision    DateTime           @default(now())
-  subtotal        Decimal
-  totalDescuento  Decimal            @default(0)
-  totalItbms      Decimal
-  totalNeto       Decimal
-  estado          String             @default("pendiente") // pendiente | entregado | facturado | anulado
-  pedidoId        String?
-  facturaId       String?
-  cotizacionId    String?
-  firmaClienteUrl String?
-  observaciones   String?
+  id                   String                   @id @default(cuid())
+  empresaId            String
+  sucursalId           String
+  cajaId               String
+  clienteId            String
+  creadorId            String
+  numero               String                   @unique
+  fechaEmision         DateTime                 @default(now())
+  subtotal             Decimal
+  totalDescuento       Decimal                  @default(0)
+  totalItbms           Decimal
+  totalNeto            Decimal
+  estado               String                   @default("pendiente") // pendiente | entregado | facturado | anulado
+  pedidoId             String?
+  facturaId            String?
+  cotizacionId         String?
+  firmaClienteUrl      String?
+  observaciones        String?
   fechaEstimadaEntrega DateTime?
   fechaRealEntrega     DateTime?
   direccionEntrega     String?
@@ -634,19 +638,19 @@ model AlbaranVenta {
   notasInternas        String?
   notasCliente         String?
   responsableId        String?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  caja            Caja               @relation(fields: [cajaId], references: [id])
-  cliente         Cliente            @relation(fields: [clienteId], references: [id])
-  creador         Usuario            @relation("AlbaranCreador", fields: [creadorId], references: [id])
-  responsable     Usuario?           @relation("AlbaranResponsable", fields: [responsableId], references: [id])
-  empresa         Empresa            @relation(fields: [empresaId], references: [id])
-  sucursal        Sucursal           @relation(fields: [sucursalId], references: [id])
-  pedido          PedidoVenta?       @relation(fields: [pedidoId], references: [id])
-  factura         Factura?           @relation(fields: [facturaId], references: [id])
-  cotizacion      Cotizacion?        @relation(fields: [cotizacionId], references: [id])
-  items           AlbaranVentaItem[]
-  historialEstados AlbaranEstadoHistorial[]
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  caja                 Caja                     @relation(fields: [cajaId], references: [id])
+  cliente              Cliente                  @relation(fields: [clienteId], references: [id])
+  creador              Usuario                  @relation("AlbaranCreador", fields: [creadorId], references: [id])
+  responsable          Usuario?                 @relation("AlbaranResponsable", fields: [responsableId], references: [id])
+  empresa              Empresa                  @relation(fields: [empresaId], references: [id])
+  sucursal             Sucursal                 @relation(fields: [sucursalId], references: [id])
+  pedido               PedidoVenta?             @relation(fields: [pedidoId], references: [id])
+  factura              Factura?                 @relation(fields: [facturaId], references: [id])
+  cotizacion           Cotizacion?              @relation(fields: [cotizacionId], references: [id])
+  items                AlbaranVentaItem[]
+  historialEstados     AlbaranEstadoHistorial[]
 
   @@index([empresaId, fechaEmision])
   @@index([clienteId])
@@ -656,20 +660,20 @@ model AlbaranVenta {
 }
 
 model AlbaranVentaItem {
-  id              String       @id @default(cuid())
-  albaranId       String
-  productoId      String
-  descripcion     String
-  cantidad        Decimal
-  cantidadPedida  Decimal      @default(0)
-  cantidadPendiente Decimal    @default(0)
-  precioUnitario  Decimal
-  descuento       Decimal      @default(0)
-  codigoTasaItbms String
-  montoItbms      Decimal
-  montoTotal      Decimal
-  albaran         AlbaranVenta @relation(fields: [albaranId], references: [id], onDelete: Cascade)
-  producto        Producto     @relation(fields: [productoId], references: [id])
+  id                String       @id @default(cuid())
+  albaranId         String
+  productoId        String
+  descripcion       String
+  cantidad          Decimal
+  cantidadPedida    Decimal      @default(0)
+  cantidadPendiente Decimal      @default(0)
+  precioUnitario    Decimal
+  descuento         Decimal      @default(0)
+  codigoTasaItbms   String
+  montoItbms        Decimal
+  montoTotal        Decimal
+  albaran           AlbaranVenta @relation(fields: [albaranId], references: [id], onDelete: Cascade)
+  producto          Producto     @relation(fields: [productoId], references: [id])
 
   @@index([albaranId])
   @@index([productoId])
@@ -693,21 +697,93 @@ model AlbaranEstadoHistorial {
 }
 
 model MovimientoInventario {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   empresaId    String
   productoId   String
-  tipo         String    // entrada | salida
+  tipo         String // entrada | salida
   cantidad     Int
-  concepto     String    // compra | venta | albaran_entrega | albaran_anulado | ajuste
-  referenciaId String?   // ID del documento relacionado
-  fecha        DateTime  @default(now())
-  createdAt    DateTime  @default(now())
-  producto     Producto  @relation(fields: [productoId], references: [id], onDelete: Cascade)
-  empresa      Empresa   @relation(fields: [empresaId], references: [id])
+  concepto     String // compra | venta | albaran_entrega | albaran_anulado | ajuste
+  referenciaId String? // ID del documento relacionado
+  fecha        DateTime @default(now())
+  createdAt    DateTime @default(now())
+  producto     Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  empresa      Empresa  @relation(fields: [empresaId], references: [id])
 
   @@index([empresaId])
   @@index([productoId])
   @@index([fecha])
 }
 
+model PlanCuentas {
+  id               String                 @id @default(cuid())
+  empresaId        String
+  codigo           String
+  nombre           String
+  tipo             String // ACTIVO, PASIVO, PATRIMONIO, INGRESO, GASTO, COSTO
+  naturaleza       String // DEUDORA o ACREEDORA
+  cuentaPadreId    String?
+  nivel            Int
+  aceptaMovimiento Boolean                @default(true)
+  activa           Boolean                @default(true)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  empresa          Empresa                @relation(fields: [empresaId], references: [id])
+  cuentaPadre      PlanCuentas?           @relation("JerarquiaCuentas", fields: [cuentaPadreId], references: [id])
+  subCuentas       PlanCuentas[]          @relation("JerarquiaCuentas")
+  lineasAsiento    AsientoContableLinea[]
 
+  @@unique([empresaId, codigo])
+  @@index([empresaId])
+}
+
+model AsientoContable {
+  id         String                 @id @default(cuid())
+  empresaId  String
+  numero     Int
+  fecha      DateTime
+  concepto   String
+  origen     String // FACTURA, COBRO, COMPRA, PAGO_PROVEEDOR, AJUSTE_INVENTARIO, MANUAL
+  origenId   String?
+  totalDebe  Decimal
+  totalHaber Decimal
+  estado     String                 @default("CONFIRMADO") // BORRADOR, CONFIRMADO, ANULADO
+  usuarioId  String
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+  empresa    Empresa                @relation(fields: [empresaId], references: [id])
+  usuario    Usuario                @relation(fields: [usuarioId], references: [id])
+  lineas     AsientoContableLinea[]
+
+  @@unique([empresaId, numero])
+  @@index([empresaId])
+  @@index([fecha])
+}
+
+model AsientoContableLinea {
+  id          String          @id @default(cuid())
+  asientoId   String
+  cuentaId    String
+  debe        Decimal         @default(0)
+  haber       Decimal         @default(0)
+  descripcion String?
+  asiento     AsientoContable @relation(fields: [asientoId], references: [id], onDelete: Cascade)
+  cuenta      PlanCuentas     @relation(fields: [cuentaId], references: [id])
+
+  @@index([asientoId])
+  @@index([cuentaId])
+}
+
+model PeriodoContable {
+  id          String    @id @default(cuid())
+  empresaId   String
+  anio        Int
+  mes         Int
+  cerrado     Boolean   @default(false)
+  fechaCierre DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  empresa     Empresa   @relation(fields: [empresaId], references: [id])
+
+  @@unique([empresaId, anio, mes])
+  @@index([empresaId])
+}

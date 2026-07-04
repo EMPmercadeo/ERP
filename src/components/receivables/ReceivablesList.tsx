@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import {
     Search,
     ChevronLeft,
@@ -10,20 +9,16 @@ import {
     ArrowUpDown,
     RotateCcw,
     X,
-    Calendar,
     DollarSign,
     Loader2,
-    Plus,
-    FileText,
     TrendingDown,
-    AlertCircle,
     Check
 } from 'lucide-react';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
     Table,
@@ -110,7 +105,7 @@ export function ReceivablesList({
     const [referencia, setReferencia] = useState<string>('');
     const [isSavingPayment, setIsSavingPayment] = useState<boolean>(false);
 
-    const createQueryString = (params: Record<string, string | null>) => {
+    const createQueryString = useCallback((params: Record<string, string | null>) => {
         const newParams = new URLSearchParams(searchParams.toString());
         for (const [key, value] of Object.entries(params)) {
             if (value === null) {
@@ -120,7 +115,7 @@ export function ReceivablesList({
             }
         }
         return newParams.toString();
-    };
+    }, [searchParams]);
 
     // Debounce search update to URL
     useEffect(() => {
@@ -132,7 +127,7 @@ export function ReceivablesList({
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [globalFilter]);
+    }, [globalFilter, pathname, router, searchParams, createQueryString]);
 
     // Update state when activeInvoice is selected
     useEffect(() => {
@@ -179,7 +174,7 @@ export function ReceivablesList({
             } else {
                 toast.error(res.error || 'Error al registrar el pago.');
             }
-        } catch (error) {
+        } catch {
             toast.error('Error de red al intentar registrar el pago.');
         } finally {
             setIsSavingPayment(false);

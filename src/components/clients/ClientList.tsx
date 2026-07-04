@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -132,7 +132,7 @@ export function ClientList({
     );
     const [globalFilter, setGlobalFilter] = useState(initialSearch);
 
-    const createQueryString = (params: Record<string, string | null>) => {
+    const createQueryString = useCallback((params: Record<string, string | null>) => {
         const newParams = new URLSearchParams(searchParams.toString());
         for (const [key, value] of Object.entries(params)) {
             if (value === null) {
@@ -142,7 +142,7 @@ export function ClientList({
             }
         }
         return newParams.toString();
-    };
+    }, [searchParams]);
 
     // Debounce search update to URL
     useEffect(() => {
@@ -154,9 +154,9 @@ export function ClientList({
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [globalFilter]);
+    }, [globalFilter, pathname, router, searchParams, createQueryString]);
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = useCallback(async (id: string) => {
         if (confirm('¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer.')) {
             try {
                 const res = await deleteClient(id);
@@ -166,11 +166,11 @@ export function ClientList({
                 } else {
                     toast.error(res.message);
                 }
-            } catch (error) {
+            } catch {
                 toast.error('Error al intentar eliminar el cliente.');
             }
         }
-    };
+    }, [router]);
 
     const columns: ColumnDef<ClientData>[] = useMemo(() => [
         {
@@ -302,7 +302,7 @@ export function ClientList({
                 );
             },
         },
-    ], []);
+    ], [handleDelete, router]);
 
     const [isMounted, setIsMounted] = useState(false);
 

@@ -2,7 +2,6 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
-import { getTenantContext } from '@/lib/auth/context';
 
 async function getOrInitializeUsage(companyId: string) {
     const now = new Date();
@@ -129,15 +128,11 @@ export async function canUsePOSIntegration(companyId: string): Promise<boolean> 
     return company.planType !== 'free' && company.planType !== 'emprendedor';
 }
 
-export async function canUploadProductImage(companyId: string): Promise<boolean> {
+export async function canUploadProductImage(): Promise<boolean> {
     return true; // Images are a standard feature in all plans
 }
 
 export async function incrementDocumentUsage(companyId: string) {
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    const year = now.getFullYear();
-
     const usage = await getOrInitializeUsage(companyId);
 
     const nextUsed = usage.usedDocuments + 1;

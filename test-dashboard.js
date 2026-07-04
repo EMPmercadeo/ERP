@@ -1,6 +1,7 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
+import { subHours, subDays, subMonths, startOfDay, endOfDay, parseISO } from 'date-fns';
+
 const prisma = new PrismaClient();
-const { subHours, subDays, subMonths, startOfDay, endOfDay, parseISO } = require('date-fns');
 
 async function getDashboardData(searchParams) {
     const period = (searchParams?.period) || '3m';
@@ -42,8 +43,7 @@ async function getDashboardData(searchParams) {
         totalSalesAgg,
         totalPaymentsAgg,
         totalReceivablesAgg,
-        totalOverdueAgg,
-        totalInvoices
+        totalOverdueAgg
     ] = await Promise.all([
         prisma.factura.findMany({
             where: whereDate,
@@ -76,8 +76,7 @@ async function getDashboardData(searchParams) {
                 saldoPendiente: { gt: 0 },
                 estadoDgi: { not: 'anulada' }
             }
-        }),
-        prisma.factura.count({ where: whereDate })
+        })
     ]);
 
     // 2. Fetch Previous Data for Trends
@@ -231,6 +230,12 @@ async function getDashboardData(searchParams) {
 
     console.log('Mapping completed successfully.');
     console.log('Sample invoice paymentStatus:', mappedInvoices[0]?.paymentStatus);
+    console.log('TrendData count:', trendData.length);
+    console.log('Sparks facturado count:', sparks.facturado.length);
+    console.log('SalesChange:', salesChange);
+    console.log('CobradoChange:', cobradoChange);
+    console.log('PendienteChange:', pendienteChange);
+    console.log('VencidoChange:', vencidoChange);
 }
 
 async function main() {

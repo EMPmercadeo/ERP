@@ -2,16 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import {
-    Download,
-    TrendingUp,
     Users,
     Package,
     DollarSign,
     Percent,
     ArrowLeft,
     FileText,
-    Calendar,
-    Clock,
     ChevronLeft,
     ChevronRight,
     ArrowUpRight,

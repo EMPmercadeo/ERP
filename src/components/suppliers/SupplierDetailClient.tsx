@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
     ArrowLeft,
     Mail,
@@ -17,7 +16,6 @@ import {
 } from 'lucide-react';
 import { Topbar } from '@/components/layout/Topbar';
 import { ContentContainer } from '@/components/layout/Content';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -95,7 +93,6 @@ function formatDate(dateStr: string) {
 }
 
 export function SupplierDetailClient({ supplier, purchases, payments, initialTab }: SupplierDetailProps) {
-    const router = useRouter();
     const [activeTab, setActiveTab] = useState<'info' | 'purchases' | 'payments' | 'statement'>(
         (initialTab === 'purchases' || initialTab === 'payments' || initialTab === 'statement') ? initialTab : 'info'
     );
