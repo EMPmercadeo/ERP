@@ -51,3 +51,6 @@ next-env.d.ts
 
 # local verification screenshots
 dashboard-after-*.png
+
+.vercel
+.env*
