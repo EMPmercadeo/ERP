@@ -55,9 +55,8 @@ export default function RootLayout({
 async function ImpersonationWrapper() {
   const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
-  const sessionEmail = cookieStore.get('session_email')?.value;
-
-  if (!sessionEmail || sessionEmail === 'guest') {
+  const sessionToken = cookieStore.get('session_token')?.value;
+  if (!sessionToken) {
     return null;
   }
 

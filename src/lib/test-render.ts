@@ -1,3 +1,4 @@
+// DEV ONLY - ya no funcional tras la migración a session_token. No usar contra producción.
 import { prisma } from './db';
 
 async function test() {
