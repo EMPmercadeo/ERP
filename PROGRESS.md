@@ -207,6 +207,164 @@ Resultado de verificación (`npx eslint` sobre los 4 archivos):
 
 ---
 
+# FASE 2 — Bancos y Conciliación
+
+## [2026-07-04 05:09] Tarea 2.1: Modelo CuentaBancaria + MovimientoBancario
+Estado: OK
+Archivos modificados:
+- [schema.prisma](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/prisma/schema.prisma) — modelos nuevos `CuentaBancaria` y `MovimientoBancario`; relaciones inversas agregadas en `Empresa` (`cuentasBancarias`, `movimientosBancarios`), `PlanCuentas` (`cuentasBancarias`) y `AsientoContable` (`movimientosBancarios`).
+- Migración `prisma/migrations/20260704050607_add_bancos/migration.sql` (generada con `prisma migrate dev --create-only`, aplicada con `prisma migrate deploy`).
+- Migración adicional `prisma/migrations/20260704050915_add_deny_all_policies_bancos/migration.sql` — decisión confirmada con el usuario: las tablas nuevas no tenían la política RLS "deny all" que sí tiene el resto de tablas del proyecto (patrón de `20260630230000_add_deny_all_policies` + `enable-rls.ts`). Se agregó `ENABLE ROW LEVEL SECURITY` + `CREATE POLICY "Deny client access" ... USING (false)` para ambas tablas nuevas.
+SQL de la migración add_bancos (100% aditivo, revisado antes de aplicar):
+```sql
+CREATE TABLE "CuentaBancaria" ( ... );
+CREATE TABLE "MovimientoBancario" ( ... );
+CREATE INDEX "CuentaBancaria_empresaId_idx" ON "CuentaBancaria"("empresaId");
+CREATE INDEX "CuentaBancaria_cuentaContableId_idx" ON "CuentaBancaria"("cuentaContableId");
+CREATE INDEX "MovimientoBancario_empresaId_idx" ON "MovimientoBancario"("empresaId");
+CREATE INDEX "MovimientoBancario_cuentaBancariaId_idx" ON "MovimientoBancario"("cuentaBancariaId");
+CREATE INDEX "MovimientoBancario_asientoContableId_idx" ON "MovimientoBancario"("asientoContableId");
+ALTER TABLE "CuentaBancaria" ADD CONSTRAINT "CuentaBancaria_empresaId_fkey" FOREIGN KEY ("empresaId") REFERENCES "Empresa"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "CuentaBancaria" ADD CONSTRAINT "CuentaBancaria_cuentaContableId_fkey" FOREIGN KEY ("cuentaContableId") REFERENCES "PlanCuentas"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "MovimientoBancario" ADD CONSTRAINT "MovimientoBancario_empresaId_fkey" FOREIGN KEY ("empresaId") REFERENCES "Empresa"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "MovimientoBancario" ADD CONSTRAINT "MovimientoBancario_cuentaBancariaId_fkey" FOREIGN KEY ("cuentaBancariaId") REFERENCES "CuentaBancaria"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "MovimientoBancario" ADD CONSTRAINT "MovimientoBancario_asientoContableId_fkey" FOREIGN KEY ("asientoContableId") REFERENCES "AsientoContable"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+```
+Resultado de `npx prisma migrate deploy` (add_bancos):
+```
+Applying migration `20260704050607_add_bancos`
+All migrations have been successfully applied.
+```
+Resultado de `npx prisma migrate deploy` (add_deny_all_policies_bancos):
+```
+Applying migration `20260704050915_add_deny_all_policies_bancos`
+All migrations have been successfully applied.
+```
+Resultado de npm run build (después de ambas migraciones):
+```
+✓ Compiled successfully in 5.9s
+```
+
+---
+
+## [2026-07-04 05:35] Tarea 2.2: CRUD de cuentas bancarias en /bank-accounts
+Estado: OK
+Archivos modificados/creados:
+- [validations/index.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/validations/index.ts) — agregado `CuentaBancariaSchema`.
+- [bank-accounts.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/actions/bank-accounts.ts) (nuevo) — `createBankAccount`, `updateBankAccount`, `toggleBankAccountStatus`, `deleteBankAccount` (desactiva si tiene movimientos, elimina si no), `getBankAccounts`, `getCuentasContablesBanco`.
+- [bank-accounts/page.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/app/(dashboard)/bank-accounts/page.tsx) (nuevo) — Server Component, patrón idéntico a `suppliers/page.tsx`.
+- [BankAccountList.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/bank-accounts/BankAccountList.tsx), [NewBankAccountModal.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/bank-accounts/NewBankAccountModal.tsx), [EditBankAccountModal.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/bank-accounts/EditBankAccountModal.tsx) (nuevos) — patrón calcado de `SupplierList.tsx` / `NewSupplierModal.tsx` / `EditSupplierModal.tsx`. El selector de cuenta contable filtra por `codigo: { startsWith: '1.1.01' }` y `aceptaMovimiento: true`.
+- [Sidebar.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/layout/Sidebar.tsx) — agregado enlace "Bancos" → `/bank-accounts` (necesario para que la pantalla sea alcanzable desde la navegación, mismo patrón que el resto de módulos).
+Resultado de npm run build:
+```
+✓ Compiled successfully in 7.1s
+```
+Resultado de prueba de verificación (crear, actualizar, eliminar una CuentaBancaria de prueba vinculada a la cuenta 1.1.01.01):
+```
+Cuenta contable encontrada: 1.1.01.01 - Caja General
+CuentaBancaria creada: cmr5wsedw003iqgr824ia9e1h
+PASS: CuentaBancaria guardada correctamente, vinculada a cuenta contable 1.1.01.01.
+PASS: Actualización de CuentaBancaria funcionó correctamente.
+PASS: CuentaBancaria eliminada correctamente (sin movimientos asociados).
+🎉 TODAS LAS PRUEBAS DE 2.2 PASARON CORRECTAMENTE.
+```
+Registro de prueba eliminado al finalizar.
+
+---
+
+## [2026-07-04 05:52] Tarea 2.3: Importación de estado de cuenta (CSV/Excel)
+Estado: OK
+Archivos modificados/creados:
+- [bank-accounts.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/actions/bank-accounts.ts) — agregado `importMovimientosBancarios(cuentaBancariaId, fileName, rows)` (mismo patrón de `importProducts` en `src/app/(dashboard)/products/actions.ts`: recibe filas ya parseadas, valida fila por fila, acumula errores sin abortar el resto) y `getBankAccountDetail(id)`.
+- [ImportMovimientosDialog.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/bank-accounts/ImportMovimientosDialog.tsx) (nuevo) — calcado de `ImportProductsDialog.tsx`: parseo de CSV manual (split por línea/coma) o `.xlsx` con `exceljs` (`workbook.xlsx.load` + `worksheet.eachRow`), enviando solo los datos ya parseados al server action (el archivo nunca se sube directamente).
+- [bank-accounts/[id]/page.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/app/(dashboard)/bank-accounts/[id]/page.tsx) (nuevo) — página de detalle, Server Component.
+- [BankAccountDetailClient.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/bank-accounts/BankAccountDetailClient.tsx) (nuevo) — resumen de cuenta + tabla de movimientos + botón "Importar movimientos" + enlace a "Conciliar" (ruta usada por la Tarea 2.4).
+Lógica de clasificación: `tipo = monto > 0 ? 'DEPOSITO' : 'RETIRO'`, `monto` se guarda siempre en valor absoluto, `conciliado: false`, `origenImportacion: file.name`.
+Resultado de npm run build:
+```
+✓ Compiled successfully in 6.1s
+```
+Resultado de prueba de verificación (CSV real de 5 filas, `scripts/_test_movimientos_2d3.csv`, leído y parseado con la misma lógica del diálogo, luego insertado con la misma lógica del server action):
+```
+CSV leído: 5 filas de datos (excluyendo encabezado).
+Movimientos creados: 5, errores: 0
+PASS: se crearon los 5 MovimientoBancario esperados.
+PASS: "Deposito cliente ABC" → tipo=DEPOSITO, monto=1500 (correcto).
+PASS: "Pago de servicios" (monto -250.50) → tipo=RETIRO, monto=250.5 (correcto, sin signo negativo).
+PASS: todos los movimientos tienen conciliado=false y origenImportacion="_test_movimientos_2d3.csv".
+PASS: 3 depósitos y 2 retiros clasificados correctamente por signo.
+🎉 TODAS LAS PRUEBAS DE 2.3 PASARON CORRECTAMENTE.
+```
+Registros y archivo CSV de prueba eliminados al finalizar.
+
+---
+
+## [2026-07-04 06:10] Tarea 2.4: Conciliación manual /bank-accounts/[id]/reconcile
+Estado: OK
+Archivos modificados/creados:
+- [bank-accounts.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/actions/bank-accounts.ts) — agregado `getReconciliationData(cuentaBancariaId)` y `reconciliarMovimiento(cuentaBancariaId, movimientoBancarioId, asientoContableId)`.
+- [bank-accounts/[id]/reconcile/page.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/app/(dashboard)/bank-accounts/[id]/reconcile/page.tsx) (nuevo) — Server Component.
+- [ReconcileClient.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/bank-accounts/ReconcileClient.tsx) (nuevo) — dos columnas: movimientos bancarios sin conciliar (izquierda) y líneas de asiento elegibles (derecha), selección por click y botón "Conciliar Selección".
+Lógica de elegibilidad (ambos lados, page.tsx y getReconciliationData): `AsientoContableLinea` filtradas por `cuentaId = cuentaBancaria.cuentaContableId` cuyo `AsientoContable` padre cumple `movimientosBancarios: { none: { conciliado: true } }` (relación agregada en la Tarea 2.1) — así un asiento ya conciliado no vuelve a aparecer como candidato.
+`reconciliarMovimiento` valida: la cuenta bancaria pertenece a la empresa, el movimiento no está ya conciliado, el asiento tiene al menos una línea en la cuenta contable vinculada, y el asiento no tiene ya un movimiento conciliado apuntándole (previene doble conciliación) — solo entonces actualiza `conciliado: true, asientoContableId`.
+Resultado de npm run build:
+```
+✓ Compiled successfully in 6.4s
+```
+Resultado de prueba de verificación (asiento de prueba #1 por $500, movimiento bancario de depósito por $500):
+```
+AsientoContable de prueba creado: #1 (cmr5x16us003mqg5cm5r9zigr)
+MovimientoBancario de prueba creado: cmr5x16v2003rqg5carxcb4e0
+PASS: el asiento aparece en la lista de líneas pendientes de conciliar (antes de conciliar).
+Resultado de la conciliación: {"success":true,"message":"Movimiento conciliado correctamente."}
+PASS: la conciliación se ejecutó exitosamente.
+PASS: MovimientoBancario.conciliado=true y asientoContableId=cmr5x16us003mqg5cm5r9zigr guardados correctamente.
+PASS: el asiento ya NO aparece como pendiente de conciliar (evita doble conciliación).
+PASS: se rechazó correctamente la doble conciliación del mismo asiento.
+🎉 TODAS LAS PRUEBAS DE 2.4 PASARON CORRECTAMENTE.
+```
+Registros de prueba eliminados al finalizar.
+
+---
+
+## [2026-07-04 06:28] Tarea 2.5: Flujo de caja proyectado /reports/cash-flow
+Estado: OK
+Verificación previa (requerida por el enunciado): `Factura.fechaVencimiento` **sí existe** en `prisma/schema.prisma` (línea 220), pero es opcional (`DateTime?`, puede ser `null`). `Compra.fechaVencimiento` es obligatorio (`DateTime`, confirmado, línea 502). Por lo tanto se usa `fechaVencimiento` de Factura cuando está presente, y solo se estima `fechaEmision + 30 días` para las filas donde sea `null` (no para todas las facturas).
+Archivos creados:
+- [reports/cash-flow/page.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/app/(dashboard)/reports/cash-flow/page.tsx) — Server Component. Ingresos = `Factura.saldoPendiente` (excluye `estadoDgi: 'anulada'`) agrupado por vencimiento efectivo. Egresos = `Compra.saldoPendiente` (excluye `estadoPago` en `['pagada','anulada']`) agrupado por `fechaVencimiento`.
+- [CashFlowView.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/reports/CashFlowView.tsx) — tabla con ingresos/egresos/neto por período + tarjetas de totales + aviso cuando hubo facturas sin fecha de vencimiento estimadas.
+Decisión de diseño (dentro del alcance, no requiere confirmación de negocio): además de los 3 bloques pedidos (0-30/31-60/61-90 días), se agregaron 2 buckets adicionales — "Vencido" (ya vencido, antes de hoy) y "Más de 90 días" — para que ningún saldo pendiente desaparezca silenciosamente del reporte; los 3 bloques centrales corresponden exactamente a lo solicitado.
+No se agregó enlace de navegación nuevo (mismo criterio que los reportes de la Fase 1d: se accede por URL directa `/reports/cash-flow`, sin entradas de sidebar por sub-reporte).
+Resultado de npm run build:
+```
+✓ Compiled successfully in 5.9s
+```
+Resultado de prueba de verificación (5 facturas de prueba —incluyendo 1 sin fechaVencimiento y 1 anulada—, 3 compras de prueba —incluyendo 1 pagada—):
+```
+Vencido: ingresos=50, egresos=0, neto=50
+0-30 días: ingresos=400, egresos=80, neto=320
+31-60 días: ingresos=200, egresos=0, neto=200
+61-90 días: ingresos=0, egresos=40, neto=-40
+Más de 90 días: ingresos=0, egresos=0, neto=0
+Facturas sin fecha de vencimiento (estimadas): 1
+PASS: bucket Vencido = 50 ingresos (Factura 4), 0 egresos.
+PASS: bucket 0-30 días = 400 ingresos (100+300 estimada), 80 egresos (Compra 1).
+PASS: bucket 31-60 días = 200 ingresos (Factura 2), 0 egresos.
+PASS: bucket 61-90 días = 0 ingresos, 40 egresos (Compra 2).
+PASS: se detectó y estimó correctamente 1 factura sin fechaVencimiento (fallback emision+30).
+PASS: totales correctos (ingresos=650 excluyendo factura anulada de 9999, egresos=120 excluyendo compra pagada de 500).
+🎉 TODAS LAS PRUEBAS DE 2.5 PASARON CORRECTAMENTE.
+```
+Registros de prueba eliminados al finalizar.
+
+---
+
+# FIN FASE 2 — Bancos y Conciliación (5/5 tareas completadas)
+
+Todas las tareas 2.1–2.5 quedaron en estado OK con build limpio y evidencia real de verificación. Por regla del roadmap, NO se avanza a la Fase 3 sin confirmación explícita del usuario.
+
+---
+
 ## Resumen de Cambios (git diff --stat)
 ```
  src/lib/actions/invoices.ts          | 26 ++++++++++++++

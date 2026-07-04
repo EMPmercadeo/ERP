@@ -121,3 +121,14 @@ export const DeliveryNoteSchema = z.object({
     items: z.array(DeliveryNoteItemSchema).min(1, { message: "Agrega al menos un ítem" }),
 });
 
+export const CuentaBancariaSchema = z.object({
+    id: z.string().optional(),
+    nombre: z.string().min(2, { message: "El nombre de la cuenta es requerido" }),
+    banco: z.string().min(2, { message: "El banco es requerido" }),
+    numeroCuenta: z.string().min(1, { message: "El número de cuenta es requerido" }),
+    tipoCuenta: z.enum(["CORRIENTE", "AHORRO"], { message: "Selecciona un tipo de cuenta válido" }),
+    cuentaContableId: z.string().min(1, { message: "Selecciona la cuenta contable vinculada" }),
+    saldoInicial: z.number().default(0),
+    activa: z.boolean().optional().default(true),
+});
+

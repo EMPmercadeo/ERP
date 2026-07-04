@@ -56,6 +56,8 @@ model Empresa {
   planCuentas               PlanCuentas[]
   asientoContables          AsientoContable[]
   periodoContables          PeriodoContable[]
+  cuentasBancarias          CuentaBancaria[]
+  movimientosBancarios      MovimientoBancario[]
 
   @@index([createdAt])
 }
@@ -731,6 +733,7 @@ model PlanCuentas {
   cuentaPadre      PlanCuentas?           @relation("JerarquiaCuentas", fields: [cuentaPadreId], references: [id])
   subCuentas       PlanCuentas[]          @relation("JerarquiaCuentas")
   lineasAsiento    AsientoContableLinea[]
+  cuentasBancarias CuentaBancaria[]
 
   @@unique([empresaId, codigo])
   @@index([empresaId])
@@ -753,6 +756,7 @@ model AsientoContable {
   empresa    Empresa                @relation(fields: [empresaId], references: [id])
   usuario    Usuario                @relation(fields: [usuarioId], references: [id])
   lineas     AsientoContableLinea[]
+  movimientosBancarios MovimientoBancario[]
 
   @@unique([empresaId, numero])
   @@index([empresaId])
@@ -786,4 +790,45 @@ model PeriodoContable {
 
   @@unique([empresaId, anio, mes])
   @@index([empresaId])
+}
+
+model CuentaBancaria {
+  id               String   @id @default(cuid())
+  empresaId        String
+  nombre           String
+  banco            String
+  numeroCuenta     String
+  tipoCuenta       String   // "CORRIENTE" | "AHORRO"
+  cuentaContableId String   // referencia a PlanCuentas (debe ser una cuenta de tipo bancos, código que empiece con "1.1.01")
+  saldoInicial     Decimal  @default(0)
+  activa           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  empresa          Empresa  @relation(fields: [empresaId], references: [id])
+  cuentaContable   PlanCuentas @relation(fields: [cuentaContableId], references: [id])
+  movimientos      MovimientoBancario[]
+
+  @@index([empresaId])
+  @@index([cuentaContableId])
+}
+
+model MovimientoBancario {
+  id                  String    @id @default(cuid())
+  empresaId           String
+  cuentaBancariaId    String
+  fecha               DateTime
+  descripcion         String
+  monto               Decimal
+  tipo                String    // "DEPOSITO" | "RETIRO"
+  referencia          String?
+  conciliado          Boolean   @default(false)
+  asientoContableId   String?
+  origenImportacion   String?
+  createdAt           DateTime  @default(now())
+  empresa             Empresa   @relation(fields: [empresaId], references: [id])
+  cuentaBancaria      CuentaBancaria @relation(fields: [cuentaBancariaId], references: [id])
+  asientoContable     AsientoContable? @relation(fields: [asientoContableId], references: [id])
+
+  @@index([empresaId])
+  @@index([cuentaBancariaId])
+  @@index([asientoContableId])
 }
