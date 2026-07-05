@@ -16,7 +16,8 @@ export async function GET(request: NextRequest) {
                 activo: true,
                 OR: [
                     { descripcion: { contains: query, mode: 'insensitive' } },
-                    { codigoInterno: { contains: query, mode: 'insensitive' } }
+                    { codigoInterno: { contains: query, mode: 'insensitive' } },
+                    { codigoBarras: { contains: query, mode: 'insensitive' } }
                 ]
             },
             select: {

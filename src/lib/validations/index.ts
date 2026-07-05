@@ -78,6 +78,8 @@ export const PurchaseItemSchema = z.object({
     costoUnitario: z.number().min(0, { message: "Costo no puede ser negativo" }),
     codigoTasaItbms: z.string().default("00"),
     descuento: z.number().default(0),
+    numeroLote: z.string().optional().nullable(),
+    fechaVencimiento: z.string().optional().nullable(),
 });
 
 export const PurchaseSchema = z.object({
@@ -132,5 +134,13 @@ export const CuentaBancariaSchema = z.object({
     cuentaContableId: z.string().min(1, { message: "Selecciona la cuenta contable vinculada" }),
     saldoInicial: z.number().default(0),
     activa: z.boolean().optional().default(true),
+});
+
+export const WarehouseSchema = z.object({
+    id: z.string().optional(),
+    codigo: z.string().min(1, { message: "El código es requerido" }),
+    nombre: z.string().min(1, { message: "El nombre es requerido" }),
+    sucursalId: z.string().min(1, { message: "Selecciona una sucursal" }),
+    activa: z.boolean().default(true).optional(),
 });
 

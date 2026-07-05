@@ -17,7 +17,7 @@ export default async function POSPage() {
         }),
         prisma.producto.findMany({
             where: { activo: true, empresaId },
-            select: { id: true, codigoInterno: true, descripcion: true, precioVenta: true, codigoTasaItbms: true, stockActual: true, imagenUrl: true }
+            select: { id: true, codigoInterno: true, codigoBarras: true, descripcion: true, precioVenta: true, codigoTasaItbms: true, stockActual: true, imagenUrl: true }
         }),
         getDocumentUsage(empresaId),
         getBodegas()
@@ -32,6 +32,7 @@ export default async function POSPage() {
     const formattedProducts = products.map(p => ({
         id: p.id,
         codigo: p.codigoInterno,
+        codigoBarras: p.codigoBarras,
         descripcion: p.descripcion,
         precio: p.precioVenta.toNumber(),
         itbms: p.codigoTasaItbms,

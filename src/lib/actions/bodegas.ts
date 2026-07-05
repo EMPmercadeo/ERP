@@ -1,13 +1,174 @@
 'use server';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { getTenantContext } from '@/lib/auth/context';
+import { WarehouseSchema } from '@/lib/validations';
 
 export async function getBodegas() {
     const { empresaId } = await getTenantContext();
     return prisma.bodega.findMany({
-        where: { empresaId, activa: true },
+        where: { empresaId },
+        include: { sucursal: true },
         orderBy: { codigo: 'asc' },
     });
+}
+
+export async function createBodega(prevState: unknown, formData: FormData) {
+    const rawData = {
+        codigo: formData.get('codigo'),
+        nombre: formData.get('nombre'),
+        sucursalId: formData.get('sucursalId'),
+        activa: formData.get('activa') === 'true' || formData.get('activa') === 'on' || formData.get('activa') === null ? true : false,
+    };
+
+    const validatedFields = WarehouseSchema.safeParse(rawData);
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Error de validación. Revisa los campos requeridos.',
+        };
+    }
+
+    const { data } = validatedFields;
+    const { empresaId } = await getTenantContext();
+
+    try {
+        const existe = await prisma.bodega.findFirst({
+            where: {
+                sucursalId: data.sucursalId,
+                codigo: data.codigo,
+            }
+        });
+
+        if (existe) {
+            return {
+                message: 'Ya existe una bodega con ese código en la sucursal seleccionada.',
+            };
+        }
+
+        await prisma.bodega.create({
+            data: {
+                empresaId,
+                sucursalId: data.sucursalId,
+                codigo: data.codigo,
+                nombre: data.nombre,
+                activa: data.activa ?? true,
+            },
+        });
+    } catch (error) {
+        console.error('Database Error:', error);
+        return {
+            message: 'Error de base de datos al crear la bodega.',
+        };
+    }
+
+    revalidatePath('/warehouses');
+    redirect('/warehouses');
+}
+
+export async function updateBodega(id: string, prevState: unknown, formData: FormData) {
+    const rawData = {
+        codigo: formData.get('codigo'),
+        nombre: formData.get('nombre'),
+        sucursalId: formData.get('sucursalId'),
+        activa: formData.get('activa') === 'true' || formData.get('activa') === 'on' ? true : false,
+    };
+
+    const validatedFields = WarehouseSchema.safeParse(rawData);
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Error de validación. Revisa los campos.',
+        };
+    }
+
+    const { data } = validatedFields;
+    const { empresaId } = await getTenantContext();
+
+    try {
+        const existing = await prisma.bodega.findFirst({
+            where: { id, empresaId }
+        });
+        if (!existing) {
+            return {
+                message: 'Bodega no encontrada o acceso denegado.',
+            };
+        }
+
+        if (existing.codigo !== data.codigo || existing.sucursalId !== data.sucursalId) {
+            const existe = await prisma.bodega.findFirst({
+                where: {
+                    sucursalId: data.sucursalId,
+                    codigo: data.codigo,
+                    id: { not: id }
+                }
+            });
+
+            if (existe) {
+                return {
+                    message: 'Ya existe otra bodega con ese código en la sucursal seleccionada.',
+                };
+            }
+        }
+
+        await prisma.bodega.update({
+            where: { id },
+            data: {
+                codigo: data.codigo,
+                nombre: data.nombre,
+                sucursalId: data.sucursalId,
+                activa: data.activa ?? true,
+            },
+        });
+    } catch (error) {
+        console.error('Database Error:', error);
+        return {
+            message: 'Error de base de datos al actualizar la bodega.',
+        };
+    }
+
+    revalidatePath('/warehouses');
+    redirect('/warehouses');
+}
+
+export async function deleteBodega(id: string) {
+    try {
+        const { empresaId } = await getTenantContext();
+        const existing = await prisma.bodega.findFirst({
+            where: { id, empresaId }
+        });
+        if (!existing) {
+            return { success: false, error: 'Bodega no encontrada o acceso denegado.' };
+        }
+
+        const itemsConStock = await prisma.inventarioBodega.count({
+            where: { bodegaId: id, cantidad: { gt: 0 } }
+        });
+
+        if (itemsConStock > 0) {
+            return {
+                success: false,
+                error: 'No se puede eliminar la bodega porque tiene productos con stock disponible.'
+            };
+        }
+
+        await prisma.inventarioBodega.deleteMany({
+            where: { bodegaId: id }
+        });
+
+        await prisma.bodega.delete({
+            where: { id }
+        });
+
+        revalidatePath('/warehouses');
+        return { success: true, message: 'Bodega eliminada exitosamente.' };
+    } catch (error) {
+        console.error('Database Error:', error);
+        return { success: false, error: 'Error al eliminar la bodega.' };
+    }
 }
 
 // Resuelve qué bodega usar: valida la sugerida si viene, o cae a la primera bodega de la empresa.

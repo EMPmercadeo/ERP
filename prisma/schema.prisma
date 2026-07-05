@@ -61,6 +61,9 @@ model Empresa {
   movimientosBancarios      MovimientoBancario[]
   bodegas                   Bodega[]
   inventariosBodega         InventarioBodega[]
+  lotes                     LoteProducto[]
+  kits                      ProductoKit[]
+  componentesKit            ProductoKitComponente[]
 
   @@index([createdAt])
 }
@@ -184,7 +187,7 @@ model Producto {
   id               String                 @id @default(cuid())
   empresaId        String
   codigoInterno    String
-  codigoBarras     String?
+  codigoBarras     String?                 @unique
   descripcion      String
   descripcionLarga String?
   costoUnitario    Decimal
@@ -194,6 +197,8 @@ model Producto {
   activo           Boolean                @default(true)
   stockActual      Int                    @default(0)
   stockMinimo      Int                    @default(0)
+  controlaLotes    Boolean                @default(false)
+  esKit            Boolean                @default(false)
   createdAt        DateTime               @default(now())
   updatedAt        DateTime               @updatedAt
   imagenUrl        String?
@@ -206,6 +211,9 @@ model Producto {
   productImages    ProductImage[]
   movimientos      MovimientoInventario[]
   inventariosBodega InventarioBodega[]
+  lotes            LoteProducto[]
+  kitInfo          ProductoKit?
+  componenteDeKit  ProductoKitComponente[] @relation("ProductoComoComponente")
 
   @@unique([empresaId, codigoInterno])
   @@index([empresaId])
@@ -518,6 +526,7 @@ model Compra {
   proveedor        Proveedor       @relation(fields: [proveedorId], references: [id])
   creador          Usuario         @relation("CompraCreador", fields: [creadorId], references: [id])
   items            CompraItem[]
+  lotes            LoteProducto[]
   pagos            PagoProveedor[]
 
   @@unique([empresaId, proveedorId, numeroFactura])
@@ -849,6 +858,7 @@ model Bodega {
   empresa     Empresa  @relation(fields: [empresaId], references: [id])
   sucursal    Sucursal @relation(fields: [sucursalId], references: [id])
   inventarios InventarioBodega[]
+  lotes       LoteProducto[]
   @@unique([sucursalId, codigo])
   @@index([empresaId])
 }
@@ -866,4 +876,57 @@ model InventarioBodega {
   @@unique([bodegaId, productoId])
   @@index([empresaId])
   @@index([productoId])
+}
+
+model LoteProducto {
+  id                String       @id @default(cuid())
+  empresaId         String
+  productoId        String
+  bodegaId          String
+  numeroLote        String
+  fechaVencimiento  DateTime?
+  cantidadRecibida  Int
+  cantidadDisponible Int
+  fechaRecepcion    DateTime     @default(now())
+  compraId          String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  empresa           Empresa      @relation(fields: [empresaId], references: [id])
+  producto          Producto     @relation(fields: [productoId], references: [id])
+  bodega            Bodega       @relation(fields: [bodegaId], references: [id])
+  compra            Compra?      @relation(fields: [compraId], references: [id])
+
+  @@index([empresaId])
+  @@index([productoId])
+  @@index([bodegaId])
+  @@index([compraId])
+}
+
+model ProductoKit {
+  id          String                 @id @default(cuid())
+  empresaId   String
+  productoId  String                 @unique
+  activo      Boolean                @default(true)
+  empresa     Empresa                @relation(fields: [empresaId], references: [id])
+  producto    Producto               @relation(fields: [productoId], references: [id])
+  componentes ProductoKitComponente[]
+
+  @@index([empresaId])
+}
+
+model ProductoKitComponente {
+  id                  String       @id @default(cuid())
+  empresaId           String
+  productoKitId       String
+  productoComponenteId String
+  cantidad            Int
+
+  empresa             Empresa      @relation(fields: [empresaId], references: [id])
+  productoKit         ProductoKit  @relation(fields: [productoKitId], references: [id])
+  productoComponente  Producto     @relation("ProductoComoComponente", fields: [productoComponenteId], references: [id])
+
+  @@unique([productoKitId, productoComponenteId])
+  @@index([empresaId])
+  @@index([productoComponenteId])
 }

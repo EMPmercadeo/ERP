@@ -148,8 +148,15 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
             const bodegaId = await resolverBodegaId(tx, empresaId, data.bodegaId ?? null);
 
             // Update inventory stock and unit cost for linked products
-            for (const item of processedItems) {
+            for (let i = 0; i < processedItems.length; i++) {
+                const item = processedItems[i];
+                const rawItem = data.items[i];
                 if (item.productoId) {
+                    const prod = await tx.producto.findFirst({
+                        where: { id: item.productoId, empresaId },
+                        select: { controlaLotes: true }
+                    });
+
                     await tx.producto.updateMany({
                         where: { id: item.productoId, empresaId },
                         data: {
@@ -163,6 +170,23 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
                         productoId: item.productoId,
                         delta: Math.round(Number(item.cantidad))
                     });
+
+                    if (prod?.controlaLotes) {
+                        const numeroLote = rawItem.numeroLote || `LOTE-${Date.now()}-${i}`;
+                        const fechaVencimiento = rawItem.fechaVencimiento ? new Date(`${rawItem.fechaVencimiento}T12:00:00`) : null;
+                        await tx.loteProducto.create({
+                            data: {
+                                empresaId,
+                                productoId: item.productoId,
+                                bodegaId,
+                                numeroLote,
+                                fechaVencimiento,
+                                cantidadRecibida: Math.round(Number(item.cantidad)),
+                                cantidadDisponible: Math.round(Number(item.cantidad)),
+                                compraId: nuevaCompra.id
+                            }
+                        });
+                    }
                 }
             }
         });

@@ -532,6 +532,135 @@ Resultado de prueba de verificación:
 ✓ VERIFICACIÓN DE SELECTORES DE UI EXITOSA: El backend provee correctamente la cantidad de bodegas y la UI aplica la visibilidad condicional (solo si hay 2+).
 ```
 
+---
 
+## [2026-07-04 21:24] Tarea 3.0: Gestión de Bodegas
+Estado: OK
+Archivos modificados/creados:
+- [index.ts (validations)](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/validations/index.ts) — se agregó `WarehouseSchema`.
+- [bodegas.ts (actions)](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/actions/bodegas.ts) — se implementaron las Server Actions `createBodega`, `updateBodega` y `deleteBodega`.
+- [NewWarehouseModal.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/warehouses/NewWarehouseModal.tsx) (nuevo) — componente modal para registrar bodegas.
+- [EditWarehouseModal.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/warehouses/EditWarehouseModal.tsx) (nuevo) — componente modal para editar bodegas.
+- [WarehouseList.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/warehouses/WarehouseList.tsx) (nuevo) — componente de lista de bodegas.
+- [page.tsx (warehouses)](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/app/(dashboard)/warehouses/page.tsx) (nuevo) — página de visualización de bodegas.
+- [Sidebar.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/layout/Sidebar.tsx) — enlace agregado a la barra de navegación lateral.
+Resultado de npm run build:
+```
+✓ Compiled successfully in 7.9s
+  Running TypeScript ...
+  Collecting page data using 23 workers ...
+  Generating static pages using 23 workers (17/17) in 715.4ms
+```
+Resultado de prueba de verificación:
+```
+--- INICIANDO PRUEBA DE GESTIÓN DE BODEGAS (TAREA 3.0) ---
+1. Creando Empresa...
+2. Creando Sucursal...
+3. Creando Bodega con createBodega...
+   Bodega creada con ID: cmr7647r60004qg1wjak9wt7j, Nombre: Bodega de Prueba
+4. Editando Bodega con updateBodega...
+   Bodega editada correctamente. Nuevo nombre: Bodega de Prueba Editada
+5. Eliminando Bodega con deleteBodega...
+   Bodega eliminada correctamente de la base de datos.
+✓ VERIFICACIÓN DE GESTIÓN DE BODEGAS EXITOSA: Crear, editar y eliminar funcionan a nivel de base de datos y Server Actions.
+```
 
+### Planeación de Tarea 3.4: Lotes con vencimiento
+- **Archivos a modificar**:
+  - `prisma/schema.prisma` — Agregar campo `controlaLotes` al modelo `Producto` (línea 197 aprox.) y definir el nuevo modelo `LoteProducto`.
+  - `src/lib/validations/index.ts` — Agregar los campos opcionales `numeroLote` y `fechaVencimiento` a `PurchaseItemSchema`.
+  - `src/lib/actions/purchases.ts` — Modificar `createPurchase` (procesamiento de ítems en el bucle de la línea 151) para registrar el `LoteProducto` en la base de datos si el producto tiene `controlaLotes === true`.
+  - `src/lib/actions/invoices.ts` — Modificar `createInvoice` (línea 267) y `createInvoicePOS` (línea 614) para deducir stock en orden FEFO (fecha de vencimiento ascendente) de la tabla `LoteProducto` cuando el producto vendido tiene `controlaLotes === true`.
+  - `src/app/(dashboard)/products/expiring/page.tsx` (nuevo) — Crear una página de consulta para ver los lotes próximos a vencer.
+---
+
+### Ejecución de Tarea 3.4: Lotes con vencimiento
+- **Cambios realizados**:
+  - `prisma/schema.prisma` — Agregado `controlaLotes` a `Producto` y creado modelo `LoteProducto`.
+  - `src/lib/validations/index.ts` — Agregado `numeroLote` y `fechaVencimiento` a `PurchaseItemSchema`.
+  - `src/lib/actions/purchases.ts` — Modificado `createPurchase` para guardar `LoteProducto` cuando se compran productos con control de lotes.
+  - `src/lib/actions/invoices.ts` — Modificados `createInvoice` y `createInvoicePOS` para descontar existencias por lotes bajo criterio FEFO.
+  - `src/app/(dashboard)/products/expiring/page.tsx` — Nueva página para listar lotes activos ordenados por vencimiento.
+- **Resultado del Build**: Exitoso (Next.js compiló correctamente).
+- **Evidencia de Prueba de Integración**:
+```
+--- INICIANDO PRUEBA DE CONTROL DE LOTES Y DEDUCCIÓN FEFO ---
+1. Creando Empresa...
+   Generando plan de cuentas...
+2. Creando Usuario...
+3. Creando Sucursal, Caja y Bodega...
+4. Creando Cliente y Proveedor...
+5. Creando Producto con controlaLotes = true...
+6. Registrando Compra de Lote A (Vence antes)...
+   Registrando Compra de Lote B (Vence después)...
+   Lote A - Disponible: 5 (Esperado: 5)
+   Lote B - Disponible: 10 (Esperado: 10)
+7. Registrando Venta de 3 unidades (debería descontar solo de Lote A)...
+   Lote A - Disponible: 2 (Esperado: 2)
+   Lote B - Disponible: 10 (Esperado: 10)
+8. Registrando Venta de 4 unidades (debería agotar Lote A y restar 2 de Lote B)...
+   Lote A - Disponible: 0 (Esperado: 0)
+   Lote B - Disponible: 8 (Esperado: 8)
+✓ VERIFICACIÓN DE CONTROL DE LOTES Y DEDUCCIÓN FEFO EXITOSA.
+Limpiando datos de la prueba...
+✓ Limpieza completada.
+--- FIN DE LA PRUEBA ---
+```
+---
+
+### Ejecución de Tarea 3.5: Código de barras
+- **Cambios realizados**:
+  - `prisma/schema.prisma` — Cambiado `codigoBarras` en `Producto` para que sea `@unique`. Creada la migración manual correspondiente para evitar problemas interactivos de TTY.
+  - `src/app/api/products/search/route.ts` — Agregada búsqueda por código de barras (`codigoBarras` contains `query`) en la API de productos.
+  - `src/app/(dashboard)/pos/page.tsx` — Agregado el campo `codigoBarras` al select y mapeo de productos cargados en el POS.
+  - `src/components/pos/QuickSalePOS.tsx` — Agregado `codigoBarras` al filtrado en memoria y añadido `useEffect` que añade el producto al carrito de forma inmediata si se detecta un escaneo con coincidencia exacta de código de barras.
+- **Resultado del Build**: Exitoso (Next.js compiló correctamente).
+- **Evidencia de Prueba de Integración**:
+```
+--- INICIANDO PRUEBA DE BÚSQUEDA POR CÓDIGO DE BARRAS ---
+1. Creando Empresa...
+2. Creando Producto con código de barras: BARCODE-1783218675304...
+3. Llamando al API Route /api/products/search con el código de barras...
+   Respuesta recibida: [
+  {
+    id: 'cmr76cvwf0002qgg0unyepgzy',
+    descripcion: 'Producto con código de barras de prueba',
+    codigoInterno: 'INT-1783218675304',
+    stockActual: 10
+  }
+]
+   Producto encontrado correctamente: Producto con código de barras de prueba (INT-1783218675304)
+✓ VERIFICACIÓN DE BÚSQUEDA POR CÓDIGO DE BARRAS EXITOSA.
+Limpiando datos de la prueba...
+✓ Limpieza completada.
+--- FIN DE LA PRUEBA ---
+```
+
+### Planeación de Tarea 3.6: Kits / productos compuestos (RIESGO ALTO)
+- **Archivos a modificar**:
+  - `prisma/schema.prisma` — Agregar campo `esKit` al modelo `Producto` (línea 197 aprox.) y definir los modelos `ProductoKit` y `ProductoKitComponente` con sus relaciones correspondientes.
+  - `src/lib/actions/invoices.ts` — Modificar `createInvoice` (cálculo de costos y descuento de inventario en bucle de ítems) y `createInvoicePOS` (mismas secciones) para que si un producto es un kit, se calcule el costo contable y se descuenten las existencias sobre cada uno de sus componentes recursivamente (multiplicando la cantidad vendida del kit por la cantidad del componente).
+
+### Ejecución de Tarea 3.6: Kits / productos compuestos
+- **Estado real encontrado al retomar** (verificado leyendo código, no PROGRESS.md): schema y `createInvoice` ya tenían la lógica de kits implementada en una sesión anterior interrumpida, pero **`createInvoicePOS` nunca fue tocado** (confirmado por este mismo archivo, que dejaba la tarea en fase de "Planeación" sin sección de "Ejecución"). Tampoco existía el campo `activo` en `ProductoKit` pese a estar en la especificación original.
+- **Cambios realizados**:
+  - `prisma/schema.prisma` — Agregado `activo Boolean @default(true)` a `ProductoKit` (faltaba respecto a la especificación).
+  - `prisma/migrations/20260705120000_add_kit_activo/migration.sql` (nuevo) — migración aditiva para la columna anterior.
+  - `src/lib/actions/invoices.ts`:
+    - `createInvoice`: se agregó la verificación `kitInfo.activo` (antes solo chequeaba `esKit && kitInfo`) tanto en `getProductoCosto` como en `descontarStock`, para no tratar como kit uno desactivado.
+    - `createInvoicePOS`: se replicó el mismo patrón que ya tenía `createInvoice` — la consulta de productos ahora incluye `kitInfo.componentes.productoComponente`; se agregó `getProductoCosto` (costo recursivo por componentes) y se reemplazó el bucle plano de descuento de stock por la función recursiva `descontarStock` (si es kit activo, descuenta cada componente recursivamente incluyendo su propia lógica de lotes FEFO; si no, aplica el mismo comportamiento de antes).
+- **Resultado de npm run build**: Exitoso, sin errores de TypeScript, migración aplicada sin pendientes.
+- **Evidencia de prueba de integración** (kit con Componente A costo=10 cantidad=2 y Componente B costo=20 cantidad=3, vendido 1 kit vía `createInvoicePOS`):
+```
+Resultado de createInvoicePOS: {"success":true,"invoice":{"numeroCompleto":"FE-001-001-01-00000002","totalNeto":100}}
+Componente A stockActual: 98 (Esperado: 98)
+Componente B stockActual: 97 (Esperado: 97)
+Kit stockActual: 0 (Esperado: 0, sin cambios)
+FacturaItem.costoUnitario (costo del kit vendido): 80 (Esperado: 80 = 2*10 + 3*20)
+AsientoContable COSTO_VENTA: Debe=80 Haber=80 (Esperado: 80/80)
+🎉 TODAS LAS PRUEBAS DE TAREA 3.6 (KITS EN POS) PASARON CORRECTAMENTE.
+```
+Registros y scripts de prueba eliminados al finalizar.
+- **Limitación conocida, fuera de alcance de esta tarea**: no existe ninguna UI ni Server Action para crear/editar un `ProductoKit` y sus componentes desde la aplicación (ni para activar `controlaLotes` desde el formulario de producto) — hoy solo son configurables directamente en base de datos. La especificación de esta fase no pidió esa UI (solo modelos + lógica de venta), así que no se construyó, pero se deja anotado como riesgo de usabilidad para una fase futura.
+- **Hallazgo adicional (fuera de alcance)**: las tablas nuevas de Fase 3 (`Bodega`, `InventarioBodega`, `LoteProducto`, `ProductoKit`, `ProductoKitComponente`) no tienen las políticas RLS "Deny client access" que sí tiene el resto de tablas del proyecto (patrón de `20260630230000_add_deny_all_policies`). No se corrigió por no ser parte de las 4 tareas solicitadas ni de los flujos de venta/costo — requiere confirmación explícita antes de tocar (mismo criterio que el resto de decisiones de esta fase).
 

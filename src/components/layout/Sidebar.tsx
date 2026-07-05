@@ -33,6 +33,7 @@ import {
     ClipboardList,
     Truck,
     Landmark,
+    Warehouse,
     type LucideIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -60,6 +61,7 @@ const mainNavigation = [
     { name: 'Proveedores', href: '/suppliers', icon: Building2 },
     { name: 'Compras', href: '/purchases', icon: ShoppingCart },
     { name: 'Productos', href: '/products', icon: Package },
+    { name: 'Bodegas', href: '/warehouses', icon: Warehouse },
     { name: 'Bancos', href: '/bank-accounts', icon: Landmark },
     { name: 'Reportes', href: '/reports', icon: BarChart3 },
 ];

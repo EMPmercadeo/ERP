@@ -126,6 +126,17 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
             where: {
                 id: { in: uniqueProductIds },
                 empresaId
+            },
+            include: {
+                kitInfo: {
+                    include: {
+                        componentes: {
+                            include: {
+                                productoComponente: true
+                            }
+                        }
+                    }
+                }
             }
         });
         if (products.length !== uniqueProductIds.length) {
@@ -173,8 +184,21 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
         const totalNeto = subtotal - totalDescuento + totalItbms;
 
         // Calcula el total de ventas por tipo (Mercancías vs Servicios) usando la unidad de medida del producto
+        const getProductoCosto = (prod: any): number => {
+            if (prod.esKit && prod.kitInfo && prod.kitInfo.activo) {
+                let totalCosto = 0;
+                for (const comp of prod.kitInfo.componentes) {
+                    totalCosto += getProductoCosto(comp.productoComponente) * comp.cantidad;
+                }
+                return totalCosto;
+            }
+            return Number(prod.costoUnitario || 0);
+        };
+
         const mapaUnidad = new Map(products.map((p) => [p.id, p.unidadMedida]));
-        const mapaCosto = new Map(products.map((p) => [p.id, Number(p.costoUnitario)]));
+        const mapaCosto = new Map(products.map((p) => [p.id, getProductoCosto(p)]));
+        const mapaProductDetails = new Map(products.map((p) => [p.id, p]));
+
         let costoVentaTotal = 0;
         for (const item of data.items) {
             const unidad = mapaUnidad.get(item.productoId);
@@ -264,19 +288,95 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
 
             const bodegaId = await resolverBodegaId(tx, empresa.id, data.bodegaId ?? null);
 
-            for (const item of data.items) {
-                const unidad = mapaUnidad.get(item.productoId);
-                if (unidad !== 'SRV' && unidad !== 'HRS') {
+            const descontarStock = async (prodId: string, cantidad: number, esKit: boolean, kitInfo: any) => {
+                if (esKit && kitInfo && kitInfo.activo) {
+                    for (const comp of kitInfo.componentes) {
+                        const compProd = comp.productoComponente;
+                        const totalQty = comp.cantidad * cantidad;
+                        await descontarStock(compProd.id, totalQty, compProd.esKit, compProd.kitInfo);
+                    }
+                } else {
+                    const prod = await tx.producto.findFirst({
+                        where: { id: prodId },
+                        select: { controlaLotes: true }
+                    });
+
                     await tx.producto.update({
-                        where: { id: item.productoId },
-                        data: { stockActual: { decrement: Math.round(item.cantidad) } },
+                        where: { id: prodId },
+                        data: { stockActual: { decrement: Math.round(cantidad) } },
                     });
                     await moverInventarioBodega(tx, {
                         empresaId: empresa.id,
                         bodegaId,
-                        productoId: item.productoId,
-                        delta: -Math.round(item.cantidad)
+                        productoId: prodId,
+                        delta: -Math.round(cantidad)
                     });
+
+                    if (prod?.controlaLotes) {
+                        let cantidadPorDescontar = Math.round(cantidad);
+                        const lotes = await tx.loteProducto.findMany({
+                            where: {
+                                empresaId: empresa.id,
+                                productoId: prodId,
+                                bodegaId,
+                                cantidadDisponible: { gt: 0 }
+                            },
+                            orderBy: [
+                                { fechaVencimiento: 'asc' },
+                                { createdAt: 'asc' }
+                            ]
+                        });
+
+                        for (const lote of lotes) {
+                            if (cantidadPorDescontar <= 0) break;
+                            const cantidadDescontarDeEsteLote = Math.min(lote.cantidadDisponible, cantidadPorDescontar);
+                            await tx.loteProducto.update({
+                                where: { id: lote.id },
+                                data: {
+                                    cantidadDisponible: { decrement: cantidadDescontarDeEsteLote }
+                                }
+                            });
+                            cantidadPorDescontar -= cantidadDescontarDeEsteLote;
+                        }
+
+                        if (cantidadPorDescontar > 0) {
+                            if (lotes.length > 0) {
+                                await tx.loteProducto.update({
+                                    where: { id: lotes[lotes.length - 1].id },
+                                    data: {
+                                        cantidadDisponible: { decrement: cantidadPorDescontar }
+                                    }
+                                });
+                            } else {
+                                await tx.loteProducto.create({
+                                    data: {
+                                        empresaId: empresa.id,
+                                        productoId: prodId,
+                                        bodegaId,
+                                        numeroLote: 'LOTE-SISTEMA',
+                                        fechaVencimiento: null,
+                                        cantidadRecibida: 0,
+                                        cantidadDisponible: -cantidadPorDescontar
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+            };
+
+            for (const item of data.items) {
+                const unidad = mapaUnidad.get(item.productoId);
+                if (unidad !== 'SRV' && unidad !== 'HRS') {
+                    const prodDetails = mapaProductDetails.get(item.productoId);
+                    if (prodDetails) {
+                        await descontarStock(
+                            item.productoId,
+                            item.cantidad,
+                            prodDetails.esKit,
+                            prodDetails.kitInfo
+                        );
+                    }
                 }
             }
 
@@ -519,19 +619,41 @@ export async function createInvoicePOS(rawData: {
 
         // Validate all products belong to tenant BEFORE creating invoice, y traer datos necesarios para contabilidad
         const productIds = rawData.items.map((i) => i.productoId).filter(Boolean);
-        let productsData: { id: string; unidadMedida: string; costoUnitario: unknown }[] = [];
+        let productsData: any[] = [];
         if (productIds.length > 0) {
             productsData = await prisma.producto.findMany({
                 where: { id: { in: productIds }, empresaId },
-                select: { id: true, unidadMedida: true, costoUnitario: true }
+                include: {
+                    kitInfo: {
+                        include: {
+                            componentes: {
+                                include: {
+                                    productoComponente: true
+                                }
+                            }
+                        }
+                    }
+                }
             });
             if (productsData.length !== productIds.length) {
                 return { success: false, error: 'Producto no válido para esta empresa.' };
             }
         }
 
+        const getProductoCosto = (prod: any): number => {
+            if (prod.esKit && prod.kitInfo && prod.kitInfo.activo) {
+                let totalCosto = 0;
+                for (const comp of prod.kitInfo.componentes) {
+                    totalCosto += getProductoCosto(comp.productoComponente) * comp.cantidad;
+                }
+                return totalCosto;
+            }
+            return Number(prod.costoUnitario || 0);
+        };
+
         const mapaUnidad = new Map(productsData.map((p) => [p.id, p.unidadMedida]));
-        const mapaCosto = new Map(productsData.map((p) => [p.id, Number(p.costoUnitario)]));
+        const mapaCosto = new Map(productsData.map((p) => [p.id, getProductoCosto(p)]));
+        const mapaProductDetails = new Map(productsData.map((p) => [p.id, p]));
 
         let ventasMercancias = 0;
         let ventasServicios = 0;
@@ -610,22 +732,89 @@ export async function createInvoicePOS(rawData: {
 
             const bodegaId = await resolverBodegaId(tx, empresa.id, rawData.bodegaId ?? null);
 
-            // Update stock
-            for (const item of rawData.items) {
-                await tx.producto.update({
-                    where: { id: item.productoId },
-                    data: {
-                        stockActual: {
-                            decrement: item.cantidad
+            const descontarStock = async (prodId: string, cantidad: number, esKit: boolean, kitInfo: any) => {
+                if (esKit && kitInfo && kitInfo.activo) {
+                    for (const comp of kitInfo.componentes) {
+                        const compProd = comp.productoComponente;
+                        const totalQty = comp.cantidad * cantidad;
+                        await descontarStock(compProd.id, totalQty, compProd.esKit, compProd.kitInfo);
+                    }
+                } else {
+                    const prod = await tx.producto.findFirst({
+                        where: { id: prodId },
+                        select: { controlaLotes: true }
+                    });
+
+                    await tx.producto.update({
+                        where: { id: prodId },
+                        data: { stockActual: { decrement: Math.round(cantidad) } },
+                    });
+                    await moverInventarioBodega(tx, {
+                        empresaId: empresa.id,
+                        bodegaId,
+                        productoId: prodId,
+                        delta: -Math.round(cantidad)
+                    });
+
+                    if (prod?.controlaLotes) {
+                        let cantidadPorDescontar = Math.round(cantidad);
+                        const lotes = await tx.loteProducto.findMany({
+                            where: {
+                                empresaId: empresa.id,
+                                productoId: prodId,
+                                bodegaId,
+                                cantidadDisponible: { gt: 0 }
+                            },
+                            orderBy: [
+                                { fechaVencimiento: 'asc' },
+                                { createdAt: 'asc' }
+                            ]
+                        });
+
+                        for (const lote of lotes) {
+                            if (cantidadPorDescontar <= 0) break;
+                            const cantidadDescontarDeEsteLote = Math.min(lote.cantidadDisponible, cantidadPorDescontar);
+                            await tx.loteProducto.update({
+                                where: { id: lote.id },
+                                data: {
+                                    cantidadDisponible: { decrement: cantidadDescontarDeEsteLote }
+                                }
+                            });
+                            cantidadPorDescontar -= cantidadDescontarDeEsteLote;
+                        }
+
+                        if (cantidadPorDescontar > 0) {
+                            if (lotes.length > 0) {
+                                await tx.loteProducto.update({
+                                    where: { id: lotes[lotes.length - 1].id },
+                                    data: {
+                                        cantidadDisponible: { decrement: cantidadPorDescontar }
+                                    }
+                                });
+                            } else {
+                                await tx.loteProducto.create({
+                                    data: {
+                                        empresaId: empresa.id,
+                                        productoId: prodId,
+                                        bodegaId,
+                                        numeroLote: 'LOTE-SISTEMA',
+                                        fechaVencimiento: null,
+                                        cantidadRecibida: 0,
+                                        cantidadDisponible: -cantidadPorDescontar
+                                    }
+                                });
+                            }
                         }
                     }
-                });
-                await moverInventarioBodega(tx, {
-                    empresaId: empresa.id,
-                    bodegaId,
-                    productoId: item.productoId,
-                    delta: -item.cantidad
-                });
+                }
+            };
+
+            // Update stock
+            for (const item of rawData.items) {
+                const prodDetails = mapaProductDetails.get(item.productoId);
+                if (prodDetails) {
+                    await descontarStock(item.productoId, item.cantidad, prodDetails.esKit, prodDetails.kitInfo);
+                }
             }
 
             // If payment is made, record it in Pago model

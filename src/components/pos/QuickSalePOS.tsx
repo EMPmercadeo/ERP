@@ -51,6 +51,7 @@ interface ClientOption {
 interface ProductOption {
     id: string;
     codigo: string;
+    codigoBarras?: string | null;
     descripcion: string;
     precio: number;
     itbms: string;
@@ -137,9 +138,23 @@ export function QuickSalePOS({
     const filteredProducts = useMemo(() => {
         return products.filter(p => 
             p.descripcion.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.codigo.toLowerCase().includes(searchQuery.toLowerCase())
+            p.codigo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (p.codigoBarras && p.codigoBarras.toLowerCase().includes(searchQuery.toLowerCase()))
         );
     }, [products, searchQuery]);
+
+    // Auto-add product when search query exactly matches a barcode
+    useEffect(() => {
+        if (!searchQuery) return;
+        const queryClean = searchQuery.trim().toLowerCase();
+        const match = products.find(p => 
+            p.codigoBarras && p.codigoBarras.trim() !== '' && p.codigoBarras.toLowerCase() === queryClean
+        );
+        if (match) {
+            addToCart(match);
+            setSearchQuery('');
+        }
+    }, [searchQuery, products]);
 
     const filteredClients = useMemo(() => {
         if (!clientSearch) return [];
