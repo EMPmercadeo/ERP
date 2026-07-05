@@ -373,3 +373,35 @@ Todas las tareas 2.1–2.5 quedaron en estado OK con build limpio y evidencia re
  src/lib/contabilidad/asientos.ts     | 67 ++++++++++++++++++++++++++++++++++++
  4 files changed, 131 insertions(+), 2 deletions(-)
 ```
+
+---
+
+## [2026-07-04 20:00] Tarea 3.0: Completar auto-aprovisionamiento con Sucursal/Caja por defecto + backfill
+Estado: OK
+Archivos modificados/creados:
+- [context.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/auth/context.ts) — se agregó la creación de una Sucursal ("Casa Matriz", código '001') y una Caja ("Caja Principal", código '001') por defecto en la transacción del auto-aprovisionamiento para nuevos usuarios.
+- [backfill-sucursal-caja.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/scripts/backfill-sucursal-caja.ts) (nuevo) — script manual de backfill para regularizar las empresas en la base de datos local que carecen de Sucursal y Caja, agrupando los inserts en transacciones atómicas de Prisma.
+Resultado de npm run build:
+```
+✓ Compiled successfully in 7.9s
+  Running TypeScript ...
+  Collecting page data using 23 workers ...
+  Generating static pages using 23 workers (17/17) in 767.5ms
+```
+Resultado de la prueba de verificación:
+```
+--- INICIANDO PRUEBA DE INTEGRACIÓN ---
+1. Ejecutando transacción de auto-aprovisionamiento para email: test-provision-1783213030510@example.com...
+✓ Transacción completada con éxito. Empresa ID: cmr72zwci0000qgq8k0vnz23a, Usuario ID: cmr72zwff003mqgq8gttrku1x
+2. Simulando llamada a getDefaults() para comprobar si lanza el error...
+✓ Empresa encontrada: TEST COMPANY S.A.
+✓ Cantidad de Sucursales: 1
+  - Primera Sucursal: Casa Matriz (Código: 001)
+  - Cantidad de Cajas en la sucursal: 1
+    - Primera Caja: Caja Principal (Código: 001)
+✓ VERIFICACIÓN EXITOSA: getDefaults() ya NO arrojará error de configuración incompleta.
+3. Limpiando datos de prueba...
+✓ Limpieza completada.
+--- FIN DE LA PRUEBA ---
+```
+

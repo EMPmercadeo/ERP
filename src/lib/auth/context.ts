@@ -63,6 +63,26 @@ export async function getTenantContext(): Promise<TenantContext> {
 
                     await crearPlanCuentasParaEmpresa(tx, nuevaEmpresa.id);
 
+                    const nuevaSucursal = await tx.sucursal.create({
+                        data: {
+                            empresaId: nuevaEmpresa.id,
+                            codigo: '001',
+                            nombre: 'Casa Matriz',
+                            direccion: 'Panamá',
+                            activa: true,
+                        }
+                    });
+
+                    await tx.caja.create({
+                        data: {
+                            empresaId: nuevaEmpresa.id,
+                            sucursalId: nuevaSucursal.id,
+                            codigo: '001',
+                            nombre: 'Caja Principal',
+                            activa: true,
+                        }
+                    });
+
                     return await tx.usuario.create({
                         data: {
                             empresaId: nuevaEmpresa.id,
