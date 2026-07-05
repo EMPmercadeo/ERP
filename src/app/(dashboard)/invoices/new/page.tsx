@@ -3,13 +3,14 @@ import { Topbar } from '@/components/layout/Topbar';
 import { InvoiceForm } from '@/components/invoices/InvoiceForm';
 import { getTenantContext } from '@/lib/auth/context';
 import { getDocumentUsage } from '@/lib/actions/billing';
+import { getBodegas } from '@/lib/actions/bodegas';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NewInvoicePage() {
     const { empresaId } = await getTenantContext();
 
-    const [clients, products, documentUsage] = await Promise.all([
+    const [clients, products, documentUsage, bodegas] = await Promise.all([
         prisma.cliente.findMany({
             where: { empresaId, estado: 'activo' },
             select: { id: true, razonSocial: true, ruc: true }
@@ -18,7 +19,8 @@ export default async function NewInvoicePage() {
             where: { empresaId, activo: true },
             select: { id: true, codigoInterno: true, descripcion: true, precioVenta: true, codigoTasaItbms: true }
         }),
-        getDocumentUsage(empresaId)
+        getDocumentUsage(empresaId),
+        getBodegas()
     ]);
 
     const formattedClients = clients.map(c => ({
@@ -43,6 +45,7 @@ export default async function NewInvoicePage() {
                 products={formattedProducts} 
                 companyId={empresaId}
                 remainingDocuments={documentUsage.remainingDocuments}
+                bodegas={bodegas}
             />
         </>
     );

@@ -39,6 +39,12 @@ interface ProductSimple {
     costoUnitario: number;
 }
 
+interface BodegaSimple {
+    id: string;
+    codigo: string;
+    nombre: string;
+}
+
 interface ItemRow {
     productoId: string;
     descripcion: string;
@@ -58,9 +64,11 @@ function formatCurrency(value: number) {
 export function NewPurchaseForm({
     suppliers,
     products,
+    bodegas = [],
 }: {
     suppliers: SupplierSimple[];
     products: ProductSimple[];
+    bodegas?: BodegaSimple[];
 }) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -71,6 +79,7 @@ export function NewPurchaseForm({
         new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     );
     const [observaciones, setObservaciones] = useState('');
+    const [bodegaId, setBodegaId] = useState(bodegas[0]?.id || '');
 
     const [items, setItems] = useState<ItemRow[]>([
         { productoId: '', descripcion: '', cantidad: 1, costoUnitario: 0, descuento: 0, codigoTasaItbms: '01' }
@@ -147,6 +156,7 @@ export function NewPurchaseForm({
         formData.set('fechaEmision', fechaEmision);
         formData.set('fechaVencimiento', fechaVencimiento);
         if (observaciones) formData.set('observaciones', observaciones);
+        if (bodegas.length >= 2 && bodegaId) formData.set('bodegaId', bodegaId);
         formData.set('items', JSON.stringify(items));
 
         try {
@@ -239,6 +249,24 @@ export function NewPurchaseForm({
                                 onChange={(e) => setFechaVencimiento(e.target.value)}
                             />
                         </div>
+
+                        {bodegas.length >= 2 && (
+                            <div>
+                                <Label htmlFor="bodega">Bodega de Entrada *</Label>
+                                <Select value={bodegaId} onValueChange={setBodegaId}>
+                                    <SelectTrigger id="bodega">
+                                        <SelectValue placeholder="Seleccionar bodega..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {bodegas.map(b => (
+                                            <SelectItem key={b.id} value={b.id}>
+                                                {b.codigo} - {b.nombre}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 

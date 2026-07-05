@@ -2,13 +2,14 @@ import { prisma } from '@/lib/db';
 import { Topbar } from '@/components/layout/Topbar';
 import { NewPurchaseForm } from '@/components/purchases/NewPurchaseForm';
 import { getTenantContext } from '@/lib/auth/context';
+import { getBodegas } from '@/lib/actions/bodegas';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NewPurchasePage() {
     const { empresaId } = await getTenantContext();
 
-    const [suppliers, products] = await Promise.all([
+    const [suppliers, products, bodegas] = await Promise.all([
         prisma.proveedor.findMany({
             where: { empresaId, estado: 'activo' },
             select: { id: true, razonSocial: true, ruc: true },
@@ -18,7 +19,8 @@ export default async function NewPurchasePage() {
             where: { empresaId, activo: true },
             select: { id: true, descripcion: true, costoUnitario: true },
             orderBy: { descripcion: 'asc' }
-        })
+        }),
+        getBodegas()
     ]);
 
     const formattedProducts = products.map(p => ({
@@ -30,7 +32,7 @@ export default async function NewPurchasePage() {
     return (
         <>
             <Topbar title="Nueva Compra" />
-            <NewPurchaseForm suppliers={suppliers} products={formattedProducts} />
+            <NewPurchaseForm suppliers={suppliers} products={formattedProducts} bodegas={bodegas} />
         </>
     );
 }

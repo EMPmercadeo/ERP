@@ -58,6 +58,12 @@ interface ProductOption {
     imagenUrl?: string | null;
 }
 
+interface BodegaSimple {
+    id: string;
+    codigo: string;
+    nombre: string;
+}
+
 interface CartItem {
     product: ProductOption;
     quantity: number;
@@ -74,12 +80,14 @@ export function QuickSalePOS({
     clients,
     products,
     companyId,
-    remainingDocuments = 10
+    remainingDocuments = 10,
+    bodegas = []
 }: {
     clients: ClientOption[];
     products: ProductOption[];
     companyId: string;
     remainingDocuments: number;
+    bodegas?: BodegaSimple[];
 }) {
     const router = useRouter();
     
@@ -95,6 +103,7 @@ export function QuickSalePOS({
     const [metodoPago, setMetodoPago] = useState('efectivo');
     const [clientSearch, setClientSearch] = useState('');
     const [isCheckingOut, setIsCheckingOut] = useState(false);
+    const [bodegaId, setBodegaId] = useState(bodegas[0]?.id || '');
     
     // Success State
     const [successInvoice, setSuccessInvoice] = useState<{
@@ -247,7 +256,8 @@ export function QuickSalePOS({
                 clienteId,
                 condicionPago,
                 metodoPago,
-                items: itemsPayload
+                items: itemsPayload,
+                bodegaId: bodegas.length >= 2 ? bodegaId : undefined
             });
 
             if (res.success && res.invoice) {
@@ -305,6 +315,23 @@ export function QuickSalePOS({
                                 </button>
                             )}
                         </div>
+
+                        {bodegas.length >= 2 && (
+                            <div className="w-full sm:w-48 shrink-0">
+                                <Select value={bodegaId} onValueChange={setBodegaId}>
+                                    <SelectTrigger className="h-11 bg-white border-slate-200 rounded-xl text-sm w-full">
+                                        <SelectValue placeholder="Bodega..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl">
+                                        {bodegas.map(b => (
+                                            <SelectItem key={b.id} value={b.id} className="cursor-pointer text-xs">
+                                                {b.codigo} - {b.nombre}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
                     </div>
 
                     {/* Products Grid */}

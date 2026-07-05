@@ -498,5 +498,40 @@ Resultado de prueba de verificación:
 ✓ VERIFICACIÓN DE TRANSACCIONES EXITOSA: Todos los movimientos afectaron correctamente a InventarioBodega.
 ```
 
+---
+
+## [2026-07-04 21:10] Tarea 3.3: Selector visible de bodega (solo si hay 2+)
+Estado: OK
+Archivos modificados/creados:
+- [page.tsx (invoices/new)](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/app/(dashboard)/invoices/new/page.tsx) — se realiza el fetch de bodegas mediante `getBodegas()` y se le pasa como prop al formulario.
+- [InvoiceForm.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/invoices/InvoiceForm.tsx) — se recibe la prop `bodegas` y se expone el dropdown `Bodega de Despacho` en la tarjeta lateral de condiciones únicamente si hay 2 o más bodegas. Se vincula al envío mediante un hidden input.
+- [page.tsx (purchases/new)](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/app/(dashboard)/purchases/new/page.tsx) — se realiza el fetch de bodegas y se le pasa como prop a `NewPurchaseForm`.
+- [NewPurchaseForm.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/purchases/NewPurchaseForm.tsx) — se recibe la prop `bodegas` y se expone el selector `Bodega de Entrada` en el formulario principal si hay 2 o más bodegas. Se agrega a `formData` en el submit si está visible.
+- [page.tsx (pos)](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/app/(dashboard)/pos/page.tsx) — se realiza el fetch de bodegas y se le pasa como prop a `QuickSalePOS`.
+- [QuickSalePOS.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/components/pos/QuickSalePOS.tsx) — se recibe la prop `bodegas` y se expone el selector de bodega en la barra superior al lado del buscador de productos si hay 2 o más bodegas. Se envía `bodegaId` en el payload de `createInvoicePOS`.
+Resultado de npm run build:
+```
+✓ Compiled successfully in 7.7s
+  Running TypeScript ...
+  Collecting page data using 23 workers ...
+  Generating static pages using 23 workers (17/17) in 773.4ms
+```
+Resultado de prueba de verificación:
+```
+--- INICIANDO PRUEBA DE VISIBILIDAD DE SELECTORES (UI) ---
+1. Creando Empresa 1 (1 sola bodega)...
+2. Creando Empresa 2 (2 bodegas)...
+3. Evaluando getBodegas() para Empresa 1...
+   Empresa 1 - Cantidad de bodegas: 1 (Esperado: 1)
+4. Evaluando getBodegas() para Empresa 2...
+   Empresa 2 - Cantidad de bodegas: 2 (Esperado: 2)
+5. Validando archivos de código fuente de UI...
+   InvoiceForm check (bodegas.length >= 2): PASSED
+   NewPurchaseForm check (bodegas.length >= 2): PASSED
+   QuickSalePOS check (bodegas.length >= 2): PASSED
+✓ VERIFICACIÓN DE SELECTORES DE UI EXITOSA: El backend provee correctamente la cantidad de bodegas y la UI aplica la visibilidad condicional (solo si hay 2+).
+```
+
+
 
 

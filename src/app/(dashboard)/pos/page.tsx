@@ -3,13 +3,14 @@ import { Topbar } from '@/components/layout/Topbar';
 import { QuickSalePOS } from '@/components/pos/QuickSalePOS';
 import { getTenantContext } from '@/lib/auth/context';
 import { getDocumentUsage } from '@/lib/actions/billing';
+import { getBodegas } from '@/lib/actions/bodegas';
 
 export const dynamic = 'force-dynamic';
 
 export default async function POSPage() {
     const { empresaId } = await getTenantContext();
 
-    const [clients, products, documentUsage] = await Promise.all([
+    const [clients, products, documentUsage, bodegas] = await Promise.all([
         prisma.cliente.findMany({
             where: { estado: 'activo', empresaId },
             select: { id: true, razonSocial: true, ruc: true }
@@ -18,7 +19,8 @@ export default async function POSPage() {
             where: { activo: true, empresaId },
             select: { id: true, codigoInterno: true, descripcion: true, precioVenta: true, codigoTasaItbms: true, stockActual: true, imagenUrl: true }
         }),
-        getDocumentUsage(empresaId)
+        getDocumentUsage(empresaId),
+        getBodegas()
     ]);
 
     const formattedClients = clients.map(c => ({
@@ -45,6 +47,7 @@ export default async function POSPage() {
                 products={formattedProducts} 
                 companyId={empresaId}
                 remainingDocuments={documentUsage.remainingDocuments}
+                bodegas={bodegas}
             />
         </>
     );

@@ -58,6 +58,12 @@ export interface ProductOption {
     itbms: string;
 }
 
+export interface BodegaOption {
+    id: string;
+    codigo: string;
+    nombre: string;
+}
+
 interface InvoiceItem {
     id: string;
     productoId: string;
@@ -93,12 +99,14 @@ export function InvoiceForm({
     clients, 
     products,
     companyId,
-    remainingDocuments = 10
+    remainingDocuments = 10,
+    bodegas = []
 }: { 
     clients: ClientOption[]; 
     products: ProductOption[];
     companyId: string;
     remainingDocuments: number;
+    bodegas?: BodegaOption[];
 }) {
     const router = useRouter();
     const [state, formAction] = useFormState(createInvoice, initialState);
@@ -114,6 +122,7 @@ export function InvoiceForm({
     const [condicionPago, setCondicionPago] = useState('contado');
     const [observaciones, setObservaciones] = useState('');
     const [items, setItems] = useState<InvoiceItem[]>([]);
+    const [bodegaId, setBodegaId] = useState(bodegas[0]?.id || '');
 
     // Product search
     const [productSearch, setProductSearch] = useState('');
@@ -274,6 +283,9 @@ export function InvoiceForm({
                     <input type="hidden" name="items" value={JSON.stringify(items)} />
                     {/* Hidden Input for Client ID (explicit control) */}
                     <input type="hidden" name="clienteId" value={clienteId} />
+                    {bodegas.length >= 2 && (
+                        <input type="hidden" name="bodegaId" value={bodegaId} />
+                    )}
 
                     <div className="grid gap-6 lg:grid-cols-3">
                         {/* Left column - Client & Items */}
@@ -542,6 +554,26 @@ export function InvoiceForm({
                                             </SelectContent>
                                         </Select>
                                     </div>
+
+                                    {bodegas.length >= 2 && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                                Bodega de Despacho
+                                            </label>
+                                            <Select value={bodegaId} onValueChange={setBodegaId}>
+                                                <SelectTrigger className="h-11 md:h-10">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {bodegas.map(b => (
+                                                        <SelectItem key={b.id} value={b.id}>
+                                                            {b.codigo} - {b.nombre}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    )}
 
                                     <div>
                                         <label className="block text-sm font-medium text-foreground mb-1">
