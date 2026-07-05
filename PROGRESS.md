@@ -664,3 +664,70 @@ Registros y scripts de prueba eliminados al finalizar.
 - **Limitación conocida, fuera de alcance de esta tarea**: no existe ninguna UI ni Server Action para crear/editar un `ProductoKit` y sus componentes desde la aplicación (ni para activar `controlaLotes` desde el formulario de producto) — hoy solo son configurables directamente en base de datos. La especificación de esta fase no pidió esa UI (solo modelos + lógica de venta), así que no se construyó, pero se deja anotado como riesgo de usabilidad para una fase futura.
 - **Hallazgo adicional (fuera de alcance)**: las tablas nuevas de Fase 3 (`Bodega`, `InventarioBodega`, `LoteProducto`, `ProductoKit`, `ProductoKitComponente`) no tienen las políticas RLS "Deny client access" que sí tiene el resto de tablas del proyecto (patrón de `20260630230000_add_deny_all_policies`). No se corrigió por no ser parte de las 4 tareas solicitadas ni de los flujos de venta/costo — requiere confirmación explícita antes de tocar (mismo criterio que el resto de decisiones de esta fase).
 
+---
+
+# UI para activar lotes y gestionar kits
+
+## PASO 0: Investigación previa (antes de tocar código)
+
+**No existe un `ProductForm.tsx` compartido.** Hay dos formularios independientes, cada uno inline en su propia página (sin componente de formulario reutilizado entre ambos):
+- `src/app/(dashboard)/products/new/page.tsx` — componente `NewProductPage`. Formulario plano (sin tabs). Llama a `createProduct(prevState, formData)` vía `useActionState` (import de `@/lib/actions/products`).
+- `src/app/(dashboard)/products/[id]/page.tsx` — componente `EditProductPage` → `EditProductForm`. Ya usa `Tabs`/`TabsList`/`TabsContent` de `@/components/ui/tabs` con pestañas existentes: **General, Precios, Inventario, Multimedia, Historial**. Llama a `updateProduct(product.id, prevState, formData)` vía `useActionState`.
+
+**Nombres exactos de los Server Actions confirmados**: `createProduct` y `updateProduct`, ambos en `src/lib/actions/products.ts`. Ninguno de los dos lee ni guarda `controlaLotes` hoy (confirmado por grep: `controlaLotes` no aparece en `products.ts`).
+
+**`ProductSchema`** (`src/lib/validations/index.ts`) **no tiene el campo `controlaLotes`** actualmente — confirmado leyendo el archivo completo.
+
+**Patrón de booleanos ya establecido en este mismo archivo** (`[id]/page.tsx`, campo `activo` — línea ~411): no existe un componente `Checkbox`/`Switch` en `src/components/ui/`, así que el toggle "Activo/Inactivo" se resuelve con `<Select name="activo" value={activo} onValueChange={setActivo}>` (Radix `Select.Root` soporta `name` y renderiza un `<select>` nativo oculto para participar en el `FormData` del `<form action={formAction}>`). Se reutilizará el mismo patrón (`Select` con Sí/No) para `controlaLotes`, en vez de introducir un primitivo nuevo, para mantener consistencia visual y de submit.
+
+**Patrón de búsqueda de productos en `InvoiceForm.tsx`** (`src/components/invoices/InvoiceForm.tsx`, línea ~384): NO llama a `/api/products/search` por cada tecla — recibe la lista completa de productos de la empresa como prop desde el Server Component padre, y filtra en memoria (`filteredProducts`) sobre un `<Input>` de búsqueda con un dropdown de resultados clickeables. Se replicará este mismo patrón (fetch único + filtro en memoria) para el buscador de componentes del kit, en vez de pegarle a la API en cada tecla.
+
+Con esto, se procede a TAREA A y TAREA B tal como fueron especificadas.
+
+## [2026-07-05] Tarea A: Activar lotes desde el formulario de producto
+Estado: OK
+Archivos modificados:
+- `src/lib/validations/index.ts` — agregado `controlaLotes: z.boolean().optional()` a `ProductSchema`.
+- `src/lib/actions/products.ts` — `createProduct` y `updateProduct` ahora leen `formData.get('controlaLotes') === 'true'`, lo validan vía `ProductSchema` y lo persisten en el `data: {...}` de cada Server Action.
+- `src/app/(dashboard)/products/new/page.tsx` — agregado selector "Control de Lotes y Vencimientos" (Sí/No) en la tarjeta de Inventario Inicial, mismo patrón `Select` con `name` que ya usa el resto del formulario para booleanos.
+- `src/app/(dashboard)/products/[id]/page.tsx` — mismo selector agregado en la pestaña "Inventario", junto a Stock Actual/Stock Mínimo, con estado inicial tomado de `product.controlaLotes`.
+Resultado de npm run build:
+```
+✓ Compiled successfully in 9.4s
+```
+
+## [2026-07-05] Tarea B: Gestión de Kits (UI + Server Actions)
+Estado: OK
+Archivos creados/modificados:
+- `src/lib/actions/product-kits.ts` (nuevo):
+  - `getKitDeProducto(productoId)` — retorna el `ProductoKit` (con `activo` y componentes, incluyendo descripción/costoUnitario del producto componente) o `null` si no existe/no pertenece a la empresa.
+  - `getProductosParaKit(excluirProductoId)` — helper adicional (no pedido explícitamente pero necesario para el buscador): lista productos activos, `esKit: false` y distintos del producto actual, para poblar el buscador de componentes sin permitir seleccionar kits ni el propio producto.
+  - `crearOActualizarKit(productoId, componentes)` — en una transacción: marca `Producto.esKit = true`, hace `upsert` del `ProductoKit` (`activo: true`), y reemplaza sus `ProductoKitComponente` (borra los que ya no están, actualiza cantidad de los que siguen, crea los nuevos). Valida antes de tocar la BD: al menos 1 componente, cantidades > 0, sin duplicados, componentes pertenecientes a la empresa, sin auto-referencia, y sin kits anidados (rechaza si algún componente tiene `esKit: true`).
+  - `desactivarKit(productoId)` — pone `activo: false` en el `ProductoKit` sin borrarlo (preserva el vínculo histórico de `FacturaItem`/`AsientoContable` con ventas ya realizadas).
+- `src/app/(dashboard)/products/[id]/page.tsx` — nueva pestaña "Kit" (`TabsTrigger`/`TabsContent value="kit"`, entre "Inventario" y "Multimedia") con el componente `KitTab`: toggle "¿Este producto es un kit?" (mismo patrón `Select` Sí/No), buscador de componentes calcado del patrón de `InvoiceForm.tsx` (lista completa vía `getProductosParaKit` + filtro en memoria, sin golpear ninguna API por cada tecla), tabla editable de componentes con cantidad y costo total del kit calculado en vivo (`Σ costoUnitario × cantidad`), y un único botón "Guardar Kit" (`type="button"`, fuera del `<form>` principal de `updateProduct` para no interferir con él) que llama a `crearOActualizarKit` si el toggle está en "Sí", o a `desactivarKit` si estaba activo y se apagó el toggle.
+
+**Decisión de diseño tomada sin pausar** (no ambigua, consecuencia directa de la lógica de venta ya construida en la Tarea 3.6): `crearOActualizarKit` setea `Producto.esKit = true` porque `createInvoice`/`createInvoicePOS` usan exactamente ese flag (`prod.esKit && prod.kitInfo && prod.kitInfo.activo`) para decidir si tratar la venta como kit. Sin este flag, guardar un `ProductoKit` desde la UI no tendría ningún efecto en la venta. `desactivarKit` deliberadamente NO revierte `esKit` a `false`: como la lógica de venta ya revisa `kitInfo.activo`, un kit desactivado se vende como producto normal sin necesidad de tocar `esKit`, y mantenerlo en `true` también sigue bloqueando que ese mismo producto se use como componente de otro kit más adelante (protección extra contra anidados, consistente con la regla de negocio ya definida).
+
+Resultado de npm run build:
+```
+✓ Compiled successfully in 5.7s
+```
+
+## PASO FINAL: Prueba de integración conjunta (Tarea A + Tarea B)
+Script temporal `scripts/_test_lotes_kits_ui.ts` (mismo mecanismo de mock de `next/headers`/`@/lib/firebase/admin` ya usado en la verificación de la Tarea 3.6, para poder invocar los Server Actions reales fuera de una request de Next.js), contra la empresa de desarrollo local. Eliminado al finalizar.
+```
+--- INICIANDO PRUEBA DE UI: LOTES + KITS ---
+Usando empresa de desarrollo: cmr5sltb00004qgwc0vxf1xps
+Resultado de updateProduct (activar controlaLotes): {"message":"Producto actualizado correctamente","success":true}
+Producto.controlaLotes tras updateProduct: true (Esperado: true)
+Resultado de crearOActualizarKit: {"success":true,"message":"Kit guardado correctamente."}
+Kit guardado (getKitDeProducto): {"id":"cmr78psbp000bqgjkof28tct3","activo":true,"componentes":[{"productoComponenteId":"cmr78psbb0005qgjka0h13ta5","cantidad":2,"codigoInterno":"TESTUI-...-COMPA","descripcion":"Componente A (UI)","costoUnitario":3},{"productoComponenteId":"cmr78psbe0007qgjk9so71q9y","cantidad":1,"codigoInterno":"TESTUI-...-COMPB","descripcion":"Componente B (UI)","costoUnitario":7}]}
+Producto.esKit tras crearOActualizarKit: true (Esperado: true)
+Resultado de intentar auto-referencia: {"success":false,"error":"Un producto no puede ser componente de sí mismo."}
+Resultado de intentar kit anidado: {"success":false,"error":"\"Kit de prueba (UI)\" ya es un kit y no puede usarse como componente de otro kit (no se permiten kits anidados)."}
+🎉 TODAS LAS PRUEBAS DE UI (LOTES + KITS) PASARON CORRECTAMENTE.
+```
+Registros y script de prueba eliminados al finalizar. Build final verificado limpio nuevamente después de borrar el script temporal.
+
+**Nota pendiente (no bloqueante, no tocada)**: sigue sin resolverse el hallazgo de Fase 3 sobre políticas RLS faltantes en las tablas nuevas (`Bodega`, `InventarioBodega`, `LoteProducto`, `ProductoKit`, `ProductoKitComponente`) — no era parte del alcance de esta tarea (UI de lotes/kits) y requiere confirmación explícita antes de tocar migraciones de seguridad.
+

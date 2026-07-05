@@ -35,6 +35,7 @@ export const ProductSchema = z.object({
     stockActual: z.string().optional(), // Parse to int
     stockMinimo: z.string().optional(), // Parse to int
     activo: z.boolean().default(true),
+    controlaLotes: z.boolean().optional(),
 });
 
 export const InvoiceItemSchema = z.object({

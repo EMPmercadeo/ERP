@@ -24,7 +24,8 @@ export async function createProduct(prevState: unknown, formData: FormData) {
         codigoTasaItbms: formData.get('codigoTasaItbms'),
         stockActual: formData.get('stockActual'),
         stockMinimo: formData.get('stockMinimo'),
-        activo: true
+        activo: true,
+        controlaLotes: formData.get('controlaLotes') === 'true'
     };
 
     const validatedFields = ProductSchema.safeParse(rawData);
@@ -66,7 +67,8 @@ export async function createProduct(prevState: unknown, formData: FormData) {
                     unidadMedida: data.unidadMedida,
                     stockActual: data.stockActual ? parseInt(data.stockActual) : 0,
                     stockMinimo: data.stockMinimo ? parseInt(data.stockMinimo) : 0,
-                    activo: true
+                    activo: true,
+                    controlaLotes: data.controlaLotes ?? false
                 },
             });
 
@@ -111,7 +113,8 @@ export async function updateProduct(id: string, prevState: unknown, formData: Fo
         codigoTasaItbms: formData.get('codigoTasaItbms'),
         stockActual: formData.get('stockActual'),
         stockMinimo: formData.get('stockMinimo'),
-        activo: formData.get('activo') === 'true'
+        activo: formData.get('activo') === 'true',
+        controlaLotes: formData.get('controlaLotes') === 'true'
     };
 
     const validatedFields = ProductSchema.safeParse(rawData);
@@ -165,7 +168,8 @@ export async function updateProduct(id: string, prevState: unknown, formData: Fo
                     unidadMedida: data.unidadMedida,
                     stockActual: data.stockActual ? parseInt(data.stockActual) : 0,
                     stockMinimo: data.stockMinimo ? parseInt(data.stockMinimo) : 0,
-                    activo: rawData.activo
+                    activo: rawData.activo,
+                    controlaLotes: data.controlaLotes ?? false
                 },
             });
 

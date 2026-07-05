@@ -22,7 +22,10 @@ import {
     ArrowDownRight,
     TrendingUp,
     CheckCircle2,
-    CalendarDays
+    CalendarDays,
+    Search,
+    Plus,
+    Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,14 +44,20 @@ import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { 
-    updateProduct, 
+import {
+    updateProduct,
     getProduct,
     uploadProductImage,
     deleteProductImage,
     setProductImagePrimary,
     updateProductImageOrder
 } from '@/lib/actions/products';
+import {
+    getKitDeProducto,
+    getProductosParaKit,
+    crearOActualizarKit,
+    desactivarKit
+} from '@/lib/actions/product-kits';
 import { useState, useEffect, use, useActionState } from 'react';
 import { cn } from '@/lib/utils';
 import {
@@ -135,6 +144,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
     const [stockActual, setStockActual] = useState(product.stockActual?.toString() || '0');
     const [stockMinimo, setStockMinimo] = useState(product.stockMinimo?.toString() || '0');
     const [activo, setActivo] = useState(product.activo ? 'true' : 'false');
+    const [controlaLotes, setControlaLotes] = useState(product.controlaLotes ? 'true' : 'false');
     const [imagenUrl, setImagenUrl] = useState(product.imagenUrl || '');
     const [images, setImages] = useState(product.productImages || []);
     const [activePreviewUrl, setActivePreviewUrl] = useState(product.imagenUrl || '');
@@ -347,6 +357,9 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                         </TabsTrigger>
                                         <TabsTrigger value="inventory" className="text-xs font-bold text-slate-500 rounded-md px-3.5 py-1.5 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
                                             Inventario
+                                        </TabsTrigger>
+                                        <TabsTrigger value="kit" className="text-xs font-bold text-slate-500 rounded-md px-3.5 py-1.5 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
+                                            Kit
                                         </TabsTrigger>
                                         <TabsTrigger value="multimedia" className="text-xs font-bold text-slate-500 rounded-md px-3.5 py-1.5 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
                                             Multimedia
@@ -586,15 +599,28 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                             {/* Stock Mínimo */}
                                             <div className="space-y-1">
                                                 <Label htmlFor="stockMinimo" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Stock Mínimo (Alerta de Reorden)</Label>
-                                                <Input 
+                                                <Input
                                                     id="stockMinimo"
-                                                    name="stockMinimo" 
-                                                    value={stockMinimo} 
+                                                    name="stockMinimo"
+                                                    value={stockMinimo}
                                                     onChange={(e) => setStockMinimo(e.target.value)}
                                                     type="number"
                                                     required
                                                     className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
                                                 />
+                                            </div>
+
+                                            <div className="space-y-1 sm:col-span-2">
+                                                <Label htmlFor="controlaLotes" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Control de Lotes y Vencimientos</Label>
+                                                <Select name="controlaLotes" value={controlaLotes} onValueChange={setControlaLotes}>
+                                                    <SelectTrigger id="controlaLotes" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full sm:w-1/2">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="rounded-lg">
+                                                        <SelectItem value="false" className="text-xs sm:text-sm cursor-pointer">No controla lotes</SelectItem>
+                                                        <SelectItem value="true" className="text-xs sm:text-sm cursor-pointer">Este producto controla lotes y vencimientos</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                         </div>
 
@@ -642,7 +668,12 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                             </div>
                                         </div>
                                     </TabsContent>
-                                    
+
+                                    {/* TAB: KIT / PRODUCTO COMPUESTO */}
+                                    <TabsContent value="kit" className="mt-4 space-y-4 outline-none">
+                                        <KitTab productoId={product.id} initialEsKit={product.esKit} />
+                                    </TabsContent>
+
                                     {/* TAB 4: MULTIMEDIA */}
                                     <TabsContent value="multimedia" className="mt-2 space-y-6 outline-none">
                                         <input type="hidden" name="imagenUrl" value={imagenUrl} />
@@ -1009,5 +1040,232 @@ function SubmitButton() {
                 </>
             )}
         </Button>
+    );
+}
+
+interface KitComponenteRow {
+    productoComponenteId: string;
+    cantidad: number;
+    descripcion: string;
+    costoUnitario: number;
+}
+
+function KitTab({ productoId, initialEsKit }: { productoId: string; initialEsKit: boolean }) {
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [esKitEnabled, setEsKitEnabled] = useState(initialEsKit);
+    const [hadActiveKit, setHadActiveKit] = useState(false);
+    const [componentes, setComponentes] = useState<KitComponenteRow[]>([]);
+    const [productosDisponibles, setProductosDisponibles] = useState<{ id: string; codigoInterno: string; descripcion: string; costoUnitario: number }[]>([]);
+    const [search, setSearch] = useState('');
+    const [showSearch, setShowSearch] = useState(false);
+
+    useEffect(() => {
+        Promise.all([
+            getKitDeProducto(productoId),
+            getProductosParaKit(productoId)
+        ]).then(([kit, productos]) => {
+            if (kit) {
+                setEsKitEnabled(kit.activo);
+                setHadActiveKit(kit.activo);
+                setComponentes(kit.componentes.map((c) => ({
+                    productoComponenteId: c.productoComponenteId,
+                    cantidad: c.cantidad,
+                    descripcion: c.descripcion,
+                    costoUnitario: c.costoUnitario,
+                })));
+            }
+            setProductosDisponibles(productos);
+            setLoading(false);
+        });
+    }, [productoId]);
+
+    const filteredProductos = productosDisponibles.filter((p) =>
+        !componentes.some((c) => c.productoComponenteId === p.id) &&
+        (!search || p.descripcion.toLowerCase().includes(search.toLowerCase()) || p.codigoInterno.toLowerCase().includes(search.toLowerCase()))
+    );
+
+    const addComponente = (p: { id: string; codigoInterno: string; descripcion: string; costoUnitario: number }) => {
+        setComponentes((prev) => [...prev, { productoComponenteId: p.id, cantidad: 1, descripcion: p.descripcion, costoUnitario: p.costoUnitario }]);
+        setSearch('');
+        setShowSearch(false);
+    };
+
+    const removeComponente = (productoComponenteId: string) => {
+        setComponentes((prev) => prev.filter((c) => c.productoComponenteId !== productoComponenteId));
+    };
+
+    const updateCantidad = (productoComponenteId: string, cantidad: number) => {
+        setComponentes((prev) => prev.map((c) => c.productoComponenteId === productoComponenteId ? { ...c, cantidad } : c));
+    };
+
+    const costoTotalKit = componentes.reduce((sum, c) => sum + (c.costoUnitario * (c.cantidad || 0)), 0);
+
+    const handleGuardar = async () => {
+        setSaving(true);
+        try {
+            if (esKitEnabled) {
+                if (componentes.length === 0) {
+                    toast.error('Agrega al menos un componente antes de guardar.');
+                    return;
+                }
+                const res = await crearOActualizarKit(
+                    productoId,
+                    componentes.map((c) => ({ productoComponenteId: c.productoComponenteId, cantidad: c.cantidad }))
+                );
+                if (res.success) {
+                    toast.success(res.message);
+                    setHadActiveKit(true);
+                } else {
+                    toast.error(res.error || 'Error al guardar el kit.');
+                }
+            } else if (hadActiveKit) {
+                const res = await desactivarKit(productoId);
+                if (res.success) {
+                    toast.success(res.message);
+                    setHadActiveKit(false);
+                } else {
+                    toast.error(res.error || 'Error al desactivar el kit.');
+                }
+            }
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-brand-1" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            <div className="space-y-1">
+                <Label htmlFor="esKitToggle" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">¿Este producto es un kit?</Label>
+                <Select value={esKitEnabled ? 'true' : 'false'} onValueChange={(v) => setEsKitEnabled(v === 'true')}>
+                    <SelectTrigger id="esKitToggle" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full sm:w-1/2">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-lg">
+                        <SelectItem value="false" className="text-xs sm:text-sm cursor-pointer">No, es un producto normal</SelectItem>
+                        <SelectItem value="true" className="text-xs sm:text-sm cursor-pointer">Sí, es un kit / producto compuesto</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            {esKitEnabled && (
+                <>
+                    <div className="space-y-2">
+                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Componentes del Kit</Label>
+
+                        {showSearch ? (
+                            <div className="space-y-2">
+                                <div className="relative">
+                                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                    <Input
+                                        placeholder="Buscar producto componente..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="pl-8 h-10 text-xs sm:text-sm"
+                                        autoFocus
+                                    />
+                                </div>
+                                <div className="border border-slate-100 rounded-lg max-h-48 overflow-auto bg-white shadow-sm">
+                                    {filteredProductos.length > 0 ? filteredProductos.map((p) => (
+                                        <button
+                                            key={p.id}
+                                            type="button"
+                                            onClick={() => addComponente(p)}
+                                            className="w-full px-3 py-2 text-left hover:bg-slate-50 flex justify-between items-center border-b last:border-0 border-slate-100"
+                                        >
+                                            <span className="text-xs font-medium text-slate-700">{p.descripcion} <span className="text-slate-400 font-mono">({p.codigoInterno})</span></span>
+                                            <span className="text-xs text-slate-400 font-mono">{formatCurrency(p.costoUnitario)}</span>
+                                        </button>
+                                    )) : (
+                                        <div className="p-3 text-xs text-slate-400 text-center">No se encontraron productos disponibles (los kits no pueden usarse como componentes).</div>
+                                    )}
+                                </div>
+                                <Button type="button" variant="ghost" size="sm" onClick={() => { setShowSearch(false); setSearch(''); }} className="h-8 text-xs">
+                                    Cancelar
+                                </Button>
+                            </div>
+                        ) : (
+                            <Button type="button" variant="outline" size="sm" onClick={() => setShowSearch(true)} className="h-9 text-xs font-bold">
+                                <Plus className="h-4 w-4 mr-1.5" />
+                                Agregar Componente
+                            </Button>
+                        )}
+                    </div>
+
+                    <div className="border border-slate-100 rounded-xl overflow-hidden bg-white shadow-sm">
+                        <Table>
+                            <TableHeader className="bg-slate-50">
+                                <TableRow className="hover:bg-transparent">
+                                    <TableHead className="h-9 text-slate-700 font-bold text-[10px] uppercase">Componente</TableHead>
+                                    <TableHead className="h-9 text-slate-700 font-bold text-[10px] uppercase text-center w-28">Cantidad</TableHead>
+                                    <TableHead className="h-9 text-slate-700 font-bold text-[10px] uppercase text-right">Costo Unit.</TableHead>
+                                    <TableHead className="h-9 text-slate-700 font-bold text-[10px] uppercase text-right">Subtotal</TableHead>
+                                    <TableHead className="h-9 w-10"></TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {componentes.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-20 text-center text-slate-400 text-xs font-semibold">
+                                            Aún no has agregado componentes a este kit.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : componentes.map((c) => (
+                                    <TableRow key={c.productoComponenteId} className="border-b border-slate-100 last:border-0">
+                                        <TableCell className="py-2 text-xs font-medium text-slate-700">{c.descripcion}</TableCell>
+                                        <TableCell className="py-2 text-center">
+                                            <Input
+                                                type="number"
+                                                min={1}
+                                                value={c.cantidad}
+                                                onChange={(e) => updateCantidad(c.productoComponenteId, parseInt(e.target.value) || 1)}
+                                                className="h-8 text-xs text-center w-20 mx-auto"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="py-2 text-xs text-right font-mono text-slate-600">{formatCurrency(c.costoUnitario)}</TableCell>
+                                        <TableCell className="py-2 text-xs text-right font-mono font-bold text-slate-800">{formatCurrency(c.costoUnitario * c.cantidad)}</TableCell>
+                                        <TableCell className="py-2 text-right">
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeComponente(c.productoComponenteId)} className="h-7 w-7 text-slate-400 hover:text-rose-600">
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Costo total del kit (referencia)</span>
+                        <span className="text-sm font-bold text-brand-1 font-mono">{formatCurrency(costoTotalKit)}</span>
+                    </div>
+                </>
+            )}
+
+            {!esKitEnabled && hadActiveKit && (
+                <Alert variant="error" className="text-xs font-semibold">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>Al guardar, este kit se desactivará (no se borra el historial de ventas que ya lo referencian).</span>
+                </Alert>
+            )}
+
+            <Button
+                type="button"
+                onClick={handleGuardar}
+                disabled={saving || (!esKitEnabled && !hadActiveKit)}
+                className="h-9 bg-brand-1 hover:bg-brand-2 text-white font-bold text-xs"
+            >
+                {saving ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />}
+                Guardar Kit
+            </Button>
+        </div>
     );
 }

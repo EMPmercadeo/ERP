@@ -63,6 +63,7 @@ export default function NewProductPage() {
     const [precioVenta, setPrecioVenta] = useState('0');
     const [stockActual, setStockActual] = useState('0');
     const [stockMinimo, setStockMinimo] = useState('0');
+    const [controlaLotes, setControlaLotes] = useState('false');
     const [imagenUrl, setImagenUrl] = useState('');
 
     // Derived Calculations using centralized fiscal utility
@@ -473,6 +474,19 @@ export default function NewProductPage() {
                                             placeholder="0"
                                         />
                                     </div>
+                                </div>
+
+                                <div className="space-y-1 pt-1">
+                                    <Label htmlFor="controlaLotes" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Control de Lotes y Vencimientos</Label>
+                                    <Select name="controlaLotes" value={controlaLotes} onValueChange={setControlaLotes}>
+                                        <SelectTrigger id="controlaLotes" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-lg">
+                                            <SelectItem value="false" className="text-xs sm:text-sm cursor-pointer">No controla lotes</SelectItem>
+                                            <SelectItem value="true" className="text-xs sm:text-sm cursor-pointer">Este producto controla lotes y vencimientos</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </CardContent>
                         </Card>
