@@ -405,3 +405,58 @@ Resultado de la prueba de verificación:
 --- FIN DE LA PRUEBA ---
 ```
 
+---
+
+## [2026-07-04 20:50] Tarea 3.1: Cimientos de inventario por bodega
+Estado: OK
+Archivos modificados/creados:
+- [schema.prisma](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/prisma/schema.prisma) — agregado el modelo `Bodega` e `InventarioBodega`, así como sus relaciones inversas en `Empresa`, `Sucursal` y `Producto`.
+- [context.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/auth/context.ts) — agregada la creación de la Bodega Principal en el auto-aprovisionamiento.
+- [route.ts (issuers)](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/app/api/v1/issuers/route.ts) — agregada la creación de la Caja Principal y Bodega Principal si no existen para la sucursal.
+- [backfill-bodegas.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/scripts/backfill-bodegas.ts) (nuevo) — script para regularizar las sucursales que no tienen ninguna bodega.
+- [backfill-inventario-bodega.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/scripts/backfill-inventario-bodega.ts) (nuevo) — script para inicializar `InventarioBodega` con las cantidades actuales de `Producto.stockActual`.
+Resultado de npm run build:
+```
+✓ Compiled successfully in 7.9s
+  Running TypeScript ...
+  Collecting page data using 23 workers ...
+  Generating static pages using 23 workers (17/17) in 786.5ms
+```
+Resultado de prueba de verificación:
+```
+--- INICIANDO PRUEBA DE INTEGRACIÓN DE INVENTARIO BODEGA ---
+1. Creando Empresa, Sucursal y Bodega de prueba...
+2. Creando 2 Productos con stockActual conocido...
+✓ Creados Producto A (ID: cmr74qzzk0006qgrsu1hrm856, stockActual: 15) y Producto B (ID: cmr74qzzq0008qgrsx4c0fszd, stockActual: 30)
+3. Ejecutando lógica de backfill de InventarioBodega para esta empresa...
+4. Consultando y validando cantidades de InventarioBodega...
+  - InventarioBodega Producto A: cantidad = 15 (Esperado: 15)
+  - InventarioBodega Producto B: cantidad = 30 (Esperado: 30)
+✓ VERIFICACIÓN EXITOSA: Las cantidades coinciden exactamente con stockActual.
+5. Limpiando datos de prueba...
+✓ Limpieza completada.
+--- FIN DE LA PRUEBA ---
+```
+Salida de la ejecución de backfill en base de datos local:
+- `backfill-bodegas.ts`:
+  ```
+  Iniciando script de backfill para Bodega...
+  Encontradas 150 sucursales sin bodega.
+  ...
+  ================ RESUMEN DEL BACKFILL DE BODEGAS ================
+  Total de sucursales corregidas: 150
+  ==================================================================
+  ```
+- `backfill-inventario-bodega.ts`:
+  ```
+  Iniciando script de backfill para InventarioBodega...
+  Encontradas 1 empresas para procesar.
+
+  ================ PROCESANDO INVENTARIOS POR EMPRESA ================
+  Empresa: "ERP Panamá Solutions S.A." (ID: cmr5sltb00004qgwc0vxf1xps)
+    Target Bodega: "Bodega Principal" (Código: 001, ID: cmr74r6g9000jqgc8getxhtcm)
+    ✓ Productos procesados: 150 (actualizados o creados)
+  =====================================================================
+  ```
+
+

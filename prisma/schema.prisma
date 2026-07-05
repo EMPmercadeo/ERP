@@ -59,6 +59,8 @@ model Empresa {
   periodoContables          PeriodoContable[]
   cuentasBancarias          CuentaBancaria[]
   movimientosBancarios      MovimientoBancario[]
+  bodegas                   Bodega[]
+  inventariosBodega         InventarioBodega[]
 
   @@index([createdAt])
 }
@@ -79,6 +81,7 @@ model Sucursal {
   pedidosVenta   PedidoVenta[]
   albaranesVenta AlbaranVenta[]
   empresa        Empresa        @relation(fields: [empresaId], references: [id])
+  bodegas        Bodega[]
 
   @@unique([empresaId, codigo])
   @@index([empresaId])
@@ -202,6 +205,7 @@ model Producto {
   empresa          Empresa                @relation(fields: [empresaId], references: [id])
   productImages    ProductImage[]
   movimientos      MovimientoInventario[]
+  inventariosBodega InventarioBodega[]
 
   @@unique([empresaId, codigoInterno])
   @@index([empresaId])
@@ -832,4 +836,34 @@ model MovimientoBancario {
   @@index([empresaId])
   @@index([cuentaBancariaId])
   @@index([asientoContableId])
+}
+
+model Bodega {
+  id          String   @id @default(cuid())
+  empresaId   String
+  sucursalId  String
+  codigo      String
+  nombre      String
+  activa      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  empresa     Empresa  @relation(fields: [empresaId], references: [id])
+  sucursal    Sucursal @relation(fields: [sucursalId], references: [id])
+  inventarios InventarioBodega[]
+  @@unique([sucursalId, codigo])
+  @@index([empresaId])
+}
+
+model InventarioBodega {
+  id          String   @id @default(cuid())
+  empresaId   String
+  bodegaId    String
+  productoId  String
+  cantidad    Int      @default(0)
+  updatedAt   DateTime @updatedAt
+  empresa     Empresa  @relation(fields: [empresaId], references: [id])
+  bodega      Bodega   @relation(fields: [bodegaId], references: [id])
+  producto    Producto @relation(fields: [productoId], references: [id])
+  @@unique([bodegaId, productoId])
+  @@index([empresaId])
+  @@index([productoId])
 }

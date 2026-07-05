@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
             });
 
             if (!defaultBranch) {
-                await tx.sucursal.create({
+                const nuevaSucursal = await tx.sucursal.create({
                     data: {
                         empresaId: emp.id,
                         codigo: '001',
@@ -34,7 +34,59 @@ export async function POST(request: NextRequest) {
                         activa: true
                     }
                 });
+
+                await tx.caja.create({
+                    data: {
+                        empresaId: emp.id,
+                        sucursalId: nuevaSucursal.id,
+                        codigo: '001',
+                        nombre: 'Caja Principal',
+                        activa: true,
+                    }
+                });
+
+                await tx.bodega.create({
+                    data: {
+                        empresaId: emp.id,
+                        sucursalId: nuevaSucursal.id,
+                        codigo: '001',
+                        nombre: 'Bodega Principal',
+                        activa: true,
+                    }
+                });
             } else {
+                // Ensure Caja Principal exists
+                const defaultCaja = await tx.caja.findFirst({
+                    where: { sucursalId: defaultBranch.id, codigo: '001' }
+                });
+                if (!defaultCaja) {
+                    await tx.caja.create({
+                        data: {
+                            empresaId: emp.id,
+                            sucursalId: defaultBranch.id,
+                            codigo: '001',
+                            nombre: 'Caja Principal',
+                            activa: true,
+                        }
+                    });
+                }
+
+                // Ensure Bodega Principal exists
+                const defaultBodega = await tx.bodega.findFirst({
+                    where: { sucursalId: defaultBranch.id, codigo: '001' }
+                });
+                if (!defaultBodega) {
+                    await tx.bodega.create({
+                        data: {
+                            empresaId: emp.id,
+                            sucursalId: defaultBranch.id,
+                            codigo: '001',
+                            nombre: 'Bodega Principal',
+                            activa: true,
+                        }
+                    });
+                }
+
                 await tx.sucursal.update({
                     where: { id: defaultBranch.id },
                     data: { direccion }

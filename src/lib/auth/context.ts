@@ -83,6 +83,16 @@ export async function getTenantContext(): Promise<TenantContext> {
                         }
                     });
 
+                    await tx.bodega.create({
+                        data: {
+                            empresaId: nuevaEmpresa.id,
+                            sucursalId: nuevaSucursal.id,
+                            codigo: '001',
+                            nombre: 'Bodega Principal',
+                            activa: true,
+                        }
+                    });
+
                     return await tx.usuario.create({
                         data: {
                             empresaId: nuevaEmpresa.id,
