@@ -49,8 +49,9 @@ export const InvoiceItemSchema = z.object({
 export const InvoiceSchema = z.object({
     clienteId: z.string().min(1, { message: "Selecciona un cliente" }),
     condicionPago: z.string(),
-    observaciones: z.string().optional(),
+    observaciones: z.string().nullable().optional(),
     items: z.array(InvoiceItemSchema).min(1, { message: "Agrega al menos un ítem" }),
+    bodegaId: z.string().nullable().optional(),
 });
 
 export const SupplierSchema = z.object({
@@ -84,8 +85,9 @@ export const PurchaseSchema = z.object({
     numeroFactura: z.string().min(1, { message: "El número de factura del proveedor es requerido" }),
     fechaEmision: z.string().min(1, { message: "Fecha de emisión requerida" }),
     fechaVencimiento: z.string().min(1, { message: "Fecha de vencimiento requerida" }),
-    observaciones: z.string().optional(),
+    observaciones: z.string().nullable().optional(),
     items: z.array(PurchaseItemSchema).min(1, { message: "Agrega al menos un ítem o gasto" }),
+    bodegaId: z.string().nullable().optional(),
 });
 
 export const SupplierPaymentSchema = z.object({

@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db';
 import { PurchaseSchema } from '@/lib/validations';
 import { getTenantContext } from '@/lib/auth/context';
 import { generarAsientoCompra } from '@/lib/contabilidad/asientos';
+import { resolverBodegaId, moverInventarioBodega } from './bodegas';
 
 export async function createPurchase(prevState: unknown, formData: FormData) {
     const rawItems = formData.get('items');
@@ -24,6 +25,7 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
         fechaEmision: formData.get('fechaEmision'),
         fechaVencimiento: formData.get('fechaVencimiento'),
         observaciones: formData.get('observaciones') || null,
+        bodegaId: formData.get('bodegaId') || null,
         items,
     };
 
@@ -143,6 +145,8 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
                 }
             });
 
+            const bodegaId = await resolverBodegaId(tx, empresaId, data.bodegaId ?? null);
+
             // Update inventory stock and unit cost for linked products
             for (const item of processedItems) {
                 if (item.productoId) {
@@ -152,6 +156,12 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
                             stockActual: { increment: Math.round(Number(item.cantidad)) },
                             costoUnitario: item.costoUnitario
                         }
+                    });
+                    await moverInventarioBodega(tx, {
+                        empresaId,
+                        bodegaId,
+                        productoId: item.productoId,
+                        delta: Math.round(Number(item.cantidad))
                     });
                 }
             }

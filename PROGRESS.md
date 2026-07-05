@@ -459,4 +459,44 @@ Salida de la ejecución de backfill en base de datos local:
   =====================================================================
   ```
 
+---
+
+## [2026-07-04 21:05] Tarea 3.2: Conectar InventarioBodega a compras, facturas y POS (backend)
+Estado: OK
+Archivos modificados/creados:
+- [bodegas.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/actions/bodegas.ts) (nuevo) — contiene las funciones de backend `getBodegas`, `resolverBodegaId` y `moverInventarioBodega` para gestionar stock a nivel transaccional.
+- [index.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/validations/index.ts) — se agregaron las propiedades `bodegaId` como opcionales y nulas en `PurchaseSchema` e `InvoiceSchema`.
+- [purchases.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/actions/purchases.ts) — en `createPurchase`, se llama a `resolverBodegaId` y se incrementa el inventario de la bodega correspondiente usando `moverInventarioBodega`.
+- [invoices.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/actions/invoices.ts) — en `createInvoice` y `createInvoicePOS`, se llama a `resolverBodegaId` y se decrementa el inventario de la bodega correspondiente usando `moverInventarioBodega`.
+Resultado de npm run build:
+```
+✓ Compiled successfully in 7.4s
+  Running TypeScript ...
+  Collecting page data using 23 workers ...
+  Generating static pages using 23 workers (17/17) in 750.3ms
+```
+Resultado de prueba de verificación:
+```
+--- INICIANDO PRUEBA DE TRANSACCIONES DE BODEGA ---
+1. Creando Empresa...
+   Generando plan de cuentas...
+2. Creando Usuario...
+3. Creando Sucursal, Caja y Bodega...
+   Configurando secuencia inicial en: 446054
+4. Creando Cliente y Proveedor...
+5. Creando Producto con stock inicial...
+--- COMPRA DE 5 UNIDADES (sin bodegaId) ---
+   Producto stockActual: 15 (Esperado: 15)
+   InventarioBodega cantidad: 15 (Esperado: 15)
+--- VENTA POS DE 3 UNIDADES (sin bodegaId) ---
+   Producto stockActual: 12 (Esperado: 12)
+   InventarioBodega cantidad: 12 (Esperado: 12)
+--- VENTA FACTURA DE 2 UNIDADES (con bodegaId explícito) ---
+   Redirect capturado correctamente (proceso exitoso).
+   Producto stockActual: 10 (Esperado: 10)
+   InventarioBodega cantidad: 10 (Esperado: 10)
+✓ VERIFICACIÓN DE TRANSACCIONES EXITOSA: Todos los movimientos afectaron correctamente a InventarioBodega.
+```
+
+
 

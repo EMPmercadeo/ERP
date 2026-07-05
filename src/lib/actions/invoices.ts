@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db';
 import { InvoiceSchema } from '@/lib/validations';
 
 import { getTenantContext } from '@/lib/auth/context';
+import { resolverBodegaId, moverInventarioBodega } from './bodegas';
 import { canCreateInvoice, incrementDocumentUsage } from '@/lib/actions/billing';
 import { generarAsientoFactura, generarAsientoCobro, generarAsientoCostoVenta } from '@/lib/contabilidad/asientos';
 
@@ -88,6 +89,7 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
         clienteId: formData.get('clienteId'),
         condicionPago: formData.get('condicionPago'),
         observaciones: formData.get('observaciones'),
+        bodegaId: formData.get('bodegaId') || null,
         items: items
     };
 
@@ -260,12 +262,20 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
                 costoTotal: costoVentaTotal,
             });
 
+            const bodegaId = await resolverBodegaId(tx, empresa.id, data.bodegaId ?? null);
+
             for (const item of data.items) {
                 const unidad = mapaUnidad.get(item.productoId);
                 if (unidad !== 'SRV' && unidad !== 'HRS') {
                     await tx.producto.update({
                         where: { id: item.productoId },
                         data: { stockActual: { decrement: Math.round(item.cantidad) } },
+                    });
+                    await moverInventarioBodega(tx, {
+                        empresaId: empresa.id,
+                        bodegaId,
+                        productoId: item.productoId,
+                        delta: -Math.round(item.cantidad)
                     });
                 }
             }
@@ -456,6 +466,7 @@ export async function createInvoicePOS(rawData: {
     condicionPago: string;
     metodoPago?: string;
     observaciones?: string;
+    bodegaId?: string | null;
     items: {
         productoId: string;
         descripcion: string;
@@ -597,6 +608,8 @@ export async function createInvoicePOS(rawData: {
                 costoTotal: costoVentaTotal,
             });
 
+            const bodegaId = await resolverBodegaId(tx, empresa.id, rawData.bodegaId ?? null);
+
             // Update stock
             for (const item of rawData.items) {
                 await tx.producto.update({
@@ -606,6 +619,12 @@ export async function createInvoicePOS(rawData: {
                             decrement: item.cantidad
                         }
                     }
+                });
+                await moverInventarioBodega(tx, {
+                    empresaId: empresa.id,
+                    bodegaId,
+                    productoId: item.productoId,
+                    delta: -item.cantidad
                 });
             }
 
