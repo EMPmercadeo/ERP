@@ -4,13 +4,13 @@ export const ClientSchema = z.object({
     id: z.string().optional(),
     tipoRuc: z.string().min(2, { message: "Selecciona un tipo de RUC" }),
     ruc: z.string().min(5, { message: "El RUC es requerido" }),
-    dv: z.string().max(2).optional(),
+    dv: z.string().max(2).nullable().optional(),
     razonSocial: z.string().min(2, { message: "La razón social es requerida" }),
-    email: z.string().email().optional().or(z.literal('')),
-    telefono: z.string().optional(),
-    direccion: z.string().optional(),
-    limiteCredito: z.string().optional(), // We'll parse to float
-    diasCredito: z.string().optional(), // We'll parse to int
+    email: z.string().email().or(z.literal('')).nullable().optional(),
+    telefono: z.string().nullable().optional(),
+    direccion: z.string().nullable().optional(),
+    limiteCredito: z.string().nullable().optional(), // We'll parse to float
+    diasCredito: z.string().nullable().optional(), // We'll parse to int
 });
 
 export const ProductSchema = z.object({
