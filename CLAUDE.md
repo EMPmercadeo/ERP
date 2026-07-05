@@ -80,3 +80,8 @@ Plans: `free` → `emprendedor` → `negocio` → `pro` → `empresa`. Stored as
 - Zustand store at `src/lib/store.ts` — lightweight global UI state
 - TanStack Table used in all list views; columns defined inline per component
 - `Prisma.XxxWhereInput` types for dynamic filter objects — never use `any` for where clauses
+
+### Deploy y migraciones (IMPORTANTE)
+- `package.json#build` = `prisma generate && prisma migrate deploy && next build` — **cada push a `main` que dispare un build de Vercel corre migraciones pendientes contra producción automáticamente**, sin paso manual de aprobación.
+- El usuario trabaja este mismo repo en paralelo con otra sesión (Gemini/Antigravity). Puede haber pushes a `main` que no vienen de esta sesión — revisar `git log`/`git status` antes de asumir que el working tree solo tiene tus propios cambios; un `git add -A` de otra sesión puede arrastrar archivos tuyos sin commitear.
+- Para marcar una migración como aplicada contra producción con `prisma migrate resolve`, hay que sobreescribir tanto `DATABASE_URL` como `DIRECT_URL` en `.env` (Prisma CLI usa `directUrl` para comandos de migración) — cambiar solo `DATABASE_URL` no tiene efecto. El `.env` de este proyecto tiene BOM al inicio, así que un `sed`/`awk` anclado con `^DATABASE_URL` no hace match; usar `s#DATABASE_URL=".*"#...#` sin ancla.

@@ -10,6 +10,8 @@ import { resolverBodegaId, moverInventarioBodega } from './bodegas';
 import { canCreateInvoice, incrementDocumentUsage } from '@/lib/actions/billing';
 import { generarAsientoFactura, generarAsientoCobro, generarAsientoCostoVenta } from '@/lib/contabilidad/asientos';
 import { timbrarFacturaDGI } from './billing-fe';
+import { dispatchWebhookEvent } from '@/lib/integrations/webhooks';
+import { enviarWhatsAppFactura } from '@/lib/integrations/whatsapp';
 
 // DGI Document Codes
 const DOC_TYPE_FE = 'FE'; // Factura Electrónica
@@ -426,7 +428,23 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
                 console.error('Background DGI timbrado error:', err);
             });
         }
-        
+
+        // Notificar integraciones configuradas (webhook saliente + WhatsApp), sin bloquear la respuesta
+        dispatchWebhookEvent(empresaId, 'factura.creada', {
+            facturaId: invoice.id,
+            numeroFactura: invoice.numeroCompleto,
+            total: Number(invoice.totalNeto),
+            clienteId: invoice.clienteId
+        }).catch(err => console.error('Webhook dispatch error:', err));
+
+        enviarWhatsAppFactura({
+            empresaId,
+            clienteId: invoice.clienteId,
+            facturaId: invoice.id,
+            numeroFactura: invoice.numeroCompleto,
+            total: Number(invoice.totalNeto)
+        }).catch(err => console.error('WhatsApp dispatch error:', err));
+
         redirectUrl = `/invoices?created=true&id=${invoice.id}&num=${encodeURIComponent(invoice.numeroCompleto)}&total=${invoice.totalNeto}`;
 
     } catch (error) {
@@ -554,16 +572,26 @@ export async function recordInvoicePayment(
                 },
             });
 
-            return { 
-                success: true, 
+            return {
+                success: true,
                 message: `Pago de $${paymentAmount.toFixed(2)} registrado exitosamente.`,
-                remainingSaldo: newSaldo 
+                remainingSaldo: newSaldo,
+                clienteId: invoice.clienteId,
+                montoPagado: paymentAmount,
+                metodoPago: method
             };
         });
 
         if (result.success) {
             revalidatePath('/invoices');
             revalidatePath('/receivables');
+
+            dispatchWebhookEvent(empresaId, 'pago.recibido', {
+                facturaId: invoiceId,
+                clienteId: result.clienteId,
+                monto: result.montoPagado,
+                metodoPago: result.metodoPago
+            }).catch(err => console.error('Webhook dispatch error:', err));
         }
         return result;
 
@@ -876,6 +904,22 @@ export async function createInvoicePOS(rawData: {
                 console.error('Background DGI POS timbrado error:', err);
             });
         }
+
+        // Notificar integraciones configuradas (webhook saliente + WhatsApp), sin bloquear la respuesta
+        dispatchWebhookEvent(empresaId, 'factura.creada', {
+            facturaId: invoice.id,
+            numeroFactura: invoice.numeroCompleto,
+            total: Number(totalNeto),
+            clienteId: rawData.clienteId
+        }).catch(err => console.error('Webhook dispatch error:', err));
+
+        enviarWhatsAppFactura({
+            empresaId,
+            clienteId: rawData.clienteId,
+            facturaId: invoice.id,
+            numeroFactura: invoice.numeroCompleto,
+            total: Number(totalNeto)
+        }).catch(err => console.error('WhatsApp dispatch error:', err));
 
         revalidatePath('/invoices');
         return {
