@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { after } from 'next/server';
 import { prisma } from '@/lib/db';
 import { InvoiceSchema } from '@/lib/validations';
 
@@ -424,26 +425,31 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
                 where: { id: invoice.id },
                 data: { estadoDgi: 'pendiente' }
             });
-            timbrarFacturaDGI(invoice.id).catch(err => {
-                console.error('Background DGI timbrado error:', err);
-            });
         }
 
-        // Notificar integraciones configuradas (webhook saliente + WhatsApp), sin bloquear la respuesta
-        dispatchWebhookEvent(empresaId, 'factura.creada', {
-            facturaId: invoice.id,
-            numeroFactura: invoice.numeroCompleto,
-            total: Number(invoice.totalNeto),
-            clienteId: invoice.clienteId
-        }).catch(err => console.error('Webhook dispatch error:', err));
+        // Tareas en background (timbrado DGI, webhook saliente, WhatsApp): after() garantiza que
+        // Next.js las ejecute tras enviar la respuesta, incluso en runtimes serverless donde el
+        // proceso puede congelarse justo después del redirect() de más abajo.
+        after(async () => {
+            if (feConfig && feConfig.activo) {
+                await timbrarFacturaDGI(invoice.id);
+            }
 
-        enviarWhatsAppFactura({
-            empresaId,
-            clienteId: invoice.clienteId,
-            facturaId: invoice.id,
-            numeroFactura: invoice.numeroCompleto,
-            total: Number(invoice.totalNeto)
-        }).catch(err => console.error('WhatsApp dispatch error:', err));
+            await dispatchWebhookEvent(empresaId, 'factura.creada', {
+                facturaId: invoice.id,
+                numeroFactura: invoice.numeroCompleto,
+                total: Number(invoice.totalNeto),
+                clienteId: invoice.clienteId
+            });
+
+            await enviarWhatsAppFactura({
+                empresaId,
+                clienteId: invoice.clienteId,
+                facturaId: invoice.id,
+                numeroFactura: invoice.numeroCompleto,
+                total: Number(invoice.totalNeto)
+            });
+        });
 
         redirectUrl = `/invoices?created=true&id=${invoice.id}&num=${encodeURIComponent(invoice.numeroCompleto)}&total=${invoice.totalNeto}`;
 
@@ -586,12 +592,14 @@ export async function recordInvoicePayment(
             revalidatePath('/invoices');
             revalidatePath('/receivables');
 
-            dispatchWebhookEvent(empresaId, 'pago.recibido', {
-                facturaId: invoiceId,
-                clienteId: result.clienteId,
-                monto: result.montoPagado,
-                metodoPago: result.metodoPago
-            }).catch(err => console.error('Webhook dispatch error:', err));
+            after(async () => {
+                await dispatchWebhookEvent(empresaId, 'pago.recibido', {
+                    facturaId: invoiceId,
+                    clienteId: result.clienteId,
+                    monto: result.montoPagado,
+                    metodoPago: result.metodoPago
+                });
+            });
         }
         return result;
 
@@ -900,26 +908,30 @@ export async function createInvoicePOS(rawData: {
                 where: { id: invoice.id },
                 data: { estadoDgi: 'pendiente' }
             });
-            timbrarFacturaDGI(invoice.id).catch(err => {
-                console.error('Background DGI POS timbrado error:', err);
-            });
         }
 
-        // Notificar integraciones configuradas (webhook saliente + WhatsApp), sin bloquear la respuesta
-        dispatchWebhookEvent(empresaId, 'factura.creada', {
-            facturaId: invoice.id,
-            numeroFactura: invoice.numeroCompleto,
-            total: Number(totalNeto),
-            clienteId: rawData.clienteId
-        }).catch(err => console.error('Webhook dispatch error:', err));
+        // Tareas en background (timbrado DGI, webhook saliente, WhatsApp): after() garantiza que
+        // Next.js las ejecute tras enviar la respuesta, incluso en runtimes serverless.
+        after(async () => {
+            if (feConfig && feConfig.activo) {
+                await timbrarFacturaDGI(invoice.id);
+            }
 
-        enviarWhatsAppFactura({
-            empresaId,
-            clienteId: rawData.clienteId,
-            facturaId: invoice.id,
-            numeroFactura: invoice.numeroCompleto,
-            total: Number(totalNeto)
-        }).catch(err => console.error('WhatsApp dispatch error:', err));
+            await dispatchWebhookEvent(empresaId, 'factura.creada', {
+                facturaId: invoice.id,
+                numeroFactura: invoice.numeroCompleto,
+                total: Number(totalNeto),
+                clienteId: rawData.clienteId
+            });
+
+            await enviarWhatsAppFactura({
+                empresaId,
+                clienteId: rawData.clienteId,
+                facturaId: invoice.id,
+                numeroFactura: invoice.numeroCompleto,
+                total: Number(totalNeto)
+            });
+        });
 
         revalidatePath('/invoices');
         return {
