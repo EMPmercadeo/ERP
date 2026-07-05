@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { getTenantContext } from '@/lib/auth/context';
+import { encrypt } from '@/lib/utils/crypto';
 
 export async function updateDgiSettings(empresaId: string, data: {
     razonSocial: string;
@@ -49,6 +50,28 @@ export async function updateDgiSettings(empresaId: string, data: {
             }
         });
 
+        // Upsert ConfiguracionFacturacionElectronica
+        const credencialCifrada = data.passwordPac ? encrypt(data.passwordPac) : '';
+        const ambiente = data.ambienteDgi === '2' ? 1 : 2; // DGI: 1 = producción, 2 = pruebas
+
+        await prisma.configuracionFacturacionElectronica.upsert({
+            where: { empresaId },
+            create: {
+                empresaId,
+                proveedor: 'GENERICO',
+                ambiente,
+                baseUrl: 'https://api.generico-pac.com',
+                authTipo: 'API_KEY',
+                credencialCifrada,
+                activo: empresa.fiscalEnabled
+            },
+            update: {
+                ambiente,
+                credencialCifrada: data.passwordPac ? credencialCifrada : undefined,
+                activo: empresa.fiscalEnabled
+            }
+        });
+
         revalidatePath('/settings');
         return { success: true, message: 'Configuración DGI guardada correctamente.' };
     } catch (error) {
@@ -84,6 +107,33 @@ export async function updateCompanyPlan(empresaId: string, planType: string) {
             where: { id: empresaId },
             data: updateData
         });
+
+        // Sync with ConfiguracionFacturacionElectronica active flag
+        const config = await prisma.configuracionFacturacionElectronica.findUnique({
+            where: { empresaId }
+        });
+        if (config) {
+            await prisma.configuracionFacturacionElectronica.update({
+                where: { empresaId },
+                data: {
+                    activo: fiscalEnabled,
+                    ambiente: planType === 'free' ? 2 : config.ambiente
+                }
+            });
+        } else {
+            // Create a default one if plan updated but none exists
+            await prisma.configuracionFacturacionElectronica.create({
+                data: {
+                    empresaId,
+                    proveedor: 'GENERICO',
+                    ambiente: 2,
+                    baseUrl: 'https://api.generico-pac.com',
+                    authTipo: 'API_KEY',
+                    credencialCifrada: '',
+                    activo: fiscalEnabled
+                }
+            });
+        }
 
         revalidatePath('/settings');
         return { success: true, message: `Plan actualizado a ${planType.toUpperCase()} correctamente.` };

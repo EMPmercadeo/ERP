@@ -64,6 +64,8 @@ model Empresa {
   lotes                     LoteProducto[]
   kits                      ProductoKit[]
   componentesKit            ProductoKitComponente[]
+  configuracionFE           ConfiguracionFacturacionElectronica?
+  facturasPACLog            FacturaPACLog[]
 
   @@index([createdAt])
 }
@@ -238,11 +240,18 @@ model Factura {
   totalPagado      Decimal        @default(0)
   saldoPendiente   Decimal
   estadoDgi        String         @default("borrador")
-  cufe             String?
-  qrUrl            String?
-  xmlContent       String?
-  fechaAceptacion  DateTime?
-  errorDgi         String?
+  cufe                    String?        @unique
+  qrUrl                   String?
+  xmlContent              String?
+  fechaAceptacion         DateTime?
+  errorDgi                String?
+  protocoloAutorizacion   String?
+  fechaAutorizacionDGI    DateTime?
+  qrContent               String?        @db.Text
+  xmlFirmado              String?        @db.Text
+  motivoAnulacionDGI      String?
+  fechaAnulacionDGI       DateTime?
+  pacLogs                 FacturaPACLog[]
   facturaOrigenId  String?
   motivoAnulacion  String?
   source           String         @default("manual")
@@ -929,4 +938,36 @@ model ProductoKitComponente {
   @@unique([productoKitId, productoComponenteId])
   @@index([empresaId])
   @@index([productoComponenteId])
+}
+
+model ConfiguracionFacturacionElectronica {
+  id                 String   @id @default(cuid())
+  empresaId          String   @unique
+  proveedor          String
+  ambiente           Int
+  baseUrl            String
+  authTipo           String
+  credencialCifrada  String   @db.Text
+  activo             Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  empresa            Empresa  @relation(fields: [empresaId], references: [id])
+}
+
+model FacturaPACLog {
+  id               String   @id @default(cuid())
+  facturaId        String
+  empresaId        String
+  tipoOperacion    String
+  requestPayload   Json
+  responsePayload  Json
+  codigoResultado  String?
+  mensajeResultado String?
+  exitoso          Boolean
+  createdAt        DateTime @default(now())
+  factura          Factura  @relation(fields: [facturaId], references: [id])
+  empresa          Empresa  @relation(fields: [empresaId], references: [id])
+
+  @@index([empresaId])
+  @@index([facturaId])
 }

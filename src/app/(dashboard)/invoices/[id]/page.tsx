@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getTenantContext } from '@/lib/auth/context';
+import { DgiActions } from '@/components/invoices/DgiActions';
 
 export const dynamic = 'force-dynamic';
 import {
@@ -70,11 +71,22 @@ export default async function InvoiceDetailPage(props: PageProps) {
     }
 
     const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'aceptada': return 'bg-green-500 hover:bg-green-600';
-            case 'rechazada': return 'bg-red-500 hover:bg-red-600';
-            case 'pendiente': return 'bg-yellow-500 hover:bg-yellow-600';
-            default: return 'bg-gray-500 hover:bg-gray-600';
+        switch ((status || '').toLowerCase()) {
+            case 'authorized':
+            case 'autorizada':
+            case 'aceptada':
+                return 'bg-green-600 hover:bg-green-700 text-white';
+            case 'canceled':
+            case 'anulada':
+                return 'bg-slate-500 hover:bg-slate-600 text-white';
+            case 'error':
+            case 'rechazada':
+                return 'bg-red-600 hover:bg-red-700 text-white';
+            case 'pending':
+            case 'pendiente':
+                return 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse';
+            default:
+                return 'bg-slate-400 hover:bg-slate-500 text-white';
         }
     };
 
@@ -242,6 +254,15 @@ export default async function InvoiceDetailPage(props: PageProps) {
                                             CUFE: {invoice.cufe}
                                         </div>
                                     )}
+                                    {invoice.qrContent && (
+                                        <div className="mt-2">
+                                            <Button variant="outline" size="sm" className="w-full text-xs" asChild>
+                                                <a href={invoice.qrContent} target="_blank" rel="noopener noreferrer">
+                                                    Ver CAFE (DGI)
+                                                </a>
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                                 <Separator />
                                 <div>
@@ -255,6 +276,9 @@ export default async function InvoiceDetailPage(props: PageProps) {
                                 </div>
                             </CardContent>
                         </Card>
+
+                        {/* DGI Actions Client Component */}
+                        <DgiActions facturaId={invoice.id} estadoDgi={invoice.estadoDgi} />
                     </div>
                 </div>
             </div>

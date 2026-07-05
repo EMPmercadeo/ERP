@@ -9,6 +9,7 @@ import { getTenantContext } from '@/lib/auth/context';
 import { resolverBodegaId, moverInventarioBodega } from './bodegas';
 import { canCreateInvoice, incrementDocumentUsage } from '@/lib/actions/billing';
 import { generarAsientoFactura, generarAsientoCobro, generarAsientoCostoVenta } from '@/lib/contabilidad/asientos';
+import { timbrarFacturaDGI } from './billing-fe';
 
 // DGI Document Codes
 const DOC_TYPE_FE = 'FE'; // Factura Electrónica
@@ -411,6 +412,20 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
 
         // Increment monthly document usage
         await incrementDocumentUsage(empresaId);
+
+        // Si la facturación electrónica está configurada y activa, timbrar en background
+        const feConfig = await prisma.configuracionFacturacionElectronica.findUnique({
+            where: { empresaId }
+        });
+        if (feConfig && feConfig.activo) {
+            await prisma.factura.update({
+                where: { id: invoice.id },
+                data: { estadoDgi: 'pendiente' }
+            });
+            timbrarFacturaDGI(invoice.id).catch(err => {
+                console.error('Background DGI timbrado error:', err);
+            });
+        }
         
         redirectUrl = `/invoices?created=true&id=${invoice.id}&num=${encodeURIComponent(invoice.numeroCompleto)}&total=${invoice.totalNeto}`;
 
@@ -847,6 +862,20 @@ export async function createInvoicePOS(rawData: {
 
         // Increment usage
         await incrementDocumentUsage(empresaId);
+
+        // Si la facturación electrónica está configurada y activa, timbrar en background
+        const feConfig = await prisma.configuracionFacturacionElectronica.findUnique({
+            where: { empresaId }
+        });
+        if (feConfig && feConfig.activo) {
+            await prisma.factura.update({
+                where: { id: invoice.id },
+                data: { estadoDgi: 'pendiente' }
+            });
+            timbrarFacturaDGI(invoice.id).catch(err => {
+                console.error('Background DGI POS timbrado error:', err);
+            });
+        }
 
         revalidatePath('/invoices');
         return {
