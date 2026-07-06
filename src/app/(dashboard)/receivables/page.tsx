@@ -21,7 +21,7 @@ export default async function ReceivablesPage(props: {
     const search = searchParams.search || '';
     const sortBy = searchParams.sortBy || 'fechaEmision';
     const sortOrder = (searchParams.sortOrder === 'desc' ? 'desc' : 'asc') as 'asc' | 'desc';
-    const limit = Number(searchParams.limit) || 20;
+    const limit = Math.min(Number(searchParams.limit) || 20, 100);
     const skip = (page - 1) * limit;
 
     const andConditions: Prisma.FacturaWhereInput[] = [];

@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ChevronLeft, Download, Send } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { QuotePDFDownloadButton } from '@/components/quotes/QuotePDFDownloadButton';
+import { SendQuoteButton } from '@/components/quotes/SendQuoteButton';
 import { getTenantContext } from '@/lib/auth/context';
 
 export const dynamic = 'force-dynamic';
@@ -108,10 +109,7 @@ export default async function QuoteDetailPage(props: PageProps) {
                     </div>
                     <div className="flex gap-2">
                         <QuotePDFDownloadButton quote={quote} />
-                        <Button variant="outline">
-                            <Send className="mr-2 h-4 w-4" />
-                            Enviar
-                        </Button>
+                        <SendQuoteButton />
                     </div>
                 </div>
             </Topbar>

@@ -53,7 +53,7 @@ export default async function ReportsPage(props: PageProps) {
     const paymentStatus = searchParams.paymentStatus || 'all';
     const periodoRapido = searchParams.periodoRapido || 'mes';
     const page = Number(searchParams.page) || 1;
-    const limit = Number(searchParams.limit) || 10;
+    const limit = Math.min(Number(searchParams.limit) || 10, 100);
 
     // Parse dates or default to current month
     let dateFrom = dateFromStr ? parseISO(dateFromStr) : startOfMonth(new Date());

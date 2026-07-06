@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 import { SupplierSchema } from '@/lib/validations';
 import { getTenantContext } from '@/lib/auth/context';
+import { sendEmail } from '@/lib/email/resend';
 
 export async function createSupplier(prevState: unknown, formData: FormData) {
     const rawData = {
@@ -340,7 +341,17 @@ export async function updateSupplierInline(id: string, data: {
 
 export async function sendSupplierEmailAction(id: string, email: string, tipo: 'estado_cuenta' | 'orden_compra') {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId, emailVerified } = await getTenantContext();
+
+        // No permitir que una cuenta sin verificar dispare envíos de correo en nombre
+        // de la empresa (phishing/spam desde cuentas recién creadas y no confirmadas).
+        if (!emailVerified) {
+            return {
+                success: false,
+                error: 'Debes verificar tu correo electrónico antes de poder enviar correos. Revisa tu bandeja de entrada o reenvía el correo de verificación desde tu perfil.'
+            };
+        }
+
         const existing = await prisma.proveedor.findFirst({
             where: { id, empresaId }
         });
@@ -349,14 +360,30 @@ export async function sendSupplierEmailAction(id: string, email: string, tipo: '
             return { success: false, error: 'Proveedor no encontrado' };
         }
 
-        // Simulamos envío seguro y registramos en bitácora si hubiere
-        await new Promise(resolve => setTimeout(resolve, 800));
+        const destinatario = email || existing.email;
+        if (!destinatario) {
+            return { success: false, error: 'El proveedor no tiene un correo registrado.' };
+        }
+
+        const asunto = tipo === 'estado_cuenta'
+            ? `Estado de cuenta - ${existing.razonSocial}`
+            : `Orden de compra - ${existing.razonSocial}`;
+
+        const html = tipo === 'estado_cuenta'
+            ? `<p>Hola ${existing.razonSocial},</p><p>Tu saldo pendiente actual es de <strong>$${Number(existing.saldoPendiente).toFixed(2)}</strong>.</p><p>Este es un correo automático de ERP Panamá.</p>`
+            : `<p>Hola ${existing.razonSocial},</p><p>Adjuntamos el detalle de la orden de compra correspondiente.</p><p>Este es un correo automático de ERP Panamá.</p>`;
+
+        const result = await sendEmail({ to: destinatario, subject: asunto, html });
+
+        if (!result.success) {
+            return { success: false, error: result.message };
+        }
 
         return {
             success: true,
             message: tipo === 'estado_cuenta'
-                ? `Estado de cuenta actualizado enviado a ${email || existing.razonSocial}`
-                : `Correo comercial enviado a ${email || existing.razonSocial}`
+                ? `Estado de cuenta enviado a ${destinatario}`
+                : `Correo comercial enviado a ${destinatario}`
         };
     } catch (error) {
         console.error('Error sending email:', error);

@@ -11,7 +11,8 @@ import {
     createUserWithEmailAndPassword,
     signOut as firebaseSignOut,
     onAuthStateChanged,
-    updateProfile as firebaseUpdateProfile
+    updateProfile as firebaseUpdateProfile,
+    sendEmailVerification as firebaseSendEmailVerification
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 
@@ -27,6 +28,8 @@ interface AuthContextType {
     signOut: () => Promise<void>;
     resetPassword: (email: string) => Promise<void>;
     refreshUser: () => Promise<void>;
+    resendVerificationEmail: () => Promise<void>;
+    isEmailVerified: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -251,6 +254,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const cred = await createUserWithEmailAndPassword(auth, email, password);
             const idToken = await cred.user.getIdToken();
             await setSessionToken(idToken);
+            try {
+                await firebaseSendEmailVerification(cred.user);
+            } catch (verifyError) {
+                // No bloqueamos el registro si falla el envío del correo de verificación
+                // (ej. límite de envíos de Firebase) — el usuario puede reenviarlo luego
+                // desde su perfil.
+                console.error('Error enviando correo de verificación:', verifyError);
+            }
         } catch (error: unknown) {
             console.error('Error signing up:', error);
             throw error;
@@ -274,6 +285,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await sendPasswordResetEmail(auth, email);
     };
 
+    const resendVerificationEmail = async () => {
+        if (!auth.currentUser) {
+            throw new Error('No hay una sesión activa de Firebase.');
+        }
+        await firebaseSendEmailVerification(auth.currentUser);
+    };
+
     return (
         <AuthContext.Provider value={{
             user: user || mockUserRef.current,
@@ -286,7 +304,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             signUpWithEmail,
             signOut,
             resetPassword,
-            refreshUser
+            refreshUser,
+            resendVerificationEmail,
+            isEmailVerified: (user || mockUserRef.current)?.emailVerified ?? false
         }}>
             {children}
         </AuthContext.Provider>

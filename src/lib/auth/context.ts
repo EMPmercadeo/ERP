@@ -1,9 +1,9 @@
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { redirect } from 'next/navigation';
-import { getUserRole } from '@/lib/actions/auth'; // Reusing this or similar logic
 import { crearPlanCuentasParaEmpresa } from '@/lib/contabilidad/planCuentasDefault';
 import { adminAuth } from '@/lib/firebase/admin';
+import { resolveUsuarioPorEmail } from '@/lib/auth/resolveUsuario';
 
 // Mock session retriever. In real usage, this might decode a JWT, check cookies, or call Firebase Admin.
 // We'll simulate getting the user email/id from headers or a mock "current user".
@@ -13,6 +13,10 @@ export interface TenantContext {
     empresaId: string;
     role: string;
     isImpersonating?: boolean;
+    // true solo si Firebase confirma que el email del usuario está verificado
+    // (claim `email_verified` del ID token, vía Firebase Admin SDK). Nunca se
+    // toma de una columna guardada en Postgres porque puede desactualizarse.
+    emailVerified: boolean;
 }
 
 export async function getTenantContext(): Promise<TenantContext> {
@@ -20,10 +24,12 @@ export async function getTenantContext(): Promise<TenantContext> {
     const cookieStore = await cookies();
     const sessionCookieValue = cookieStore.get('session_token')?.value;
     let sessionEmail: string | undefined;
+    let emailVerified = false;
     if (sessionCookieValue) {
         try {
             const decoded = await adminAuth.verifySessionCookie(sessionCookieValue, true);
             sessionEmail = decoded.email?.trim().toLowerCase();
+            emailVerified = decoded.email_verified === true;
         } catch {
             sessionEmail = undefined;
         }
@@ -31,14 +37,7 @@ export async function getTenantContext(): Promise<TenantContext> {
 
     let devUser = null;
     if (sessionEmail && sessionEmail !== 'guest') {
-        devUser = await prisma.usuario.findFirst({
-            where: {
-                OR: [
-                    { email: sessionEmail },
-                    { email: { equals: sessionEmail, mode: 'insensitive' } }
-                ]
-            }
-        });
+        devUser = await resolveUsuarioPorEmail(sessionEmail);
 
         // Auto-aprovisionar nueva cuenta en PostgreSQL para usuarios que inician sesión/registran por primera vez vía Firebase (Google o Email)
         if (!devUser && sessionEmail.includes('@')) {
@@ -117,6 +116,10 @@ export async function getTenantContext(): Promise<TenantContext> {
         devUser = await prisma.usuario.findFirst({
             where: { email: { contains: 'empsignature', mode: 'insensitive' } }
         });
+        // Modo mock de desarrollo: no hay ID Token real de Firebase que decodificar,
+        // así que no podemos verificar email_verified de verdad. Se asume true para
+        // no bloquear el flujo de desarrollo local.
+        emailVerified = true;
     }
 
     if (!devUser) {
@@ -156,6 +159,7 @@ export async function getTenantContext(): Promise<TenantContext> {
         userId: devUser.id, // Always the real user ID
         empresaId: activeEmpresaId,
         role: devUser.rol,
-        isImpersonating
+        isImpersonating,
+        emailVerified
     };
 }

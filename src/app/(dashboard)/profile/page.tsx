@@ -11,14 +11,27 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState } from 'react';
 import { updatePersonalInfo, changePassword } from '@/lib/actions/profile';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Lock, User as UserIcon } from 'lucide-react';
+import { Eye, EyeOff, Lock, User as UserIcon, MailWarning, MailCheck } from 'lucide-react';
 
 export default function ProfilePage() {
-    const { user, role, refreshUser } = useAuth();
+    const { user, role, refreshUser, isEmailVerified, resendVerificationEmail } = useAuth();
     const [isPersonalLoading, setIsPersonalLoading] = useState(false);
     const [isPasswordLoading, setIsPasswordLoading] = useState(false);
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
+    const [isResendingVerification, setIsResendingVerification] = useState(false);
+
+    const handleResendVerification = async () => {
+        setIsResendingVerification(true);
+        try {
+            await resendVerificationEmail();
+            toast.success('Correo de verificación reenviado. Revisa tu bandeja de entrada.');
+        } catch (error) {
+            toast.error('No se pudo reenviar el correo de verificación. Intenta de nuevo en unos minutos.');
+        } finally {
+            setIsResendingVerification(false);
+        }
+    };
 
     // Derived state
     const displayName = user?.displayName || user?.email?.split('@')[0] || 'Usuario';
@@ -96,7 +109,33 @@ export default function ProfilePage() {
                                 <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
                                     Cuenta Activa
                                 </span>
+                                {isEmailVerified ? (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
+                                        <MailCheck className="h-3 w-3" /> Correo Verificado
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                                        <MailWarning className="h-3 w-3" /> Correo sin verificar
+                                    </span>
+                                )}
                             </div>
+                            {!isEmailVerified && (
+                                <div className="flex flex-col items-center md:items-start gap-1 pt-1">
+                                    <p className="text-xs text-muted-foreground max-w-sm">
+                                        Algunas acciones (como enviar correos a proveedores o clientes) requieren que verifiques tu email primero.
+                                    </p>
+                                    <Button
+                                        type="button"
+                                        variant="link"
+                                        size="sm"
+                                        className="h-auto p-0 text-xs"
+                                        onClick={handleResendVerification}
+                                        disabled={isResendingVerification}
+                                    >
+                                        {isResendingVerification ? 'Reenviando...' : 'Reenviar correo de verificación'}
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     </div>
 

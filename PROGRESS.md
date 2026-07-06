@@ -789,3 +789,181 @@ Estado: OK
 - Prueba end-to-end real vía HTTP del endpoint externo (con cookie de sesión real) sigue bloqueada por falta de credenciales web de Firebase en el entorno local — si se necesita en el futuro, requeriría configurar `NEXT_PUBLIC_FIREBASE_API_KEY` (u otra) localmente para mintear un ID token real.
 - Los sistemas DGI duplicados y el kill-switch `PAC_INTEGRATION_ENABLED` quedaron explícitamente fuera de alcance de esta sesión (congelados por decisión previa), no se tocaron.
 
+
+---
+
+## [2026-07-06] Item 5: Paginación / límite máximo de página en findMany
+
+Auditoría (grep de `findMany(` en `src/`, 47 archivos): la mayoría de las listas ya usan `skip`/`take` (patrón establecido: `invoices`, `receivables`, `quotes`, `clients`, `products`). Hallazgos concretos:
+
+1. **Sin tope máximo de `limit`** (un cliente podía pedir `?limit=999999` y traer la tabla completa): `invoices/page.tsx`, `receivables/page.tsx`, `quotes/page.tsx`, `reports/page.tsx` (Factura vía `getInvoiceDetail`). `clients/page.tsx` y `products/page.tsx` ya tenían el patrón correcto (`Math.min(Number(searchParams.limit) || 20, 100)`) — se replicó ese mismo patrón en los 4 archivos sin tope.
+2. **Sin paginación de ningún tipo** (`findMany` sin `take`/`skip`/`cursor`): `bank-accounts/[id]/page.tsx` — la vista de detalle de una `CuentaBancaria` traía TODOS sus `MovimientoBancario` de una sola vez. Esta es exactamente la tabla que el brief marcó como prioritaria. Se agregó paginación server-side (`skip`/`take`, página por defecto 50, tope 100) más un paginador Anterior/Siguiente en `BankAccountDetailClient.tsx`. Importante: los totales de la cabecera (saldo actual, depósitos, retiros, pendientes de conciliar) se recalcularon con `aggregate()`/`count()` sobre el universo completo de la cuenta — antes se derivaban con `.reduce()` sobre el array de movimientos, que ahora solo trae una página, así que si no se corregía esto los totales se habrían roto silenciosamente al paginar.
+
+Archivos modificados:
+- `src/app/(dashboard)/invoices/page.tsx`, `receivables/page.tsx`, `quotes/page.tsx`, `reports/page.tsx` — agregado tope de 100 al `limit`.
+- `src/app/(dashboard)/bank-accounts/[id]/page.tsx` — paginación real (`skip`/`take`) + `aggregate`/`count` para los totales de cabecera.
+- `src/components/bank-accounts/BankAccountDetailClient.tsx` — recibe `totales` y `pagination` como props separadas de `movimientos`; agregado paginador Anterior/Siguiente.
+
+Resultado de `npx tsc --noEmit`: sin errores.
+Resultado de `npm run build`: no se pudo ejecutar completo en este entorno (ver nota de red en el ítem 1). Pendiente antes de push.
+
+Encontrado pero **fuera de alcance de esta sesión** (documentado, no corregido, para no expandir el alcance sin confirmación):
+- `src/app/(dashboard)/delivery-notes/page.tsx` (`AlbaranVenta.findMany`) — sin `take`/`skip`, tabla que también crece con el negocio. No estaba en la lista de prioridad del brief (Factura, MovimientoBancario, Producto, Cliente).
+- `src/app/(dashboard)/purchases/page.tsx` (`take: 100` fijo), `src/app/(dashboard)/suppliers/page.tsx` (`take: 1000` fijo), `src/app/(dashboard)/orders/page.tsx` (`take: 100` fijo) — tienen un tope duro pero no paginación real (no hay forma de ver más allá del límite fijo). Funcionan como salvaguarda de escalabilidad pero no cumplen del todo "paginación con cursor" — quedan como candidatos para una tarea futura si el usuario confirma que se necesita ver más allá de esos límites.
+
+---
+
+## [2026-07-06] Item 2: Auditoría de botones sin funcionalidad
+
+El usuario no tenía una lista específica ("algunos sí, otros no funcionan, revisa todo"), así que se hizo un barrido amplio: grep de patrones sospechosos (`onClick={() => {}}`, TODO/WIP/"próximamente", placeholders) en todo `src/`, más una revisión dirigida de ~20 modales de creación/edición (clients, products, suppliers, bank-accounts, warehouses, purchases) y las listas con botones de acción por fila (editar/eliminar/toggle estado).
+
+Resultado: la gran mayoría de los botones SÍ están conectados a Server Actions reales (creación/edición de proveedores, cuentas bancarias, bodegas, pagos, cambios de estado de pedidos, etc.) — no se encontró un patrón generalizado de botones rotos.
+
+Hallazgos reales (2):
+1. **`src/app/(dashboard)/quotes/[id]/page.tsx`** — el botón "Enviar" (header de una cotización ya creada) no tenía `onClick` en absoluto: parecía un botón activo y no hacía nada al hacer click. Esta es la causa raíz típica que describía el brief ("presente pero sin funcionalidad").
+   - **Fix**: se creó `src/components/quotes/SendQuoteButton.tsx` (client component) que ahora muestra un toast honesto explicando que el envío por correo no está disponible todavía porque depende de tener un proveedor de email configurado (Item 3 de esta misma fase), en vez de no responder al click.
+2. **`src/components/quotes/QuoteSummarySidebar.tsx`** (línea 202, botón "Enviar al Cliente" en el formulario de creación de cotización) — está con `disabled={true}` a propósito. A diferencia del caso anterior, este SÍ comunica honestamente al usuario que no está disponible (no se puede ni hacer click), así que no se tocó — no es el patrón de bug reportado.
+
+Relacionado, pero **no es un botón roto sino algo peor** (ya identificado en `ROADMAP_IMPLEMENTACION.md` Tarea 4.1, no se tocó en esta sesión): `sendSupplierEmailAction` (`src/lib/actions/suppliers.ts:341`) simula el envío con un `setTimeout` de 800ms y devuelve `success: true` con un mensaje de "correo enviado" — el botón SÍ funciona (no está roto), pero miente sobre el resultado. Esto se resuelve de raíz junto con el Item 3 (Resend), no antes.
+
+Falso positivo descartado: los botones "Exportar a Excel/CSV" del dashboard (`DashboardHeader.tsx`) tienen `disabled` condicionado a que los datos hayan cargado — es una guarda defensiva correcta, no un bug.
+
+Archivos modificados:
+- `src/components/quotes/SendQuoteButton.tsx` (nuevo)
+- `src/app/(dashboard)/quotes/[id]/page.tsx` (usa el componente nuevo en vez del botón sin onClick)
+
+Resultado de `npx tsc --noEmit`: sin errores.
+
+---
+
+## [2026-07-06] Item 3: SMTP y entregabilidad (Resend)
+
+Estado: OK (código) / BLOQUEADO (pasos externos — DNS y cuenta Resend, confirmado por el usuario que aún no los tiene).
+
+Se implementó el lado de código, dejando pendientes únicamente los pasos que requieren credenciales/acceso del usuario:
+
+1. Proveedor elegido: **Resend** (recomendado por integración simple con Vercel/Next.js). Se instaló el paquete `resend` (`npm install resend`, agregado a `package.json`).
+2. `src/lib/email/resend.ts` (nuevo) — cliente único de Resend para toda la plataforma (a diferencia de WhatsApp/webhooks que son credenciales por empresa, el remitente de email es de la plataforma, no por tenant). Expone `sendEmail({ to, subject, html, replyTo })` y `isEmailConfigured()`. Sigue el mismo patrón de "kill switch" ya usado en `src/lib/integrations/whatsapp.ts`: si faltan `RESEND_API_KEY` o `RESEND_FROM_EMAIL`, devuelve un error explícito en vez de fallar silenciosamente o simular el envío.
+3. Se migró el único envío de correo "hardcodeado/simulado" encontrado en el proyecto: `sendSupplierEmailAction` (`src/lib/actions/suppliers.ts`) usaba un `setTimeout` de 800ms y devolvía `success: true` sin enviar nada. Ahora llama a `sendEmail()` real. Si `RESEND_API_KEY`/`RESEND_FROM_EMAIL` no están configuradas (que es el caso actual), la función devuelve el error claro de `isEmailConfigured()` en vez de fingir éxito — comportamiento correcto mientras no haya credenciales.
+4. La API key **nunca se hardcodea**: se lee de `process.env.RESEND_API_KEY` / `process.env.RESEND_FROM_EMAIL`, a configurar como variables de entorno en Vercel (Production + Preview) cuando el usuario tenga la cuenta.
+
+Pendiente (requiere que el usuario lo haga, no se puede hacer desde este entorno):
+- Crear cuenta en https://resend.com.
+- Agregar el dominio de ERP Panamá/empsignature en Resend → Resend genera los registros DNS exactos (SPF, DKIM, y se recomienda agregar también un DMARC) → agregarlos en el proveedor DNS del dominio real.
+- Una vez el dominio quede verificado en Resend, generar una API key y configurar `RESEND_API_KEY` y `RESEND_FROM_EMAIL` (ej. `ERP Panamá <notificaciones@tu-dominio.com>`) en Vercel.
+- Probar entregabilidad real con https://mail-tester.com antes de dar el punto por cerrado (pendiente, no se puede simular sin dominio verificado).
+
+Nota: la verificación de email de Firebase (Item 4) **no depende de Resend** — Firebase Auth envía sus propios correos de verificación con su infraestructura, no con el proveedor SMTP de la app. Los dos ítems son independientes.
+
+Resultado de `npx tsc --noEmit`: sin errores.
+
+---
+
+## [2026-07-06] Item 4: Verificación de email antes de enviar correos
+
+No existía ningún flujo de verificación de email antes de esta sesión (`emailVerified` solo aparecía hardcodeado en `true` en los objetos de usuario mock de desarrollo).
+
+Implementado:
+1. **Registro**: `signUpWithEmail()` (`src/lib/firebase/auth.tsx`) ahora llama a `sendEmailVerification()` del SDK de Firebase Auth justo después de crear la cuenta. Si ese envío falla (ej. rate limit de Firebase) no se bloquea el registro — el usuario puede reenviarlo después desde su perfil.
+2. **Verificación server-side (fuente de verdad real)**: `getTenantContext()` (`src/lib/auth/context.ts`) ahora decodifica también el claim `email_verified` del ID token verificado (vía Firebase Admin SDK, `adminAuth.verifySessionCookie`) y lo expone como `TenantContext.emailVerified`. Se decidió explícitamente **no** guardar esto en la tabla `Usuario` — se lee siempre fresco del token en cada request, tal como pedía el brief ("no confiar solo en un flag guardado... puede desactualizarse").
+3. **Bloqueo con mensaje claro**: `sendSupplierEmailAction` (`src/lib/actions/suppliers.ts`) ahora verifica `emailVerified` antes de intentar enviar y devuelve un error explícito ("Debes verificar tu correo electrónico antes de poder enviar correos...") en vez de fallar silenciosamente o dejar pasar el envío.
+4. **Botón "Reenviar verificación"**: agregado en `/profile` (`src/app/(dashboard)/profile/page.tsx`) — muestra una insignia "Correo Verificado" / "Correo sin verificar" y, si no está verificado, un botón para reenviar el correo (`resendVerificationEmail()`, nuevo método expuesto por `useAuth()` en `src/lib/firebase/auth.tsx`, usa `sendEmailVerification(auth.currentUser)` del cliente de Firebase).
+
+Nota de diseño: `useAuth().isEmailVerified` (cliente) refleja el estado del objeto `User` de Firebase en memoria, que solo se actualiza si se llama `.reload()` — es decir, puede quedar desactualizado un momento si el usuario verifica su correo en otra pestaña y no recarga. Esto es aceptable porque es solo para MOSTRAR la insignia/botón en la UI; el bloqueo real (`sendSupplierEmailAction`) siempre usa el valor fresco de `getTenantContext()` (decodificado del token en cada request), no el estado del cliente.
+
+Archivos modificados:
+- `src/lib/firebase/auth.tsx` — `sendEmailVerification` en `signUpWithEmail`; nuevo `resendVerificationEmail()`; nuevo `isEmailVerified` en el contexto.
+- `src/lib/auth/context.ts` — `TenantContext.emailVerified`.
+- `src/lib/actions/suppliers.ts` — bloqueo en `sendSupplierEmailAction`.
+- `src/app/(dashboard)/profile/page.tsx` — insignia + botón de reenvío.
+
+Resultado de `npx tsc --noEmit`: sin errores.
+
+Pendiente/fuera de alcance: no se aplicó el mismo bloqueo de `emailVerified` a otras acciones porque, tras la auditoría del Item 2 y 3, `sendSupplierEmailAction` es la única acción de "enviar correo" real en el proyecto (el botón de cotizaciones ahora solo muestra un aviso, no envía nada todavía).
+
+---
+
+## [2026-07-06] Item 6: Auditoría de design system (Impeccable)
+
+`impeccable` sí es un paquete público de npm (`impeccable@3.2.0`, https://impeccable.style) — se pudo ejecutar directamente con `npx impeccable detect src/` sin necesidad de `npx impeccable install` (ese paso instala el skill/slash-commands `/impeccable audit` y `/impeccable polish` dentro de un IDE con soporte de skills tipo Claude Code/Antigravity; esos comandos interactivos no están disponibles en este entorno, pero el escaneo determinista (`detect`) sí corrió igual y es la parte que no gasta tokens de LLM).
+
+Resultado del escaneo determinista (`npx impeccable detect src/`): **40 anti-patrones encontrados** en 16 archivos. Todos son de 4 categorías:
+- `ai-color-palette` (la mayoría): gradientes/tonos índigo-morado — el propio Impeccable los marca como "el tell más reconocible de UI generada por IA". Aparece en: `ClientDetailClient.tsx`, `help/page.tsx`, `research-hub/page.tsx`, `SettingsClient.tsx`, `AdminBillingClient.tsx`, `BankAccountDetailClient.tsx`, `BankAccountList.tsx`, `ClientList.tsx`, `RecentActivityTable.tsx`, `InvoiceList.tsx`, `PurchaseList.tsx`, `QuotesList.tsx`, `ReceivablesList.tsx`, `CashFlowView.tsx`, `SupplierDetailClient.tsx`, `SupplierList.tsx`.
+- `side-tab` (`border-l-4`, borde de color grueso a un lado de la tarjeta): `BankAccountDetailClient.tsx`, `CashFlowView.tsx`, `SupplierList.tsx`.
+- `border-accent-on-rounded` (`border-b-2` que choca con las esquinas redondeadas): `BalanceSheetView.tsx`, `TimeFilter.tsx`.
+- `gray-on-color` (texto gris sobre fondos de color, bajo contraste): `BankAccountList.tsx`, `SupplierList.tsx`, `WarehouseList.tsx`.
+
+Se documenta la lista completa (archivo + línea) para que sirva de checklist, pero **no se aplicaron los fixes visuales en esta sesión** — corregir 40 anti-patrones en 16 archivos requiere revisar el diff pantalla por pantalla (así lo pide el propio brief: "no todo el sitio de un solo golpe") y ya se había usado buena parte de esta sesión en los Items 1-5. Queda como tarea pendiente explícita para una próxima sesión enfocada solo en esto.
+
+Resultado de `npx tsc --noEmit`: sin errores (no se modificó ningún archivo en este ítem).
+
+---
+
+## [2026-07-06] Item 7: Landing page pública en /
+
+Hallazgo importante que simplificó el trabajo: la suposición del brief de que "el middleware redirige todo tráfico no autenticado a login" **no aplicaba a este proyecto**. Revisando `src/middleware.ts`, el matcher es `['/api/:path*']` — solo aplica CORS/rate-limit a rutas de API, no bloquea ninguna ruta de página. El redirect a login vivía únicamente en `src/app/page.tsx` (`redirect('/dashboard')`) y, para rutas del dashboard, en `getTenantContext()` (cada página del dashboard llama esa función y ella redirige si no hay sesión). El dashboard real ya vivía en `/dashboard`, no en `/` — no fue necesario mover nada ni tocar el middleware.
+
+Cambios:
+1. `src/app/page.tsx` — reemplazado el `redirect('/dashboard')` por la landing pública completa: Hero, Funcionalidades, Cómo funciona, Rubros, Glosario, Precios, FAQ, CTA final y Footer (se reutilizó el `Footer` compartido ya existente en `src/components/layout/Footer.tsx`, que ya enlaza a `/terms`, `/privacy` y `/cookies` — esas 3 rutas ya existían en el proyecto). Incluye `export const metadata` con title/description/keywords/Open Graph/Twitter Card/canonical — a diferencia del resto de la app (que no necesita ser indexable), esta ruta sí.
+2. `src/components/landing/LandingHeader.tsx` (nuevo) — header sticky con logo (mismo patrón visual "EP" + "ERP Panamá" que ya usa `Topbar.tsx` en el dashboard, para no inventar una marca nueva en paralelo), nav central (Funcionalidades/Rubros/Cómo funciona/Glosario/Precios como anclas `#` a las secciones de la misma página), y a la derecha "Iniciar sesión" (`/login`) + "Crear cuenta gratis" (`/register`) — ambas apuntan a las rutas reales que ya existían, no se tocó el flujo de login/registro. Menú hamburguesa en mobile/tablet (`lg:hidden`).
+3. `src/components/landing/FaqAccordion.tsx` (nuevo) — acordeón simple para la sección FAQ.
+4. Contenido honesto según lo pedido: la sección de Funcionalidades aclara explícitamente que "la integración con el PAC está en preparación", sin prometer timbrado DGI real en producción. El FAQ incluye la pregunta "¿qué pasa si aún no tengo el PAC contratado?" con la misma aclaración.
+5. Decisión de diseño (dentro de lo razonable, el usuario puede ajustarla): Funcionalidades/Rubros/Cómo funciona/Glosario/Precios se implementaron como secciones ancla dentro de una sola página (`/#funcionalidades`, etc.) en vez de rutas separadas — es el patrón más común en landings SaaS y evita duplicar el header/footer en 5 rutas distintas. Si se prefieren rutas propias (ej. `/precios`, `/glosario`), es un cambio acotado a partir de esta base.
+6. Paleta de color: se usó la paleta de marca YA EXISTENTE en `globals.css` (`brand-1` #073674, `brand-2` #052550, `brand-3` #001835 — azules), **no** los gradientes índigo/morado que la propia auditoría del Item 6 (Impeccable) identificó como "el tell más reconocible de UI generada por IA" en el resto de la app — para no repetir ese problema en la pieza más visible de todas.
+7. Precios: se usaron exactamente los 3 planes y features que definió el usuario en el brief. Nota para el usuario: los límites que ya están *codificados* en `src/lib/actions/billing.ts` (fallback sin registro de `Plan`) no coinciden exactamente con los del brief (ahí dice `emprendedor: 150` facturas/mes y `maxUsers: 1`, el brief pide 100 y 2) — no se tocó `billing.ts` (fuera de alcance de este ítem), pero antes de cobrar de verdad conviene alinear esos números con lo que se muestra en la landing.
+
+Responsividad: no se pudo levantar `npm run dev` en este entorno para verificar visualmente en los 3 breakpoints — Turbopack falla al crear symlinks dentro de este sandbox (`failed to create symlink ... node_modules/firebase-admin`), y al forzar `--webpack` el sandbox tampoco permite eliminar archivos de compilación previos (`EPERM: operation not permitted, unlink .next/...`), ambas son limitaciones del entorno de esta sesión, no del código. Se construyó con los mismos breakpoints Tailwind (`sm:`/`lg:`) ya usados en el resto de la app, con grids que van de 1 columna (mobile) → 2 (tablet, `sm:`) → 3-4 (desktop, `lg:`), botones que apilan en mobile (`flex-col` → `sm:flex-row`) y el menú hamburguesa cubriendo mobile+tablet. **Pendiente**: correr `npm run dev` localmente y verificar visualmente en ~375px/~768px/~1280px antes de dar el punto por cerrado, tal como pide la regla global de esta fase.
+
+Archivos nuevos:
+- `src/components/landing/LandingHeader.tsx`
+- `src/components/landing/FaqAccordion.tsx`
+
+Archivos modificados:
+- `src/app/page.tsx` (antes: `redirect('/dashboard')`; ahora: landing pública completa)
+
+Resultado de `npx tsc --noEmit`: sin errores.
+Resultado de `npx eslint` sobre los archivos nuevos/modificados: sin errores ni warnings.
+Resultado de `npm run build` completo: no se pudo ejecutar en este entorno (ver nota de red del Item 1 — descarga de `@next/swc-linux-x64-gnu` falla por DNS). Pendiente antes de push.
+
+---
+
+## [2026-07-06] Verificación final de la sesión (Fase 4)
+
+- `npx tsc --noEmit` sobre todo el proyecto: **sin errores**.
+- `npx eslint src` sobre todo el proyecto: sin errores nuevos ni warnings nuevos atribuibles a esta sesión (se revisó explícitamente cada archivo tocado/creado — cero problemas). Los errores/warnings preexistentes que aparecen (`billing-fe.ts`, `bodegas.ts`, `mappers.ts`, `test-facturacion-electronica.ts`, `invoiceCreation.ts`, `ProductList.tsx`, etc.) ya existían antes de esta sesión y no están en el alcance de la Fase 4.
+- `npm run build` completo: no se pudo ejecutar en este entorno de sandbox (descarga de binario de Next/SWC bloqueada por red; ver Item 1). **Pendiente ejecutar localmente/en Vercel antes de cualquier push.**
+- **Aviso importante sobre el estado de git**: al iniciar esta sesión, el working tree ya tenía ~120 archivos marcados como modificados por un cambio de fin de línea (CRLF↔LF) — mismas líneas, mismo contenido, solo cambia el terminador (confirmado con `git diff --stat`: inserciones = eliminaciones exactas en cada archivo). Esto es previo a esta sesión (coincide con la advertencia ya escrita en `CLAUDE.md` sobre otra sesión de Antigravity trabajando el mismo repo en paralelo) — **no se tocaron esos archivos ni se intentó revertir ese cambio**, para no interferir con el trabajo de la otra sesión. Antes de hacer `git push`, hay que revisar el diff completo con cuidado: los cambios reales de esta sesión están en una lista acotada de archivos (detallada en cada sección de este documento); el resto del ruido de línea puede venir de la otra sesión y conviene confirmarlo con el usuario antes de commitear todo junto.
+- No se probó login manual en navegador (sin acceso a un navegador conectado en esta sesión) — pendiente que el usuario lo haga antes de dar por cerrada la fase, tal como pide el protocolo.
+- No se verificó responsividad visual en 3 breakpoints (ver limitación de entorno documentada en el Item 7).
+
+### Resumen de archivos realmente modificados/creados por esta sesión (Fase 4)
+Nuevos:
+- `src/lib/auth/resolveUsuario.ts`
+- `src/lib/email/resend.ts`
+- `src/components/quotes/SendQuoteButton.tsx`
+- `src/components/landing/LandingHeader.tsx`
+- `src/components/landing/FaqAccordion.tsx`
+
+Modificados (contenido real, no solo fin de línea):
+- `src/lib/auth/context.ts`
+- `src/lib/actions/auth.ts`
+- `src/app/admin/layout.tsx`
+- `src/app/(dashboard)/invoices/page.tsx`
+- `src/app/(dashboard)/receivables/page.tsx`
+- `src/app/(dashboard)/quotes/page.tsx`
+- `src/app/(dashboard)/quotes/[id]/page.tsx`
+- `src/app/(dashboard)/reports/page.tsx`
+- `src/app/(dashboard)/bank-accounts/[id]/page.tsx`
+- `src/components/bank-accounts/BankAccountDetailClient.tsx`
+- `src/lib/actions/suppliers.ts`
+- `src/lib/firebase/auth.tsx`
+- `src/app/(dashboard)/profile/page.tsx`
+- `src/app/page.tsx`
+- `package.json` / `package-lock.json` (dependencia `resend` agregada)
+
+### Pendientes que requieren al usuario (no se pueden cerrar desde este entorno)
+1. Item 2: seguir reportando botones específicos si aparece alguno más (se corrigió el único caso confirmado: "Enviar" en detalle de cotización).
+2. Item 3: crear cuenta Resend, verificar dominio (DNS), configurar `RESEND_API_KEY`/`RESEND_FROM_EMAIL` en Vercel, probar con mail-tester.com.
+3. Item 6: aplicar los fixes visuales de los 40 anti-patrones detectados por `impeccable detect` (se dejó como checklist, no aplicado).
+4. Item 7: revisar visualmente la landing en 375px/768px/1280px; confirmar si se prefiere que Rubros/Glosario/Precios sean rutas separadas en vez de anclas de una sola página; alinear los límites de planes del brief con los valores reales en `billing.ts`.
+5. Correr `npm run build` real y probar login manual en navegador antes de cualquier `git push` a `main` (dispara migraciones/deploy automático en Vercel).

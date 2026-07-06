@@ -1,6 +1,6 @@
+import { redirect } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Content } from '@/components/layout/Content';
-import { verifySuperAdmin } from '@/lib/auth/admin';
 import { getTenantContext } from '@/lib/auth/context';
 
 // All admin routes require cookies (session), so they must be dynamic
@@ -11,7 +11,10 @@ export default async function AdminLayout({
 }: {
     children: React.ReactNode;
 }) {
-    // 1. Get current tenant context (redirects to /login if unauthenticated)
+    // Fuente única de verdad para el rol: getTenantContext() (redirige a /login si no
+    // hay sesión). Antes había una segunda verificación independiente (verifySuperAdmin
+    // con su propia consulta a Postgres) — se eliminó para no tener dos lógicas que
+    // puedan desincronizarse; ahora solo se usa el `role` que ya devolvió el contexto.
     let context;
     try {
         context = await getTenantContext();
@@ -23,18 +26,9 @@ export default async function AdminLayout({
         throw new Error('Error de autenticación al acceder al panel de administración.');
     }
 
-    // 2. Enforce super admin check (redirects to / if unauthorized)
-    try {
-        await verifySuperAdmin(context.userId);
-    } catch (err) {
-        // verifySuperAdmin uses redirect() which throws a NEXT_REDIRECT error
-        // We need to re-throw redirect errors, but catch actual errors
-        if (err && typeof err === 'object' && 'digest' in err) {
-            // This is a Next.js redirect - let it propagate
-            throw err;
-        }
-        console.error('[AdminLayout] verifySuperAdmin failed:', err);
-        throw new Error('Error al verificar permisos de administrador.');
+    if (context.role !== 'super_admin') {
+        // 404 en vez de 403 para no revelar la existencia del panel de admin
+        redirect('/');
     }
 
     // Using standardized layout components for consistency

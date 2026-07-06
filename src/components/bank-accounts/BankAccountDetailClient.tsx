@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
     Landmark,
     ArrowLeft,
@@ -58,14 +59,31 @@ function formatDate(dateStr: string) {
 export function BankAccountDetailClient({
     cuenta,
     movimientos,
+    totales,
+    pagination,
 }: {
     cuenta: BankAccountDetailData;
     movimientos: MovimientoBancarioData[];
+    // Calculados server-side sobre TODOS los movimientos de la cuenta, no solo la
+    // página actual — `movimientos` ahora llega paginado, así que estos totales ya
+    // no se pueden derivar reduciendo el array recibido.
+    totales: { totalDepositos: number; totalRetiros: number; pendientesConciliar: number };
+    pagination: { page: number; limit: number; totalCount: number };
 }) {
-    const totalDepositos = movimientos.filter((m) => m.tipo === 'DEPOSITO').reduce((s, m) => s + m.monto, 0);
-    const totalRetiros = movimientos.filter((m) => m.tipo === 'RETIRO').reduce((s, m) => s + m.monto, 0);
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const { totalDepositos, totalRetiros, pendientesConciliar } = totales;
     const saldoActual = cuenta.saldoInicial + totalDepositos - totalRetiros;
-    const pendientesConciliar = movimientos.filter((m) => !m.conciliado).length;
+    const { page, limit, totalCount } = pagination;
+    const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+
+    const goToPage = (target: number) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('page', String(target));
+        router.push(`${pathname}?${params.toString()}`);
+    };
 
     return (
         <ContentContainer className="py-4 space-y-6">
@@ -182,6 +200,33 @@ export function BankAccountDetailClient({
                             </TableBody>
                         </Table>
                     </div>
+
+                    {totalCount > 0 && (
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t pt-4 mt-2">
+                            <span className="text-sm text-muted-foreground">
+                                Mostrando {(page - 1) * limit + 1} a {Math.min(page * limit, totalCount)} de {totalCount} movimientos
+                                {' · '}Página {page} de {totalPages}
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={page <= 1}
+                                    onClick={() => goToPage(page - 1)}
+                                >
+                                    Anterior
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={page >= totalPages}
+                                    onClick={() => goToPage(page + 1)}
+                                >
+                                    Siguiente
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </ContentContainer>
