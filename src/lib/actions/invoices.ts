@@ -17,6 +17,12 @@ import { enviarWhatsAppFactura } from '@/lib/integrations/whatsapp';
 // DGI Document Codes
 const DOC_TYPE_FE = 'FE'; // Factura Electrónica
 
+// Kill-switch de seguridad: el PAC (GenericoPACProvider) hoy no tiene ninguna integración real y
+// solo lanza errores (ver generico.provider.ts). Esta bandera además impide invocarlo del todo
+// aunque alguien active ConfiguracionFacturacionElectronica.activo por error o a propósito — no
+// existe PAC_INTEGRATION_ENABLED en ningún .env todavía, a propósito, hasta que haya un PAC real.
+const PAC_INTEGRATION_ENABLED = process.env.PAC_INTEGRATION_ENABLED === 'true';
+
 async function getNextSequence(empresaId: string, sucursalId: string, cajaId: string) {
     // Use a transaction to ensure atomicity
     return await prisma.$transaction(async (tx) => {
@@ -420,7 +426,7 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
         const feConfig = await prisma.configuracionFacturacionElectronica.findUnique({
             where: { empresaId }
         });
-        if (feConfig && feConfig.activo) {
+        if (PAC_INTEGRATION_ENABLED && feConfig && feConfig.activo) {
             await prisma.factura.update({
                 where: { id: invoice.id },
                 data: { estadoDgi: 'pendiente' }
@@ -431,7 +437,7 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
         // Next.js las ejecute tras enviar la respuesta, incluso en runtimes serverless donde el
         // proceso puede congelarse justo después del redirect() de más abajo.
         after(async () => {
-            if (feConfig && feConfig.activo) {
+            if (PAC_INTEGRATION_ENABLED && feConfig && feConfig.activo) {
                 await timbrarFacturaDGI(invoice.id);
             }
 
@@ -903,7 +909,7 @@ export async function createInvoicePOS(rawData: {
         const feConfig = await prisma.configuracionFacturacionElectronica.findUnique({
             where: { empresaId }
         });
-        if (feConfig && feConfig.activo) {
+        if (PAC_INTEGRATION_ENABLED && feConfig && feConfig.activo) {
             await prisma.factura.update({
                 where: { id: invoice.id },
                 data: { estadoDgi: 'pendiente' }
@@ -913,7 +919,7 @@ export async function createInvoicePOS(rawData: {
         // Tareas en background (timbrado DGI, webhook saliente, WhatsApp): after() garantiza que
         // Next.js las ejecute tras enviar la respuesta, incluso en runtimes serverless.
         after(async () => {
-            if (feConfig && feConfig.activo) {
+            if (PAC_INTEGRATION_ENABLED && feConfig && feConfig.activo) {
                 await timbrarFacturaDGI(invoice.id);
             }
 
