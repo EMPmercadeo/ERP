@@ -768,6 +768,19 @@ Resultado de prueba de integración (`crearFacturaCompleta` con datos reales, em
 
 **Limitación de la prueba (transparente):** no se pudo probar el endpoint HTTP `POST /api/v1/invoices` de punta a punta (con una request real) porque no hay `NEXT_PUBLIC_FIREBASE_API_KEY` (u otra credencial web de Firebase) configurada localmente para mintear una cookie de sesión real — el mismo tipo de limitación de entorno ya documentada en sesiones anteriores. En su lugar se probó `crearFacturaCompleta()` directamente, que es literalmente la misma función que la ruta ahora invoca (la ruta es un wrapper delgado de parseo de JSON + esta función), por lo que la cobertura de la lógica de negocio es equivalente.
 
+**Hueco detectado en la revisión (2026-07-06, antes de aprobar el push): la primera prueba de integración NO cubrió kits ni lotes** — solo un producto simple. Se corrigió con una segunda prueba dedicada: factura con 2x producto-kit (2 componentes: A y B) + 25 unidades de un producto con 2 lotes (uno próximo a vencer, otro no), a crédito (para variar del primer test que fue de contado). Resultado:
+```
+- Componente A: 100 → 96 (2 kits × 2 unidades c/u) ✅
+- Componente B: 100 → 94 (2 kits × 3 unidades c/u) ✅
+- Stock propio del kit: sin cambios (0) — correcto, el kit no descuenta su propio stockActual ✅
+- Lote L1-VIEJO (vence 2026-08-01): 20 → 0 (se agota primero, FIFO) ✅
+- Lote L2-NUEVO (vence 2026-12-01): 30 → 25 (solo se toca lo que faltó) ✅
+- costoUnitario del ítem-kit en FacturaItem: 35 (=2×10 + 3×5, costo de componentes) ✅
+- Asientos: FACTURA + COSTO_VENTA, SIN COBRO (correcto, es crédito) ✅
+- Balance de Comprobación: Debe=Haber=1286.50 (cuadra) ✅
+```
+Confirma que la descomposición recursiva de kits y el descuento FIFO por fecha de vencimiento de lotes —lógica que no se ve en el Balance de Comprobación, solo en el detalle de inventario— siguen funcionando correctamente en el servicio compartido. Script de prueba eliminado tras confirmar; BD local limpiada sin dejar residuos.
+
 Estado: OK
 
 ### Pendientes futuros / fuera de alcance (no implementados en esta sesión, solo anotados)
