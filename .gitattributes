@@ -1,0 +1,21 @@
+# Normaliza line endings para todo el repo: siempre LF en el índice de git,
+# sin importar si el checkout se hace desde Windows/PowerShell, WSL o un
+# sandbox Linux. Evita el ruido de "125 archivos modificados" que solo son
+# diferencias de CRLF vs LF.
+* text=auto eol=lf
+
+# Binarios: nunca tocar line endings
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+*.p12 binary
+
+# Windows-only scripts: mantener CRLF explícitamente
+*.bat text eol=crlf
