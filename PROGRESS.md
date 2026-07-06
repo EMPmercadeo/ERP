@@ -1025,3 +1025,21 @@ Nota/decisión pendiente (no se tocó): la landing solo muestra 3 planes (Empren
 Commits generados en esta sesión (aún sin push, pendientes de revisión en GitHub Desktop como de costumbre):
 - `chore: normalizar line endings (LF) e ignorar config local de .claude/`
 - `fix(landing): reconciliar precios/límites de planes con billing.ts real`
+
+---
+
+## [2026-07-06] Pricing landing: 4 planes reales (Emprendedor/Negocio/Pro/Empresa)
+
+El usuario pidió reemplazar la sección de precios de la landing (`src/app/page.tsx`) por el copy exacto que ya usa el selector de planes dentro de la app (`SettingsClient.tsx`, líneas 532-623) — mismos 4 planes, mismas features, mismo copy de CTA ("Actualizar a X"). Se verificó que ese contenido coincide 1:1 con la fuente de verdad (`prisma/seed.ts`), así que ahora la landing pública, el selector interno de planes y la base de datos están alineados en los 3 lugares.
+
+Cambios: `PLANES` pasó de 3 entradas (Emprendedor/Negocio/"Empresarial: Cotizar") a las 4 reales (Emprendedor $19.99, Negocio $34.99, Pro $54.99 — ahora el destacado "Más Popular" en vez de Negocio, Empresa $89.99), con la lista completa de features de cada uno. Grid ajustado de `lg:grid-cols-3` a `sm:grid-cols-2 lg:grid-cols-4`. Se quitó el caso especial `price !== 'Cotizar'` porque los 4 planes ahora tienen precio fijo.
+
+**Nota técnica**: el Edit tool truncó el archivo silenciosamente durante esta edición (el archivo quedó cortado exactamente en el mismo byte-count que la versión anterior, sin importar que el contenido nuevo fuera más largo — patrón ya visto antes con corrupción de NUL bytes, pero esta vez truncamiento a mitad de archivo). Se recuperó reconstruyendo el archivo completo con un script Python (base: `git show HEAD:src/app/page.tsx` + reemplazos de string), que sí escribe el archivo completo de forma confiable. Verificado con `tsc --noEmit` limpio después.
+
+## [2026-07-06] Revisión de los 536 problemas de lint reportados antes
+
+El usuario pidió confirmar si los 536 problemas de `npm run lint` ya estaban corregidos. Verificación: **no**, siguen siendo deuda técnica genuina y preexistente, no relacionada con ningún ítem de Fase 4 ni con los cambios de esta sesión — confirmado revisando línea por línea los archivos que sí toqué (`SettingsClient.tsx`, `AdminBillingClient.tsx`, `InvoiceList.tsx`, etc.): los errores/warnings ahí son variables sin usar preexistentes, no relacionados con los cambios de clases de Tailwind del Item 6.
+
+Desglose: ~105 problemas están en `design-review-package/src-copy/` (snapshot congelado, "never edit" según CLAUDE.md — no se tocó). El resto (~430) está en `src/`, `scripts/` y `prisma/`, mayoritariamente `@typescript-eslint/no-explicit-any` (160 errores) y variables/imports sin usar (warnings).
+
+Se corrió `eslint --fix` sobre todo lo no-congelado: solo 1 problema era realmente auto-corregible de forma segura (`let omitidos` → `const omitidos` en `scripts/backfill-inventario-bodega.ts`, nunca reasignada). Resultado final: 535 problemas (160 errores, 375 warnings) — bajó de 536. Arreglar los 160 errores de `no-explicit-any` requeriría escribir tipos reales para cada caso (Prisma payloads, respuestas de proveedores DGI, etc.) archivo por archivo — es trabajo real y riesgoso de automatizar a ciegas, fuera del alcance de un fix rápido; queda como tarea de limpieza técnica separada si se quiere abordar.

@@ -48,7 +48,7 @@ async function main() {
         console.log(`  Target Bodega: "${targetBodega.nombre}" (Código: ${targetBodega.codigo}, ID: ${targetBodega.id})`);
 
         let poblados = 0;
-        let omitidos = 0;
+        const omitidos = 0;
 
         for (const producto of empresa.productos) {
             try {

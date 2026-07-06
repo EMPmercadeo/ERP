@@ -132,46 +132,74 @@ const PLANES = [
     {
         name: 'Emprendedor',
         price: '$19.99',
-        description: 'Para negocios que están empezando a facturar electrónicamente.',
+        description: 'Ideal para independientes y emprendedores que inician.',
         features: [
-            '1 sucursal',
-            'Hasta 150 facturas DGI/mes',
-            '1 usuario',
-            'Contabilidad automática de partida doble',
-            'Inventario básico (un almacén)',
+            '150 documentos electrónicos al mes',
+            '1 usuario incluido',
+            'Clientes, productos y servicios',
+            'Cotizaciones',
+            'Facturas electrónicas',
+            'Descarga PDF/XML',
+            'Cuentas por cobrar',
+            'Reportes básicos',
+            'Envío por correo o WhatsApp',
         ],
-        cta: 'Crear cuenta gratis',
+        cta: 'Actualizar a Emprendedor',
         href: '/register',
         highlighted: false,
     },
     {
         name: 'Negocio',
         price: '$34.99',
-        description: 'Para negocios en crecimiento con más de un punto de venta.',
+        description: 'Para pequeños negocios con necesidades estándar.',
         features: [
-            'Hasta 3 sucursales',
-            'Hasta 300 facturas DGI/mes',
-            'Hasta 2 usuarios',
-            'Conciliación bancaria',
-            'Inventario multi-almacén con lotes/FEFO',
-            'Reportes financieros avanzados',
-            'Soporte prioritario',
+            'Todo lo del plan Emprendedor',
+            '300 documentos electrónicos al mes',
+            '2 usuarios incluidos',
+            'Inventario básico',
+            'Notas de crédito y débito',
+            'Reportes de ventas',
+            'Control de pagos',
+            'Dashboard mensual',
+            'Integración POS básica',
         ],
-        cta: 'Crear cuenta gratis',
+        cta: 'Actualizar a Negocio',
+        href: '/register',
+        highlighted: false,
+    },
+    {
+        name: 'Pro',
+        price: '$54.99',
+        description: 'Para empresas medianas en crecimiento constante.',
+        features: [
+            'Todo lo del plan Negocio',
+            '600 documentos electrónicos al mes',
+            '5 usuarios incluidos',
+            'Permisos por usuario (roles)',
+            'Sucursales y cajas',
+            'Reportes avanzados',
+            'Exportación contable',
+            'Automatizaciones básicas',
+            'Soporte POS avanzado',
+        ],
+        cta: 'Actualizar a Pro',
         href: '/register',
         highlighted: true,
     },
     {
-        name: 'Empresarial',
-        price: 'Cotizar',
-        description: 'Para grupos empresariales y operaciones multi-empresa.',
+        name: 'Empresa',
+        price: '$89.99',
+        description: 'Para corporaciones y operaciones a gran escala.',
         features: [
-            'Sucursales y usuarios ilimitados',
-            'Multi-empresa',
-            'Integraciones a medida',
-            'Soporte dedicado',
+            'Todo lo del plan Pro',
+            '1,000 documentos electrónicos al mes',
+            '10 usuarios incluidos',
+            'Soporte prioritario',
+            'API y Webhooks salientes',
+            'Integraciones y configuración asistida',
+            'Multiempresa y multisucursal avanzada',
         ],
-        cta: 'Hablar con ventas',
+        cta: 'Actualizar a Empresa',
         href: '/register',
         highlighted: false,
     },
@@ -339,7 +367,7 @@ export default function LandingPage() {
                         <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Precios</h2>
                         <p className="mt-4 text-base text-slate-600">Planes en dólares (USD), la moneda oficial de Panamá.</p>
                     </div>
-                    <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-8 lg:grid-cols-3">
+                    <div className="mx-auto mt-12 grid max-w-6xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
                         {PLANES.map((plan) => (
                             <div
                                 key={plan.name}
@@ -349,14 +377,14 @@ export default function LandingPage() {
                             >
                                 {plan.highlighted && (
                                     <span className="mb-4 inline-block w-fit rounded-full bg-brand-1 px-3 py-1 text-xs font-semibold text-white">
-                                        Más elegido
+                                        Más Popular
                                     </span>
                                 )}
                                 <h3 className="text-lg font-bold text-brand-3">{plan.name}</h3>
                                 <p className="mt-1 text-sm text-slate-600">{plan.description}</p>
                                 <div className="mt-6 flex items-baseline gap-1">
                                     <span className="text-4xl font-bold tracking-tight text-brand-3">{plan.price}</span>
-                                    {plan.price !== 'Cotizar' && <span className="text-sm text-slate-500">/mes</span>}
+                                    <span className="text-sm text-slate-500">/mes</span>
                                 </div>
                                 <ul className="mt-6 flex-1 space-y-3">
                                     {plan.features.map((feature) => (
@@ -377,7 +405,7 @@ export default function LandingPage() {
                         ))}
                     </div>
                     <p className="mx-auto mt-8 max-w-2xl text-center text-xs text-slate-500">
-                        Los límites de facturas y usuarios por plan pueden ajustarse — escríbenos si tu negocio necesita algo distinto.
+                        Precios en dólares (USD). Puedes cambiar de plan en cualquier momento desde la configuración de tu cuenta.
                     </p>
                 </div>
             </section>
