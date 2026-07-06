@@ -9,19 +9,14 @@ import {
     SortingState,
     flexRender,
     getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    useReactTable,
+    useReactTable
 } from '@tanstack/react-table';
 import {
     Search,
     Plus,
-    MoreHorizontal,
     ChevronLeft,
     ChevronRight,
     ArrowUpDown,
-    FileText,
     Send,
     CheckCircle,
     XCircle,

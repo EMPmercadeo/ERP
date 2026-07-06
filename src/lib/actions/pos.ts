@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { getTenantContext } from '@/lib/auth/context';
-import { encrypt, decrypt } from '@/lib/utils/crypto';
+import { encrypt } from '@/lib/utils/crypto';
 import { canUsePOSIntegration } from '@/lib/actions/billing';
 
 export async function connectPOS(providerSlug: string, credentials: {

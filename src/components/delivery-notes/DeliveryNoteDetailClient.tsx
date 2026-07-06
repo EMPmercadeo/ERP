@@ -150,7 +150,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
             } else {
                 toast.error(res.message || 'Error al actualizar estado.');
             }
-        } catch (e) {
+        } catch {
             toast.error('Error de red al actualizar el estado.');
         } finally {
             setActionLoading(false);

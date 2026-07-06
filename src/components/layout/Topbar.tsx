@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Menu, Bell, Search, LogOut } from 'lucide-react';
+import { Bell, Search, LogOut } from 'lucide-react';
 import { useSidebarStore } from '@/lib/store';
 import { useAuth } from '@/lib/firebase/auth';
 import { Button } from '@/components/ui/button';

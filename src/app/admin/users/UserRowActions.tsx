@@ -10,7 +10,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { updateUserStatusAndRole } from '@/lib/actions/admin';
-import { ShieldAlert, UserCheck, UserX, Loader2 } from 'lucide-react';
+import { UserCheck, UserX, Loader2 } from 'lucide-react';
 
 interface UserRowActionsProps {
     userId: string;

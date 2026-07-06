@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Search, CheckSquare, Plus, Eye, FileText, ArrowRight } from 'lucide-react';
+import { Search, CheckSquare, Plus, Eye, FileText } from 'lucide-react';
 import { invoiceGroupedDeliveryNotes } from '@/lib/actions/delivery-notes';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';

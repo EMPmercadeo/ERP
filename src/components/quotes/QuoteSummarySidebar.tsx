@@ -1,15 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { Save, Send, FileText, Download } from 'lucide-react';
+import { Save, Send, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
     Card,
     CardContent,
     CardHeader,
-    CardTitle,
-    CardFooter
+    CardTitle
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import {

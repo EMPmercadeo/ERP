@@ -2,25 +2,19 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { 
-  TrendingUp, 
-  Calendar, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  Percent, 
-  Filter 
+import {
+    Calendar,
+    Filter
 } from 'lucide-react';
 import { ContentContainer } from '@/components/layout/Content';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableRow
 } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils/currency';
 

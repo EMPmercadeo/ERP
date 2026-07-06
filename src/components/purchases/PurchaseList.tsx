@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { format } from 'date-fns';
+
 import { toast } from 'sonner';
-import { Search, Plus, Trash2, Calendar, FileText } from 'lucide-react';
+import { Search, Plus, Trash2 } from 'lucide-react';
 import { deletePurchase } from '@/lib/actions/purchases';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { StatusBadge } from '@/components/ui/status-badge';
+
 import {
     Table,
     TableBody,

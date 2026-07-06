@@ -9,10 +9,7 @@ import {
     SortingState,
     flexRender,
     getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    useReactTable,
+    useReactTable
 } from '@tanstack/react-table';
 import {
     Search,
@@ -32,7 +29,7 @@ import {
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+
 import { StatusBadge, type DgiStatus } from '@/components/ui/status-badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -156,7 +153,7 @@ export function InvoiceList({
                 } else {
                     toast.error(res.message);
                 }
-            } catch (error) {
+            } catch {
                 toast.error('Error al intentar anular la factura.');
             }
         }

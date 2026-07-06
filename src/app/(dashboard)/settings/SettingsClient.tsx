@@ -217,7 +217,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                             toast.error(result.message);
                             setPaymentStep('details');
                         }
-                    } catch (error) {
+                    } catch {
                         toast.error('Error al actualizar el plan.');
                         setPaymentStep('details');
                     } finally {
@@ -297,7 +297,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
             } else {
                 toast.error(result.message);
             }
-        } catch (error) {
+        } catch {
             toast.error('Ocurrió un error inesperado al guardar los cambios.');
         } finally {
             setIsSaving(false);
@@ -327,7 +327,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
             } else {
                 toast.error(result.message);
             }
-        } catch (error) {
+        } catch {
             toast.error('Error al guardar las integraciones.');
         } finally {
             setIsSavingIntegrations(false);
@@ -380,7 +380,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
             } else {
                 toast.error(res.message);
             }
-        } catch (error) {
+        } catch {
             toast.error('Error al conectar POS.');
         } finally {
             setIsConnectingPos(false);
@@ -397,7 +397,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
             } else {
                 toast.error(res.message);
             }
-        } catch (error) {
+        } catch {
             toast.error('Error al desconectar POS.');
         }
     };
@@ -417,7 +417,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
             } else {
                 toast.error(res.message);
             }
-        } catch (error) {
+        } catch {
             toast.error(`Error al sincronizar ${type}.`);
         } finally {
             setIsSyncingPos(prev => ({ ...prev, [`${providerSlug}_${type}`]: false }));
@@ -462,7 +462,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                 toast.error(result.message);
                 setPaymentStep('details');
             }
-        } catch (error) {
+        } catch {
             toast.error('Error al procesar la suscripción con PayPal.');
             setPaymentStep('details');
         } finally {
@@ -487,7 +487,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
             } else {
                 toast.error(result.message);
             }
-        } catch (error) {
+        } catch {
             toast.error('Error al cancelar la suscripción.');
         } finally {
             setIsPlanLoading(false);
@@ -514,7 +514,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
             } else {
                 toast.error(res.message);
             }
-        } catch (error) {
+        } catch {
             toast.error('Error al procesar la compra del bloque de documentos.');
         } finally {
             setIsPurchasingBlock(false);

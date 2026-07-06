@@ -77,7 +77,7 @@ export function ReconcileClient({
             } else {
                 toast.error(res.error || 'Error al conciliar');
             }
-        } catch (error) {
+        } catch {
             toast.error('Error inesperado al conciliar');
         } finally {
             setLoading(false);

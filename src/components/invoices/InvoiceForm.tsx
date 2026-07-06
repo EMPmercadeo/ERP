@@ -158,7 +158,7 @@ export function InvoiceForm({
             } else {
                 toast.error(res.message);
             }
-        } catch (error) {
+        } catch {
             toast.error('Error al procesar la compra del bloque de documentos.');
         } finally {
             setIsPurchasingBlock(false);

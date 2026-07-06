@@ -3,7 +3,7 @@
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Save, Loader2, Package, Calculator, Percent, AlertCircle, ImageIcon } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Package, Calculator, AlertCircle, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,8 +26,7 @@ import {
     calcularITBMS,
     calcularPrecioConImpuesto,
     calcularMargen,
-    formatearMoneda,
-    formatearPorcentaje
+    formatearMoneda
 } from '@/lib/utils/fiscal';
 
 const initialState = {

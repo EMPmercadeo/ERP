@@ -28,7 +28,6 @@ import {
     Package,
     Download,
     History,
-    FileUp,
     RotateCcw,
     X
 } from 'lucide-react';

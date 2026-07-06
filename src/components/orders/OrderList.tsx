@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Search, Plus, FileText, CheckCircle, Clock } from 'lucide-react';
+import { Search, FileText, CheckCircle, Clock } from 'lucide-react';
 import { updateSalesOrderStatus } from '@/lib/actions/sales-orders';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';

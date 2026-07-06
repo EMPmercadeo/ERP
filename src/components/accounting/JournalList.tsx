@@ -2,15 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { 
-  ChevronDown, 
-  ChevronUp, 
-  Search, 
-  Calendar, 
-  Filter, 
-  FileSpreadsheet, 
-  CheckCircle2, 
-  AlertCircle 
+import {
+    ChevronDown,
+    ChevronUp,
+    Calendar,
+    Filter,
+    CheckCircle2,
+    AlertCircle
 } from 'lucide-react';
 import { ContentContainer } from '@/components/layout/Content';
 import { Card, CardContent } from '@/components/ui/card';

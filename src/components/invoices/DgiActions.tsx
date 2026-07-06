@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { timbrarFacturaDGI, anularFacturaDGI, obtenerLogsPAC } from '@/lib/actions/billing-fe';
-import { AlertCircle, AlertTriangle, CheckCircle2, History, RotateCw, XCircle } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { CheckCircle2, History, RotateCw, XCircle } from 'lucide-react';
+
 import {
     Table,
     TableBody,
@@ -30,14 +30,14 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [motivoCancelacion, setMotivoCancelacion] = useState('');
 
-    const cargarLogs = async () => {
+    const cargarLogs = useCallback(async () => {
         const pacLogs = await obtenerLogsPAC(facturaId);
         setLogs(pacLogs);
-    };
+    }, [facturaId]);
 
     useEffect(() => {
         cargarLogs();
-    }, [facturaId, estadoDgi]);
+    }, [cargarLogs, estadoDgi]);
 
     const handleTimbrar = async () => {
         setLoading(true);

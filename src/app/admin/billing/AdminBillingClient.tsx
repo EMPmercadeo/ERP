@@ -63,7 +63,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
             } else {
                 toast.error(result.message);
             }
-        } catch (error) {
+        } catch {
             toast.error('Error al cambiar de plan.');
         } finally {
             setIsPlanLoading(false);

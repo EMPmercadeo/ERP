@@ -66,7 +66,7 @@ export function WarehouseList({
                 } else {
                     toast.error(res.error || 'Error al eliminar la bodega');
                 }
-            } catch (error) {
+            } catch {
                 toast.error('Error al conectar con el servidor.');
             }
         }

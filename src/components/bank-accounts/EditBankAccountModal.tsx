@@ -80,7 +80,7 @@ export function EditBankAccountModal({
             } else {
                 toast.error(res.error || 'Error al actualizar la cuenta bancaria');
             }
-        } catch (error) {
+        } catch {
             toast.error('Error inesperado al guardar los cambios');
         } finally {
             setLoading(false);

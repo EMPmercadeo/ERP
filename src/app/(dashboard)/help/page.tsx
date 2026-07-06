@@ -6,7 +6,6 @@ import {
     HelpCircle,
     FileText,
     Settings,
-    Users,
     Package,
     ShieldCheck,
     ArrowUpRight,

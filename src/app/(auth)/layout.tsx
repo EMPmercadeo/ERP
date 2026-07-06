@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Star } from 'lucide-react';
+import { Home } from 'lucide-react';
 import React from 'react';
 import { Footer } from '@/components/layout/Footer';
 

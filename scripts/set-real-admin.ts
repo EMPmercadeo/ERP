@@ -62,7 +62,7 @@ async function main() {
         try {
             await prisma.usuario.delete({ where: { id: u.id } });
             console.log('Deleted.');
-        } catch (e) {
+        } catch {
             console.log('Could not delete (likely has data). Deactivating and demoting instead.');
             await prisma.usuario.update({
                 where: { id: u.id },

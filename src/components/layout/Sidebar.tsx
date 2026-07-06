@@ -25,7 +25,6 @@ import {
     Shield,
     ArrowLeft,
     Check,
-    ExternalLink,
     Send,
     Copy,
     Building2,
@@ -161,7 +160,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
             } else {
                 toast.error(res.message);
             }
-        } catch (error) {
+        } catch {
             toast.error('Error al enviar comentarios.');
         } finally {
             setIsSubmittingFeedback(false);
@@ -182,7 +181,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
             } else {
                 toast.error(res.message);
             }
-        } catch (error) {
+        } catch {
             toast.error('Error al enviar el ticket de soporte.');
         } finally {
             setIsSubmittingSupport(false);

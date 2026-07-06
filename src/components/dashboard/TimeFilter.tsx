@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { format, subDays, subMonths } from 'date-fns';
+import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Check, ChevronDown } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -42,8 +42,8 @@ export function TimeFilter({ className }: TimeFilterProps) {
 
     // Initial state from URL
     const currentPeriod = (searchParams.get('period') as Period) || '3m';
-    const currentStart = searchParams.get('start') ? new Date(searchParams.get('start')!) : undefined;
-    const currentEnd = searchParams.get('end') ? new Date(searchParams.get('end')!) : undefined;
+    const currentStart = React.useMemo(() => searchParams.get('start') ? new Date(searchParams.get('start')!) : undefined, [searchParams]);
+    const currentEnd = React.useMemo(() => searchParams.get('end') ? new Date(searchParams.get('end')!) : undefined, [searchParams]);
 
     const [open, setOpen] = React.useState(false);
     const [tempPeriod, setTempPeriod] = React.useState<Period>(currentPeriod);

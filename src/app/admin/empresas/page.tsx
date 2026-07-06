@@ -1,10 +1,10 @@
-import { Suspense } from 'react';
+
 import { getTenants } from '@/lib/actions/admin';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ContentContainer } from '@/components/layout/Content';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, Shield } from 'lucide-react';
+import { Eye, Shield } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 

@@ -7,7 +7,7 @@
  * - Google logo colors in login/register pages (#4285F4, #34A853, #FBBC05, #EA4335)
  */
 
-import { execSync } from 'child_process';
+
 import * as fs from 'fs';
 import * as path from 'path';
 

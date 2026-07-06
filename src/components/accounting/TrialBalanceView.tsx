@@ -2,12 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { 
-  Scale, 
-  Calendar, 
-  CheckCircle2, 
-  AlertCircle,
-  ArrowDownToLine
+import {
+    Calendar,
+    CheckCircle2,
+    AlertCircle,
+    ArrowDownToLine
 } from 'lucide-react';
 import { ContentContainer } from '@/components/layout/Content';
 import { Card, CardContent } from '@/components/ui/card';

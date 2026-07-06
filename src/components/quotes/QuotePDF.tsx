@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Font } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
 
 // Register a standard font (Helvetica is built-in, but Inter or Roboto is nicer if custom loaded. 
 // For simplicity and speed, we'll use Helvetica which is standard in PDF.)

@@ -11,11 +11,8 @@ import {
     Printer,
     Download,
     Mail,
-    FileText,
     CheckCircle,
-    XCircle,
-    Clock,
-    CreditCard
+    Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

@@ -11,10 +11,6 @@ import {
     CreditCard,
     Calendar,
     Edit,
-    FileText,
-    CheckCircle2,
-    XCircle,
-    AlertCircle,
     User,
     DollarSign,
     Scale
@@ -25,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Separator } from '@/components/ui/separator';
+
 import { StatusBadge } from '@/components/ui/status-badge';
 
 interface ClientDetailProps {

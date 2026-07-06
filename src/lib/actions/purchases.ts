@@ -14,7 +14,7 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
     if (rawItems) {
         try {
             items = JSON.parse(rawItems as string);
-        } catch (e) {
+        } catch {
             return { message: 'Formato de ítems inválido.' };
         }
     }

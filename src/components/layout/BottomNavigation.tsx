@@ -16,8 +16,6 @@ import {
     User,
     BarChart3,
     LogOut,
-    MessageSquare,
-    BookOpen,
     UserCog,
     FileClock,
     CreditCard,
@@ -57,7 +55,7 @@ export function BottomNavigation() {
                 }
             });
         }
-    }, [user?.email]);
+    }, [user?.email, user?.displayName]);
 
     // Close menu on click outside
     useEffect(() => {

@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db';
 import { Topbar } from '@/components/layout/Topbar';
 import { ContentContainer } from '@/components/layout/Content';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import {
     Table,
     TableBody,
@@ -11,7 +11,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { getTenantContext } from '@/lib/auth/context';
-import { Calendar, Package, Warehouse } from 'lucide-react';
+import { Calendar, Warehouse } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 export const dynamic = 'force-dynamic';

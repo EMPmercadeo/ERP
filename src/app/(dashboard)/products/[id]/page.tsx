@@ -10,18 +10,11 @@ import {
     Loader2,
     Package,
     History,
-    Calculator,
-    Copy,
     Warehouse,
     ImageIcon,
-    Percent,
     AlertCircle,
     User,
     Calendar,
-    ArrowUpRight,
-    ArrowDownRight,
-    TrendingUp,
-    CheckCircle2,
     CalendarDays,
     Search,
     Plus,
@@ -29,7 +22,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -175,7 +168,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                 } else {
                     toast.error(`Error al subir ${file.name}: ${res.message}`);
                 }
-            } catch (err) {
+            } catch {
                 toast.error(`Error de red al subir ${file.name}`);
             }
         }

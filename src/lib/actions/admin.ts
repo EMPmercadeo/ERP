@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
-import { verifySuperAdmin } from '@/lib/auth/admin';
+
 import { revalidatePath } from 'next/cache';
 
 export async function getTenants() {

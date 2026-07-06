@@ -3,19 +3,18 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { 
-    Search, 
-    Trash2, 
-    FileText, 
-    DollarSign, 
-    Building2, 
-    Phone, 
-    Mail, 
-    Calendar, 
-    AlertCircle, 
-    CheckCircle2, 
-    MoreHorizontal, 
-    User, 
+import {
+    Search,
+    Trash2,
+    DollarSign,
+    Building2,
+    Phone,
+    Mail,
+    Calendar,
+    AlertCircle,
+    CheckCircle2,
+    MoreHorizontal,
+    User,
     PlusCircle,
     Archive,
     Edit,

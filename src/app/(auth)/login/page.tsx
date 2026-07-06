@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User, Lock, Fingerprint, MessageSquare, Shield, Tag, QrCode, Star, X, Eye, EyeOff, Camera } from 'lucide-react';
+import { User, Lock, Fingerprint, MessageSquare, Shield, Tag, QrCode, Star, X, Camera } from 'lucide-react';
 import { Alert } from '@/components/ui/alert';
 import { useAuth } from '@/lib/firebase/auth';
 

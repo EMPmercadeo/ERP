@@ -4,14 +4,13 @@ import { Topbar } from '@/components/layout/Topbar';
 import { ContentContainer } from '@/components/layout/Content';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+
 import {
     MessageSquare,
     User,
     Building2,
     Calendar,
     AlertCircle,
-    CheckCircle2,
     Inbox,
     Mail
 } from 'lucide-react';

@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
         });
 
         return NextResponse.json({ success: true, data: { certificadoDgi: updated.certificadoDgi } });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Error al registrar el certificado.' }, { status: 500 });
     }
 }

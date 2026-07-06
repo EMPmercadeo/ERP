@@ -2,18 +2,16 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { 
-  BookOpen, 
-  Search, 
-  Calendar, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  Calculator 
+import {
+    BookOpen,
+    ArrowUpRight,
+    ArrowDownLeft,
+    Calculator
 } from 'lucide-react';
 import { ContentContainer } from '@/components/layout/Content';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+
+
 import { Badge } from '@/components/ui/badge';
 import { 
   Table, 

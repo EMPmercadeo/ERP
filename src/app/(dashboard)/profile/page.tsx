@@ -26,7 +26,7 @@ export default function ProfilePage() {
         try {
             await resendVerificationEmail();
             toast.success('Correo de verificación reenviado. Revisa tu bandeja de entrada.');
-        } catch (error) {
+        } catch {
             toast.error('No se pudo reenviar el correo de verificación. Intenta de nuevo en unos minutos.');
         } finally {
             setIsResendingVerification(false);
@@ -59,7 +59,7 @@ export default function ProfilePage() {
             } else {
                 toast.error(result.message);
             }
-        } catch (error) {
+        } catch {
             toast.error('Error al actualizar información');
         } finally {
             setIsPersonalLoading(false);
@@ -80,7 +80,7 @@ export default function ProfilePage() {
             } else {
                 toast.error(result.message);
             }
-        } catch (error) {
+        } catch {
             toast.error('Error al cambiar contraseña');
         } finally {
             setIsPasswordLoading(false);

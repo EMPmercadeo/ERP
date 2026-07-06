@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -8,28 +8,21 @@ import {
     ShoppingCart,
     Plus,
     Minus,
-    Trash2,
     X,
-    User,
-    DollarSign,
     Check,
     Loader2,
     Package,
-    ArrowLeft,
-    Share2,
-    MessageSquare,
     Mail,
     Printer,
     Eye,
     ChevronUp,
     ChevronDown,
-    Zap,
-    AlertCircle
+    Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { ContentContainer } from '@/components/layout/Content';
 import {
     Select,
@@ -134,6 +127,30 @@ export function QuickSalePOS({
         }
     }, [clients]);
 
+    // Add to cart
+    const addToCart = useCallback((product: ProductOption) => {
+        if (product.stock <= 0) {
+            toast.error('Este producto no tiene stock disponible.');
+            return;
+        }
+
+        const existingItem = cart.find(item => item.product.id === product.id);
+        if (existingItem) {
+            if (existingItem.quantity >= product.stock) {
+                toast.error(`No puedes agregar más de ${product.stock} unidades (stock disponible).`);
+                return;
+            }
+            setCart(cart.map(item => 
+                item.product.id === product.id 
+                    ? { ...item, quantity: item.quantity + 1 }
+                    : item
+            ));
+        } else {
+            setCart([...cart, { product, quantity: 1 }]);
+        }
+        toast.success(`Agregado: ${product.descripcion}`, { duration: 1000 });
+    }, [cart]);
+
     // Filter products by search query
     const filteredProducts = useMemo(() => {
         return products.filter(p => 
@@ -154,7 +171,7 @@ export function QuickSalePOS({
             addToCart(match);
             setSearchQuery('');
         }
-    }, [searchQuery, products]);
+    }, [searchQuery, products, addToCart]);
 
     const filteredClients = useMemo(() => {
         if (!clientSearch) return [];
@@ -186,29 +203,7 @@ export function QuickSalePOS({
         };
     }, [cart]);
 
-    // Add to cart
-    const addToCart = (product: ProductOption) => {
-        if (product.stock <= 0) {
-            toast.error('Este producto no tiene stock disponible.');
-            return;
-        }
 
-        const existingItem = cart.find(item => item.product.id === product.id);
-        if (existingItem) {
-            if (existingItem.quantity >= product.stock) {
-                toast.error(`No puedes agregar más de ${product.stock} unidades (stock disponible).`);
-                return;
-            }
-            setCart(cart.map(item => 
-                item.product.id === product.id 
-                    ? { ...item, quantity: item.quantity + 1 }
-                    : item
-            ));
-        } else {
-            setCart([...cart, { product, quantity: 1 }]);
-        }
-        toast.success(`Agregado: ${product.descripcion}`, { duration: 1000 });
-    };
 
     // Remove or decrease quantity
     const decreaseQuantity = (productId: string) => {
@@ -287,7 +282,7 @@ export function QuickSalePOS({
             } else {
                 toast.error(res.error || 'Error al procesar la venta.');
             }
-        } catch (error) {
+        } catch {
             toast.error('Error de red al procesar la venta.');
         } finally {
             setIsCheckingOut(false);

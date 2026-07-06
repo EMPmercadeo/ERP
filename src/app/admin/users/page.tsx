@@ -5,7 +5,7 @@ import { ContentContainer } from '@/components/layout/Content';
 import { Badge } from '@/components/ui/badge';
 import { UserFilters } from './UserFilters';
 import { UserRowActions } from './UserRowActions';
-import { Shield, ShieldAlert, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Link from 'next/link';

@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Plus, Trash, ArrowLeft, Save, FileText } from 'lucide-react';
+import { Plus, Trash, ArrowLeft, Save } from 'lucide-react';
 import { createDeliveryNote } from '@/lib/actions/delivery-notes';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
@@ -215,7 +215,7 @@ export function DeliveryNoteForm({ clients, products, quotes, users }: FormProps
             } else {
                 toast.error(res?.message || 'Error al guardar el documento de entrega.');
             }
-        } catch (error) {
+        } catch {
             toast.error('Error de red al guardar el documento de entrega.');
         } finally {
             setLoading(false);

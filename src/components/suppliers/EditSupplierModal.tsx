@@ -72,7 +72,7 @@ export function EditSupplierModal({
             } else {
                 toast.error(res.error || 'Error al actualizar el proveedor');
             }
-        } catch (error) {
+        } catch {
             toast.error('Error inesperado al guardar los cambios');
         } finally {
             setLoading(false);
