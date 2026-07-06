@@ -1,7 +1,21 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { resolverBodegaId, moverInventarioBodega } from '@/lib/actions/bodegas';
 import { canCreateInvoice, incrementDocumentUsage } from '@/lib/actions/billing';
 import { generarAsientoFactura, generarAsientoCobro, generarAsientoCostoVenta } from '@/lib/contabilidad/asientos';
+
+interface ProductoConCosto {
+    id: string;
+    esKit: boolean;
+    costoUnitario?: Prisma.Decimal | number | string | null;
+    kitInfo?: {
+        activo: boolean;
+        componentes: {
+            cantidad: number;
+            productoComponente: ProductoConCosto;
+        }[];
+    } | null;
+}
 
 const DOC_TYPE_FE = 'FE';
 
@@ -91,7 +105,7 @@ function calcularTasaItbms(codigoTasaItbms: string): number {
             codigoTasaItbms === '03' ? 0.15 : 0;
 }
 
-function getProductoCosto(prod: any): number {
+function getProductoCosto(prod: ProductoConCosto): number {
     if (prod.esKit && prod.kitInfo && prod.kitInfo.activo) {
         let totalCosto = 0;
         for (const comp of prod.kitInfo.componentes) {
@@ -256,7 +270,7 @@ export async function crearFacturaCompleta(params: CrearFacturaCompletaParams) {
             prodId: string,
             cantidad: number,
             esKit: boolean,
-            kitInfo: any
+            kitInfo: ProductoConCosto['kitInfo']
         ): Promise<void> => {
             if (esKit && kitInfo && kitInfo.activo) {
                 for (const comp of kitInfo.componentes) {

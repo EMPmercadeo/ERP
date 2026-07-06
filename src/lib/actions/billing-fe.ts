@@ -1,10 +1,17 @@
 'use server';
 
+import { Prisma } from '@prisma/client';
 import { prisma } from '../db';
 import { getTenantContext } from '../auth/context';
 import { getPACProviderForEmpresa } from '../facturacion-electronica/factory';
 import { mapFacturaToDTO } from '../facturacion-electronica/mappers';
+import { encrypt } from '../utils/crypto';
+import type { PACEmisionResponse, PACAnulacionResponse, PACTransaction } from '../facturacion-electronica/pac-provider.interface';
 import { revalidatePath } from 'next/cache';
+
+function getErrorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
 
 export async function timbrarFacturaDGI(facturaId: string) {
   try {
@@ -42,15 +49,16 @@ export async function timbrarFacturaDGI(facturaId: string) {
     });
 
     // 4. Llamar al PAC y capturar logs
-    let response;
+    let response: PACEmisionResponse;
     try {
       response = await pacProvider.emitirFactura(dto);
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const err = e instanceof Error ? e : undefined;
       response = {
         exitoso: false,
         codigoResultado: 'ERR-HTTP',
-        mensajeResultado: e.message || 'Error de conexión HTTP con el PAC.',
-        error: e.stack || e.message
+        mensajeResultado: err?.message || 'Error de conexión HTTP con el PAC.',
+        error: err?.stack || err?.message || String(e)
       };
     }
 
@@ -60,8 +68,8 @@ export async function timbrarFacturaDGI(facturaId: string) {
         facturaId,
         empresaId,
         tipoOperacion: 'emision',
-        requestPayload: dto as any,
-        responsePayload: response as any,
+        requestPayload: dto as unknown as Prisma.InputJsonValue,
+        responsePayload: response as unknown as Prisma.InputJsonValue,
         codigoResultado: response.codigoResultado || null,
         mensajeResultado: response.mensajeResultado || null,
         exitoso: response.exitoso
@@ -95,9 +103,9 @@ export async function timbrarFacturaDGI(facturaId: string) {
       revalidatePath('/invoices');
       return { success: false, message: `Error al timbrar factura: ${response.mensajeResultado || response.error}` };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in timbrarFacturaDGI:', error);
-    return { success: false, message: error.message || 'Error interno del servidor al procesar DGI.' };
+    return { success: false, message: getErrorMessage(error) || 'Error interno del servidor al procesar DGI.' };
   }
 }
 
@@ -129,15 +137,16 @@ export async function anularFacturaDGI(facturaId: string, motivo: string) {
     }
 
     // 3. Llamar al PAC y capturar logs
-    let response;
+    let response: PACAnulacionResponse;
     try {
       response = await pacProvider.anularFactura(factura.cufe, motivo);
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const err = e instanceof Error ? e : undefined;
       response = {
         exitoso: false,
         codigoResultado: 'ERR-HTTP',
-        mensajeResultado: e.message || 'Error de conexión HTTP con el PAC.',
-        error: e.stack || e.message
+        mensajeResultado: err?.message || 'Error de conexión HTTP con el PAC.',
+        error: err?.stack || err?.message || String(e)
       };
     }
 
@@ -147,8 +156,8 @@ export async function anularFacturaDGI(facturaId: string, motivo: string) {
         facturaId,
         empresaId,
         tipoOperacion: 'anulacion',
-        requestPayload: { cufe: factura.cufe, motivo } as any,
-        responsePayload: response as any,
+        requestPayload: { cufe: factura.cufe, motivo } as unknown as Prisma.InputJsonValue,
+        responsePayload: response as unknown as Prisma.InputJsonValue,
         codigoResultado: response.codigoResultado || null,
         mensajeResultado: response.mensajeResultado || null,
         exitoso: response.exitoso
@@ -170,9 +179,9 @@ export async function anularFacturaDGI(facturaId: string, motivo: string) {
     } else {
       return { success: false, message: `Error al anular factura: ${response.mensajeResultado || response.error}` };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in anularFacturaDGI:', error);
-    return { success: false, message: error.message || 'Error interno al anular factura.' };
+    return { success: false, message: getErrorMessage(error) || 'Error interno al anular factura.' };
   }
 }
 
@@ -193,10 +202,10 @@ export async function consultarTransaccionDGI(facturaId: string) {
       return { success: false, message: 'Facturación electrónica no está activa.' };
     }
 
-    let response;
+    let response: PACTransaction;
     try {
       response = await pacProvider.consultarTransaccion(factura.cufe);
-      
+
       // Update if authorized
       if (response.estado === 'authorized') {
         await prisma.factura.update({
@@ -210,11 +219,11 @@ export async function consultarTransaccionDGI(facturaId: string) {
         revalidatePath('/invoices');
       }
       return { success: true, message: `Estado actual: ${response.estado}`, data: response };
-    } catch (e: any) {
-      return { success: false, message: e.message };
+    } catch (e: unknown) {
+      return { success: false, message: getErrorMessage(e) };
     }
-  } catch (error: any) {
-    return { success: false, message: error.message };
+  } catch (error: unknown) {
+    return { success: false, message: getErrorMessage(error) };
   }
 }
 
@@ -241,7 +250,6 @@ export async function guardarConfiguracionFE(data: {
 }) {
   try {
     const { empresaId } = await getTenantContext();
-    const { encrypt } = require('../utils/crypto');
 
     const credencialCifrada = data.credencial ? encrypt(data.credencial) : '';
 
@@ -277,8 +285,8 @@ export async function guardarConfiguracionFE(data: {
 
     revalidatePath('/settings');
     return { success: true, config };
-  } catch (error: any) {
-    return { success: false, message: error.message };
+  } catch (error: unknown) {
+    return { success: false, message: getErrorMessage(error) };
   }
 }
 

@@ -1,13 +1,20 @@
 // Intercept next/navigation and auth/context modules
-const Module = require('module');
+import Module from 'module';
+import type { Prisma } from '@prisma/client';
+
+declare global {
+  var mockUserId: string | undefined;
+  var mockEmpresaId: string | undefined;
+}
+
 const originalRequire = Module.prototype.require;
-Module.prototype.require = function (request: string) {
+Module.prototype.require = function (this: Module, request: string, ...rest: unknown[]) {
   if (request.includes('auth/context')) {
     return {
       getTenantContext: async () => {
         return {
-          userId: (global as any).mockUserId,
-          empresaId: (global as any).mockEmpresaId,
+          userId: global.mockUserId,
+          empresaId: global.mockEmpresaId,
           role: 'admin'
         };
       }
@@ -25,8 +32,8 @@ Module.prototype.require = function (request: string) {
       }
     };
   }
-  return originalRequire.apply(this, arguments);
-};
+  return originalRequire.apply(this, [request, ...rest] as Parameters<typeof originalRequire>);
+} as NodeJS.Require;
 
 import { prisma } from '../db';
 import { crearPlanCuentasParaEmpresa } from '../contabilidad/planCuentasDefault';
@@ -44,10 +51,6 @@ async function testFacturacionElectronica() {
   const suffix = Date.now().toString();
 
   let createdEmpresaId: string | null = null;
-  let createdUserId: string | null = null;
-  let createdSucursalId: string | null = null;
-  let createdCajaId: string | null = null;
-  let createdBodegaId: string | null = null;
   let createdClienteId: string | null = null;
   let createdProductoId: string | null = null;
 
@@ -66,11 +69,11 @@ async function testFacturacionElectronica() {
       }
     });
     createdEmpresaId = empresa.id;
-    (global as any).mockEmpresaId = empresa.id;
+    global.mockEmpresaId = empresa.id;
 
     // Generar plan de cuentas minimo para asientos
     console.log('   Generando plan de cuentas...');
-    await crearPlanCuentasParaEmpresa(prisma as any, empresa.id);
+    await crearPlanCuentasParaEmpresa(prisma as unknown as Prisma.TransactionClient, empresa.id);
 
     // 2. Creando Usuario
     console.log('2. Creando Usuario...');
@@ -83,8 +86,7 @@ async function testFacturacionElectronica() {
         passwordHash: 'mock-hash'
       }
     });
-    createdUserId = user.id;
-    (global as any).mockUserId = user.id;
+    global.mockUserId = user.id;
 
     // 3. Creando Sucursal, Caja y Bodega
     console.log('3. Creando Sucursal, Caja y Bodega...');
@@ -97,9 +99,8 @@ async function testFacturacionElectronica() {
         activa: true
       }
     });
-    createdSucursalId = sucursal.id;
 
-    const caja = await prisma.caja.create({
+    await prisma.caja.create({
       data: {
         empresaId: empresa.id,
         sucursalId: sucursal.id,
@@ -108,7 +109,6 @@ async function testFacturacionElectronica() {
         activa: true
       }
     });
-    createdCajaId = caja.id;
 
     const bodega = await prisma.bodega.create({
       data: {
@@ -119,7 +119,6 @@ async function testFacturacionElectronica() {
         activa: true
       }
     });
-    createdBodegaId = bodega.id;
 
     // 4. Creando Cliente y Producto
     console.log('4. Creando Cliente y Producto...');
@@ -158,7 +157,7 @@ async function testFacturacionElectronica() {
       credencial: 'my-pac-api-key',
       activo: true
     });
-    
+
     if (!configRes.success) {
       throw new Error(`Fallo al guardar la configuración FE: ${configRes.message}`);
     }
@@ -221,7 +220,7 @@ async function testFacturacionElectronica() {
     ]));
 
     // Interceptamos la llamada para ver si crea la factura
-    const invoiceResult = await createInvoice({}, formData);
+    await createInvoice({}, formData);
     console.log('   createInvoice completado.');
 
     // Recuperar la factura creada para validar
@@ -249,7 +248,7 @@ async function testFacturacionElectronica() {
     });
 
     if (!dbInvoiceAutorizada) throw new Error('No se encontró la factura.');
-    
+
     console.log('   Factura Autorizada metadatos:', {
       estadoDgi: dbInvoiceAutorizada.estadoDgi,
       cufe: dbInvoiceAutorizada.cufe,

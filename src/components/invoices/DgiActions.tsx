@@ -21,10 +21,12 @@ interface DgiActionsProps {
     estadoDgi: string;
 }
 
+type PacLog = Awaited<ReturnType<typeof obtenerLogsPAC>>[number];
+
 export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsProps) {
     const [estadoDgi, setEstadoDgi] = useState(initialEstado);
     const [loading, setLoading] = useState(false);
-    const [logs, setLogs] = useState<any[]>([]);
+    const [logs, setLogs] = useState<PacLog[]>([]);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [motivoCancelacion, setMotivoCancelacion] = useState('');
 
@@ -50,8 +52,8 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
                 toast.error(res.message, { id: 'timbrado' });
                 setEstadoDgi('error');
             }
-        } catch (e: any) {
-            toast.error(e.message || 'Error al conectar con el servidor.', { id: 'timbrado' });
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Error al conectar con el servidor.', { id: 'timbrado' });
         } finally {
             setLoading(false);
         }
@@ -75,8 +77,8 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
             } else {
                 toast.error(res.message, { id: 'anulacion' });
             }
-        } catch (e: any) {
-            toast.error(e.message || 'Error de conexión.', { id: 'anulacion' });
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Error de conexión.', { id: 'anulacion' });
         } finally {
             setLoading(false);
         }

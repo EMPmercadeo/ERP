@@ -1,6 +1,7 @@
 'use server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { getTenantContext } from '@/lib/auth/context';
 import { WarehouseSchema } from '@/lib/validations';
@@ -172,7 +173,7 @@ export async function deleteBodega(id: string) {
 }
 
 // Resuelve qué bodega usar: valida la sugerida si viene, o cae a la primera bodega de la empresa.
-export async function resolverBodegaId(tx: any, empresaId: string, bodegaIdSugerido?: string | null): Promise<string> {
+export async function resolverBodegaId(tx: Prisma.TransactionClient, empresaId: string, bodegaIdSugerido?: string | null): Promise<string> {
     if (bodegaIdSugerido) {
         const valida = await tx.bodega.findFirst({ where: { id: bodegaIdSugerido, empresaId, activa: true } });
         if (valida) return valida.id;
@@ -184,7 +185,7 @@ export async function resolverBodegaId(tx: any, empresaId: string, bodegaIdSuger
     return principal.id;
 }
 
-async function moverInventarioBodega(tx: any, params: { empresaId: string; bodegaId: string; productoId: string; delta: number }) {
+async function moverInventarioBodega(tx: Prisma.TransactionClient, params: { empresaId: string; bodegaId: string; productoId: string; delta: number }) {
     await tx.inventarioBodega.upsert({
         where: { bodegaId_productoId: { bodegaId: params.bodegaId, productoId: params.productoId } },
         create: { empresaId: params.empresaId, bodegaId: params.bodegaId, productoId: params.productoId, cantidad: params.delta },

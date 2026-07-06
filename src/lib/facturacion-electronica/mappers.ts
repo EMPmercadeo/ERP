@@ -1,11 +1,59 @@
+import type { Prisma } from '@prisma/client';
 import { FacturaElectronicaDTO } from './pac-provider.interface';
 
+type NumericLike = number | string | Prisma.Decimal;
+
+interface FacturaInput {
+  fechaEmision?: Date | null;
+  condicionPago?: string | null;
+  metodoPago?: string | null;
+  tipoDocumento?: string | null;
+  facturaOrigen?: {
+    cufe?: string | null;
+    fechaEmision?: Date | null;
+  } | null;
+}
+
+interface ClienteInput {
+  tipoRuc?: string | null;
+  ruc: string;
+  dv?: string | null;
+  razonSocial: string;
+  direccion?: string | null;
+  email?: string | null;
+  telefono?: string | null;
+}
+
+interface EmpresaInput {
+  ambienteDgi?: string | null;
+  ruc: string;
+  dv: string;
+  razonSocial: string;
+  nombreComercial?: string | null;
+  direccion?: string | null;
+  telefono?: string | null;
+  email?: string | null;
+}
+
+interface SucursalInput {
+  direccion?: string | null;
+}
+
+interface ItemInput {
+  productoId?: string | null;
+  descripcion: string;
+  cantidad: NumericLike;
+  precioUnitario: NumericLike;
+  descuento?: NumericLike | null;
+  codigoTasaItbms?: string | null;
+}
+
 export function mapFacturaToDTO(params: {
-  factura: any;
-  cliente: any;
-  empresa: any;
-  sucursal: any;
-  items: any[];
+  factura: FacturaInput;
+  cliente: ClienteInput;
+  empresa: EmpresaInput;
+  sucursal: SucursalInput;
+  items: ItemInput[];
 }): FacturaElectronicaDTO {
   const { factura, cliente, empresa, sucursal, items } = params;
 
@@ -20,7 +68,7 @@ export function mapFacturaToDTO(params: {
     const tasa = item.codigoTasaItbms === '01' ? 0.07 :
                  item.codigoTasaItbms === '02' ? 0.10 :
                  item.codigoTasaItbms === '03' ? 0.15 : 0;
-    
+
     const montoItbms = Number((baseImponible * tasa).toFixed(4));
     const montoTotal = Number((baseImponible + montoItbms).toFixed(4));
 
