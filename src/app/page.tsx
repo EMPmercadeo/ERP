@@ -131,12 +131,12 @@ const GLOSARIO = [
 const PLANES = [
     {
         name: 'Emprendedor',
-        price: '$24.99',
+        price: '$19.99',
         description: 'Para negocios que están empezando a facturar electrónicamente.',
         features: [
             '1 sucursal',
-            'Hasta 100 facturas DGI/mes',
-            '2 usuarios',
+            'Hasta 150 facturas DGI/mes',
+            '1 usuario',
             'Contabilidad automática de partida doble',
             'Inventario básico (un almacén)',
         ],
@@ -146,12 +146,12 @@ const PLANES = [
     },
     {
         name: 'Negocio',
-        price: '$44.99',
+        price: '$34.99',
         description: 'Para negocios en crecimiento con más de un punto de venta.',
         features: [
             'Hasta 3 sucursales',
-            'Facturación de alto volumen',
-            'Hasta 10 usuarios',
+            'Hasta 300 facturas DGI/mes',
+            'Hasta 2 usuarios',
             'Conciliación bancaria',
             'Inventario multi-almacén con lotes/FEFO',
             'Reportes financieros avanzados',
