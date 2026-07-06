@@ -1,0 +1,374 @@
+import { prisma } from '@/lib/db';
+import { resolverBodegaId, moverInventarioBodega } from '@/lib/actions/bodegas';
+import { canCreateInvoice, incrementDocumentUsage } from '@/lib/actions/billing';
+import { generarAsientoFactura, generarAsientoCobro, generarAsientoCostoVenta } from '@/lib/contabilidad/asientos';
+
+const DOC_TYPE_FE = 'FE';
+
+export class FacturaCreationError extends Error {}
+
+interface ItemFacturaInput {
+    productoId: string;
+    descripcion: string;
+    cantidad: number;
+    precioUnitario: number;
+    codigoTasaItbms: string;
+    descuento?: number;
+}
+
+export interface CrearFacturaCompletaParams {
+    empresaId: string;
+    userId: string;
+    clienteId: string;
+    condicionPago: string;
+    metodoPago?: string;
+    bodegaId?: string | null;
+    items: ItemFacturaInput[];
+}
+
+export async function getEmpresaDefaults(empresaId: string) {
+    const company = await prisma.empresa.findUnique({
+        where: { id: empresaId },
+        include: {
+            sucursales: {
+                include: {
+                    cajas: true
+                }
+            }
+        }
+    });
+
+    if (!company || !company.sucursales[0] || !company.sucursales[0].cajas[0]) {
+        throw new FacturaCreationError('Configuración de empresa/sucursal/caja incompleta');
+    }
+
+    return {
+        empresa: company,
+        sucursal: company.sucursales[0],
+        caja: company.sucursales[0].cajas[0]
+    };
+}
+
+export async function getNextSequence(empresaId: string, sucursalId: string, cajaId: string) {
+    return await prisma.$transaction(async (tx) => {
+        const sequence = await tx.secuencia.findUnique({
+            where: {
+                empresaId_sucursalId_cajaId_tipoDocumento: {
+                    empresaId,
+                    sucursalId,
+                    cajaId,
+                    tipoDocumento: DOC_TYPE_FE
+                }
+            }
+        });
+
+        let nextNumber = 1;
+        if (sequence) {
+            nextNumber = sequence.ultimoNumero + 1;
+            await tx.secuencia.update({
+                where: { id: sequence.id },
+                data: { ultimoNumero: nextNumber }
+            });
+        } else {
+            await tx.secuencia.create({
+                data: {
+                    empresaId,
+                    sucursalId,
+                    cajaId,
+                    tipoDocumento: DOC_TYPE_FE,
+                    ultimoNumero: nextNumber
+                }
+            });
+        }
+
+        return nextNumber;
+    });
+}
+
+function calcularTasaItbms(codigoTasaItbms: string): number {
+    return codigoTasaItbms === '01' ? 0.07 :
+        codigoTasaItbms === '02' ? 0.10 :
+            codigoTasaItbms === '03' ? 0.15 : 0;
+}
+
+function getProductoCosto(prod: any): number {
+    if (prod.esKit && prod.kitInfo && prod.kitInfo.activo) {
+        let totalCosto = 0;
+        for (const comp of prod.kitInfo.componentes) {
+            totalCosto += getProductoCosto(comp.productoComponente) * comp.cantidad;
+        }
+        return totalCosto;
+    }
+    return Number(prod.costoUnitario || 0);
+}
+
+/**
+ * Crea una factura completa (numeración vía Secuencia, asientos contables, descuento de stock
+ * con soporte de kits/lotes, y consumo de cuota mensual). Fuente única de verdad usada tanto por
+ * los flujos internos (UI, POS) como por la API externa — no duplicar esta lógica en otro lugar.
+ */
+export async function crearFacturaCompleta(params: CrearFacturaCompletaParams) {
+    const { empresaId, userId, clienteId, condicionPago, items } = params;
+    const metodoPago = params.metodoPago || 'efectivo';
+
+    if (!items || items.length === 0) {
+        throw new FacturaCreationError('La factura debe contener al menos un ítem.');
+    }
+
+    const { empresa, sucursal, caja } = await getEmpresaDefaults(empresaId);
+
+    const client = await prisma.cliente.findFirst({
+        where: { id: clienteId, empresaId }
+    });
+    if (!client) {
+        throw new FacturaCreationError('El cliente seleccionado no pertenece a tu empresa o no existe.');
+    }
+
+    const productIds = Array.from(new Set(items.map((item) => item.productoId)));
+    const products = await prisma.producto.findMany({
+        where: { id: { in: productIds }, empresaId },
+        include: {
+            kitInfo: {
+                include: {
+                    componentes: {
+                        include: {
+                            productoComponente: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+    if (products.length !== productIds.length) {
+        throw new FacturaCreationError('Uno o más productos seleccionados no pertenecen a tu empresa o no existen.');
+    }
+
+    const hasRemainingDocs = await canCreateInvoice(empresaId);
+    if (!hasRemainingDocs) {
+        throw new FacturaCreationError('Has alcanzado el límite mensual de documentos electrónicos de tu plan. Compra un bloque adicional o actualiza tu plan.');
+    }
+
+    const isFiscal = empresa.fiscalEnabled && empresa.planType !== 'free';
+    const tipoDoc = isFiscal ? 'FE' : 'REC';
+    const prefix = isFiscal ? 'FE' : 'REC';
+
+    const numeroSecuencial = await getNextSequence(empresa.id, sucursal.id, caja.id);
+    const numeroCompleto = isFiscal
+        ? `${prefix}-001-001-01-${String(numeroSecuencial).padStart(8, '0')}`
+        : `${prefix}-${String(numeroSecuencial).padStart(8, '0')}`;
+
+    const subtotal = items.reduce((sum, item) => sum + (item.cantidad * item.precioUnitario), 0);
+    const totalDescuento = items.reduce((sum, item) => sum + (item.descuento || 0), 0);
+    const totalItbms = items.reduce((sum, item) => {
+        const tasa = calcularTasaItbms(item.codigoTasaItbms);
+        const montoBruto = item.cantidad * item.precioUnitario;
+        const montoNeto = Math.max(0, montoBruto - (item.descuento || 0));
+        return sum + (montoNeto * tasa);
+    }, 0);
+    const totalNeto = subtotal - totalDescuento + totalItbms;
+
+    const mapaUnidad = new Map(products.map((p) => [p.id, p.unidadMedida]));
+    const mapaCosto = new Map(products.map((p) => [p.id, getProductoCosto(p)]));
+    const mapaProductDetails = new Map(products.map((p) => [p.id, p]));
+
+    let ventasMercancias = 0;
+    let ventasServicios = 0;
+    let costoVentaTotal = 0;
+    for (const item of items) {
+        const unidad = mapaUnidad.get(item.productoId);
+        const montoBrutoItem = item.cantidad * item.precioUnitario;
+        if (unidad === 'SRV' || unidad === 'HRS') {
+            ventasServicios += montoBrutoItem;
+        } else {
+            ventasMercancias += montoBrutoItem;
+            costoVentaTotal += (mapaCosto.get(item.productoId) ?? 0) * item.cantidad;
+        }
+    }
+
+    const invoice = await prisma.$transaction(async (tx) => {
+        const nuevaFactura = await tx.factura.create({
+            data: {
+                empresaId: empresa.id,
+                sucursalId: sucursal.id,
+                cajaId: caja.id,
+                clienteId,
+                creadorId: userId,
+                tipoDocumento: tipoDoc,
+                numeroSecuencial,
+                numeroCompleto,
+                subtotal,
+                totalDescuento,
+                totalItbms,
+                totalNeto,
+                saldoPendiente: condicionPago === 'contado' ? 0 : totalNeto,
+                totalPagado: condicionPago === 'contado' ? totalNeto : 0,
+                estadoDgi: isFiscal ? 'pendiente' : 'local',
+                items: {
+                    create: items.map((item) => {
+                        const tasa = calcularTasaItbms(item.codigoTasaItbms);
+                        const desc = item.descuento || 0;
+                        const montoBruto = item.cantidad * item.precioUnitario;
+                        const montoNeto = Math.max(0, montoBruto - desc);
+                        const montoItbms = montoNeto * tasa;
+                        return {
+                            productoId: item.productoId,
+                            descripcion: item.descripcion,
+                            cantidad: item.cantidad,
+                            precioUnitario: item.precioUnitario,
+                            costoUnitario: mapaCosto.get(item.productoId) ?? 0,
+                            descuento: desc,
+                            codigoTasaItbms: item.codigoTasaItbms,
+                            montoItbms,
+                            montoTotal: montoNeto + montoItbms
+                        };
+                    })
+                }
+            },
+            include: { items: true }
+        });
+
+        await generarAsientoFactura(tx, {
+            empresaId: empresa.id,
+            facturaId: nuevaFactura.id,
+            numeroCompleto: nuevaFactura.numeroCompleto,
+            fecha: nuevaFactura.fechaEmision,
+            usuarioId: userId,
+            subtotal,
+            totalDescuento,
+            totalItbms,
+            totalNeto,
+            ventasMercancias,
+            ventasServicios
+        });
+
+        await generarAsientoCostoVenta(tx, {
+            empresaId: empresa.id,
+            facturaId: nuevaFactura.id,
+            numeroCompleto: nuevaFactura.numeroCompleto,
+            fecha: nuevaFactura.fechaEmision,
+            usuarioId: userId,
+            costoTotal: costoVentaTotal
+        });
+
+        const bodegaId = await resolverBodegaId(tx, empresa.id, params.bodegaId ?? null);
+
+        const descontarStock = async (
+            prodId: string,
+            cantidad: number,
+            esKit: boolean,
+            kitInfo: any
+        ): Promise<void> => {
+            if (esKit && kitInfo && kitInfo.activo) {
+                for (const comp of kitInfo.componentes) {
+                    const compProd = comp.productoComponente;
+                    const totalQty = comp.cantidad * cantidad;
+                    await descontarStock(compProd.id, totalQty, compProd.esKit, compProd.kitInfo);
+                }
+                return;
+            }
+
+            const prod = await tx.producto.findFirst({
+                where: { id: prodId },
+                select: { controlaLotes: true }
+            });
+
+            await tx.producto.update({
+                where: { id: prodId },
+                data: { stockActual: { decrement: Math.round(cantidad) } }
+            });
+            await moverInventarioBodega(tx, {
+                empresaId: empresa.id,
+                bodegaId,
+                productoId: prodId,
+                delta: -Math.round(cantidad)
+            });
+
+            if (prod?.controlaLotes) {
+                let cantidadPorDescontar = Math.round(cantidad);
+                const lotes = await tx.loteProducto.findMany({
+                    where: {
+                        empresaId: empresa.id,
+                        productoId: prodId,
+                        bodegaId,
+                        cantidadDisponible: { gt: 0 }
+                    },
+                    orderBy: [
+                        { fechaVencimiento: 'asc' },
+                        { createdAt: 'asc' }
+                    ]
+                });
+
+                for (const lote of lotes) {
+                    if (cantidadPorDescontar <= 0) break;
+                    const cantidadDescontarDeEsteLote = Math.min(lote.cantidadDisponible, cantidadPorDescontar);
+                    await tx.loteProducto.update({
+                        where: { id: lote.id },
+                        data: { cantidadDisponible: { decrement: cantidadDescontarDeEsteLote } }
+                    });
+                    cantidadPorDescontar -= cantidadDescontarDeEsteLote;
+                }
+
+                if (cantidadPorDescontar > 0) {
+                    if (lotes.length > 0) {
+                        await tx.loteProducto.update({
+                            where: { id: lotes[lotes.length - 1].id },
+                            data: { cantidadDisponible: { decrement: cantidadPorDescontar } }
+                        });
+                    } else {
+                        await tx.loteProducto.create({
+                            data: {
+                                empresaId: empresa.id,
+                                productoId: prodId,
+                                bodegaId,
+                                numeroLote: 'LOTE-SISTEMA',
+                                fechaVencimiento: null,
+                                cantidadRecibida: 0,
+                                cantidadDisponible: -cantidadPorDescontar
+                            }
+                        });
+                    }
+                }
+            }
+        };
+
+        for (const item of items) {
+            const unidad = mapaUnidad.get(item.productoId);
+            if (unidad !== 'SRV' && unidad !== 'HRS') {
+                const prodDetails = mapaProductDetails.get(item.productoId);
+                if (prodDetails) {
+                    await descontarStock(item.productoId, item.cantidad, prodDetails.esKit, prodDetails.kitInfo);
+                }
+            }
+        }
+
+        if (condicionPago === 'contado') {
+            const nuevoPago = await tx.pago.create({
+                data: {
+                    empresaId: empresa.id,
+                    facturaId: nuevaFactura.id,
+                    clienteId,
+                    usuarioId: userId,
+                    monto: totalNeto,
+                    metodoPago,
+                    montoAplicado: totalNeto
+                }
+            });
+
+            await generarAsientoCobro(tx, {
+                empresaId: empresa.id,
+                pagoId: nuevoPago.id,
+                numeroFactura: nuevaFactura.numeroCompleto,
+                fecha: nuevaFactura.fechaEmision,
+                usuarioId: userId,
+                monto: totalNeto,
+                metodoPago
+            });
+        }
+
+        return nuevaFactura;
+    });
+
+    await incrementDocumentUsage(empresaId);
+
+    return invoice;
+}

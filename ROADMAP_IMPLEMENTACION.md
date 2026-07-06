@@ -81,13 +81,15 @@ Todas las pantallas de esta fase son de solo consulta (no modifican datos existe
 
 Nota: esta fase es de riesgo alto porque toca el campo `stockActual` que hoy usan `createPurchase`, `createInvoice` (si descuenta stock) y el módulo de compras. Se recomienda modo supervisado (comando por tarea), no autónomo.
 
+**Actualización 2026-07-06**: la lógica de "crear factura completa" (numeración, asientos contables, descuento de stock con kits/lotes, `incrementDocumentUsage`) vivía duplicada en `createInvoice`/`createInvoicePOS` y estaba ausente/rota en `POST /api/v1/invoices` (la API externa bypaseaba contabilidad y stock por completo). Se consolidó todo en `src/lib/services/invoiceCreation.ts#crearFacturaCompleta()`, usada por los 3 call sites. **Cualquier cambio futuro a la lógica de creación de facturas (Fase 3 en adelante) debe hacerse en ese único archivo, no en `invoices.ts` ni en `route.ts` directamente**, para no reintroducir la divergencia.
+
 ---
 
 ## FASE 4 — Integraciones Reales (RIESGO MEDIO — requiere credenciales externas del usuario)
 
 **Tarea 4.1** — Email real con Resend o SendGrid, reemplazando el `setTimeout` mock en `sendSupplierEmailAction` (suppliers.ts). Requiere que el usuario cree una cuenta y provea API key.
-**Tarea 4.2** — WhatsApp Business API real (o integración con Yappy que el usuario mencionó que tiene API propia) para envío de facturas/recordatorios de cobro.
-**Tarea 4.3** — Webhooks reales: disparar POST HTTP a la URL configurada en Empresa cuando ocurren eventos (factura creada, pago recibido).
+**Tarea 4.2** — WhatsApp Business API real (o integración con Yappy que el usuario mencionó que tiene API propia) para envío de facturas/recordatorios de cobro. Disparo ya implementado (`src/lib/integrations/whatsapp.ts`) y gateado correctamente (no hace nada sin `whatsappPhone`/`whatsappToken` configurados) — falta que una empresa real registre credenciales y, para mensajes iniciados por el negocio, un template aprobado en Meta Business Manager (hoy usa `type: "text"`, solo válido dentro de la ventana de 24h).
+**Tarea 4.3** — Webhooks reales: disparar POST HTTP a la URL configurada en Empresa cuando ocurren eventos (factura creada, pago recibido). Disparo ya implementado (`src/lib/integrations/webhooks.ts`) y gateado correctamente (no hace nada sin `webhookUrl` configurado) — falta que alguna empresa real configure uno para probarse en producción.
 **Tarea 4.4** — PayPal con planes reales, reemplazando los IDs mock (`P-MOCK-BASIC-PLAN`) por planes creados de verdad en el dashboard de PayPal.
 
 Nota: todas estas requieren que el usuario obtenga credenciales/cuentas reales antes de poder probarse. No se pueden verificar solo con `npm run build`.

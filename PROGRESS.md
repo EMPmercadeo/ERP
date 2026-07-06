@@ -731,3 +731,48 @@ Registros y script de prueba eliminados al finalizar. Build final verificado lim
 
 **Nota pendiente (no bloqueante, no tocada)**: sigue sin resolverse el hallazgo de Fase 3 sobre políticas RLS faltantes en las tablas nuevas (`Bodega`, `InventarioBodega`, `LoteProducto`, `ProductoKit`, `ProductoKitComponente`) — no era parte del alcance de esta tarea (UI de lotes/kits) y requiere confirmación explícita antes de tocar migraciones de seguridad.
 
+---
+
+## [2026-07-06] Sesión de Estabilización — Fix 1: gating de webhook/whatsapp
+
+**Discovery:** `src/lib/integrations/webhooks.ts#dispatchWebhookEvent` y `src/lib/integrations/whatsapp.ts#enviarWhatsAppFactura` ya consultan `Empresa.webhookUrl` y `Empresa.whatsappPhone/whatsappToken` respectivamente ANTES de intentar cualquier llamada de red, devolviendo `{success: false, message: '...no configurado...'}` de inmediato si faltan. No existe una tabla de configuración separada (a diferencia de `ConfiguracionFacturacionElectronica` para DGI) — los campos viven directo en `Empresa`. Confirmado: 0 empresas (local y producción) tienen estos campos configurados hoy.
+
+**Fix:** Ninguno necesario en código — el guard ya existe y es correcto (falla silenciosa, cero intentos de red). Se verificó con un test real (`global.fetch` parcheado para detectar cualquier llamada): 0 llamadas a `fetch()` al invocar ambas funciones contra una empresa sin configurar. Script de prueba eliminado tras confirmar.
+
+Estado: OK (sin cambios de código, solo verificación)
+
+## [2026-07-06] Sesión de Estabilización — Fix 2: extraer `crearFacturaCompleta()` compartida
+
+**Discovery:** `createInvoice` y `createInvoicePOS` (`src/lib/actions/invoices.ts`) tenían ~300 líneas de lógica prácticamente duplicada (numeración vía `Secuencia`, cálculo de totales/ITBMS con descuento, costo de kits, `generarAsientoFactura`/`generarAsientoCostoVenta`/`generarAsientoCobro`, descuento de stock con soporte de kits/lotes, `incrementDocumentUsage`). Mientras tanto, `POST /api/v1/invoices` (API externa, activa y documentada desde 2026-06-22) tenía una implementación paralela y mucho más pobre: `numeroCompleto = 'TEMP-' + Date.now()` en vez de `Secuencia`, sin llamar a `generarAsientoFactura`/`generarAsientoCostoVenta`, sin descontar stock, y con un chequeo de límite de plan hardcodeado (100/100/500 por `planType`) que duplicaba —de forma distinta e incorrecta— la lógica real de `canCreateInvoice`/`DocumentUsage`.
+
+**Fix:** Se extrajo toda la lógica común a `src/lib/services/invoiceCreation.ts#crearFacturaCompleta()` (incluye validación de cliente/productos por tenant, `canCreateInvoice`, numeración, cálculo de totales, asientos contables, descuento de stock con kits/lotes, pago+asiento de cobro si es contado, e `incrementDocumentUsage`). Los tres call sites ahora llaman a la misma función:
+- `createInvoice`/`createInvoicePOS`: conservan su propio parsing (FormData+Zod vs objeto plano) y su propio post-procesamiento (timbrado DGI/webhook/WhatsApp vía `after()`, redirect vs JSON), pero delegan la creación completa de la factura al servicio.
+- `POST /api/v1/invoices/route.ts`: ahora genera numeración fiscal real, asientos contables reales y descuenta stock real (incluyendo kits/lotes, que antes ni siquiera contemplaba) — exactamente igual que si la factura viniera de la UI. Se agregó además un registro de `Auditoria` específico de este endpoint (`source: 'api-externa'`) para trazabilidad de integradores externos, ya que los flujos internos no lo tenían pero la API pública sí lo hacía antes y se conservó.
+
+Archivos modificados/creados:
+- `src/lib/services/invoiceCreation.ts` (nuevo)
+- `src/lib/actions/invoices.ts` (createInvoice/createInvoicePOS refactorizados para usar el servicio)
+- `src/app/api/v1/invoices/route.ts` (reescrito para usar el servicio en vez del bypass)
+
+Resultado de `npx tsc --noEmit`: limpio.
+Resultado de `npm run build`: limpio.
+
+Resultado de prueba de integración (`crearFacturaCompleta` con datos reales, empresa/producto/cliente temporales, limpiados al finalizar):
+```
+1. numeroCompleto=FE-001-001-01-00000001 (formato fiscal real, no TEMP-) ✅
+2. Stock: 20 → 17 tras vender 3 unidades ✅
+3. Asientos generados: FACTURA, COSTO_VENTA, COBRO (3, como se espera para venta de contado) ✅
+4. Balance de Comprobación: Total Debe=822.00, Total Haber=822.00 (cuadra) ✅
+   totalNeto=321 (300 subtotal + 21 ITBMS 7%) ✅
+```
+
+**Limitación de la prueba (transparente):** no se pudo probar el endpoint HTTP `POST /api/v1/invoices` de punta a punta (con una request real) porque no hay `NEXT_PUBLIC_FIREBASE_API_KEY` (u otra credencial web de Firebase) configurada localmente para mintear una cookie de sesión real — el mismo tipo de limitación de entorno ya documentada en sesiones anteriores. En su lugar se probó `crearFacturaCompleta()` directamente, que es literalmente la misma función que la ruta ahora invoca (la ruta es un wrapper delgado de parseo de JSON + esta función), por lo que la cobertura de la lógica de negocio es equivalente.
+
+Estado: OK
+
+### Pendientes futuros / fuera de alcance (no implementados en esta sesión, solo anotados)
+- El endpoint externo `POST /api/v1/invoices` no dispara `dispatchWebhookEvent`/`enviarWhatsAppFactura`/timbrado DGI tras crear la factura (a diferencia de `createInvoice`/`createInvoicePOS`) — no se pidió explícitamente y se dejó fuera para no expandir el alcance de este fix.
+- El campo `observaciones` que el endpoint externo recibe en el body nunca se persiste en ningún lado (tampoco lo hacía antes) — no es una regresión de este fix, pero quedó como comportamiento preexistente sin resolver.
+- Prueba end-to-end real vía HTTP del endpoint externo (con cookie de sesión real) sigue bloqueada por falta de credenciales web de Firebase en el entorno local — si se necesita en el futuro, requeriría configurar `NEXT_PUBLIC_FIREBASE_API_KEY` (u otra) localmente para mintear un ID token real.
+- Los sistemas DGI duplicados y el kill-switch `PAC_INTEGRATION_ENABLED` quedaron explícitamente fuera de alcance de esta sesión (congelados por decisión previa), no se tocaron.
+
