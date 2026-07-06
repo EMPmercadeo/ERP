@@ -55,4 +55,5 @@ dashboard-after-*.png
 .vercel
 .env*
 
-# 
+# config local de asistentes IA (Claude Code / Cowork), no es parte del proyecto
+.claude/
