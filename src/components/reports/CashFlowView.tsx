@@ -52,7 +52,7 @@ export function CashFlowView({
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card className="border-l-4 border-l-emerald-500 shadow-sm">
+                <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ingresos Totales Proyectados</CardTitle>
                         <TrendingUp className="h-4 w-4 text-emerald-500" />
@@ -61,7 +61,7 @@ export function CashFlowView({
                         <div className="text-2xl font-bold text-emerald-600">{formatCurrency(totales.ingresos)}</div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-red-500 shadow-sm">
+                <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Egresos Totales Proyectados</CardTitle>
                         <TrendingDown className="h-4 w-4 text-red-500" />
@@ -70,12 +70,12 @@ export function CashFlowView({
                         <div className="text-2xl font-bold text-red-600">{formatCurrency(totales.egresos)}</div>
                     </CardContent>
                 </Card>
-                <Card className={`border-l-4 shadow-sm ${totales.neto >= 0 ? 'border-l-indigo-500' : 'border-l-amber-500'}`}>
+                <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Neto Proyectado</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className={`text-2xl font-bold ${totales.neto >= 0 ? 'text-indigo-600' : 'text-amber-600'}`}>
+                        <div className={`text-2xl font-bold ${totales.neto >= 0 ? 'text-brand-1' : 'text-amber-600'}`}>
                             {formatCurrency(totales.neto)}
                         </div>
                     </CardContent>

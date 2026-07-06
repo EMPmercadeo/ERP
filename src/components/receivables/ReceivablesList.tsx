@@ -63,7 +63,7 @@ const getInitials = (name: string) => {
 };
 
 const palette = [
-    'from-indigo-600 to-purple-400 text-white',
+    'from-brand-1 to-brand-2 text-white',
     'from-blue-600 to-cyan-400 text-white',
     'from-amber-500 to-orange-400 text-white',
     'from-rose-500 to-red-400 text-white',

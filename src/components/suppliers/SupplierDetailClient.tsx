@@ -210,10 +210,10 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium text-muted-foreground">Términos de Pago</CardTitle>
-                                <CreditCard className="h-4 w-4 text-indigo-500" />
+                                <CreditCard className="h-4 w-4 text-brand-1" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-indigo-700">
+                                <div className="text-2xl font-bold text-brand-2">
                                     {supplier.condicionPago}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">Término de pago comercial</p>

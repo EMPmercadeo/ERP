@@ -221,10 +221,10 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium text-muted-foreground">Límite de Crédito</CardTitle>
-                                <CreditCard className="h-4 w-4 text-indigo-500" />
+                                <CreditCard className="h-4 w-4 text-brand-1" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-indigo-700">
+                                <div className="text-2xl font-bold text-brand-2">
                                     {formatCurrency(client.limiteCredito)}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">Condición: {client.condicionPago}</p>
@@ -427,7 +427,7 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
                                                 <TableCell className="text-sm">{formatDate(entry.date.toISOString())}</TableCell>
                                                 <TableCell className="text-sm font-medium">
                                                     {entry.refLink ? (
-                                                        <Link href={entry.refLink} className="text-indigo-600 hover:text-indigo-800 hover:underline">
+                                                        <Link href={entry.refLink} className="text-brand-1 hover:text-brand-2 hover:underline">
                                                             {entry.description}
                                                         </Link>
                                                     ) : (

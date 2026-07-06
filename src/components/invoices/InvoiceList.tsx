@@ -93,9 +93,9 @@ const palette = [
     'from-blue-600 to-teal-400 text-white',
     'from-emerald-500 to-teal-400 text-white',
     'from-amber-500 to-orange-400 text-white',
-    'from-indigo-500 to-purple-400 text-white',
+    'from-brand-1 to-brand-2 text-white',
     'from-rose-500 to-red-400 text-white',
-    'from-blue-500 to-indigo-400 text-white'
+    'from-slate-600 to-slate-800 text-white'
 ];
 
 

@@ -77,8 +77,8 @@ export default function HelpPage() {
             <ContentContainer>
                 <div className="mx-auto max-w-5xl space-y-8 font-sans">
                     {/* Header Banner */}
-                    <div className="text-center py-8 space-y-3 bg-gradient-to-r from-indigo-50/50 via-white to-indigo-50/50 rounded-xl border p-6">
-                        <div className="h-12 w-12 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center mx-auto">
+                    <div className="text-center py-8 space-y-3 bg-gradient-to-r from-brand-1/5 via-white to-brand-1/5 rounded-xl border p-6">
+                        <div className="h-12 w-12 bg-brand-1/10 text-brand-1 rounded-full flex items-center justify-center mx-auto">
                             <HelpCircle className="h-6 w-6" />
                         </div>
                         <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">¿Cómo podemos ayudarte?</h2>
@@ -94,7 +94,7 @@ export default function HelpPage() {
                             return (
                                 <Card key={idx} className="flex flex-col h-full hover:shadow-md transition-shadow">
                                     <CardHeader>
-                                        <div className="h-10 w-10 bg-indigo-50 text-indigo-700 rounded-lg flex items-center justify-center mb-3">
+                                        <div className="h-10 w-10 bg-brand-1/5 text-brand-1 rounded-lg flex items-center justify-center mb-3">
                                             <Icon className="h-5 w-5" />
                                         </div>
                                         <CardTitle className="text-lg">{cat.title}</CardTitle>
@@ -108,7 +108,7 @@ export default function HelpPage() {
                                                 <a
                                                     key={lIdx}
                                                     href={link.href}
-                                                    className="group flex items-center justify-between text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                                                    className="group flex items-center justify-between text-xs text-brand-1 hover:text-brand-2 font-medium"
                                                 >
                                                     <span>{link.name}</span>
                                                     <ArrowUpRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -125,7 +125,7 @@ export default function HelpPage() {
                         {/* FAQs Section */}
                         <div className="md:col-span-2 space-y-6">
                             <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                                <FileText className="h-5 w-5 text-indigo-600" />
+                                <FileText className="h-5 w-5 text-brand-1" />
                                 Preguntas Frecuentes (FAQs)
                             </h3>
                             <div className="space-y-4">
@@ -143,10 +143,10 @@ export default function HelpPage() {
                         {/* Contact Support Sidebar */}
                         <div className="space-y-6">
                             <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                                <PhoneCall className="h-5 w-5 text-indigo-600" />
+                                <PhoneCall className="h-5 w-5 text-brand-1" />
                                 Canales de Soporte
                             </h3>
-                            <Card className="border-indigo-100 bg-indigo-50/10">
+                            <Card className="border-brand-1/10 bg-brand-1/5">
                                 <CardHeader className="pb-4">
                                     <CardTitle className="text-base">Soporte Técnico Directo</CardTitle>
                                     <CardDescription className="text-xs">
@@ -155,7 +155,7 @@ export default function HelpPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="flex items-center gap-3 text-xs">
-                                        <div className="h-8 w-8 bg-indigo-50 text-indigo-700 rounded-full flex items-center justify-center shrink-0">
+                                        <div className="h-8 w-8 bg-brand-1/5 text-brand-1 rounded-full flex items-center justify-center shrink-0">
                                             <Mail className="h-4 w-4" />
                                         </div>
                                         <div>
@@ -164,7 +164,7 @@ export default function HelpPage() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3 text-xs">
-                                        <div className="h-8 w-8 bg-indigo-50 text-indigo-700 rounded-full flex items-center justify-center shrink-0">
+                                        <div className="h-8 w-8 bg-brand-1/5 text-brand-1 rounded-full flex items-center justify-center shrink-0">
                                             <MessageSquare className="h-4 w-4" />
                                         </div>
                                         <div>

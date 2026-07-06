@@ -967,3 +967,41 @@ Modificados (contenido real, no solo fin de línea):
 3. Item 6: aplicar los fixes visuales de los 40 anti-patrones detectados por `impeccable detect` (se dejó como checklist, no aplicado).
 4. Item 7: revisar visualmente la landing en 375px/768px/1280px; confirmar si se prefiere que Rubros/Glosario/Precios sean rutas separadas en vez de anclas de una sola página; alinear los límites de planes del brief con los valores reales en `billing.ts`.
 5. Correr `npm run build` real y probar login manual en navegador antes de cualquier `git push` a `main` (dispara migraciones/deploy automático en Vercel).
+
+---
+
+## [2026-07-06] Item 6 (continuación): fixes visuales aplicados
+
+Se aplicaron los fixes de los 40 anti-patrones detectados por `impeccable detect` (documentados como checklist en la entrada anterior de este mismo item). Solo cambios visuales (clases de Tailwind) — no se tocó lógica de negocio, llamadas a servidor ni validaciones en ningún archivo.
+
+**ai-color-palette (índigo/morado → paleta de marca real)**: se reemplazó cada uso de `indigo-*`/`purple-*`/`violet-*` por la paleta de marca ya existente en `globals.css` (`brand-1` #073674, `brand-2` #052550, `brand-3` #001835), usando opacidad (`/5`, `/10`, `/20`, etc.) para los tonos claros ya que la marca no tiene una escala 50–950 como Tailwind. Se corrigió no solo la línea puntual que marcó Impeccable sino **todas** las apariciones de índigo/morado en cada archivo afectado (varios archivos tenían el color repetido más veces de las que el escaneo determinista reporta — reporta una ocurrencia representativa por patrón, no todas). Afectados: `ClientDetailClient.tsx`, `help/page.tsx`, `research-hub/page.tsx`, `SettingsClient.tsx` (~40 ocurrencias, página de planes/facturación), `AdminBillingClient.tsx`, `BankAccountDetailClient.tsx`, `BankAccountList.tsx`, `ClientList.tsx`, `RecentActivityTable.tsx`, `InvoiceList.tsx`, `PurchaseList.tsx`, `QuotesList.tsx`, `ReceivablesList.tsx`, `CashFlowView.tsx`, `SupplierDetailClient.tsx`, `SupplierList.tsx`. También se corrigió la paleta compartida de avatares con iniciales (`from-indigo-500 to-purple-400` / `from-blue-500 to-indigo-400`, copiada y pegada en ~7 componentes de lista) por combinaciones sin índigo/morado (`brand-1`→`brand-2`, `slate-600`→`slate-800`, etc.), manteniendo la variedad visual entre avatares.
+
+**side-tab (`border-l-4` grueso en tarjetas)**: eliminado en las 4 tarjetas de KPI de `BankAccountDetailClient.tsx`, las 3 de `CashFlowView.tsx` y las 4 de `SupplierList.tsx` — el valor numérico de cada tarjeta ya está coloreado (`text-emerald-600`, `text-amber-600`, etc.), así que el borde grueso lateral era puramente decorativo y redundante.
+
+**border-accent-on-rounded (`border-b-2` que choca con esquinas redondeadas)**: corregido en los 3 encabezados de sección (Activos/Pasivos/Patrimonio) de `BalanceSheetView.tsx`, que sí tenían `rounded-lg` + `border-b-2` en el mismo contenedor. **Revisado y descartado a propósito** en `TimeFilter.tsx` (líneas 165/168): ahí el `border-b-2` es el indicador de pestaña activa dentro de un `Tabs` plano sin esquinas redondeadas — no hay ningún choque visual real, es un patrón de subrayado de tab estándar y quitarlo eliminaría la única señal de "pestaña seleccionada". Se dejó sin tocar.
+
+**gray-on-color (texto gris sobre fondo de color)**: corregidas las combinaciones que sí involucraban índigo (ya resueltas al quitar el índigo). **Revisadas y descartadas a propósito** las 4 restantes (`BankAccountList.tsx`, `SupplierList.tsx` x2, `WarehouseList.tsx`): en los 4 casos el texto gris (`text-slate-600`/`text-slate-500`) es el estado de REPOSO de un botón-ícono, y tanto el color de texto como el de fondo cambian juntos (`hover:text-amber-600 hover:bg-amber-50`, etc.) — no hay ningún momento en que el texto gris conviva con el fondo de color; el detector estático de Impeccable no distingue clases con prefijo `hover:`, por eso las marca igual. Se dejaron sin cambios para no introducir una diferencia visual que no soluciona un problema real.
+
+Resultado de `npx impeccable detect src/` después de los fixes: **de 40 anti-patrones bajó a 6** (los 6 casos arriba, revisados y descartados explícitamente por ser falsos positivos del detector estático, no problemas visuales reales).
+
+Resultado de `npx tsc --noEmit`: sin errores.
+Resultado de `npx eslint` sobre los 17 archivos tocados: 0 errores, 63 warnings — todos preexistentes (imports sin usar, dependencias de hooks) y no relacionados con los cambios de esta sesión.
+
+Archivos modificados (todos, solo clases de Tailwind):
+`src/app/(dashboard)/clients/[id]/ClientDetailClient.tsx`, `src/app/(dashboard)/help/page.tsx`, `src/app/(dashboard)/research-hub/page.tsx`, `src/app/(dashboard)/settings/SettingsClient.tsx`, `src/app/admin/billing/AdminBillingClient.tsx`, `src/components/accounting/BalanceSheetView.tsx`, `src/components/bank-accounts/BankAccountDetailClient.tsx`, `src/components/bank-accounts/BankAccountList.tsx`, `src/components/clients/ClientList.tsx`, `src/components/dashboard/RecentActivityTable.tsx`, `src/components/invoices/InvoiceList.tsx`, `src/components/purchases/PurchaseList.tsx`, `src/components/quotes/QuotesList.tsx`, `src/components/receivables/ReceivablesList.tsx`, `src/components/reports/CashFlowView.tsx`, `src/components/suppliers/SupplierDetailClient.tsx`, `src/components/suppliers/SupplierList.tsx`.
+
+---
+
+## [2026-07-06] Item 7 (continuación): intento de verificación visual en 3 breakpoints
+
+Se intentaron 3 vías distintas para levantar un servidor de desarrollo y capturar la landing en ~375px/768px/1280px:
+
+1. `next dev` (Turbopack, default): falla con `Turbopack Error: failed to create symlink ... node_modules/firebase-admin` — el mount de este sandbox no soporta symlinks.
+2. `next dev --webpack`: falla con `EPERM: operation not permitted, unlink .next/dev/build/chunks/...` — quedaron artefactos del intento anterior de Turbopack en `.next/`, y este sandbox **no permite eliminar ningún archivo** dentro de la carpeta conectada del repo (confirmado: ni siquiera archivos creados por esta misma sesión se pueden borrar — es una restricción general del entorno, no de permisos de Linux).
+3. Copiar el proyecto completo a una carpeta sin esa restricción (el scratchpad de la sesión) para correr el dev server ahí sin tocar el repo real: no es viable en el tiempo disponible por el tamaño de `node_modules`.
+
+Conclusión: **no se pudo generar una captura de pantalla real** de la landing en este entorno — es una limitación del sandbox de esta sesión, no del código. Lo que sí se pudo verificar:
+- `npx tsc --noEmit`: sin errores.
+- Revisión manual del código de `src/app/page.tsx`, `LandingHeader.tsx` y `FaqAccordion.tsx`: los patrones responsive (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3/4`, botones `flex-col sm:flex-row`, nav `hidden lg:flex` / hamburguesa `lg:hidden`) son los mismos breakpoints (`sm:`/`lg:`) y el mismo patrón ya usado y probado en el resto de la app (ej. controles de paginación en `ClientList.tsx`), no un esquema nuevo sin precedente.
+
+**Pendiente real para el usuario**: correr `npm run dev` (o `npm run dev -- --webpack` si Turbopack da problemas localmente) en su máquina y confirmar visualmente los 3 breakpoints antes de dar el punto por cerrado — esto no se pudo automatizar desde este entorno.

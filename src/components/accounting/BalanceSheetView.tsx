@@ -146,7 +146,7 @@ export function BalanceSheetView({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Lado Izquierdo: Activos */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b-2 border-slate-800 pb-1.5 bg-slate-50 px-3 py-2 rounded-lg">
+              <div className="flex items-center justify-between bg-slate-50 px-3 py-2 rounded-lg">
                 <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Activos</h3>
                 <span className="font-mono text-sm font-bold text-slate-800">{formatCurrency(totalActivos)}</span>
               </div>
@@ -173,7 +173,7 @@ export function BalanceSheetView({
             <div className="space-y-6">
               {/* Pasivos */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b-2 border-slate-800 pb-1.5 bg-slate-50 px-3 py-2 rounded-lg">
+                <div className="flex items-center justify-between bg-slate-50 px-3 py-2 rounded-lg">
                   <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Pasivos</h3>
                   <span className="font-mono text-sm font-bold text-slate-800">{formatCurrency(totalPasivos)}</span>
                 </div>
@@ -198,7 +198,7 @@ export function BalanceSheetView({
 
               {/* Patrimonios */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b-2 border-slate-800 pb-1.5 bg-slate-50 px-3 py-2 rounded-lg">
+                <div className="flex items-center justify-between bg-slate-50 px-3 py-2 rounded-lg">
                   <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Patrimonio</h3>
                   <span className="font-mono text-sm font-bold text-slate-800">{formatCurrency(totalPatrimonioTotal)}</span>
                 </div>

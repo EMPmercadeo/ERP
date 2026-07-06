@@ -919,31 +919,31 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                     {activeTab === 'billing' && (
                         <div className="space-y-6">
                             {/* Current Status Banner */}
-                            <Card className="border-indigo-100 bg-indigo-50/30">
+                            <Card className="border-brand-1/10 bg-brand-1/30">
                                 <CardContent className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-6">
                                     <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-indigo-100 text-indigo-700 rounded-lg shrink-0">
+                                        <div className="p-3 bg-brand-1/10 text-brand-2 rounded-lg shrink-0">
                                             {company.planType === 'free' && <Sparkles className="h-6 w-6" />}
                                             {company.planType === 'emprendedor' && <Zap className="h-6 w-6" />}
-                                            {company.planType === 'negocio' && <Zap className="h-6 w-6 text-indigo-600" />}
+                                            {company.planType === 'negocio' && <Zap className="h-6 w-6 text-brand-1" />}
                                             {company.planType === 'pro' && <Zap className="h-6 w-6 animate-pulse text-amber-500" />}
-                                            {company.planType === 'empresa' && <Building className="h-6 w-6 text-indigo-600" />}
+                                            {company.planType === 'empresa' && <Building className="h-6 w-6 text-brand-1" />}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <h3 className="font-semibold text-lg text-indigo-950">
+                                                <h3 className="font-semibold text-lg text-brand-3">
                                                     Plan Actual: {company.planType === 'free' ? 'Plan de Pruebas' : company.planType === 'emprendedor' ? 'Plan Emprendedor' : company.planType === 'negocio' ? 'Plan Negocio' : company.planType === 'pro' ? 'Plan Pro' : 'Plan Empresa'}
                                                 </h3>
-                                                <Badge variant="secondary" className="bg-indigo-100 text-indigo-800 border-indigo-200 uppercase text-[10px]">
+                                                <Badge variant="secondary" className="bg-brand-1/10 text-brand-2 border-brand-1/20 uppercase text-[10px]">
                                                     {company.subscriptionStatus === 'active' ? 'Activo' : company.subscriptionStatus}
                                                 </Badge>
                                             </div>
-                                            <p className="text-sm text-indigo-900/80 mt-1">
+                                            <p className="text-sm text-brand-3/80 mt-1">
                                                 {planInfo.desc}
                                             </p>
                                             {company.planType !== 'free' && (
                                                 <div className="mt-2.5 flex items-center gap-4">
-                                                    <span className="text-xs text-indigo-950/60 font-semibold flex items-center gap-1">
+                                                    <span className="text-xs text-brand-3/60 font-semibold flex items-center gap-1">
                                                         <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                                                         Renovación PayPal activa
                                                     </span>
@@ -959,17 +959,17 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                     </div>
                                     <div className="w-full sm:w-auto flex flex-col items-end gap-2">
                                         <div className="w-full">
-                                            <div className="flex justify-between text-xs text-indigo-900/60 mb-1.5">
+                                            <div className="flex justify-between text-xs text-brand-3/60 mb-1.5">
                                                 <span>Consumo de documentos:</span>
                                                 <span className="font-bold">{documentUsage.usedDocuments} / {totalCapacity}</span>
                                             </div>
-                                            <div className="w-full sm:w-48 bg-indigo-100 rounded-full h-2 overflow-hidden">
+                                            <div className="w-full sm:w-48 bg-brand-1/10 rounded-full h-2 overflow-hidden">
                                                 <div 
-                                                    className="bg-indigo-600 h-2 rounded-full transition-all duration-500" 
+                                                    className="bg-brand-1 h-2 rounded-full transition-all duration-500" 
                                                     style={{ width: `${progressWidth}%` }} 
                                                 />
                                             </div>
-                                            <div className="flex justify-between text-[10px] text-indigo-900/70 mt-1">
+                                            <div className="flex justify-between text-[10px] text-brand-3/70 mt-1">
                                                 <span>{documentUsage.usedDocuments} generados</span>
                                                 <span>{documentUsage.extraDocumentsPurchased > 0 ? `${documentUsage.includedLimit} incl. + ${documentUsage.extraDocumentsPurchased} extras` : `${documentUsage.includedLimit} incl.`}</span>
                                             </div>
@@ -977,7 +977,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                         <Button
                                             size="sm"
                                             variant="outline"
-                                            className="text-xs h-7 px-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                                            className="text-xs h-7 px-2 border-brand-1/20 text-brand-2 hover:bg-brand-1/5"
                                             onClick={() => setShowPurchaseBlockModal(true)}
                                         >
                                             Comprar Bloque
@@ -1002,12 +1002,12 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                         onClick={() => setBillingCycle('yearly')}
                                         className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-1.5 ${
                                             billingCycle === 'yearly'
-                                                ? 'bg-indigo-600 text-white shadow-sm'
+                                                ? 'bg-brand-1 text-white shadow-sm'
                                                 : 'text-slate-500 hover:text-slate-900'
                                         }`}
                                     >
                                         <span>Facturación Anual</span>
-                                        <Badge className="bg-indigo-100 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-700 border-none px-1.5 py-0 text-[10px] font-bold">
+                                        <Badge className="bg-brand-1/10 hover:bg-brand-1/10 text-brand-2 hover:text-brand-2 border-none px-1.5 py-0 text-[10px] font-bold">
                                             Ahorra 17%
                                         </Badge>
                                     </button>
@@ -1033,12 +1033,12 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                             key={plan.id}
                                             className={`flex flex-col h-full relative transition-all duration-300 hover:shadow-lg ${
                                                 plan.highlight
-                                                    ? 'border-indigo-500 shadow-md ring-2 ring-indigo-500/10 scale-100 md:scale-[1.02]'
+                                                    ? 'border-brand-1 shadow-md ring-2 ring-brand-1/10 scale-100 md:scale-[1.02]'
                                                      : 'border-border'
                                             }`}
                                         >
                                             {plan.highlight && (
-                                                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1 uppercase tracking-wider">
+                                                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-1 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1 uppercase tracking-wider">
                                                      <Zap className="h-3 w-3 fill-white" />
                                                      Más Popular
                                                  </span>
@@ -1047,8 +1047,8 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                              <CardHeader className="pb-6">
                                                  <CardTitle className="text-2xl font-bold flex items-center justify-between">
                                                      <span>{plan.name}</span>
-                                                     {plan.id === 'free' && <Sparkles className="h-5 w-5 text-indigo-500" />}
-                                                     {plan.id === 'basic' && <Zap className="h-5 w-5 text-indigo-500" />}
+                                                     {plan.id === 'free' && <Sparkles className="h-5 w-5 text-brand-1" />}
+                                                     {plan.id === 'basic' && <Zap className="h-5 w-5 text-brand-1" />}
                                                      {plan.id === 'pro' && <Zap className="h-5 w-5 text-amber-500" />}
                                                      {plan.id === 'enterprise' && <Building className="h-5 w-5 text-slate-500" />}
                                                  </CardTitle>
@@ -1073,7 +1073,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                                         </>
                                                     )}
                                                     {billingCycle === 'yearly' && !isCustomPrice && (price as number) > 0 && (
-                                                        <div className="text-xs text-indigo-600 font-semibold mt-1">
+                                                        <div className="text-xs text-brand-1 font-semibold mt-1">
                                                             Cobrado anualmente (${(price as number) * 12}/año)
                                                         </div>
                                                     )}
@@ -1087,7 +1087,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                                         <li key={i} className="flex items-start gap-2.5">
                                                             <div className={`p-0.5 rounded-full mt-0.5 shrink-0 ${
                                                                 plan.highlight
-                                                                    ? 'bg-indigo-100 text-indigo-700'
+                                                                    ? 'bg-brand-1/10 text-brand-2'
                                                                     : 'bg-slate-100 text-slate-700'
                                                             }`}>
                                                                 <Check className="h-3.5 w-3.5" />
@@ -1103,8 +1103,8 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                                         isCurrent
                                                             ? 'bg-slate-100 text-slate-600 border-none cursor-default hover:bg-slate-100'
                                                             : plan.highlight
-                                                                ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm hover:shadow-md'
-                                                                : 'border-indigo-200 text-indigo-700 bg-white hover:bg-indigo-50/50'
+                                                                ? 'bg-brand-1 hover:bg-brand-2 text-white shadow-sm hover:shadow-md'
+                                                                : 'border-brand-1/20 text-brand-2 bg-white hover:bg-brand-1/50'
                                                     }`}
                                                     variant={plan.variant}
                                                     disabled={isCurrent || isPlanLoading}
@@ -1154,12 +1154,12 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                     {activeTab === 'integrations' && (
                         <div className="space-y-6">
                             {/* Info Banner */}
-                            <Card className="border-indigo-200 bg-indigo-50/5">
+                            <Card className="border-brand-1/20 bg-brand-1/5">
                                 <CardContent className="pt-6">
                                     <div className="flex items-start gap-3">
-                                        <Sparkles className="h-5 w-5 text-indigo-600 mt-0.5" />
+                                        <Sparkles className="h-5 w-5 text-brand-1 mt-0.5" />
                                         <div>
-                                            <h3 className="font-semibold text-indigo-950">WhatsApp API y Webhooks de Integración</h3>
+                                            <h3 className="font-semibold text-brand-3">WhatsApp API y Webhooks de Integración</h3>
                                             <p className="text-sm text-muted-foreground mt-1">
                                                 Configura el envío automático de facturas por WhatsApp y la recepción de eventos en tiempo real mediante Webhooks.
                                                 Estas características requieren un plan de pago habilitado.
@@ -1174,7 +1174,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                 <Card>
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
-                                            <Zap className="h-5 w-5 text-indigo-600" />
+                                            <Zap className="h-5 w-5 text-brand-1" />
                                             Configuración de WhatsApp API
                                         </CardTitle>
                                         <CardDescription>
@@ -1216,7 +1216,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                 <Card>
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
-                                            <Building className="h-5 w-5 text-indigo-600" />
+                                            <Building className="h-5 w-5 text-brand-1" />
                                             Webhooks y API Web Saliente
                                         </CardTitle>
                                         <CardDescription>
@@ -1262,7 +1262,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                         <Button
                                             onClick={handleSaveIntegrationSettings}
                                             disabled={isSavingIntegrations}
-                                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                                            className="bg-brand-1 hover:bg-brand-2 text-white"
                                         >
                                             {isSavingIntegrations ? (
                                                 <>
@@ -1281,7 +1281,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                             <Card className="mt-8">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
-                                        <Building2 className="h-5 w-5 text-indigo-600" />
+                                        <Building2 className="h-5 w-5 text-brand-1" />
                                         Conexión POS (Puntos de Venta)
                                     </CardTitle>
                                     <CardDescription>
@@ -1290,19 +1290,19 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                 </CardHeader>
                                 <CardContent>
                                     {company.planType === 'free' || company.planType === 'emprendedor' ? (
-                                        <div className="rounded-lg border border-dashed border-indigo-200 bg-indigo-50/20 p-8 text-center max-w-xl mx-auto space-y-4">
-                                            <div className="h-12 w-12 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center mx-auto">
+                                        <div className="rounded-lg border border-dashed border-brand-1/20 bg-brand-1/20 p-8 text-center max-w-xl mx-auto space-y-4">
+                                            <div className="h-12 w-12 rounded-full bg-brand-1/10 text-brand-2 flex items-center justify-center mx-auto">
                                                 <Zap className="h-6 w-6" />
                                             </div>
                                             <div className="space-y-2">
-                                                <h4 className="text-base font-bold text-indigo-950">Módulo de Sincronización POS Bloqueado</h4>
+                                                <h4 className="text-base font-bold text-brand-3">Módulo de Sincronización POS Bloqueado</h4>
                                                 <p className="text-xs text-muted-foreground leading-relaxed">
                                                     Esta función te permite conectar con Loyverse, Square, Shopify POS y WooCommerce POS para importar ventas y facturar automáticamente. Está disponible desde el plan **Negocio**.
                                                 </p>
                                             </div>
                                             <Button 
                                                 onClick={() => setActiveTab('billing')}
-                                                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs"
+                                                className="bg-brand-1 hover:bg-brand-2 text-white font-semibold text-xs"
                                             >
                                                 Subir de Plan
                                             </Button>
@@ -1373,7 +1373,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                                                     type="checkbox" 
                                                                     checked={posSyncProducts}
                                                                     onChange={(e) => setPosSyncProducts(e.target.checked)}
-                                                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-1"
+                                                                    className="rounded border-gray-300 text-brand-1 focus:ring-brand-1 mr-1"
                                                                 />
                                                                 Productos
                                                             </label>
@@ -1382,7 +1382,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                                                     type="checkbox" 
                                                                     checked={posSyncSales}
                                                                     onChange={(e) => setPosSyncSales(e.target.checked)}
-                                                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-1"
+                                                                    className="rounded border-gray-300 text-brand-1 focus:ring-brand-1 mr-1"
                                                                 />
                                                                 Ventas
                                                             </label>
@@ -1391,7 +1391,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                                                     type="checkbox" 
                                                                     checked={posSyncInventory}
                                                                     onChange={(e) => setPosSyncInventory(e.target.checked)}
-                                                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-1"
+                                                                    className="rounded border-gray-300 text-brand-1 focus:ring-brand-1 mr-1"
                                                                 />
                                                                 Inventario
                                                             </label>
@@ -1401,7 +1401,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                                     <Button
                                                         onClick={handleConnectPOS}
                                                         disabled={isConnectingPos}
-                                                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs mt-4"
+                                                        className="w-full bg-brand-1 hover:bg-brand-2 text-white font-semibold text-xs mt-4"
                                                     >
                                                         {isConnectingPos ? (
                                                             <>
@@ -1460,7 +1460,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                                                             variant="outline"
                                                                             disabled={isSyncingPos[`${integration.providerSlug}_products`]}
                                                                             onClick={() => handleSyncPOS(integration.providerSlug, 'products')}
-                                                                            className="text-[10px] h-7 flex-1 border-indigo-100 text-indigo-700"
+                                                                            className="text-[10px] h-7 flex-1 border-brand-1/10 text-brand-2"
                                                                         >
                                                                             {isSyncingPos[`${integration.providerSlug}_products`] ? 'Sincronizando...' : 'Sinc. Productos'}
                                                                         </Button>
@@ -1471,7 +1471,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                                                             variant="outline"
                                                                             disabled={isSyncingPos[`${integration.providerSlug}_sales`]}
                                                                             onClick={() => handleSyncPOS(integration.providerSlug, 'sales')}
-                                                                            className="text-[10px] h-7 flex-1 border-indigo-100 text-indigo-700"
+                                                                            className="text-[10px] h-7 flex-1 border-brand-1/10 text-brand-2"
                                                                         >
                                                                             {isSyncingPos[`${integration.providerSlug}_sales`] ? 'Sincronizando...' : 'Sinc. Ventas'}
                                                                         </Button>
@@ -1482,7 +1482,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                                                             variant="outline"
                                                                             disabled={isSyncingPos[`${integration.providerSlug}_inventory`]}
                                                                             onClick={() => handleSyncPOS(integration.providerSlug, 'inventory')}
-                                                                            className="text-[10px] h-7 flex-1 border-indigo-100 text-indigo-700"
+                                                                            className="text-[10px] h-7 flex-1 border-brand-1/10 text-brand-2"
                                                                         >
                                                                             {isSyncingPos[`${integration.providerSlug}_inventory`] ? 'Sincronizando...' : 'Sinc. Inventario'}
                                                                         </Button>
@@ -1562,7 +1562,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                         <span>{billingCycle === 'monthly' ? 'Mensual' : 'Anual'}</span>
                                     </div>
                                     {billingCycle === 'yearly' && (
-                                        <div className="flex justify-between text-xs text-indigo-600 font-semibold border-t pt-2">
+                                        <div className="flex justify-between text-xs text-brand-1 font-semibold border-t pt-2">
                                             <span>Cobro total anual</span>
                                             <span>${(selectedPlanForPay.price.yearly * 12).toFixed(2)} USD</span>
                                         </div>
@@ -1624,11 +1624,11 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                 <div className="space-y-2">
                                     <h4 className="text-xl font-bold text-slate-900">¡Suscripción Activada!</h4>
                                     <p className="text-xs text-muted-foreground">
-                                        Tu cuenta ha sido actualizada al plan <strong className="text-indigo-600">{selectedPlanForPay.name}</strong>. Ya puedes emitir documentos fiscales de forma automática.
+                                        Tu cuenta ha sido actualizada al plan <strong className="text-brand-1">{selectedPlanForPay.name}</strong>. Ya puedes emitir documentos fiscales de forma automática.
                                     </p>
                                 </div>
                                 <Button
-                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+                                    className="w-full bg-brand-1 hover:bg-brand-2 text-white font-semibold"
                                     onClick={() => {
                                         setShowPaypalModal(false);
                                         router.refresh();
@@ -1732,19 +1732,19 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
                                             onClick={() => setSelectedBlockSize(block.size)}
                                             className={`p-3 border rounded-lg flex flex-col items-center justify-center gap-1 transition-all ${
                                                 selectedBlockSize === block.size
-                                                    ? 'border-indigo-600 bg-indigo-50/50 text-indigo-950 ring-2 ring-indigo-600/10'
+                                                    ? 'border-brand-1 bg-brand-1/50 text-brand-3 ring-2 ring-brand-1/10'
                                                     : 'border-border bg-white text-slate-700 hover:bg-slate-50'
                                             }`}
                                         >
                                             <span className="text-xs font-bold">{block.label}</span>
-                                            <span className="text-xs font-semibold text-indigo-600">${block.price.toFixed(2)}</span>
+                                            <span className="text-xs font-semibold text-brand-1">${block.price.toFixed(2)}</span>
                                             <span className="text-[9px] text-muted-foreground">($0.05 c/u)</span>
                                         </button>
                                     ))}
                                 </div>
                             </div>
 
-                            <div className="bg-indigo-50/30 border border-indigo-100 rounded-lg p-4 space-y-2 text-xs text-indigo-950/80">
+                            <div className="bg-brand-1/30 border border-brand-1/10 rounded-lg p-4 space-y-2 text-xs text-brand-3/80">
                                 <div className="flex justify-between font-semibold">
                                     <span>Costo del Bloque</span>
                                     <span>${(selectedBlockSize * 0.05).toFixed(2)} USD</span>

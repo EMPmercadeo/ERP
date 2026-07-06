@@ -158,13 +158,13 @@ Al crear o editar productos:
                 <div className="mx-auto max-w-5xl space-y-8 font-sans">
                     
                     {/* Hero Header */}
-                    <div className="bg-gradient-to-r from-indigo-900 to-indigo-950 text-white rounded-xl p-8 shadow-xl relative overflow-hidden">
+                    <div className="bg-gradient-to-r from-brand-2 to-brand-3 text-white rounded-xl p-8 shadow-xl relative overflow-hidden">
                         <div className="relative z-10 max-w-2xl space-y-4">
-                            <Badge className="bg-indigo-500/20 text-indigo-200 border-none font-bold uppercase tracking-wider text-[10px]">
+                            <Badge className="bg-white/20 text-white border-none font-bold uppercase tracking-wider text-[10px]">
                                 Base de Conocimiento
                             </Badge>
                             <h2 className="text-3xl font-extrabold tracking-tight">Research Hub</h2>
-                            <p className="text-sm text-indigo-100/80 leading-relaxed">
+                            <p className="text-sm text-white/80 leading-relaxed">
                                 Explora manuales técnicos, guías de cumplimiento de facturación electrónica DGI y configuraciones avanzadas para tu negocio.
                             </p>
                         </div>
@@ -192,7 +192,7 @@ Al crear o editar productos:
                                     onClick={() => setSelectedCategory(cat.id)}
                                     className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                                         selectedCategory === cat.id
-                                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                                            ? 'bg-brand-1 border-brand-1 text-white shadow-sm'
                                             : 'bg-card border-border hover:bg-slate-50 text-muted-foreground'
                                     }`}
                                 >
@@ -219,7 +219,7 @@ Al crear o editar productos:
                                     <Card
                                         key={art.id}
                                         className={`transition-all duration-300 ${
-                                            isExpanded ? 'ring-1 ring-indigo-500/20 shadow-md' : 'hover:shadow-sm'
+                                            isExpanded ? 'ring-1 ring-brand-1/20 shadow-md' : 'hover:shadow-sm'
                                         }`}
                                     >
                                         <button
@@ -230,7 +230,7 @@ Al crear o editar productos:
                                                 <div className="flex items-center gap-2">
                                                     <span className={cn(
                                                         "text-[9px] font-extrabold uppercase px-2 py-0.5 rounded",
-                                                        art.category === 'dgi' && "text-indigo-600 bg-indigo-50",
+                                                        art.category === 'dgi' && "text-brand-1 bg-brand-1/5",
                                                         art.category === 'billing' && "text-amber-600 bg-amber-50",
                                                         art.category === 'catalog' && "text-emerald-600 bg-emerald-50",
                                                         art.category === 'api' && "text-blue-600 bg-blue-50"
@@ -238,7 +238,7 @@ Al crear o editar productos:
                                                         {categories.find(c => c.id === art.category)?.name}
                                                     </span>
                                                 </div>
-                                                <h4 className="text-base font-bold text-slate-900 hover:text-indigo-600 transition-colors">
+                                                <h4 className="text-base font-bold text-slate-900 hover:text-brand-1 transition-colors">
                                                     {art.title}
                                                 </h4>
                                                 <p className="text-xs text-muted-foreground leading-relaxed">
@@ -262,10 +262,10 @@ Al crear o editar productos:
                     </div>
 
                     {/* Support Callout Banner */}
-                    <Card className="bg-indigo-50/20 border-indigo-100">
+                    <Card className="bg-brand-1/5 border-brand-1/10">
                         <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-6 py-6 px-8">
                             <div className="flex items-center gap-4 text-left">
-                                <BookOpen className="h-8 w-8 text-indigo-600 shrink-0" />
+                                <BookOpen className="h-8 w-8 text-brand-1 shrink-0" />
                                 <div>
                                     <h4 className="font-bold text-slate-950">¿No encuentras lo que buscas?</h4>
                                     <p className="text-xs text-muted-foreground">

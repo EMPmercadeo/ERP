@@ -149,7 +149,7 @@ export function BankAccountList({
                                         <TableRow key={c.id} className="hover:bg-slate-50/60">
                                             <TableCell>
                                                 <div className="flex items-center gap-2.5">
-                                                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-600 to-purple-400 text-white shrink-0">
+                                                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-brand-1 to-brand-2 text-white shrink-0">
                                                         <Landmark className="h-4 w-4" />
                                                     </div>
                                                     <Link href={`/bank-accounts/${c.id}`} className="font-semibold text-slate-800 hover:text-brand-1">
@@ -172,7 +172,7 @@ export function BankAccountList({
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-1">
                                                     <Link href={`/bank-accounts/${c.id}`}>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50" title="Ver Detalle">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-brand-1 hover:bg-brand-1/10" title="Ver Detalle">
                                                             <Eye className="h-4 w-4" />
                                                         </Button>
                                                     </Link>

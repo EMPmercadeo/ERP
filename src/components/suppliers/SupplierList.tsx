@@ -101,7 +101,7 @@ const getInitials = (name: string) => {
 };
 
 const palette = [
-    'from-indigo-600 to-purple-400 text-white',
+    'from-brand-1 to-brand-2 text-white',
     'from-emerald-500 to-teal-400 text-white',
     'from-amber-500 to-orange-400 text-white',
     'from-blue-600 to-cyan-400 text-white',
@@ -226,7 +226,7 @@ export function SupplierList({
 
             {/* Top Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="border-l-4 border-l-amber-500 shadow-sm">
+                <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total por Pagar</CardTitle>
                         <DollarSign className="h-4 w-4 text-amber-500" />
@@ -237,7 +237,7 @@ export function SupplierList({
                     </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-l-red-500 shadow-sm">
+                <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Saldo Vencido</CardTitle>
                         <AlertCircle className="h-4 w-4 text-red-500" />
@@ -248,18 +248,18 @@ export function SupplierList({
                     </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-l-indigo-500 shadow-sm">
+                <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Próximos Vencimientos</CardTitle>
-                        <Calendar className="h-4 w-4 text-indigo-500" />
+                        <Calendar className="h-4 w-4 text-brand-1" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-indigo-600">{formatCurrency(summaryState.proximosVencimientos)}</div>
+                        <div className="text-2xl font-bold text-brand-1">{formatCurrency(summaryState.proximosVencimientos)}</div>
                         <p className="text-xs text-muted-foreground mt-1">Por vencer en próximos periodos</p>
                     </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-l-emerald-500 shadow-sm">
+                <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Proveedores Activos</CardTitle>
                         <Building2 className="h-4 w-4 text-emerald-500" />
@@ -408,7 +408,7 @@ export function SupplierList({
                                                 <TableCell className="text-right">
                                                     <div className="flex items-center justify-end gap-1">
                                                         <Link href={`/suppliers/${s.id}?tab=info`}>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50" title="Ver Detalle">
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-brand-1 hover:bg-brand-1/10" title="Ver Detalle">
                                                                 <Eye className="h-4 w-4" />
                                                             </Button>
                                                         </Link>
@@ -441,7 +441,7 @@ export function SupplierList({
                                                                 <DropdownMenuLabel>Acciones del Proveedor</DropdownMenuLabel>
                                                                 <DropdownMenuItem asChild>
                                                                     <Link href={`/suppliers/${s.id}?tab=info`} className="cursor-pointer">
-                                                                        <Eye className="mr-2 h-4 w-4 text-indigo-600" /> Ver Perfil Comercial
+                                                                        <Eye className="mr-2 h-4 w-4 text-brand-1" /> Ver Perfil Comercial
                                                                     </Link>
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem onClick={() => setEditingSupplier(s)} className="cursor-pointer">
@@ -534,7 +534,7 @@ export function SupplierList({
 
                                         <div className="flex gap-2 pt-1">
                                             <Link href={`/suppliers/${s.id}`} className="flex-1">
-                                                <Button variant="outline" size="sm" className="w-full h-9 text-xs font-bold text-indigo-600 rounded-lg">
+                                                <Button variant="outline" size="sm" className="w-full h-9 text-xs font-bold text-brand-1 rounded-lg">
                                                     Ver Detalle
                                                 </Button>
                                             </Link>

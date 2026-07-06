@@ -94,7 +94,7 @@ export function BankAccountDetailClient({
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </Link>
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-600 to-purple-400 text-white shrink-0">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-brand-1 to-brand-2 text-white shrink-0">
                         <Landmark className="h-5 w-5" />
                     </div>
                     <div>
@@ -116,7 +116,7 @@ export function BankAccountDetailClient({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="border-l-4 border-l-indigo-500 shadow-sm">
+                <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Saldo Inicial</CardTitle>
                     </CardHeader>
@@ -124,7 +124,7 @@ export function BankAccountDetailClient({
                         <div className="text-2xl font-bold text-slate-900">{formatCurrency(cuenta.saldoInicial)}</div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-emerald-500 shadow-sm">
+                <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Saldo Actual (calculado)</CardTitle>
                     </CardHeader>
@@ -132,7 +132,7 @@ export function BankAccountDetailClient({
                         <div className="text-2xl font-bold text-emerald-600">{formatCurrency(saldoActual)}</div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-amber-500 shadow-sm">
+                <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Movimientos sin conciliar</CardTitle>
                     </CardHeader>
@@ -140,7 +140,7 @@ export function BankAccountDetailClient({
                         <div className="text-2xl font-bold text-amber-600">{pendientesConciliar}</div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-slate-400 shadow-sm">
+                <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Estado</CardTitle>
                     </CardHeader>
