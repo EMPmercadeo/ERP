@@ -283,31 +283,31 @@ export default function LoginPage() {
             {/* =========================================================
                 VISTA MÓVIL (< lg) - Estilo Banco General
             ========================================================= */}
-            <div className="flex lg:hidden w-full max-w-md mx-auto h-full flex-col justify-evenly overflow-hidden">
+            <div className="flex lg:hidden w-full max-w-md mx-auto h-full flex-col justify-evenly overflow-x-hidden px-4 sm:px-6 py-2 min-w-0">
                 {/* Cabecera & Logo Mobile */}
                 <div className="flex items-center justify-center gap-2 shrink-0 pt-0.5">
                     <div className="bg-white/20 p-1 rounded-xl backdrop-blur-sm">
                         <Star className="h-5 w-5 fill-white text-white" />
                     </div>
-                    <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
+                    <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-white truncate">
                         ERP Panamá
                     </span>
                 </div>
 
                 {/* Banner de Imagen (Exactamente 25vh según requerimiento) */}
-                <div className="h-[25vh] min-h-[130px] w-full bg-white/10 border border-white/25 rounded-3xl p-3.5 flex flex-col items-center justify-center text-center backdrop-blur-md shadow-md shrink-0 my-1">
-                    <div className="inline-block px-3 py-0.5 rounded-full bg-white/25 text-[10px] font-bold text-white uppercase tracking-wider mb-1.5">
+                <div className="h-[22vh] min-h-[110px] max-h-[170px] w-full bg-white/10 border border-white/25 rounded-3xl p-3 flex flex-col items-center justify-center text-center backdrop-blur-md shadow-md shrink-0 my-1 overflow-hidden">
+                    <div className="inline-block px-3 py-0.5 rounded-full bg-white/25 text-[10px] font-bold text-white uppercase tracking-wider mb-1.5 truncate max-w-full">
                         Espacio para Imagen (25vh)
                     </div>
-                    <p className="text-xs sm:text-sm font-bold text-white leading-snug max-w-[260px]">
+                    <p className="text-xs sm:text-sm font-bold text-white leading-snug max-w-[260px] break-words">
                         Ve por tu historia / Nosotros te acompañamos en tu gestión fiscal
                     </p>
                 </div>
 
                 {/* Formulario con Espaciados Fieles a la Referencia */}
-                <form onSubmit={handleSubmit} className="flex flex-col gap-2 shrink-0">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-2 shrink-0 w-full min-w-0">
                     {/* Input 1: Usuario / Correo */}
-                    <div className="bg-white rounded-2xl h-11 sm:h-12 px-3.5 shadow-sm flex items-center gap-2.5 text-gray-800">
+                    <div className="bg-white rounded-2xl h-11 sm:h-12 px-3.5 shadow-sm flex items-center gap-2.5 text-gray-800 w-full min-w-0">
                         <User className="h-4.5 w-4.5 text-gray-400 shrink-0" />
                         <input
                             type="email"
@@ -315,13 +315,13 @@ export default function LoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full text-xs sm:text-sm font-medium"
+                            className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full min-w-0 text-xs sm:text-sm font-medium"
                         />
                         {email && (
                             <button
                                 type="button"
                                 onClick={() => setEmail('')}
-                                className="text-gray-400 hover:text-gray-600 px-1 text-sm font-bold cursor-pointer"
+                                className="text-gray-400 hover:text-gray-600 px-1 text-sm font-bold cursor-pointer shrink-0"
                             >
                                 ✕
                             </button>
@@ -329,8 +329,8 @@ export default function LoginPage() {
                     </div>
 
                     {/* Input 2: Contraseña + Botón Biométrico */}
-                    <div className="flex gap-2 items-center">
-                        <div className="bg-white rounded-2xl h-11 sm:h-12 px-3.5 shadow-sm flex items-center gap-2 flex-1 text-gray-800">
+                    <div className="flex gap-2 items-center w-full min-w-0">
+                        <div className="bg-white rounded-2xl h-11 sm:h-12 px-3.5 shadow-sm flex items-center gap-2 flex-1 text-gray-800 min-w-0">
                             <Lock className="h-4.5 w-4.5 text-gray-400 shrink-0" />
                             <input
                                 type={showPassword ? 'text' : 'password'}
@@ -338,7 +338,7 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full text-xs sm:text-sm font-medium"
+                                className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full min-w-0 text-xs sm:text-sm font-medium"
                             />
                             <button
                                 type="button"
@@ -362,19 +362,19 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-brand-bg-blue hover:bg-brand-bg-blue-hover-dark text-white font-bold text-sm sm:text-base h-11 sm:h-12 rounded-2xl shadow-md transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide"
+                        className="w-full bg-brand-bg-blue hover:bg-brand-bg-blue-hover-dark text-white font-bold text-sm sm:text-base h-11 sm:h-12 rounded-2xl shadow-md transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide truncate"
                     >
                         {isLoading ? 'Iniciando sesión...' : 'Entrar'}
                     </button>
                 </form>
 
                 {/* Enlaces Secundarios */}
-                <div className="flex flex-col items-center gap-1.5 shrink-0">
-                    <Link href="/forgot-password" className="text-white font-bold text-xs sm:text-sm hover:underline">
+                <div className="flex flex-col items-center gap-1.5 shrink-0 w-full min-w-0">
+                    <Link href="/forgot-password" className="text-white font-bold text-xs sm:text-sm hover:underline truncate max-w-full">
                         ¿Olvidaste tu contraseña?
                     </Link>
 
-                    <Link href="/register" className="w-full border border-white/80 rounded-2xl py-2 px-4 text-center text-xs sm:text-sm font-bold text-white hover:bg-white/10 transition-all">
+                    <Link href="/register" className="w-full border border-white/80 rounded-2xl py-2 px-4 text-center text-xs sm:text-sm font-bold text-white hover:bg-white/10 transition-all truncate">
                         Crea tu usuario o abre tu cuenta
                     </Link>
 
@@ -383,7 +383,7 @@ export default function LoginPage() {
                         type="button"
                         onClick={handleGoogleLogin}
                         disabled={isGoogleLoading}
-                        className="w-full bg-white/90 text-gray-800 font-semibold text-xs h-10 px-3 rounded-2xl shadow hover:bg-white flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                        className="w-full bg-white/90 text-gray-800 font-semibold text-xs h-10 px-3 rounded-2xl shadow hover:bg-white flex items-center justify-center gap-1.5 transition-all cursor-pointer truncate"
                     >
                         <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -391,7 +391,7 @@ export default function LoginPage() {
                             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                         </svg>
-                        <span>{isGoogleLoading ? 'Conectando...' : 'Continuar con Google'}</span>
+                        <span className="truncate">{isGoogleLoading ? 'Conectando...' : 'Continuar con Google'}</span>
                     </button>
 
                     <span className="text-[10px] text-white/60 tracking-wide">
@@ -400,23 +400,23 @@ export default function LoginPage() {
                 </div>
 
                 {/* 4 Tarjetas Inferiores */}
-                <div className="shrink-0 pb-0.5">
-                    <div className="grid grid-cols-4 gap-2">
-                        <button type="button" onClick={() => setActiveModal('soporte')} className="border border-white/40 rounded-2xl p-1.5 flex flex-col items-center justify-center hover:bg-white/10 transition-all aspect-square cursor-pointer">
-                            <MessageSquare className="h-4.5 w-4.5 mb-0.5 text-white" />
-                            <span className="text-[9px] font-semibold text-white">Contactar</span>
+                <div className="shrink-0 pb-0.5 w-full min-w-0">
+                    <div className="grid grid-cols-4 gap-1.5 sm:gap-2 w-full">
+                        <button type="button" onClick={() => setActiveModal('soporte')} className="border border-white/40 rounded-2xl p-1.5 flex flex-col items-center justify-center hover:bg-white/10 transition-all aspect-square cursor-pointer min-w-0">
+                            <MessageSquare className="h-4.5 w-4.5 mb-0.5 text-white shrink-0" />
+                            <span className="text-[9px] font-semibold text-white truncate max-w-full">Contactar</span>
                         </button>
-                        <button type="button" onClick={() => setActiveModal('seguridad')} className="border border-white/40 rounded-2xl p-1.5 flex flex-col items-center justify-center hover:bg-white/10 transition-all aspect-square cursor-pointer">
-                            <Shield className="h-4.5 w-4.5 mb-0.5 text-white" />
-                            <span className="text-[9px] font-semibold text-white">Token</span>
+                        <button type="button" onClick={() => setActiveModal('seguridad')} className="border border-white/40 rounded-2xl p-1.5 flex flex-col items-center justify-center hover:bg-white/10 transition-all aspect-square cursor-pointer min-w-0">
+                            <Shield className="h-4.5 w-4.5 mb-0.5 text-white shrink-0" />
+                            <span className="text-[9px] font-semibold text-white truncate max-w-full">Token</span>
                         </button>
-                        <button type="button" onClick={() => setActiveModal('planes')} className="border border-white/40 rounded-2xl p-1.5 flex flex-col items-center justify-center hover:bg-white/10 transition-all aspect-square cursor-pointer">
-                            <Tag className="h-4.5 w-4.5 mb-0.5 text-white" />
-                            <span className="text-[9px] font-semibold text-white">Planes</span>
+                        <button type="button" onClick={() => setActiveModal('planes')} className="border border-white/40 rounded-2xl p-1.5 flex flex-col items-center justify-center hover:bg-white/10 transition-all aspect-square cursor-pointer min-w-0">
+                            <Tag className="h-4.5 w-4.5 mb-0.5 text-white shrink-0" />
+                            <span className="text-[9px] font-semibold text-white truncate max-w-full">Planes</span>
                         </button>
-                        <button type="button" onClick={() => setActiveModal('qr')} className="border border-white/40 rounded-2xl p-1.5 flex flex-col items-center justify-center hover:bg-white/10 transition-all aspect-square cursor-pointer">
-                            <QrCode className="h-4.5 w-4.5 mb-0.5 text-white" />
-                            <span className="text-[9px] font-semibold text-white">Lector QR</span>
+                        <button type="button" onClick={() => setActiveModal('qr')} className="border border-white/40 rounded-2xl p-1.5 flex flex-col items-center justify-center hover:bg-white/10 transition-all aspect-square cursor-pointer min-w-0">
+                            <QrCode className="h-4.5 w-4.5 mb-0.5 text-white shrink-0" />
+                            <span className="text-[9px] font-semibold text-white truncate max-w-full">Lector QR</span>
                         </button>
                     </div>
                 </div>
