@@ -89,3 +89,69 @@ export async function changePassword(email: string, formData: FormData) {
         return { success: false, message: 'Error al cambiar la contraseña' };
     }
 }
+
+export async function getProfileOverview() {
+    try {
+        const ctx = await getTenantContext();
+        const user = await prisma.usuario.findUnique({
+            where: { id: ctx.userId }
+        });
+        const empresa = await prisma.empresa.findUnique({
+            where: { id: ctx.empresaId },
+            include: {
+                subscription: {
+                    include: {
+                        plan: true
+                    }
+                }
+            }
+        });
+
+        if (!user || !empresa) return null;
+
+        const { getDocumentUsage } = await import('@/lib/actions/billing');
+        const usage = await getDocumentUsage(ctx.empresaId);
+
+        return {
+            user: {
+                id: user.id,
+                nombre: user.nombre,
+                email: user.email,
+                rol: user.rol,
+                activo: user.activo,
+                createdAt: user.createdAt,
+                lastLogin: user.lastLogin
+            },
+            empresa: {
+                id: empresa.id,
+                razonSocial: empresa.razonSocial,
+                nombreComercial: empresa.nombreComercial || 'N/A',
+                ruc: empresa.ruc,
+                dv: empresa.dv,
+                direccion: empresa.direccion,
+                telefono: empresa.telefono || 'N/A',
+                email: empresa.email || 'N/A',
+                logo: empresa.logo || null,
+                ambienteDgi: empresa.ambienteDgi === '1' ? 'Pruebas' : 'Producción',
+                certificadoDgi: empresa.certificadoDgi ? 'Configurado / Activo' : 'No Configurado',
+                planType: empresa.planType,
+                fiscalEnabled: empresa.fiscalEnabled,
+                subscriptionStatus: empresa.subscriptionStatus
+            },
+            billing: {
+                planName: empresa.subscription?.plan?.name || empresa.planType.toUpperCase(),
+                priceMonthly: empresa.subscription?.plan?.priceMonthly ? Number(empresa.subscription.plan.priceMonthly) : 0,
+                status: empresa.subscription?.status || empresa.subscriptionStatus,
+                currentPeriodEnd: empresa.subscription?.currentPeriodEnd || null,
+                foliosIncluded: usage.includedLimit,
+                foliosUsed: usage.usedDocuments,
+                foliosExtra: usage.extraDocumentsPurchased,
+                foliosRemaining: usage.remainingDocuments
+            }
+        };
+    } catch (error) {
+        console.error('Error fetching profile overview:', error);
+        return null;
+    }
+}
+
