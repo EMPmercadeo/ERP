@@ -452,13 +452,19 @@ export function InvoiceList({
                             Gestiona tus facturas electrónicas y notas de crédito
                         </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <ImportInvoicesDialog />
-                        <Button variant="outline" onClick={handleExport}>
+                        <Button variant="outline" onClick={handleExport} className="rounded-xl">
                             <Download className="mr-2 h-4 w-4" />
                             Exportar Excel
                         </Button>
-                        <Button asChild>
+                        <Button asChild variant="outline" className="rounded-xl border-red-200 hover:bg-red-50 text-red-700 font-semibold">
+                            <Link href="/credit-notes">
+                                <FileText className="mr-2 h-4 w-4 text-red-600" />
+                                Notas de Crédito
+                            </Link>
+                        </Button>
+                        <Button asChild className="rounded-xl bg-brand-bg-blue hover:bg-brand-bg-blue-hover-dark text-white font-bold">
                             <Link href="/invoices/new">
                                 <Plus className="mr-2 h-4 w-4" />
                                 Nueva Factura
