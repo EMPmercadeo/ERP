@@ -807,4 +807,37 @@ export function InvoiceList({
                                         className="h-11 rounded-xl font-bold text-xs"
                                         onClick={() => {
                                             toast.info('Abriendo vista de impresión...');
-                                            window.open(`/invoices/${shareInvoiceId}/prin
+                                            window.open(`/invoices/${shareInvoiceId}/print`, '_blank');
+                                        }}
+                                    >
+                                        <Printer className="h-4 w-4 mr-2" />
+                                        Imprimir
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        type="button"
+                                        className="h-11 rounded-xl font-bold text-xs"
+                                        asChild
+                                    >
+                                        <Link href={`/invoices/${shareInvoiceId}`}>
+                                            <Eye className="h-4 w-4 mr-2" />
+                                            Ver Detalle
+                                        </Link>
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <Button
+                                type="button"
+                                className="w-full h-11 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold text-xs rounded-xl"
+                                onClick={() => router.replace('/invoices')}
+                            >
+                                Listo
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </ContentContainer>
+    );
+}

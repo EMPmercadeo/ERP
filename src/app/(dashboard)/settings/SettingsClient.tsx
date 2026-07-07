@@ -1776,4 +1776,31 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                     disabled={isPurchasingBlock}
                                     className="w-full bg-paypal-yellow hover:bg-paypal-yellow-hover text-paypal-blue font-bold py-5 flex items-center justify-center gap-2 border-none shadow-sm hover:shadow-md"
                                 >
-                                    {isPurchasingB
+                                    {isPurchasingBlock ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                            Procesando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="italic font-extrabold text-lg">PayPal</span>
+                                            <span className="text-sm font-semibold tracking-wider">COMPRAR AHORA (Simulado)</span>
+                                        </>
+                                    )}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="w-full"
+                                    onClick={() => setShowPurchaseBlockModal(false)}
+                                    disabled={isPurchasingBlock}
+                                >
+                                    Cancelar
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}

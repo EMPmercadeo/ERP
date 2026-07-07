@@ -65,4 +65,19 @@ export default function AuthLayout({
                             <br />
                             Exporta más Rápido.
                             <br />
-               
+                            Cumple con la DGI.
+                        </h1>
+                        <p className="text-white/80 text-lg leading-relaxed max-w-lg font-normal">
+                            La plataforma fiscal #1 para empresas panameñas.
+                            <br />
+                            Facturación electrónica, inventario y contabilidad en un solo lugar.
+                        </p>
+                    </div>
+
+                    {/* Barra decorativa inferior */}
+                    <div className="w-12 h-1 bg-white/40 rounded-full relative z-10" />
+                </div>
+            </div>
+        </div>
+    );
+}

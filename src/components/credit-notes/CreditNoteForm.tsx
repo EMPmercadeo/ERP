@@ -640,4 +640,15 @@ export function CreditNoteForm({
                         )}
                         <div className="flex justify-between text-xs text-blue-600 font-semibold pt-1 border-t border-gray-100">
                             <span>Devolución ITBMS (Impuesto):</span>
-                      
+                            <span>{formatCurrency(totals.itbms)}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline pt-2 border-t-2 border-gray-900 text-base font-extrabold text-gray-900">
+                            <span>Total Nota de Crédito:</span>
+                            <span className="text-xl text-red-600">{formatCurrency(totals.neto)}</span>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </form>
+    );
+}

@@ -525,4 +525,43 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                                     <CardDescription>Registro de facturas y cobros de tu suscripción</CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="flex flex-col items-center justify-
+                                    <div className="flex flex-col items-center justify-center py-8 px-4 text-center border rounded-lg bg-slate-50/50 border-dashed">
+                                        <CheckCircle2 className="h-8 w-8 text-slate-400 mb-2" />
+                                        <p className="text-sm font-medium text-slate-700">Sin cobros pendientes</p>
+                                        <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                                            No hay pagos de suscripción registrados recientemente en este ciclo.
+                                        </p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
+                </TabsContent>
+            </Tabs>
+
+            {/* Accesos Rápidos — para no dejar el perfil tan vacío y facilitar navegación */}
+            <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1">Accesos Rápidos</h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                    {quickLinks.map((link) => {
+                        const Icon = link.icon;
+                        return (
+                            <Link key={link.href} href={link.href}>
+                                <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm hover:shadow-md hover:border-primary/30 transition-all">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                        <Icon className="h-5 w-5" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-semibold truncate">{link.name}</p>
+                                        <p className="text-xs text-muted-foreground truncate">{link.description}</p>
+                                    </div>
+                                    <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                                </div>
+                            </Link>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+}
