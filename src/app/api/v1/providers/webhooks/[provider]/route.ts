@@ -38,7 +38,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ prov
 
         const nextStatus = status === 'authorized' ? 'aceptada' : status === 'rejected' ? 'rechazada' : invoice.estadoDgi;
 
-        const updated = await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx) => {
             const inv = await tx.factura.update({
                 where: { id: invoice.id },
                 data: {

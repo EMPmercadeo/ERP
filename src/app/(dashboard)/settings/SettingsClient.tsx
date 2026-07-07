@@ -86,7 +86,7 @@ interface SettingsClientProps {
     userRole: string;
 }
 
-export function SettingsClient({ initialCompany, invoicesCount, initialDocumentUsage, userRole }: SettingsClientProps) {
+export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, initialDocumentUsage, userRole: _userRole }: SettingsClientProps) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'dgi' | 'users' | 'billing' | 'integrations'>('dgi');
     const [company, setCompany] = useState(initialCompany);
@@ -129,7 +129,7 @@ export function SettingsClient({ initialCompany, invoicesCount, initialDocumentU
 
     // POS States
     const [posIntegrations, setPosIntegrations] = useState<POSIntegrationWithLogs[]>([]);
-    const [isLoadingPos, setIsLoadingPos] = useState(false);
+    const [_, setIsLoadingPos] = useState(false);
     const [posProvider, setPosProvider] = useState<string>('loyverse');
     const [posApiKey, setPosApiKey] = useState('');
     const [posApiSecret, setPosApiSecret] = useState('');

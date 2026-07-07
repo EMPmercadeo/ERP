@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
     Search,
@@ -73,7 +72,7 @@ const itbmsRates: Record<string, number> = {
 export function QuickSalePOS({
     clients,
     products,
-    companyId,
+    companyId: _companyId,
     remainingDocuments = 10,
     bodegas = []
 }: {
@@ -83,8 +82,6 @@ export function QuickSalePOS({
     remainingDocuments: number;
     bodegas?: BodegaSimple[];
 }) {
-    const router = useRouter();
-    
     // POS Cart State
     const [cart, setCart] = useState<CartItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -93,7 +90,7 @@ export function QuickSalePOS({
     // Checkout states
     const [showCheckoutModal, setShowCheckoutModal] = useState(false);
     const [clienteId, setClienteId] = useState('');
-    const [condicionPago, setCondicionPago] = useState('contado');
+    const [condicionPago, _setCondicionPago] = useState('contado');
     const [metodoPago, setMetodoPago] = useState('efectivo');
     const [clientSearch, setClientSearch] = useState('');
     const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -234,10 +231,6 @@ export function QuickSalePOS({
         ));
     };
 
-    const removeFromCart = (productId: string) => {
-        setCart(cart.filter(item => item.product.id !== productId));
-    };
-
     const handleCheckout = async () => {
         if (cart.length === 0) {
             toast.error('Tu carrito está vacío.');
@@ -373,6 +366,7 @@ export function QuickSalePOS({
                                             {/* Image */}
                                             <div className="w-full aspect-square rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden mb-2 border border-slate-100 relative">
                                                 {product.imagenUrl ? (
+                                                    /* eslint-disable-next-line @next/next/no-img-element -- URL dinámica de producto de usuario no predecible para next/config */
                                                     <img src={product.imagenUrl} alt={product.descripcion} className="w-full h-full object-cover" />
                                                 ) : (
                                                     <Package className="h-8 w-8 text-slate-300" />
@@ -441,6 +435,7 @@ export function QuickSalePOS({
                                         <div key={item.product.id} className="flex items-center gap-3 border-b border-slate-100/60 pb-3 last:border-0">
                                             <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200/50 overflow-hidden">
                                                 {item.product.imagenUrl ? (
+                                                    /* eslint-disable-next-line @next/next/no-img-element -- URL dinámica de producto de usuario no predecible para next/config */
                                                     <img src={item.product.imagenUrl} alt={item.product.descripcion} className="w-full h-full object-cover" />
                                                 ) : (
                                                     <Package className="h-5 w-5 text-slate-400" />
@@ -564,6 +559,7 @@ export function QuickSalePOS({
                                 <div key={item.product.id} className="flex items-center gap-3 border-b border-slate-100/60 pb-3 last:border-0">
                                     <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 border overflow-hidden">
                                         {item.product.imagenUrl ? (
+                                            /* eslint-disable-next-line @next/next/no-img-element -- URL dinámica de producto de usuario no predecible para next/config */
                                             <img src={item.product.imagenUrl} alt={item.product.descripcion} className="w-full h-full object-cover" />
                                         ) : (
                                             <Package className="h-5 w-5 text-slate-400" />

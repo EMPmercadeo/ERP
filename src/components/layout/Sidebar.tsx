@@ -78,7 +78,7 @@ const adminNavigation = [
 export function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
-    const { isCollapsed: storedCollapsed, isMobileOpen, toggleCollapsed, setMobileOpen } = useSidebarStore();
+    const { isCollapsed: storedCollapsed, toggleCollapsed, setMobileOpen } = useSidebarStore();
     const { user, signOut, role } = useAuth();
     const [isMounted, setIsMounted] = useState(false);
 

@@ -110,7 +110,7 @@ async function main() {
 
     // 0. Seed Plans
     console.log('🌱 Creando planes...');
-    const planEmprendedor = await prisma.plan.create({
+    await prisma.plan.create({
         data: {
             name: 'Plan Emprendedor',
             slug: 'emprendedor',
@@ -131,7 +131,7 @@ async function main() {
         }
     });
 
-    const planNegocio = await prisma.plan.create({
+    await prisma.plan.create({
         data: {
             name: 'Plan Negocio',
             slug: 'negocio',
@@ -170,7 +170,7 @@ async function main() {
         }
     });
 
-    const planEmpresa = await prisma.plan.create({
+    await prisma.plan.create({
         data: {
             name: 'Plan Empresa',
             slug: 'empresa',

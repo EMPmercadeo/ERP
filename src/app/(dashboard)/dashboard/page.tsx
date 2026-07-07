@@ -67,8 +67,7 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
         totalSalesAgg,
         totalPaymentsAgg,
         totalReceivablesAgg,
-        totalOverdueAgg,
-        totalInvoices
+        totalOverdueAgg
     ] = await Promise.all([
         prisma.factura.findMany({
             where: whereDate,

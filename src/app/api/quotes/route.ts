@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     try {
         const { empresaId: companyId, userId } = await getTenantContext();
         const body = await request.json();
-        const { client, items, totals, notes, terms, validUntil } = body;
+        const { client, items, totals, validUntil } = body;
 
         const sucursal = await prisma.sucursal.findFirst({ where: { empresaId: companyId } });
         if (!sucursal) return NextResponse.json({ error: 'Configuración de empresa incompleta (Sucursal)' }, { status: 500 });

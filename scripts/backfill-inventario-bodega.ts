@@ -48,13 +48,13 @@ async function main() {
         console.log(`  Target Bodega: "${targetBodega.nombre}" (Código: ${targetBodega.codigo}, ID: ${targetBodega.id})`);
 
         let poblados = 0;
-        const omitidos = 0;
+
 
         for (const producto of empresa.productos) {
             try {
                 // Upsert para verificar si ya existe el registro InventarioBodega para esta bodega y producto.
                 // Si existe, no modificamos nada (update: {}). Si no existe, lo creamos.
-                const inventario = await prisma.inventarioBodega.upsert({
+                await prisma.inventarioBodega.upsert({
                     where: {
                         bodegaId_productoId: {
                             bodegaId: targetBodega.id,

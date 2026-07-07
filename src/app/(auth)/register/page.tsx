@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+
 import { Eye, EyeOff, Building2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ import {
 import { useAuth } from '@/lib/firebase/auth';
 
 export default function RegisterPage() {
-    const router = useRouter();
+
     const { signUpWithEmail, signInWithGoogle, user, loading, error: authError } = useAuth();
     const [mounted, setMounted] = useState(false);
     const [tipoCuenta, setTipoCuenta] = useState('empresa');

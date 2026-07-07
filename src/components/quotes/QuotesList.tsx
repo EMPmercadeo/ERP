@@ -5,7 +5,6 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
     ColumnDef,
-    ColumnFiltersState,
     SortingState,
     flexRender,
     getCoreRowModel,
@@ -125,7 +124,6 @@ export function QuotesList({
             ? [{ id: initialSortBy, desc: initialSortOrder === 'desc' }]
             : []
     );
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [globalFilter, setGlobalFilter] = useState(initialSearch);
     const [statusFilter, setStatusFilter] = useState<string>(initialStatus);
     const [isMounted, setIsMounted] = useState(false);
@@ -148,6 +146,7 @@ export function QuotesList({
     };
 
     // Debounce search update to URL
+    /* eslint-disable react-hooks/exhaustive-deps -- ejecutarse solo cuando cambia globalFilter para evitar loop */
     useEffect(() => {
         const timer = setTimeout(() => {
             const currentSearch = searchParams.get('search') || '';
@@ -158,6 +157,7 @@ export function QuotesList({
         }, 300);
         return () => clearTimeout(timer);
     }, [globalFilter]);
+    /* eslint-enable react-hooks/exhaustive-deps */
 
     const handleStatusChange = (val: string) => {
         setStatusFilter(val);
@@ -174,7 +174,7 @@ export function QuotesList({
         }
     };
 
-    const handleSendEmail = (id: string) => {
+    const handleSendEmail = (_id: string) => {
         toast.info('Enviando cotización por correo...');
         // Simulate sending
         setTimeout(() => toast.success('Correo enviado correctamente'), 1500);

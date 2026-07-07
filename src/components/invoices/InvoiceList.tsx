@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
     ColumnDef,
-    ColumnFiltersState,
     SortingState,
     flexRender,
     getCoreRowModel,
@@ -139,11 +138,10 @@ export function InvoiceList({
             ? [{ id: initialSortBy, desc: initialSortOrder === 'desc' }]
             : []
     );
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [globalFilter, setGlobalFilter] = useState(initialSearch);
     const [statusFilter, setStatusFilter] = useState<string>(initialStatus);
 
-    const handleVoid = async (id: string) => {
+    const handleVoid = useCallback(async (id: string) => {
         if (confirm('¿Estás seguro de que deseas anular esta factura? Se generará una Nota de Crédito en el sistema y el saldo pendiente pasará a $0.00.')) {
             try {
                 const res = await voidInvoice(id);
@@ -157,7 +155,7 @@ export function InvoiceList({
                 toast.error('Error al intentar anular la factura.');
             }
         }
-    };
+    }, [router]);
 
 
 
@@ -174,6 +172,7 @@ export function InvoiceList({
     };
 
     // Debounce search update to URL
+    /* eslint-disable react-hooks/exhaustive-deps -- ejecutarse solo cuando cambia globalFilter para evitar loop */
     useEffect(() => {
         const timer = setTimeout(() => {
             const currentSearch = searchParams.get('search') || '';
@@ -184,6 +183,7 @@ export function InvoiceList({
         }, 300);
         return () => clearTimeout(timer);
     }, [globalFilter]);
+    /* eslint-enable react-hooks/exhaustive-deps */
 
     const handleStatusChange = (val: string) => {
         setStatusFilter(val);
@@ -368,7 +368,7 @@ export function InvoiceList({
                 );
             },
         },
-    ], []);
+    ], [router, handleVoid]);
 
     const table = useReactTable({
         data: initialData,

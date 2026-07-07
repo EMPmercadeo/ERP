@@ -45,7 +45,6 @@ export async function importProducts(products: Record<string, string>[]) {
                 }
 
                 // ITBMS tax code validation ('00'=0%, '01'=7%, '02'=10%, '03'=15%)
-                const validItbmsRates = ['00', '01', '02', '03'];
                 let formattedItbms = '01'; // Default 7%
 
                 if (itbms) {

@@ -795,7 +795,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
 
                                             <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
                                                 {product.auditHistory && product.auditHistory.length > 0 ? (
-                                                    product.auditHistory.map((log, idx) => (
+                                                    product.auditHistory.map((log, _idx) => (
                                                         <div key={log.id} className="relative pl-6 pb-4 last:pb-0 border-l border-slate-100 last:border-transparent">
                                                             {/* Point Marker */}
                                                             <div className="absolute left-[-4.5px] top-1 h-2 w-2 rounded-full bg-brand-1 ring-4 ring-brand-1/10" />

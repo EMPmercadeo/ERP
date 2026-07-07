@@ -165,6 +165,7 @@ export function ProductList({
     };
 
     // Debounce search update to URL
+    /* eslint-disable react-hooks/exhaustive-deps -- ejecutarse solo cuando cambia globalFilter para evitar loop */
     useEffect(() => {
         const timer = setTimeout(() => {
             const currentSearch = searchParams.get('search') || '';
@@ -175,6 +176,7 @@ export function ProductList({
         }, 300);
         return () => clearTimeout(timer);
     }, [globalFilter]);
+    /* eslint-enable react-hooks/exhaustive-deps */
 
     const handleFilterChange = (key: string, value: string) => {
         const query = createQueryString({ [key]: value === 'all' ? null : value, page: '1' });
@@ -725,6 +727,7 @@ export function ProductList({
                                                 {/* Image Thumbnail Container */}
                                                 <div className="w-full aspect-square rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden mb-2 border border-slate-200/50 relative">
                                                     {product.imagenUrl ? (
+                                                        /* eslint-disable-next-line @next/next/no-img-element -- URL dinámica de producto de usuario no predecible para next/config */
                                                         <img 
                                                             src={product.imagenUrl} 
                                                             alt={product.descripcion} 

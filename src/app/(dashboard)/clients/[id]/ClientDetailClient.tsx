@@ -106,9 +106,6 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
         return invoices.reduce((sum, inv) => sum + inv.totalNeto, 0);
     }, [invoices]);
 
-    const totalPagado = useMemo(() => {
-        return payments.reduce((sum, p) => sum + p.monto, 0);
-    }, [payments]);
 
     // Build Contable Ledger (Chronological transactions statement)
     const ledger = useMemo(() => {

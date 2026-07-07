@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Actualizar la empresa
-        const updatedCompany = await prisma.empresa.update({
+        await prisma.empresa.update({
             where: { id: empresaId },
             data: {
                 planType,

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+
 import { User, Lock, Fingerprint, MessageSquare, Shield, Tag, QrCode, Star, X, Camera } from 'lucide-react';
 import { Alert } from '@/components/ui/alert';
 import { useAuth } from '@/lib/firebase/auth';
@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/firebase/auth';
 type ModalType = 'soporte' | 'seguridad' | 'planes' | 'qr' | 'bio_info' | null;
 
 export default function LoginPage() {
-    const router = useRouter();
+
     const { signInWithGoogle, signInWithEmail, user, loading, error: authError } = useAuth();
 
     useEffect(() => {

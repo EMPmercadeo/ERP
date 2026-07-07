@@ -37,7 +37,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
             '    </gDE>\n' +
             '</rDE>';
 
-        const updated = await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx) => {
             const inv = await tx.factura.update({
                 where: { id },
                 data: {

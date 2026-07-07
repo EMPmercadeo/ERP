@@ -133,7 +133,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
             } else {
                 toast.error(res.message || 'Error al generar la factura.');
             }
-        } catch (e: unknown) {
+        } catch (_e: unknown) {
             toast.error('Error de red al facturar el documento.');
         } finally {
             setActionLoading(false);
@@ -525,7 +525,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="relative pl-6 border-l space-y-6">
-                                        {note.historialEstados.map((hist, idx) => (
+                                        {note.historialEstados.map((hist, _idx) => (
                                             <div key={hist.id} className="relative">
                                                 <div className={`absolute -left-[31px] top-1 h-3.5 w-3.5 rounded-full border-2 bg-white ${
                                                     hist.estadoNuevo === 'facturado' ? 'border-emerald-600 bg-emerald-600' :
