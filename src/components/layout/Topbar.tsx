@@ -1,13 +1,16 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Bell, Search, LogOut } from 'lucide-react';
-import { useSidebarStore } from '@/lib/store';
+import { Bell, Search, LogOut, AlertTriangle, AlertCircle, PackageX, Gauge, CheckCheck } from 'lucide-react';
+
 import { useAuth } from '@/lib/firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getNotificaciones, type Notificacion } from '@/lib/actions/notifications';
+import { cn } from '@/lib/utils';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -22,10 +25,34 @@ interface TopbarProps {
     children?: React.ReactNode;
 }
 
+const ICONO_POR_TIPO: Record<Notificacion['tipo'], typeof AlertTriangle> = {
+    facturas_vencidas: AlertTriangle,
+    facturas_dgi_error: AlertCircle,
+    stock_bajo: PackageX,
+    plan_limite: Gauge,
+};
+
 export function Topbar({ title, children }: TopbarProps) {
     const router = useRouter();
-    const { toggleMobile } = useSidebarStore();
+
     const { user, signOut } = useAuth();
+    const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
+
+    useEffect(() => {
+        let activo = true;
+        getNotificaciones()
+            .then((data) => {
+                if (activo) setNotificaciones(data);
+            })
+            .catch(() => {
+                // Si falla la consulta (ej. sin sesión aún), simplemente no se muestran notificaciones.
+            });
+        return () => {
+            activo = false;
+        };
+    }, []);
+
+    const totalNotificaciones = notificaciones.reduce((sum, n) => sum + n.count, 0);
 
     const displayName = user?.displayName || user?.email?.split('@')[0] || 'Usuario';
     const initials = displayName
@@ -82,13 +109,51 @@ export function Topbar({ title, children }: TopbarProps) {
             </div>
 
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-white">
-                    3
-                </span>
-                <span className="sr-only">Notificaciones</span>
-            </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative">
+                        <Bell className="h-5 w-5" />
+                        {totalNotificaciones > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-0.5 text-[10px] font-medium text-white">
+                                {totalNotificaciones > 9 ? '9+' : totalNotificaciones}
+                            </span>
+                        )}
+                        <span className="sr-only">Notificaciones</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-80" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal text-xs uppercase tracking-wider text-muted-foreground">
+                        Notificaciones
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {notificaciones.length === 0 ? (
+                        <div className="flex flex-col items-center gap-2 px-3 py-6 text-center">
+                            <CheckCheck className="h-5 w-5 text-emerald-500" />
+                            <p className="text-xs text-muted-foreground">Todo al día, sin pendientes.</p>
+                        </div>
+                    ) : (
+                        notificaciones.map((n) => {
+                            const Icono = ICONO_POR_TIPO[n.tipo];
+                            return (
+                                <DropdownMenuItem key={n.id} asChild className="cursor-pointer whitespace-normal py-2.5">
+                                    <Link href={n.href}>
+                                        <Icono
+                                            className={cn(
+                                                'mt-0.5 h-4 w-4 shrink-0',
+                                                n.severidad === 'critical' ? 'text-rose-500' : 'text-amber-500'
+                                            )}
+                                        />
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="text-sm font-medium leading-tight">{n.titulo}</span>
+                                            <span className="text-xs text-muted-foreground leading-tight">{n.mensaje}</span>
+                                        </div>
+                                    </Link>
+                                </DropdownMenuItem>
+                            );
+                        })
+                    )}
+                </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* User menu */}
             <DropdownMenu>

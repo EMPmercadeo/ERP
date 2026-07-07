@@ -6,7 +6,7 @@ import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 import { SupplierSchema } from '@/lib/validations';
 import { getTenantContext } from '@/lib/auth/context';
-import { sendEmail } from '@/lib/email/resend';
+import { sendEmail } from '@/lib/email/mailer';
 
 export async function createSupplier(prevState: unknown, formData: FormData) {
     const rawData = {
