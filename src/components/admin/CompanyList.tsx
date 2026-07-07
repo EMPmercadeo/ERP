@@ -6,8 +6,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Eye, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Eye, Shield, ChevronLeft, ChevronRight, Power } from 'lucide-react';
 import { startImpersonation } from '@/lib/actions/impersonate';
+import { toggleTenantStatus } from '@/lib/actions/admin';
+import Link from 'next/link';
+import { toast } from 'sonner';
 import {
     Select,
     SelectContent,
@@ -136,9 +139,27 @@ export function CompanyList({
                                                     <Shield className="h-4 w-4" />
                                                 </Button>
                                             </form>
-                                            <Button size="icon" variant="ghost" className="h-8 w-8" title="Ver detalles">
-                                                <Eye className="h-4 w-4" />
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className={`h-8 w-8 ${company.status === 'Activa' ? 'text-red-600 hover:text-red-700 hover:bg-red-50' : 'text-green-600 hover:text-green-700 hover:bg-green-50'}`}
+                                                title={company.status === 'Activa' ? 'Suspender empresa' : 'Reactivar empresa'}
+                                                onClick={async () => {
+                                                    const res = await toggleTenantStatus(company.id);
+                                                    if (res.success) {
+                                                        toast.success(`Empresa ${res.newStatus === 'active' ? 'reactivada' : 'suspendida'} exitosamente`);
+                                                    } else {
+                                                        toast.error(res.error || 'Error al cambiar el estado');
+                                                    }
+                                                }}
+                                            >
+                                                <Power className="h-4 w-4" />
                                             </Button>
+                                            <Link href={`/admin/empresas/${company.id}`}>
+                                                <Button size="icon" variant="ghost" className="h-8 w-8" title="Ver detalles">
+                                                    <Eye className="h-4 w-4" />
+                                                </Button>
+                                            </Link>
                                         </div>
                                     </TableCell>
                                 </TableRow>

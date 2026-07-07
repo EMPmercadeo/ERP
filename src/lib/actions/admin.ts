@@ -167,3 +167,154 @@ export async function updateUserStatusAndRole(targetUserId: string, rol: string,
         return { success: false, error: 'Error al actualizar usuario' };
     }
 }
+
+/**
+ * Nota sobre la suspensión/reactivación de empresas:
+ * Se utiliza el campo `subscriptionStatus` de la tabla `Empresa` ("active" vs "suspended")
+ * porque es el único campo en el schema de Empresa destinado a controlar el estado del
+ * ciclo de vida de la cuenta/suscripción (a diferencia de Sucursal o Caja que usan un booleano `activa`).
+ */
+export async function toggleTenantStatus(empresaId: string) {
+    const { getTenantContext } = await import('@/lib/auth/context');
+    const ctx = await getTenantContext();
+
+    if (ctx.role !== 'super_admin') {
+        throw new Error('Unauthorized');
+    }
+
+    try {
+        const empresa = await prisma.empresa.findUnique({
+            where: { id: empresaId },
+            select: { subscriptionStatus: true }
+        });
+
+        if (!empresa) {
+            return { success: false, error: 'Empresa no encontrada' };
+        }
+
+        const newStatus = empresa.subscriptionStatus === 'suspended' ? 'active' : 'suspended';
+
+        await prisma.empresa.update({
+            where: { id: empresaId },
+            data: { subscriptionStatus: newStatus }
+        });
+
+        revalidatePath('/admin');
+        revalidatePath('/admin/empresas');
+        revalidatePath(`/admin/empresas/${empresaId}`);
+
+        return { success: true, newStatus };
+    } catch (error) {
+        console.error('Error toggling tenant status:', error);
+        return { success: false, error: 'Error al cambiar estado de la empresa' };
+    }
+}
+
+export async function getTenantById(empresaId: string) {
+    const { getTenantContext } = await import('@/lib/auth/context');
+    const ctx = await getTenantContext();
+
+    if (ctx.role !== 'super_admin') {
+        throw new Error('Unauthorized');
+    }
+
+    try {
+        const empresa = await prisma.empresa.findUnique({
+            where: { id: empresaId },
+            include: {
+                usuarios: {
+                    orderBy: { createdAt: 'desc' },
+                    select: {
+                        id: true,
+                        nombre: true,
+                        email: true,
+                        rol: true,
+                        activo: true,
+                        createdAt: true,
+                        lastLogin: true
+                    }
+                },
+                _count: {
+                    select: {
+                        usuarios: true,
+                        facturas: true,
+                        clientes: true,
+                        productos: true
+                    }
+                }
+            }
+        });
+
+        if (!empresa) return null;
+
+        return {
+            id: empresa.id,
+            razonSocial: empresa.razonSocial,
+            nombreComercial: empresa.nombreComercial || 'N/A',
+            ruc: empresa.ruc,
+            dv: empresa.dv,
+            direccion: empresa.direccion,
+            telefono: empresa.telefono || 'N/A',
+            email: empresa.email || 'N/A',
+            ambiente: empresa.ambienteDgi === '1' ? 'Pruebas' : 'Producción',
+            planType: empresa.planType,
+            fiscalEnabled: empresa.fiscalEnabled,
+            subscriptionStatus: empresa.subscriptionStatus,
+            status: empresa.subscriptionStatus === 'suspended' ? 'Suspendida' : 'Activa',
+            createdAt: empresa.createdAt,
+            updatedAt: empresa.updatedAt,
+            usuarios: empresa.usuarios,
+            counts: {
+                usuarios: empresa._count.usuarios,
+                facturas: empresa._count.facturas,
+                clientes: empresa._count.clientes,
+                productos: empresa._count.productos
+            }
+        };
+    } catch (error) {
+        console.error('Error fetching tenant by ID:', error);
+        return null;
+    }
+}
+
+export async function updateTenant(
+    empresaId: string,
+    data: {
+        razonSocial: string;
+        nombreComercial?: string;
+        direccion: string;
+        telefono?: string;
+        email?: string;
+        planType?: string;
+    }
+) {
+    const { getTenantContext } = await import('@/lib/auth/context');
+    const ctx = await getTenantContext();
+
+    if (ctx.role !== 'super_admin') {
+        throw new Error('Unauthorized');
+    }
+
+    try {
+        await prisma.empresa.update({
+            where: { id: empresaId },
+            data: {
+                razonSocial: data.razonSocial,
+                nombreComercial: data.nombreComercial,
+                direccion: data.direccion,
+                telefono: data.telefono,
+                email: data.email,
+                planType: data.planType
+            }
+        });
+
+        revalidatePath('/admin');
+        revalidatePath('/admin/empresas');
+        revalidatePath(`/admin/empresas/${empresaId}`);
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating tenant:', error);
+        return { success: false, error: 'Error al actualizar los datos de la empresa' };
+    }
+}
