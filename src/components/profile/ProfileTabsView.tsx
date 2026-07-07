@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { updatePersonalInfo, changePassword } from '@/lib/actions/profile';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Lock, User as UserIcon, MailWarning, MailCheck, Building2, CreditCard, Shield, ArrowRight, FileText, CheckCircle2, History } from 'lucide-react';
+import { Eye, EyeOff, Lock, User as UserIcon, MailWarning, MailCheck, Building2, CreditCard, Shield, ArrowRight, FileText, CheckCircle2, History, Settings as SettingsIcon, HelpCircle, Users, FileClock } from 'lucide-react';
 import Link from 'next/link';
 
 export interface ProfileOverviewData {
@@ -126,8 +126,18 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
         }
     };
 
+    const quickLinks = [
+        { name: 'Ajustes de la Empresa', href: '/settings', icon: SettingsIcon, description: 'DGI, usuarios, planes e integraciones' },
+        { name: 'Centro de Ayuda', href: '/help', icon: HelpCircle, description: 'Soporte 24/7 y guías de uso' },
+        ...(effectiveRole === 'super_admin' ? [
+            { name: 'Empresas Registradas', href: '/admin/empresas', icon: Building2, description: 'Ver y editar todas las cuentas' },
+            { name: 'Usuarios del Sistema', href: '/admin/users', icon: Users, description: 'Gestión global de usuarios' },
+            { name: 'Auditoría', href: '/admin/audit', icon: FileClock, description: 'Registro de actividad global' },
+        ] : []),
+    ];
+
     return (
-        <div className="mx-auto max-w-5xl space-y-8">
+        <div className="mx-auto max-w-5xl space-y-6 sm:space-y-8">
             {/* Super Admin Banner */}
             {effectiveRole === 'super_admin' && (
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-amber-200 bg-amber-50/80 shadow-sm text-amber-900">
@@ -150,7 +160,7 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
             )}
 
             {/* Header Card */}
-            <div className="flex flex-col md:flex-row items-center gap-6 rounded-xl border bg-card p-8 shadow-sm">
+            <div className="flex flex-col md:flex-row items-center gap-6 rounded-xl border bg-card p-4 sm:p-8 shadow-sm">
                 <Avatar className="h-28 w-28 border-4 border-background shadow-md">
                     {user?.photoURL && <AvatarImage src={user.photoURL} />}
                     <AvatarFallback className="text-3xl bg-primary text-primary-foreground">{initials}</AvatarFallback>
@@ -515,19 +525,4 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                                     <CardDescription>Registro de facturas y cobros de tu suscripción</CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="flex flex-col items-center justify-center py-8 px-4 text-center border rounded-lg bg-slate-50/50 border-dashed">
-                                        <CheckCircle2 className="h-8 w-8 text-slate-400 mb-2" />
-                                        <p className="text-sm font-medium text-slate-700">Sin cobros pendientes</p>
-                                        <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-                                            No hay pagos de suscripción registrados recientemente en este ciclo.
-                                        </p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    )}
-                </TabsContent>
-            </Tabs>
-        </div>
-    );
-}
+                                    <div className="flex flex-col items-center justify-

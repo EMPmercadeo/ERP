@@ -635,54 +635,66 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                         </p>
                     </div>
 
-                    {/* Tabs */}
-                    <div className="flex gap-2 border-b">
+                    {/* Tabs — grid de 2 columnas en mobile para que las 4 quepan sin scroll ni recorte */}
+                    <div className="grid grid-cols-2 gap-1 border-b sm:flex sm:gap-2">
                         <button
                             onClick={() => setActiveTab('dgi')}
-                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'dgi'
+                            className={`px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors ${activeTab === 'dgi'
                                 ? 'border-primary text-primary'
                                 : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
                         >
-                            <div className="flex items-center gap-2">
-                                <Key className="h-4 w-4" />
-                                Integración DGI
+                            <div className="flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2">
+                                <Key className="h-4 w-4 shrink-0" />
+                                <span className="truncate">
+                                    <span className="sm:hidden">DGI</span>
+                                    <span className="hidden sm:inline">Integración DGI</span>
+                                </span>
                             </div>
                         </button>
                         <button
                             onClick={() => setActiveTab('users')}
-                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'users'
+                            className={`px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors ${activeTab === 'users'
                                 ? 'border-primary text-primary'
                                 : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
                         >
-                            <div className="flex items-center gap-2">
-                                <Building2 className="h-4 w-4" />
-                                Gestión de Usuarios
+                            <div className="flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2">
+                                <Building2 className="h-4 w-4 shrink-0" />
+                                <span className="truncate">
+                                    <span className="sm:hidden">Usuarios</span>
+                                    <span className="hidden sm:inline">Gestión de Usuarios</span>
+                                </span>
                             </div>
                         </button>
                         <button
                             onClick={() => setActiveTab('billing')}
-                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'billing'
+                            className={`px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors ${activeTab === 'billing'
                                 ? 'border-primary text-primary'
                                 : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
                         >
-                            <div className="flex items-center gap-2">
-                                <CreditCard className="h-4 w-4" />
-                                Planes y Facturación
+                            <div className="flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2">
+                                <CreditCard className="h-4 w-4 shrink-0" />
+                                <span className="truncate">
+                                    <span className="sm:hidden">Planes</span>
+                                    <span className="hidden sm:inline">Planes y Facturación</span>
+                                </span>
                             </div>
                         </button>
                         <button
                             onClick={() => setActiveTab('integrations')}
-                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'integrations'
+                            className={`px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors ${activeTab === 'integrations'
                                 ? 'border-primary text-primary'
                                 : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
                         >
-                            <div className="flex items-center gap-2">
-                                <Zap className="h-4 w-4" />
-                                WhatsApp y APIs
+                            <div className="flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2">
+                                <Zap className="h-4 w-4 shrink-0" />
+                                <span className="truncate">
+                                    <span className="sm:hidden">APIs</span>
+                                    <span className="hidden sm:inline">WhatsApp y APIs</span>
+                                </span>
                             </div>
                         </button>
                     </div>
@@ -1764,31 +1776,4 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                     disabled={isPurchasingBlock}
                                     className="w-full bg-paypal-yellow hover:bg-paypal-yellow-hover text-paypal-blue font-bold py-5 flex items-center justify-center gap-2 border-none shadow-sm hover:shadow-md"
                                 >
-                                    {isPurchasingBlock ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                            Procesando...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span className="italic font-extrabold text-lg">PayPal</span>
-                                            <span className="text-sm font-semibold tracking-wider">COMPRAR AHORA (Simulado)</span>
-                                        </>
-                                    )}
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="w-full"
-                                    onClick={() => setShowPurchaseBlockModal(false)}
-                                    disabled={isPurchasingBlock}
-                                >
-                                    Cancelar
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </>
-    );
-}
+                                    {isPurchasingB

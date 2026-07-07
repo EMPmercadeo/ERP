@@ -17,7 +17,11 @@ export function Content({ children, className }: ContentProps) {
     return (
         <main
             className={cn(
-                'min-h-screen w-full max-w-full overflow-x-hidden bg-background transition-all duration-300 pb-20 lg:pb-0',
+                // Antes usaba min-h-screen, pero el Topbar (h-16, sticky) sigue ocupando
+                // espacio en el flujo del documento, así que min-h-screen + Topbar siempre
+                // sumaba ~4rem de más -> scroll vertical forzado en TODAS las páginas del
+                // dashboard incluso con poco contenido. Se descuenta esa altura aquí.
+                'min-h-[calc(100dvh-4rem)] w-full max-w-full overflow-x-hidden bg-background transition-all duration-300 pb-20 lg:pb-0',
                 isCollapsed ? 'lg:pl-16' : 'lg:pl-64',
                 className
             )}
@@ -114,15 +118,4 @@ export function PageSkeleton() {
                 <Skeleton className="h-10 w-32" />
             </div>
 
-            {/* Cards skeleton */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="h-32 rounded-xl" />
-                ))}
-            </div>
-
-            {/* Table skeleton */}
-            <Skeleton className="h-64 rounded-xl" />
-        </div>
-    );
-}
+     

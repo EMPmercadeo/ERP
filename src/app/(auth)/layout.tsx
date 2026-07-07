@@ -14,8 +14,17 @@ export default function AuthLayout({
             {/* =========================================================
                 VISTA MÓVIL (< lg) - Tema Azul Banco General 100% Pantalla
             ========================================================= */}
-            <div className="flex lg:hidden w-full flex-col items-center bg-gradient-to-b from-brand-light via-brand-medium to-brand-dark px-4 py-3 h-[100dvh] overflow-hidden text-white">
-                <div className="w-full max-w-md flex-1 flex flex-col justify-between h-full overflow-hidden">
+            {/*
+                Antes esto era h-[100dvh] + overflow-hidden en dos niveles anidados,
+                combinado con justify-evenly dentro de la página de login. En pantallas
+                más bajas (iPhone SE, Android con barra de navegación) el contenido
+                (logo + banner + formulario + enlaces + 4 tarjetas) no cabía y, como no
+                se permitía scroll, el espaciado se veía forzado/desigual entre secciones
+                según el alto exacto del dispositivo. Ahora se permite min-height (no
+                altura fija) y scroll vertical como red de seguridad.
+            */}
+            <div className="flex lg:hidden w-full flex-col items-center bg-gradient-to-b from-brand-light via-brand-medium to-brand-dark px-4 py-3 min-h-[100dvh] overflow-y-auto overflow-x-hidden text-white">
+                <div className="w-full max-w-md flex-1 flex flex-col justify-between min-h-full py-1">
                     {children}
                 </div>
             </div>
@@ -56,19 +65,4 @@ export default function AuthLayout({
                             <br />
                             Exporta más Rápido.
                             <br />
-                            Cumple con la DGI.
-                        </h1>
-                        <p className="text-white/80 text-lg leading-relaxed max-w-lg font-normal">
-                            La plataforma fiscal #1 para empresas panameñas.
-                            <br />
-                            Facturación electrónica, inventario y contabilidad en un solo lugar.
-                        </p>
-                    </div>
-
-                    {/* Barra decorativa inferior */}
-                    <div className="w-12 h-1 bg-white/40 rounded-full relative z-10" />
-                </div>
-            </div>
-        </div>
-    );
-}
+               

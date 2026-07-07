@@ -223,24 +223,24 @@ export default function LoginPage() {
                                     <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-100 flex justify-between items-center">
                                         <div>
                                             <strong className="text-gray-900 block font-bold">Emprendedor</strong>
-                                            <span className="text-gray-500">1 Usuario • Facturas ilimitadas</span>
+                                            <span className="text-gray-500">1 Usuario • 150 documentos/mes</span>
                                         </div>
-                                        <span className="font-extrabold text-brand-1">$25/mes</span>
+                                        <span className="font-extrabold text-brand-1">$19.99/mes</span>
                                     </div>
                                     <div className="p-2.5 rounded-xl bg-blue-50 border-2 border-brand-1 flex justify-between items-center shadow-sm">
                                         <div>
                                             <span className="bg-brand-1 text-white text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Recomendado</span>
-                                            <strong className="text-gray-900 block font-bold mt-0.5">Pyme Pro</strong>
-                                            <span className="text-gray-500">5 Usuarios • Inventario • Reportes</span>
+                                            <strong className="text-gray-900 block font-bold mt-0.5">Pro</strong>
+                                            <span className="text-gray-500">5 Usuarios • 600 documentos/mes</span>
                                         </div>
-                                        <span className="font-extrabold text-brand-1">$50/mes</span>
+                                        <span className="font-extrabold text-brand-1">$54.99/mes</span>
                                     </div>
                                     <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-200 flex justify-between items-center">
                                         <div>
-                                            <strong className="text-gray-900 block font-bold">Corporativo</strong>
-                                            <span className="text-gray-500">Multisucursal • API • Contabilidad</span>
+                                            <strong className="text-gray-900 block font-bold">Empresa</strong>
+                                            <span className="text-gray-500">10 Usuarios • 1000 documentos/mes</span>
                                         </div>
-                                        <span className="font-extrabold text-gray-700">$120/mes</span>
+                                        <span className="font-extrabold text-gray-700">$89.99/mes</span>
                                     </div>
                                 </div>
                                 <Link
@@ -283,7 +283,7 @@ export default function LoginPage() {
             {/* =========================================================
                 VISTA MÓVIL (< lg) - Estilo Banco General
             ========================================================= */}
-            <div className="flex lg:hidden w-full max-w-md mx-auto h-full flex-col justify-evenly overflow-x-hidden px-4 sm:px-6 py-2 min-w-0">
+            <div className="flex lg:hidden w-full max-w-md mx-auto flex-col justify-between gap-3 overflow-x-hidden px-4 sm:px-6 py-2 min-w-0">
                 {/* Cabecera & Logo Mobile */}
                 <div className="flex items-center justify-center gap-2 shrink-0 pt-0.5">
                     <div className="bg-white/20 p-1 rounded-xl backdrop-blur-sm">
@@ -526,3 +526,4 @@ export default function LoginPage() {
         </div>
     );
 }
+          

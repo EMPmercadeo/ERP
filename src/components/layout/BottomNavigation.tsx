@@ -21,7 +21,9 @@ import {
     CreditCard,
     Building2,
     ClipboardList,
-    Truck
+    Truck,
+    ChevronRight,
+    Shield
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -33,7 +35,7 @@ export function BottomNavigation() {
     const pathname = usePathname();
     const router = useRouter();
     const { user, signOut, role } = useAuth();
-    
+
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [userPlan, setUserPlan] = useState('free');
     const [userName, setUserName] = useState('');
@@ -98,6 +100,42 @@ export function BottomNavigation() {
         { name: 'Clientes', href: '/clients', icon: Users },
     ];
 
+    // Menú "Más": una sola lista vertical dividida en secciones (en vez de una
+    // grilla de íconos), para aprovechar mejor el ancho y que quepa todo sin
+    // recortarse — el contenedor sí hace scroll si el contenido es más alto
+    // que la pantalla.
+    const moreSections: { titulo: string; items: { name: string; href: string; icon: typeof Package }[] }[] = [
+        {
+            titulo: 'Módulos Principales',
+            items: [
+                { name: 'Productos', href: '/products', icon: Package },
+                { name: 'Cotizaciones', href: '/quotes', icon: FileText },
+                { name: 'Pedidos', href: '/orders', icon: ClipboardList },
+                { name: 'Notas de Entrega', href: '/delivery-notes', icon: Truck },
+                { name: 'Proveedores', href: '/suppliers', icon: Building2 },
+                { name: 'Compras', href: '/purchases', icon: Package },
+                { name: 'Cuentas por Cobrar', href: '/receivables', icon: CreditCard },
+                { name: 'Reportes', href: '/reports', icon: BarChart3 },
+            ],
+        },
+        {
+            titulo: 'Cuenta y Ayuda',
+            items: [
+                { name: 'Mi Cuenta', href: '/profile', icon: User },
+                { name: 'Ajustes', href: '/settings', icon: Settings },
+                { name: 'Ayuda 24/7', href: '/help', icon: HelpCircle },
+            ],
+        },
+    ];
+
+    const adminItems = [
+        { name: 'Panel de Administración', href: '/admin', icon: LayoutDashboard },
+        { name: 'Empresas', href: '/admin/empresas', icon: Users },
+        { name: 'Usuarios', href: '/admin/users', icon: UserCog },
+        { name: 'Auditoría', href: '/admin/audit', icon: FileClock },
+        { name: 'Facturación (planes)', href: '/admin/billing', icon: CreditCard },
+    ];
+
     const getPlanLabel = (plan: string) => {
         switch (plan) {
             case 'pro': return 'Pro';
@@ -111,6 +149,17 @@ export function BottomNavigation() {
     };
 
     const planLabel = getPlanLabel(userPlan);
+
+    const MenuRow = ({ name, href, icon: Icon }: { name: string; href: string; icon: typeof Package }) => (
+        <Link
+            href={href}
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-slate-700 hover:bg-white active:bg-slate-100 transition-colors"
+        >
+            <Icon className="h-4.5 w-4.5 text-brand-1 shrink-0" />
+            <span className="flex-1">{name}</span>
+            <ChevronRight className="h-4 w-4 text-slate-300 shrink-0" />
+        </Link>
+    );
 
     return (
         <>
@@ -147,16 +196,16 @@ export function BottomNavigation() {
                 </button>
             </div>
 
-            {/* Full-screen Slide-up Mobile Menu */}
+            {/* Full-screen Slide-up Mobile Menu — lista vertical, con scroll propio */}
             {isMenuOpen && (
-                <div 
+                <div
                     ref={menuRef}
-                    className="fixed inset-0 z-50 bg-slate-50 flex flex-col font-sans lg:hidden animate-in slide-in-from-bottom duration-300 pb-6 overflow-hidden"
+                    className="fixed inset-0 z-50 bg-slate-50 flex flex-col font-sans lg:hidden animate-in slide-in-from-bottom duration-300"
                 >
-                    {/* Header Compacto */}
+                    {/* Header */}
                     <div className="bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="h-8.5 w-8.5 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-sm shrink-0">
+                            <div className="h-9 w-9 rounded-full bg-brand-1 text-white font-bold flex items-center justify-center text-xs shadow-sm shrink-0">
                                 {userName ? userName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
                             </div>
                             <div className="min-w-0">
@@ -182,94 +231,35 @@ export function BottomNavigation() {
                         </button>
                     </div>
 
-                    {/* Menu Options Grid (No Scroll, spaced nicely) */}
-                    <div className="p-4 flex-1 flex flex-col justify-around overflow-hidden">
-                        {/* App Sections */}
-                        <div className="space-y-1.5">
-                            <h5 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">Módulos Principales</h5>
-                            <div className="grid grid-cols-3 gap-2">
-                                <Link href="/products" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                    <Package className="h-4.5 w-4.5 text-brand-1" />
-                                    <span>Productos</span>
-                                </Link>
-                                <Link href="/suppliers" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                    <Building2 className="h-4.5 w-4.5 text-brand-1" />
-                                    <span>Proveedores</span>
-                                </Link>
-                                <Link href="/purchases" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                    <Package className="h-4.5 w-4.5 text-brand-1" />
-                                    <span>Compras</span>
-                                </Link>
-                                <Link href="/reports" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                    <BarChart3 className="h-4.5 w-4.5 text-brand-1" />
-                                    <span>Reportes</span>
-                                </Link>
-                                <Link href="/quotes" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                    <FileText className="h-4.5 w-4.5 text-brand-1" />
-                                    <span>Cotizar</span>
-                                </Link>
-                                <Link href="/orders" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                    <ClipboardList className="h-4.5 w-4.5 text-brand-1" />
-                                    <span>Pedidos</span>
-                                </Link>
-                                <Link href="/delivery-notes" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                    <Truck className="h-4.5 w-4.5 text-brand-1" />
-                                    <span>Entregas</span>
-                                </Link>
-                                <Link href="/receivables" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                    <CreditCard className="h-4.5 w-4.5 text-brand-1" />
-                                    <span>Cobros</span>
-                                </Link>
+                    {/* Lista vertical, con scroll si no cabe todo */}
+                    <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4 pb-safe">
+                        {moreSections.map((section) => (
+                            <div key={section.titulo}>
+                                <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1">
+                                    {section.titulo}
+                                </h5>
+                                <div className="bg-slate-100/60 rounded-xl overflow-hidden divide-y divide-white">
+                                    {section.items.map((item) => (
+                                        <MenuRow key={item.name} {...item} />
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        ))}
 
-                        {/* Settings & Support */}
-                        <div className="space-y-1.5">
-                            <h5 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">Cuenta y Ayuda</h5>
-                            <div className="grid grid-cols-3 gap-2">
-                                <Link href="/profile" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                    <User className="h-4.5 w-4.5 text-slate-500" />
-                                    <span>Mi Cuenta</span>
-                                </Link>
-                                <Link href="/settings" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                    <Settings className="h-4.5 w-4.5 text-slate-500" />
-                                    <span>Ajustes</span>
-                                </Link>
-                                <Link href="/help" className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 text-[11px] font-semibold text-slate-700 active:scale-95 transition-all text-center shadow-2xs">
-                                    <HelpCircle className="h-4.5 w-4.5 text-slate-500" />
-                                    <span>Ayuda 24/7</span>
-                                </Link>
-                            </div>
-                        </div>
-
-                        {/* Super Admin Console (If Admin) */}
                         {isSuperAdmin && (
-                            <div className="space-y-1.5">
-                                <h5 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-1">Super Admin</h5>
-                                <div className="grid grid-cols-4 gap-1.5">
-                                    <Link href="/admin" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl text-[10px] font-semibold text-slate-700 text-center shadow-2xs">
-                                        <LayoutDashboard className="h-4 w-4 text-indigo-500" />
-                                        <span>Panel</span>
-                                    </Link>
-                                    <Link href="/admin/empresas" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl text-[10px] font-semibold text-slate-700 text-center shadow-2xs">
-                                        <Users className="h-4 w-4 text-indigo-500" />
-                                        <span>Empresas</span>
-                                    </Link>
-                                    <Link href="/admin/users" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl text-[10px] font-semibold text-slate-700 text-center shadow-2xs">
-                                        <UserCog className="h-4 w-4 text-indigo-500" />
-                                        <span>Usuarios</span>
-                                    </Link>
-                                    <Link href="/admin/audit" className="flex flex-col items-center justify-center gap-1 p-2 bg-white border border-slate-100 rounded-xl text-[10px] font-semibold text-slate-700 text-center shadow-2xs">
-                                        <FileClock className="h-4 w-4 text-indigo-500" />
-                                        <span>Auditoría</span>
-                                    </Link>
+                            <div>
+                                <h5 className="flex items-center gap-1 text-[10px] font-bold text-amber-600 uppercase tracking-wider px-3 mb-1">
+                                    <Shield className="h-3 w-3" />
+                                    Super Admin
+                                </h5>
+                                <div className="bg-amber-50 rounded-xl overflow-hidden divide-y divide-white border border-amber-100">
+                                    {adminItems.map((item) => (
+                                        <MenuRow key={item.name} {...item} />
+                                    ))}
                                 </div>
                             </div>
                         )}
-                    </div>
 
-                    {/* Logout Compacto */}
-                    <div className="px-4 pt-2 shrink-0">
                         <Button
                             onClick={handleLogout}
                             className="w-full h-11 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-bold text-sm rounded-xl flex items-center justify-center gap-2 active:scale-98 transition-all"

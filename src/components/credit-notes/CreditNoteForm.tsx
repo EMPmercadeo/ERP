@@ -1,9 +1,9 @@
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
     ArrowLeft,
     Save,
@@ -120,6 +120,7 @@ export function CreditNoteForm({
     products: ProductOption[];
 }) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [state, formAction] = useFormState(createCreditNote, { success: true, message: '' });
 
     const [mode, setMode] = useState<'select' | 'manual'>(invoices.length > 0 ? 'select' : 'manual');
@@ -148,6 +149,16 @@ export function CreditNoteForm({
             setItems(loadedItems);
         }
     };
+
+    // Si venimos desde "Facturas" con una factura ya elegida (?facturaId=...),
+    // preseleccionarla automáticamente en vez de obligar a buscarla de nuevo.
+    useEffect(() => {
+        const preselect = searchParams.get('facturaId');
+        if (preselect && invoices.some((i) => i.id === preselect)) {
+            handleSelectInvoice(preselect);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, invoices]);
 
     const filteredInvoices = useMemo(() => {
         if (!searchTerm) return invoices;
@@ -629,15 +640,4 @@ export function CreditNoteForm({
                         )}
                         <div className="flex justify-between text-xs text-blue-600 font-semibold pt-1 border-t border-gray-100">
                             <span>Devolución ITBMS (Impuesto):</span>
-                            <span>{formatCurrency(totals.itbms)}</span>
-                        </div>
-                        <div className="flex justify-between items-baseline pt-2 border-t-2 border-gray-900 text-base font-extrabold text-gray-900">
-                            <span>Total Nota de Crédito:</span>
-                            <span className="text-xl text-red-600">{formatCurrency(totals.neto)}</span>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </form>
-    );
-}
+                      

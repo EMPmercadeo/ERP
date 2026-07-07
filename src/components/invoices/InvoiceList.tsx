@@ -20,6 +20,7 @@ import {
     ArrowUpDown,
     Eye,
     FileX,
+    FileMinus,
     Printer,
     FileText,
     Mail,
@@ -141,20 +142,30 @@ export function InvoiceList({
     const [globalFilter, setGlobalFilter] = useState(initialSearch);
     const [statusFilter, setStatusFilter] = useState<string>(initialStatus);
 
-    const handleVoid = useCallback(async (id: string) => {
-        if (confirm('¿Estás seguro de que deseas anular esta factura? Se generará una Nota de Crédito en el sistema y el saldo pendiente pasará a $0.00.')) {
+    // Cancelar directamente: solo válido para documentos que AÚN no fueron
+    // aceptados por la DGI (borrador/local/pendiente/rechazada). Como nunca se
+    // emitió un documento fiscal real, no hace falta una Nota de Crédito.
+    const handleCancel = useCallback(async (id: string) => {
+        if (confirm('¿Deseas cancelar esta factura? Como todavía no ha sido aceptada por la DGI, se puede cancelar directamente sin generar una Nota de Crédito.')) {
             try {
                 const res = await voidInvoice(id);
                 if (res.success) {
-                    toast.success(res.message);
+                    toast.success('Factura cancelada correctamente.');
                     router.refresh();
                 } else {
                     toast.error(res.message);
                 }
             } catch {
-                toast.error('Error al intentar anular la factura.');
+                toast.error('Error al intentar cancelar la factura.');
             }
         }
+    }, [router]);
+
+    // Para facturas YA aceptadas por la DGI, la única forma correcta de anular
+    // el efecto fiscal es emitiendo una Nota de Crédito real (no un simple
+    // cambio de estado) — se envía a la factura ya preseleccionada.
+    const handleCreateCreditNote = useCallback((id: string) => {
+        router.push(`/credit-notes/new?facturaId=${id}`);
     }, [router]);
 
 
@@ -354,21 +365,33 @@ export function InvoiceList({
                                 Descargar PDF
                             </DropdownMenuItem>
 
-                            {invoice.estadoDgi === 'aceptada' && (
+                            {invoice.estadoDgi === 'aceptada' ? (
+                                // Documento ya aceptado por la DGI: la única forma correcta
+                                // de anular su efecto fiscal es con una Nota de Crédito real.
                                 <>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="text-destructive" onClick={() => handleVoid(invoice.id)}>
-                                        <FileX className="mr-2 h-4 w-4" />
-                                        Anular (crear NC)
+                                    <DropdownMenuItem onClick={() => handleCreateCreditNote(invoice.id)}>
+                                        <FileMinus className="mr-2 h-4 w-4" />
+                                        Emitir Nota de Crédito
                                     </DropdownMenuItem>
                                 </>
-                            )}
+                            ) : invoice.estadoDgi !== 'anulada' ? (
+                                // Todavía no fue aceptada por la DGI (borrador/local/pendiente/
+                                // rechazada): se puede cancelar directamente, sin NC.
+                                <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-destructive" onClick={() => handleCancel(invoice.id)}>
+                                        <FileX className="mr-2 h-4 w-4" />
+                                        Cancelar Factura
+                                    </DropdownMenuItem>
+                                </>
+                            ) : null}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 );
             },
         },
-    ], [router, handleVoid]);
+    ], [router, handleCancel, handleCreateCreditNote]);
 
     const table = useReactTable({
         data: initialData,
@@ -784,37 +807,4 @@ export function InvoiceList({
                                         className="h-11 rounded-xl font-bold text-xs"
                                         onClick={() => {
                                             toast.info('Abriendo vista de impresión...');
-                                            window.open(`/invoices/${shareInvoiceId}/print`, '_blank');
-                                        }}
-                                    >
-                                        <Printer className="h-4 w-4 mr-2" />
-                                        Imprimir
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        type="button"
-                                        className="h-11 rounded-xl font-bold text-xs"
-                                        asChild
-                                    >
-                                        <Link href={`/invoices/${shareInvoiceId}`}>
-                                            <Eye className="h-4 w-4 mr-2" />
-                                            Ver Detalle
-                                        </Link>
-                                    </Button>
-                                </div>
-                            </div>
-
-                            <Button
-                                type="button"
-                                className="w-full h-11 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold text-xs rounded-xl"
-                                onClick={() => router.replace('/invoices')}
-                            >
-                                Listo
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </ContentContainer>
-    );
-}
+                                            window.open(`/invoices/${shareInvoiceId}/prin
