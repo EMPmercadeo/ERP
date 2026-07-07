@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 import { toast } from 'sonner';
-import { Search, Plus, Trash2 } from 'lucide-react';
+import { Search, Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { deletePurchase } from '@/lib/actions/purchases';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,13 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { NewPaymentModal } from './NewPaymentModal';
 
 export interface PurchaseData {
@@ -63,21 +71,63 @@ const palette = [
     'from-rose-500 to-red-400 text-white',
 ];
 
-export function PurchaseList({ initialData }: { initialData: PurchaseData[] }) {
+export function PurchaseList({
+    initialData,
+    pageCount = 1,
+    currentPage = 1,
+    pageSize = 20,
+    totalCount = 0,
+    initialSearch = ''
+}: {
+    initialData: PurchaseData[];
+    pageCount?: number;
+    currentPage?: number;
+    pageSize?: number;
+    totalCount?: number;
+    initialSearch?: string;
+}) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
     const [isMounted, setIsMounted] = useState(false);
-    const [search, setSearch] = useState('');
+    const [search, setSearch] = useState(initialSearch);
     const [purchases, setPurchases] = useState<PurchaseData[]>(initialData);
 
+    const createQueryString = useCallback((params: Record<string, string | null>) => {
+        const newParams = new URLSearchParams(searchParams.toString());
+        for (const [key, value] of Object.entries(params)) {
+            if (value === null) {
+                newParams.delete(key);
+            } else {
+                newParams.set(key, value);
+            }
+        }
+        return newParams.toString();
+    }, [searchParams]);
+
+    /* eslint-disable react-hooks/exhaustive-deps -- ejecutarse solo cuando cambia search para evitar loop */
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        const timer = setTimeout(() => {
+            const currentSearch = searchParams.get('search') || '';
+            if (search !== currentSearch) {
+                const query = createQueryString({ search: search || null, page: '1' });
+                router.push(`${pathname}?${query}`);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
+    /* eslint-enable react-hooks/exhaustive-deps */
+
+    useEffect(() => {
+        setPurchases(initialData);
+    }, [initialData]);
+
+    useEffect(() => {
         setIsMounted(true);
     }, []);
 
-    const filtered = purchases.filter(p => 
-        p.numeroFactura.toLowerCase().includes(search.toLowerCase()) ||
-        p.proveedor.razonSocial.toLowerCase().includes(search.toLowerCase()) ||
-        p.proveedor.ruc.toLowerCase().includes(search.toLowerCase())
-    );
+    const filtered = purchases;
 
     const handleDelete = async (id: string) => {
         if (confirm('¿Estás seguro de que deseas eliminar esta compra? Se revertirá el inventario incrementado.')) {
@@ -276,6 +326,61 @@ export function PurchaseList({ initialData }: { initialData: PurchaseData[] }) {
                                 No se encontraron facturas de compra.
                             </div>
                         )}
+                    </div>
+
+                    {/* Pagination Controls */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-200 bg-gray-50/50 mt-4 rounded-b-lg">
+                        <div className="text-sm text-muted-foreground">
+                            Mostrando <span className="font-medium">{initialData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> a <span className="font-medium">{Math.min(currentPage * pageSize, totalCount)}</span> de <span className="font-medium">{totalCount}</span> resultados
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <span className="hidden sm:inline">Filas por página:</span>
+                                <Select
+                                    value={String(pageSize)}
+                                    onValueChange={(val) => {
+                                        const query = createQueryString({ limit: val, page: '1' });
+                                        router.push(`${pathname}?${query}`);
+                                    }}
+                                >
+                                    <SelectTrigger className="h-8 w-[70px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="10">10</SelectItem>
+                                        <SelectItem value="20">20</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                        <SelectItem value="100">100</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const query = createQueryString({ page: String(currentPage - 1) });
+                                        router.push(`${pathname}?${query}`);
+                                    }}
+                                    disabled={currentPage <= 1}
+                                >
+                                    <ChevronLeft className="h-4 w-4 mr-1" />
+                                    Anterior
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const query = createQueryString({ page: String(currentPage + 1) });
+                                        router.push(`${pathname}?${query}`);
+                                    }}
+                                    disabled={currentPage >= pageCount || pageCount === 0}
+                                >
+                                    Siguiente
+                                    <ChevronRight className="h-4 w-4 ml-1" />
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </CardContent>
             </Card>

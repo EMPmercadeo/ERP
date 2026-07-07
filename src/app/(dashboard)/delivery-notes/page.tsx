@@ -1,38 +1,70 @@
 import { prisma } from '@/lib/db';
+import { Prisma } from '@prisma/client';
 import { Topbar } from '@/components/layout/Topbar';
 import { DeliveryNoteList } from '@/components/delivery-notes/DeliveryNoteList';
 import { getTenantContext } from '@/lib/auth/context';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DeliveryNotesPage() {
-    const { empresaId } = await getTenantContext();
+interface PageProps {
+    searchParams: Promise<{
+        page?: string;
+        search?: string;
+        limit?: string;
+    }>;
+}
 
-    const notes = await prisma.albaranVenta.findMany({
-        where: { empresaId },
-        include: {
-            cliente: {
-                select: {
-                    razonSocial: true,
-                    ruc: true,
+export default async function DeliveryNotesPage(props: PageProps) {
+    const { empresaId } = await getTenantContext();
+    const searchParams = await props.searchParams;
+    const page = Number(searchParams.page) || 1;
+    const search = searchParams.search || '';
+    const limit = Math.min(Number(searchParams.limit) || 20, 100);
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.AlbaranVentaWhereInput = {
+        empresaId
+    };
+
+    if (search) {
+        where.OR = [
+            { numero: { contains: search, mode: 'insensitive' } },
+            { cliente: { razonSocial: { contains: search, mode: 'insensitive' } } },
+            { cliente: { ruc: { contains: search, mode: 'insensitive' } } },
+            { factura: { numeroCompleto: { contains: search, mode: 'insensitive' } } }
+        ];
+    }
+
+    const [notes, totalCount] = await Promise.all([
+        prisma.albaranVenta.findMany({
+            where,
+            skip,
+            take: limit,
+            include: {
+                cliente: {
+                    select: {
+                        razonSocial: true,
+                        ruc: true,
+                    }
+                },
+                factura: {
+                    select: {
+                        id: true,
+                        numeroCompleto: true,
+                    }
+                },
+                items: {
+                    select: {
+                        id: true,
+                        descripcion: true,
+                        cantidad: true,
+                    }
                 }
             },
-            factura: {
-                select: {
-                    id: true,
-                    numeroCompleto: true,
-                }
-            },
-            items: {
-                select: {
-                    id: true,
-                    descripcion: true,
-                    cantidad: true,
-                }
-            }
-        },
-        orderBy: { fechaEmision: 'desc' }
-    });
+            orderBy: { fechaEmision: 'desc' }
+        }),
+        prisma.albaranVenta.count({ where })
+    ]);
 
     const formattedNotes = notes.map(n => {
         const fechaEntrega = n.fechaRealEntrega 
@@ -65,10 +97,19 @@ export default async function DeliveryNotesPage() {
         };
     });
 
+    const pageCount = Math.ceil(totalCount / limit);
+
     return (
         <>
             <Topbar title="Notas de Entrega" />
-            <DeliveryNoteList initialData={formattedNotes} />
+            <DeliveryNoteList 
+                initialData={formattedNotes}
+                pageCount={pageCount}
+                currentPage={page}
+                pageSize={limit}
+                totalCount={totalCount}
+                initialSearch={search}
+            />
         </>
     );
 }

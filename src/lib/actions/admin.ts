@@ -5,7 +5,11 @@ import { Prisma } from '@prisma/client';
 
 import { revalidatePath } from 'next/cache';
 
-export async function getTenants() {
+export async function getTenants(
+    search?: string,
+    page: number = 1,
+    pageSize: number = 20
+) {
     // 1. Verify Super Admin Access
     const { getTenantContext } = await import('@/lib/auth/context');
     const ctx = await getTenantContext();
@@ -14,39 +18,55 @@ export async function getTenants() {
         throw new Error('Unauthorized');
     }
 
-    // In real app, pass current user ID. 
-    // Here we assume the caller or the layout blocked unauthorized access, 
-    // but good practice is to verify again.
-    // await verifySuperAdmin(currentUserId);
-
-    // For now, fetching all empresas
     try {
-        const empresas = await prisma.empresa.findMany({
-            orderBy: { createdAt: 'desc' },
-            include: {
-                _count: {
-                    select: { usuarios: true }
-                }
-            }
-        });
+        const where: Prisma.EmpresaWhereInput = {};
+        if (search) {
+            where.OR = [
+                { razonSocial: { contains: search, mode: 'insensitive' } },
+                { ruc: { contains: search, mode: 'insensitive' } },
+                { nombreComercial: { contains: search, mode: 'insensitive' } }
+            ];
+        }
 
-        // Map to simpler structure
-        return empresas.map(e => ({
+        const skip = (page - 1) * pageSize;
+
+        const [empresas, totalCount] = await Promise.all([
+            prisma.empresa.findMany({
+                where,
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: pageSize,
+                include: {
+                    _count: {
+                        select: { usuarios: true }
+                    }
+                }
+            }),
+            prisma.empresa.count({ where })
+        ]);
+
+        const mapped = empresas.map(e => ({
             id: e.id,
             razonSocial: e.razonSocial,
             ruc: e.ruc,
             ambiente: e.ambienteDgi === '1' ? 'Pruebas' : 'Producción',
             createdAt: e.createdAt,
             userCount: e._count.usuarios,
-            // Mock status for now as schema doesn't have 'estado' on Empresa yet? 
-            // Checking schema... it has 'ambienteDgi', maybe not 'estado' active/inactive.
-            // Requirement said "Status (activa/suspendida)".
-            // I'll add a mock status or use a field.
-            status: 'Activa'
+            status: e.subscriptionStatus === 'suspended' ? 'Suspendida' : 'Activa'
         }));
+
+        return {
+            companies: mapped,
+            totalCount,
+            pageCount: Math.ceil(totalCount / pageSize)
+        };
     } catch (error) {
         console.error('Error fetching tenants:', error);
-        return [];
+        return {
+            companies: [],
+            totalCount: 0,
+            pageCount: 0
+        };
     }
 }
 

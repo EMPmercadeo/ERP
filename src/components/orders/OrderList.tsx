@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Search, FileText, CheckCircle, Clock } from 'lucide-react';
+import { Search, FileText, CheckCircle, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { updateSalesOrderStatus } from '@/lib/actions/sales-orders';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,13 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 export interface OrderData {
     id: string;
@@ -40,24 +48,62 @@ function formatCurrency(value: number) {
     }).format(value);
 }
 
-export function OrderList({ initialData }: { initialData: OrderData[] }) {
+export function OrderList({
+    initialData,
+    pageCount = 1,
+    currentPage = 1,
+    pageSize = 20,
+    totalCount = 0,
+    initialSearch = ''
+}: {
+    initialData: OrderData[];
+    pageCount?: number;
+    currentPage?: number;
+    pageSize?: number;
+    totalCount?: number;
+    initialSearch?: string;
+}) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
     const [orders, setOrders] = useState<OrderData[]>(initialData);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState(initialSearch);
     const [isMounted, setIsMounted] = useState(false);
 
+    const createQueryString = useCallback((params: Record<string, string | null>) => {
+        const newParams = new URLSearchParams(searchParams.toString());
+        for (const [key, value] of Object.entries(params)) {
+            if (value === null) {
+                newParams.delete(key);
+            } else {
+                newParams.set(key, value);
+            }
+        }
+        return newParams.toString();
+    }, [searchParams]);
+
+    /* eslint-disable react-hooks/exhaustive-deps -- ejecutarse solo cuando cambia searchTerm para evitar loop */
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        const timer = setTimeout(() => {
+            const currentSearch = searchParams.get('search') || '';
+            if (searchTerm !== currentSearch) {
+                const query = createQueryString({ search: searchTerm || null, page: '1' });
+                router.push(`${pathname}?${query}`);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+    /* eslint-enable react-hooks/exhaustive-deps */
+
+    useEffect(() => {
         setIsMounted(true);
         setOrders(initialData);
     }, [initialData]);
 
     if (!isMounted) return null;
 
-    const filteredOrders = orders.filter((o) =>
-        o.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        o.cliente.razonSocial.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        o.cliente.ruc.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredOrders = orders;
 
     const handleStatusChange = async (id: string, newStatus: string) => {
         const res = await updateSalesOrderStatus(id, newStatus);
@@ -173,6 +219,61 @@ export function OrderList({ initialData }: { initialData: OrderData[] }) {
                                 )}
                             </TableBody>
                         </Table>
+                    </div>
+
+                    {/* Pagination Controls */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-200 bg-gray-50/50 mt-4 rounded-b-lg">
+                        <div className="text-sm text-muted-foreground">
+                            Mostrando <span className="font-medium">{initialData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> a <span className="font-medium">{Math.min(currentPage * pageSize, totalCount)}</span> de <span className="font-medium">{totalCount}</span> resultados
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <span className="hidden sm:inline">Filas por página:</span>
+                                <Select
+                                    value={String(pageSize)}
+                                    onValueChange={(val) => {
+                                        const query = createQueryString({ limit: val, page: '1' });
+                                        router.push(`${pathname}?${query}`);
+                                    }}
+                                >
+                                    <SelectTrigger className="h-8 w-[70px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="10">10</SelectItem>
+                                        <SelectItem value="20">20</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                        <SelectItem value="100">100</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const query = createQueryString({ page: String(currentPage - 1) });
+                                        router.push(`${pathname}?${query}`);
+                                    }}
+                                    disabled={currentPage <= 1}
+                                >
+                                    <ChevronLeft className="h-4 w-4 mr-1" />
+                                    Anterior
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const query = createQueryString({ page: String(currentPage + 1) });
+                                        router.push(`${pathname}?${query}`);
+                                    }}
+                                    disabled={currentPage >= pageCount || pageCount === 0}
+                                >
+                                    Siguiente
+                                    <ChevronRight className="h-4 w-4 ml-1" />
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
