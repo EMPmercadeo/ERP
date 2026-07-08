@@ -129,7 +129,7 @@ export default function RegisterPage() {
             {/* Header */}
             <div className="text-center">
                 <h2 className="text-3xl font-bold text-foreground">Crear Cuenta</h2>
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-muted-foreground">
                     Configura tu perfil empresarial gratis.
                 </p>
             </div>
@@ -231,7 +231,7 @@ export default function RegisterPage() {
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10 cursor-pointer"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground z-10 cursor-pointer"
                             tabIndex={-1}
                         >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -258,7 +258,7 @@ export default function RegisterPage() {
                         <button
                             type="button"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10 cursor-pointer"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground z-10 cursor-pointer"
                             tabIndex={-1}
                         >
                             {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -274,7 +274,7 @@ export default function RegisterPage() {
                         onChange={(e) => setAcceptTerms(e.target.checked)}
                         className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary"
                     />
-                    <span className="text-gray-600">
+                    <span className="text-muted-foreground">
                         Acepto los{' '}
                         <Link href="/terms" className="text-primary hover:underline">
                             términos
@@ -300,10 +300,10 @@ export default function RegisterPage() {
             {/* Divider */}
             <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200" />
+                    <div className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                    <span className="bg-white px-2 text-gray-500">o</span>
+                    <span className="bg-white px-2 text-muted-foreground">o</span>
                 </div>
             </div>
 
@@ -343,7 +343,7 @@ export default function RegisterPage() {
             </Button>
 
             {/* Login link */}
-            <p className="text-center text-sm text-gray-600">
+            <p className="text-center text-sm text-muted-foreground">
                 ¿Ya tienes cuenta?{' '}
                 <Link href="/login" className="font-medium text-primary hover:underline">
                     Inicia Sesión

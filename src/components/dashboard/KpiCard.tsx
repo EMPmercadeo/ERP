@@ -91,7 +91,7 @@ export function KpiCard({
 
     const cardStyles = isPrimary
         ? 'border border-white/10 bg-brand-2 text-white shadow-premium'
-        : 'bg-white shadow-premium border border-border hover:border-slate-300 hover:shadow-premium-hover';
+        : 'bg-white shadow-premium border border-border hover:border-border hover:shadow-premium-hover';
 
     const titleColor = isPrimary ? 'text-white/85' : 'text-muted-foreground';
 

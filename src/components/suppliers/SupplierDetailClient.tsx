@@ -169,7 +169,7 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                             </div>
                             <div>
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <h1 className="text-2xl font-bold text-slate-900">{supplier.razonSocial}</h1>
+                                    <h1 className="text-2xl font-bold text-foreground">{supplier.razonSocial}</h1>
                                     <Badge variant={statusVariants[supplier.estado] || 'neutral'}>
                                         {statusLabels[supplier.estado] || supplier.estado}
                                     </Badge>
@@ -274,21 +274,21 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                                         <Building2 className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Razón Social</span>
-                                            <span className="text-slate-800 font-medium">{supplier.razonSocial}</span>
+                                            <span className="text-foreground font-medium">{supplier.razonSocial}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2.5">
                                         <Building2 className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Nombre Comercial</span>
-                                            <span className="text-slate-800 font-medium">{supplier.nombreComercial || 'N/A'}</span>
+                                            <span className="text-foreground font-medium">{supplier.nombreComercial || 'N/A'}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2.5">
                                         <Building2 className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Tipo RUC</span>
-                                            <span className="text-slate-800 font-medium">
+                                            <span className="text-foreground font-medium">
                                                 {supplier.tipoRuc === '01' ? 'Natural' : supplier.tipoRuc === '02' ? 'Jurídica' : supplier.tipoRuc === '03' ? 'Gobierno' : 'Extranjero'}
                                             </span>
                                         </div>
@@ -297,14 +297,14 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                                         <Building2 className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Contacto Principal</span>
-                                            <span className="text-slate-800 font-medium">{supplier.nombreContacto || 'No especificado'}</span>
+                                            <span className="text-foreground font-medium">{supplier.nombreContacto || 'No especificado'}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2.5">
                                         <Mail className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Correo Electrónico</span>
-                                            <span className="text-slate-800 font-medium">{supplier.email || 'Sin correo registrado'}</span>
+                                            <span className="text-foreground font-medium">{supplier.email || 'Sin correo registrado'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -313,42 +313,42 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                                         <Phone className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Teléfono</span>
-                                            <span className="text-slate-800 font-medium">{supplier.telefono || 'Sin teléfono registrado'}</span>
+                                            <span className="text-foreground font-medium">{supplier.telefono || 'Sin teléfono registrado'}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2.5">
                                         <MapPin className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Dirección</span>
-                                            <span className="text-slate-800 font-medium">{supplier.direccion || 'Sin dirección registrada'}</span>
+                                            <span className="text-foreground font-medium">{supplier.direccion || 'Sin dirección registrada'}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2.5">
                                         <CreditCard className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Términos de Pago</span>
-                                            <span className="text-slate-800 font-medium">{supplier.condicionPago}</span>
+                                            <span className="text-foreground font-medium">{supplier.condicionPago}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2.5">
                                         <DollarSign className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Límite de Crédito</span>
-                                            <span className="text-slate-800 font-medium">{supplier.limiteCredito ? formatCurrency(supplier.limiteCredito) : 'Sin límite definido'}</span>
+                                            <span className="text-foreground font-medium">{supplier.limiteCredito ? formatCurrency(supplier.limiteCredito) : 'Sin límite definido'}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2.5">
                                         <FileText className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Observaciones</span>
-                                            <span className="text-slate-800 font-medium">{supplier.observaciones || 'Sin notas adicionales'}</span>
+                                            <span className="text-foreground font-medium">{supplier.observaciones || 'Sin notas adicionales'}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2.5">
                                         <Calendar className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Fecha de Registro</span>
-                                            <span className="text-slate-800 font-medium">{formatDate(supplier.createdAt)}</span>
+                                            <span className="text-foreground font-medium">{formatDate(supplier.createdAt)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -378,7 +378,7 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                                     <TableBody>
                                         {purchases.length > 0 ? purchases.map(pur => (
                                             <TableRow key={pur.id}>
-                                                <TableCell className="font-semibold text-slate-800">
+                                                <TableCell className="font-semibold text-foreground">
                                                     #{pur.numeroFactura}
                                                 </TableCell>
                                                 <TableCell>{formatDate(pur.fechaEmision)}</TableCell>
@@ -486,9 +486,9 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                                     </TableHeader>
                                     <TableBody>
                                         {ledger.length > 0 ? ledger.map((entry, index) => (
-                                            <TableRow key={index} className="hover:bg-slate-50/50">
+                                            <TableRow key={index} className="hover:bg-accent/50">
                                                 <TableCell className="text-sm">{formatDate(entry.date.toISOString())}</TableCell>
-                                                <TableCell className="text-sm font-medium text-slate-800">
+                                                <TableCell className="text-sm font-medium text-foreground">
                                                     {entry.description}
                                                 </TableCell>
                                                 <TableCell className="text-right text-red-600 text-sm font-medium">
@@ -497,7 +497,7 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                                                 <TableCell className="text-right text-emerald-600 text-sm font-medium">
                                                     {entry.type === 'credit' ? `-${formatCurrency(entry.amount)}` : ''}
                                                 </TableCell>
-                                                <TableCell className="text-right font-bold text-slate-800 text-sm">
+                                                <TableCell className="text-right font-bold text-foreground text-sm">
                                                     {formatCurrency(entry.runningBalance)}
                                                 </TableCell>
                                             </TableRow>

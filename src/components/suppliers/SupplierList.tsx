@@ -213,7 +213,7 @@ export function SupplierList({
             {/* Header */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight text-slate-900">Gestión de Proveedores</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground">Gestión de Proveedores</h2>
                     <p className="text-muted-foreground text-sm">
                         Catálogo oficial de proveedores, facturas de compra, pagos y saldos pendientes
                     </p>
@@ -231,7 +231,7 @@ export function SupplierList({
                         <DollarSign className="h-4 w-4 text-amber-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-slate-900">{formatCurrency(summaryState.totalPorPagar)}</div>
+                        <div className="text-2xl font-bold text-foreground">{formatCurrency(summaryState.totalPorPagar)}</div>
                         <p className="text-xs text-muted-foreground mt-1">Saldo acumulado en facturas vivas</p>
                     </CardContent>
                 </Card>
@@ -264,7 +264,7 @@ export function SupplierList({
                         <Building2 className="h-4 w-4 text-emerald-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-slate-900">{summaryState.proveedoresActivos}</div>
+                        <div className="text-2xl font-bold text-foreground">{summaryState.proveedoresActivos}</div>
                         <p className="text-xs text-muted-foreground mt-1">De un total de {suppliers.length} registrados</p>
                     </CardContent>
                 </Card>
@@ -274,7 +274,7 @@ export function SupplierList({
             <Card className="shadow-sm">
                 <CardContent className="pt-6 space-y-4">
                     {/* Filters Toolbar */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/80">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-muted/70 p-3.5 rounded-xl border border-border/80">
                         <div className="relative md:col-span-1">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
@@ -329,7 +329,7 @@ export function SupplierList({
                     {/* Desktop Table (10 Columns) */}
                     <div className="hidden md:block rounded-lg border overflow-hidden">
                         <Table>
-                            <TableHeader className="bg-slate-100/80">
+                            <TableHeader className="bg-muted/80">
                                 <TableRow>
                                     <TableHead>Proveedor</TableHead>
                                     <TableHead>RUC / DV</TableHead>
@@ -348,14 +348,14 @@ export function SupplierList({
                                     filtered.map((s, idx) => {
                                         const gradClass = palette[idx % palette.length];
                                         return (
-                                            <TableRow key={s.id} className="hover:bg-slate-50/60">
+                                            <TableRow key={s.id} className="hover:bg-accent/60">
                                                 <TableCell>
                                                     <div className="flex items-center gap-3">
                                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0`}>
                                                             {getInitials(s.razonSocial)}
                                                         </div>
                                                         <div>
-                                                            <Link href={`/suppliers/${s.id}`} className="font-semibold text-slate-800 hover:text-brand-1">
+                                                            <Link href={`/suppliers/${s.id}`} className="font-semibold text-foreground hover:text-brand-1">
                                                                 {s.razonSocial}
                                                             </Link>
                                                             {s.nombreComercial && <div className="text-[11px] text-muted-foreground">{s.nombreComercial}</div>}
@@ -365,7 +365,7 @@ export function SupplierList({
                                                 <TableCell className="font-mono text-xs">
                                                     {s.ruc}{s.dv ? `-${s.dv}` : ''}
                                                 </TableCell>
-                                                <TableCell className="text-xs font-medium text-slate-700">
+                                                <TableCell className="text-xs font-medium text-foreground">
                                                     {s.nombreContacto ? (
                                                         <div className="flex items-center gap-1.5">
                                                             <User className="h-3 w-3 text-muted-foreground" />
@@ -374,11 +374,11 @@ export function SupplierList({
                                                     ) : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-xs space-y-0.5">
-                                                    {s.email && <div className="flex items-center gap-1.5 text-slate-600"><Mail className="h-3 w-3 text-muted-foreground shrink-0" /> {s.email}</div>}
-                                                    {s.telefono && <div className="flex items-center gap-1.5 text-slate-600"><Phone className="h-3 w-3 text-muted-foreground shrink-0" /> {s.telefono}</div>}
+                                                    {s.email && <div className="flex items-center gap-1.5 text-muted-foreground"><Mail className="h-3 w-3 text-muted-foreground shrink-0" /> {s.email}</div>}
+                                                    {s.telefono && <div className="flex items-center gap-1.5 text-muted-foreground"><Phone className="h-3 w-3 text-muted-foreground shrink-0" /> {s.telefono}</div>}
                                                     {!s.email && !s.telefono && <span className="text-muted-foreground">-</span>}
                                                 </TableCell>
-                                                <TableCell className="text-xs font-medium text-slate-700">{s.condicionPago}</TableCell>
+                                                <TableCell className="text-xs font-medium text-foreground">{s.condicionPago}</TableCell>
                                                 <TableCell className="text-xs">
                                                     <Badge 
                                                         variant={
@@ -392,29 +392,29 @@ export function SupplierList({
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="text-right font-mono text-xs">
-                                                    <span className={s.saldoPendiente > 0 ? 'text-amber-600 font-bold' : 'text-slate-600 font-medium'}>
+                                                    <span className={s.saldoPendiente > 0 ? 'text-amber-600 font-bold' : 'text-muted-foreground font-medium'}>
                                                         {formatCurrency(s.saldoPendiente)}
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="text-right font-mono text-xs">
-                                                    <span className={s.vencido && s.vencido > 0 ? 'text-red-600 font-bold' : 'text-slate-400 font-medium'}>
+                                                    <span className={s.vencido && s.vencido > 0 ? 'text-red-600 font-bold' : 'text-muted-foreground font-medium'}>
                                                         {formatCurrency(s.vencido || 0)}
                                                     </span>
                                                 </TableCell>
-                                                <TableCell className="text-xs text-slate-600">
+                                                <TableCell className="text-xs text-muted-foreground">
                                                     {formatDate(s.ultimaCompra)}
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex items-center justify-end gap-1">
                                                         <Link href={`/suppliers/${s.id}?tab=info`}>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-brand-1 hover:bg-brand-1/10" title="Ver Detalle">
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-brand-1/10" title="Ver Detalle">
                                                                 <Eye className="h-4 w-4" />
                                                             </Button>
                                                         </Link>
                                                         <Button 
                                                             variant="ghost" 
                                                             size="icon" 
-                                                            className="h-8 w-8 text-slate-600 hover:text-amber-600 hover:bg-amber-50" 
+                                                            className="h-8 w-8 text-muted-foreground hover:text-amber-600 hover:bg-amber-50" 
                                                             title="Editar Proveedor"
                                                             onClick={() => setEditingSupplier(s)}
                                                         >
@@ -423,7 +423,7 @@ export function SupplierList({
                                                         <Button 
                                                             variant="ghost" 
                                                             size="icon" 
-                                                            className="h-8 w-8 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50" 
+                                                            className="h-8 w-8 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50" 
                                                             title="Enviar Estado de Cuenta al Correo"
                                                             onClick={() => handleSendEmail(s, 'estado_cuenta')}
                                                         >
@@ -497,35 +497,35 @@ export function SupplierList({
                             filtered.map((s, idx) => {
                                 const gradClass = palette[idx % palette.length];
                                 return (
-                                    <div key={s.id} className="bg-slate-50/60 border border-slate-100 rounded-xl p-3.5 space-y-3 shadow-sm">
+                                    <div key={s.id} className="bg-muted/60 border border-border rounded-xl p-3.5 space-y-3 shadow-sm">
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="flex items-center gap-2.5 min-w-0">
                                                 <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0`}>
                                                     {getInitials(s.razonSocial)}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <h4 className="font-bold text-slate-800 text-sm truncate">{s.razonSocial}</h4>
+                                                    <h4 className="font-bold text-foreground text-sm truncate">{s.razonSocial}</h4>
                                                     <p className="text-xs font-mono text-muted-foreground">{s.ruc}{s.dv ? `-${s.dv}` : ''}</p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
                                                 <span className="text-[10px] text-muted-foreground block">Saldo Pendiente</span>
-                                                <span className={`font-mono font-bold text-sm ${s.saldoPendiente > 0 ? 'text-amber-600' : 'text-slate-700'}`}>
+                                                <span className={`font-mono font-bold text-sm ${s.saldoPendiente > 0 ? 'text-amber-600' : 'text-foreground'}`}>
                                                     {formatCurrency(s.saldoPendiente)}
                                                 </span>
                                             </div>
                                         </div>
 
                                         {(s.email || s.telefono || s.nombreContacto) && (
-                                            <div className="text-xs text-slate-600 space-y-1 bg-white p-2 rounded border border-slate-100">
+                                            <div className="text-xs text-muted-foreground space-y-1 bg-white p-2 rounded border border-border">
                                                 {s.nombreContacto && <div className="flex items-center gap-1.5 font-medium"><User className="h-3 w-3 text-muted-foreground shrink-0" /> {s.nombreContacto}</div>}
                                                 {s.email && <div className="flex items-center gap-1.5 truncate"><Mail className="h-3 w-3 text-muted-foreground shrink-0" /> {s.email}</div>}
                                                 {s.telefono && <div className="flex items-center gap-1.5"><Phone className="h-3 w-3 text-muted-foreground shrink-0" /> {s.telefono}</div>}
                                             </div>
                                         )}
 
-                                        <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100/80">
-                                            <span className="text-muted-foreground">Términos: <strong className="text-slate-700">{s.condicionPago}</strong></span>
+                                        <div className="flex items-center justify-between text-xs pt-1 border-t border-border/80">
+                                            <span className="text-muted-foreground">Términos: <strong className="text-foreground">{s.condicionPago}</strong></span>
                                             <Badge variant={s.estado === 'activo' ? 'success' : 'destructive'} className="text-[10px] capitalize">
                                                 {s.estado}
                                             </Badge>
@@ -565,7 +565,7 @@ export function SupplierList({
                                 );
                             })
                         ) : (
-                            <div className="py-12 text-center text-xs text-slate-400 font-semibold">
+                            <div className="py-12 text-center text-xs text-muted-foreground font-semibold">
                                 No se encontraron proveedores registrados.
                             </div>
                         )}

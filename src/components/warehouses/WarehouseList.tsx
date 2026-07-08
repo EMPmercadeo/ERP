@@ -78,8 +78,8 @@ export function WarehouseList({
                 {/* Headers and Quick Stats */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Gestión de Bodegas</h1>
-                        <p className="text-sm text-slate-500">
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground dark:text-white">Gestión de Bodegas</h1>
+                        <p className="text-sm text-muted-foreground">
                             Administra los almacenes físicos y de inventario de tu comercio.
                         </p>
                     </div>
@@ -89,25 +89,25 @@ export function WarehouseList({
                 </div>
 
                 {/* Filter and Search Bar */}
-                <Card className="border-slate-100 shadow-sm">
+                <Card className="border-border shadow-sm">
                     <CardContent className="p-4 flex flex-col md:flex-row gap-3">
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                                 placeholder="Buscar por código, nombre o sucursal..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="h-10 pl-9 border-slate-200 focus-visible:ring-brand-1 text-sm rounded-lg"
+                                className="h-10 pl-9 border-border focus-visible:ring-brand-1 text-sm rounded-lg"
                             />
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Table Container */}
-                <Card className="border-slate-100 shadow-sm overflow-hidden">
+                <Card className="border-border shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <Table>
-                            <TableHeader className="bg-slate-50/50">
+                            <TableHeader className="bg-muted/50">
                                 <TableRow>
                                     <TableHead className="w-[10%]">Código</TableHead>
                                     <TableHead className="w-[30%]">Nombre</TableHead>
@@ -119,9 +119,9 @@ export function WarehouseList({
                             <TableBody>
                                 {filtered.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-12 text-slate-500">
+                                        <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
                                             <div className="flex flex-col items-center justify-center gap-2">
-                                                <Warehouse className="h-8 w-8 text-slate-300" />
+                                                <Warehouse className="h-8 w-8 text-muted-foreground" />
                                                 <p className="text-sm font-medium">No se encontraron bodegas</p>
                                                 <p className="text-xs">
                                                     Intenta con otra búsqueda o registra una nueva bodega.
@@ -131,14 +131,14 @@ export function WarehouseList({
                                     </TableRow>
                                 ) : (
                                     filtered.map((b) => (
-                                        <TableRow key={b.id} className="hover:bg-slate-50/30">
-                                            <TableCell className="font-mono font-medium text-slate-700">
+                                        <TableRow key={b.id} className="hover:bg-accent/30">
+                                            <TableCell className="font-mono font-medium text-foreground">
                                                 {b.codigo}
                                             </TableCell>
-                                            <TableCell className="font-medium text-slate-900">
+                                            <TableCell className="font-medium text-foreground">
                                                 {b.nombre}
                                             </TableCell>
-                                            <TableCell className="text-slate-600">
+                                            <TableCell className="text-muted-foreground">
                                                 {b.sucursalNombre}
                                             </TableCell>
                                             <TableCell>
@@ -147,7 +147,7 @@ export function WarehouseList({
                                                         Activa
                                                     </Badge>
                                                 ) : (
-                                                    <Badge className="bg-slate-50 text-slate-500 hover:bg-slate-50 border border-slate-200">
+                                                    <Badge className="bg-muted text-muted-foreground hover:bg-muted border border-border">
                                                         Inactiva
                                                     </Badge>
                                                 )}
@@ -168,7 +168,7 @@ export function WarehouseList({
                                                         variant="ghost"
                                                         size="icon"
                                                         onClick={() => handleDelete(b.id)}
-                                                        className="h-8 w-8 text-slate-500 hover:text-rose-600 hover:bg-rose-50/50"
+                                                        className="h-8 w-8 text-muted-foreground hover:text-rose-600 hover:bg-rose-50/50"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>

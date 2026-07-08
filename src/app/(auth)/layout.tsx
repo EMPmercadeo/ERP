@@ -34,11 +34,11 @@ export default function AuthLayout({
             ========================================================= */}
             <div className="hidden lg:flex w-full min-h-screen">
                 {/* Panel Izquierdo - Formulario en Blanco con Footer */}
-                <div className="w-1/2 bg-white flex flex-col justify-between p-8 lg:p-12 text-gray-900 border-r border-gray-100">
+                <div className="w-1/2 bg-white flex flex-col justify-between p-8 lg:p-12 text-foreground border-r border-border">
                     <div className="w-full max-w-md mx-auto flex-1 flex flex-col justify-center py-6">
                         {children}
                     </div>
-                    <div className="w-full pt-4 border-t border-gray-100 text-xs text-gray-500">
+                    <div className="w-full pt-4 border-t border-border text-xs text-muted-foreground">
                         <Footer />
                     </div>
                 </div>

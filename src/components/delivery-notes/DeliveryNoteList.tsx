@@ -188,8 +188,8 @@ export function DeliveryNoteList({
         <ContentContainer>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Notas de Entrega (Remisiones)</h1>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <h1 className="text-2xl font-bold text-foreground tracking-tight">Notas de Entrega (Remisiones)</h1>
+                    <p className="text-sm text-muted-foreground mt-1">
                         Control de entregas, inventario y documentos relacionados
                     </p>
                 </div>
@@ -213,11 +213,11 @@ export function DeliveryNoteList({
                 </div>
             </div>
 
-            <Card className="mb-6 shadow-sm border-gray-200">
+            <Card className="mb-6 shadow-sm border-border">
                 <CardContent className="p-4">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="relative md:col-span-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                                 placeholder="Buscar número, cliente o RUC..."
                                 value={searchTerm}
@@ -261,7 +261,7 @@ export function DeliveryNoteList({
                                 className="text-xs"
                                 placeholder="Desde"
                             />
-                            <span className="text-gray-400 text-xs">-</span>
+                            <span className="text-muted-foreground text-xs">-</span>
                             <Input
                                 type="date"
                                 value={dateTo}
@@ -274,39 +274,39 @@ export function DeliveryNoteList({
                 </CardContent>
             </Card>
 
-            <Card className="shadow-sm border-gray-200 overflow-hidden">
+            <Card className="shadow-sm border-border overflow-hidden">
                 <CardContent className="p-0">
                     <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/75">
+                                <TableRow className="bg-muted/75">
                                     <TableHead className="w-12 text-center">
                                         <input
                                             type="checkbox"
-                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            className="rounded border-border text-blue-600 focus:ring-blue-500"
                                             onChange={(e) => handleSelectAll(e.target.checked)}
                                             checked={selectedIds.length > 0 && selectedIds.length === filteredNotes.filter(n => n.estado !== 'facturado' && !n.factura).length}
                                         />
                                     </TableHead>
-                                    <TableHead className="font-semibold text-gray-600">Número</TableHead>
-                                    <TableHead className="font-semibold text-gray-600">Cliente</TableHead>
-                                    <TableHead className="font-semibold text-gray-600">Fecha de emisión</TableHead>
-                                    <TableHead className="font-semibold text-gray-600">Fecha de entrega</TableHead>
-                                    <TableHead className="font-semibold text-gray-600">Items</TableHead>
-                                    <TableHead className="font-semibold text-gray-600">Estado</TableHead>
-                                    <TableHead className="font-semibold text-gray-600">Factura asociada</TableHead>
-                                    <TableHead className="font-semibold text-gray-600 text-right">Total</TableHead>
-                                    <TableHead className="font-semibold text-gray-600 text-right">Acciones</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground">Número</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground">Cliente</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground">Fecha de emisión</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground">Fecha de entrega</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground">Items</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground">Estado</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground">Factura asociada</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground text-right">Total</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground text-right">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {filteredNotes.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={10} className="text-center py-14 text-gray-500">
+                                        <TableCell colSpan={10} className="text-center py-14 text-muted-foreground">
                                             <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
-                                                <FileText className="h-10 w-10 text-gray-300 mb-2" />
-                                                <p className="font-medium text-gray-700 mb-1">No hay notas de entrega registradas.</p>
-                                                <p className="text-sm text-gray-500">Crea una nota para documentar una entrega física a un cliente.</p>
+                                                <FileText className="h-10 w-10 text-muted-foreground mb-2" />
+                                                <p className="font-medium text-foreground mb-1">No hay notas de entrega registradas.</p>
+                                                <p className="text-sm text-muted-foreground">Crea una nota para documentar una entrega física a un cliente.</p>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -316,29 +316,29 @@ export function DeliveryNoteList({
                                         return (
                                             <TableRow 
                                                 key={note.id} 
-                                                className="hover:bg-gray-50/50 transition-colors cursor-pointer"
+                                                className="hover:bg-accent/50 transition-colors cursor-pointer"
                                                 onClick={() => router.push(`/delivery-notes/${note.id}`)}
                                             >
                                                 <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                                                     {!isFacturado && note.estado !== 'anulado' && (
                                                         <input
                                                             type="checkbox"
-                                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                            className="rounded border-border text-blue-600 focus:ring-blue-500"
                                                             checked={selectedIds.includes(note.id)}
                                                             onChange={(e) => handleSelectOne(note.id, e.target.checked)}
                                                         />
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="font-medium text-gray-900">{note.numero}</TableCell>
+                                                <TableCell className="font-medium text-foreground">{note.numero}</TableCell>
                                                 <TableCell>
-                                                    <div className="font-medium text-gray-900">{note.cliente.razonSocial}</div>
-                                                    <div className="text-xs text-gray-500">RUC: {note.cliente.ruc}</div>
+                                                    <div className="font-medium text-foreground">{note.cliente.razonSocial}</div>
+                                                    <div className="text-xs text-muted-foreground">RUC: {note.cliente.ruc}</div>
                                                 </TableCell>
-                                                <TableCell className="text-gray-600">{note.fechaEmision}</TableCell>
-                                                <TableCell className="text-gray-600">{note.fechaEntrega}</TableCell>
+                                                <TableCell className="text-muted-foreground">{note.fechaEmision}</TableCell>
+                                                <TableCell className="text-muted-foreground">{note.fechaEntrega}</TableCell>
                                                 <TableCell>
-                                                    <div className="text-sm text-gray-900 font-medium">{note.itemsCount} ítem{note.itemsCount !== 1 ? 's' : ''}</div>
-                                                    <div className="text-xs text-gray-500 truncate max-w-[160px]" title={note.itemsSummary}>
+                                                    <div className="text-sm text-foreground font-medium">{note.itemsCount} ítem{note.itemsCount !== 1 ? 's' : ''}</div>
+                                                    <div className="text-xs text-muted-foreground truncate max-w-[160px]" title={note.itemsSummary}>
                                                         {note.itemsSummary}
                                                     </div>
                                                 </TableCell>
@@ -357,10 +357,10 @@ export function DeliveryNoteList({
                                                             {note.factura.numero}
                                                         </span>
                                                     ) : (
-                                                        <span className="text-xs text-gray-400">No facturada</span>
+                                                        <span className="text-xs text-muted-foreground">No facturada</span>
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="text-right font-semibold text-gray-900">
+                                                <TableCell className="text-right font-semibold text-foreground">
                                                     {formatCurrency(note.totalNeto)}
                                                 </TableCell>
                                                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
@@ -368,7 +368,7 @@ export function DeliveryNoteList({
                                                         variant="ghost"
                                                         size="sm"
                                                         onClick={() => router.push(`/delivery-notes/${note.id}`)}
-                                                        className="text-gray-600 hover:text-gray-900"
+                                                        className="text-muted-foreground hover:text-foreground"
                                                         title="Ver detalle"
                                                     >
                                                         <Eye className="h-4 w-4" />
@@ -383,7 +383,7 @@ export function DeliveryNoteList({
                     </div>
 
                     {/* Pagination Controls */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-200 bg-gray-50/50 mt-4 rounded-b-lg">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-border bg-muted/50 mt-4 rounded-b-lg">
                         <div className="text-sm text-muted-foreground">
                             Mostrando <span className="font-medium">{initialData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> a <span className="font-medium">{Math.min(currentPage * pageSize, totalCount)}</span> de <span className="font-medium">{totalCount}</span> resultados
                         </div>

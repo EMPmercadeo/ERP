@@ -420,7 +420,7 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                                     <CardDescription>Estado de conexión y folios fiscales disponibles</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
-                                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border">
+                                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted border">
                                         <div>
                                             <p className="text-sm font-medium">Ambiente DGI</p>
                                             <p className="text-xs text-muted-foreground">Entorno de emisión actual</p>
@@ -430,7 +430,7 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                                         </Badge>
                                     </div>
 
-                                    <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border">
+                                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted border">
                                         <div>
                                             <p className="text-sm font-medium">Certificado Digital DGI</p>
                                             <p className="text-xs text-muted-foreground">Firma electrónica de documentos</p>
@@ -448,7 +448,7 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                                                     {overviewData.billing.foliosRemaining} disponibles
                                                 </span>
                                             </div>
-                                            <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                            <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
                                                 <div
                                                     className="bg-blue-600 h-full rounded-full transition-all"
                                                     style={{
@@ -525,9 +525,9 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                                     <CardDescription>Registro de facturas y cobros de tu suscripción</CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="flex flex-col items-center justify-center py-8 px-4 text-center border rounded-lg bg-slate-50/50 border-dashed">
-                                        <CheckCircle2 className="h-8 w-8 text-slate-400 mb-2" />
-                                        <p className="text-sm font-medium text-slate-700">Sin cobros pendientes</p>
+                                    <div className="flex flex-col items-center justify-center py-8 px-4 text-center border rounded-lg bg-muted/50 border-dashed">
+                                        <CheckCircle2 className="h-8 w-8 text-muted-foreground mb-2" />
+                                        <p className="text-sm font-medium text-foreground">Sin cobros pendientes</p>
                                         <p className="text-xs text-muted-foreground mt-1 max-w-xs">
                                             No hay pagos de suscripción registrados recientemente en este ciclo.
                                         </p>

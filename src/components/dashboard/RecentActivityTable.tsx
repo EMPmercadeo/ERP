@@ -75,7 +75,7 @@ const palette = [
     'from-amber-500 to-orange-400 text-white',
     'from-brand-1 to-brand-2 text-white',
     'from-rose-500 to-red-400 text-white',
-    'from-slate-600 to-slate-800 text-white'
+    'from-primary to-primary/80 text-white'
 ];
 
 const ITEMS_PER_PAGE = 5;
@@ -135,7 +135,7 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                                 const initials = getInitials(invoice.client) || 'CF';
 
                                 return (
-                                    <TableRow key={invoice.id} className="group hover:bg-slate-50/70 border-b">
+                                    <TableRow key={invoice.id} className="group hover:bg-accent/70 border-b">
                                         <TableCell className={CELL_CLASS}>
                                             <span className="font-mono text-xs font-bold text-brand-1 tracking-tight">
                                                 {invoice.id}
@@ -281,23 +281,23 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                         const gradClass = palette[(startIndex + index) % palette.length];
                         const initials = getInitials(invoice.client) || 'CF';
                         return (
-                            <div key={invoice.id} className="bg-slate-50/50 border border-slate-100 rounded-xl p-3.5 space-y-3 shadow-sm">
+                            <div key={invoice.id} className="bg-muted/50 border border-border rounded-xl p-3.5 space-y-3 shadow-sm">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="flex items-center gap-2.5 min-w-0">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
                                             {initials}
                                         </div>
                                         <div className="min-w-0">
-                                            <h4 className="font-bold text-slate-800 text-xs truncate max-w-[150px]">{invoice.client}</h4>
+                                            <h4 className="font-bold text-foreground text-xs truncate max-w-[150px]">{invoice.client}</h4>
                                             <p className="text-[10px] text-muted-foreground font-mono leading-none mt-0.5">{invoice.id}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-mono font-bold text-slate-800 text-xs">{formatCurrency(invoice.amount)}</p>
-                                        <p className="text-[9px] text-slate-400 font-semibold">{invoice.date}</p>
+                                        <p className="font-mono font-bold text-foreground text-xs">{formatCurrency(invoice.amount)}</p>
+                                        <p className="text-[9px] text-muted-foreground font-semibold">{invoice.date}</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between border-t border-slate-100/60 pt-2 flex-wrap gap-2">
+                                <div className="flex items-center justify-between border-t border-border/60 pt-2 flex-wrap gap-2">
                                     <div className="flex gap-1.5">
                                         <StatusBadge status={invoice.status} showIcon={false} className="h-5 text-[9px] px-2" />
                                         <StatusBadge status={invoice.paymentStatus} showIcon={false} className="h-5 text-[9px] px-2" />
@@ -308,14 +308,14 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                                         </span>
                                     )}
                                 </div>
-                                <div className="flex gap-1.5 border-t border-slate-100/60 pt-2">
+                                <div className="flex gap-1.5 border-t border-border/60 pt-2">
                                     <Link href={`/invoices/${invoice.id}`} className="flex-1">
-                                        <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-slate-600 rounded-lg">
+                                        <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-muted-foreground rounded-lg">
                                             Detalles
                                         </Button>
                                     </Link>
                                     <a href={`/api/invoices/${invoice.id}/pdf`} target="_blank" rel="noopener noreferrer" className="flex-1">
-                                        <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-slate-600 rounded-lg">
+                                        <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-muted-foreground rounded-lg">
                                             Ver PDF
                                         </Button>
                                     </a>
@@ -331,7 +331,7 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                         );
                     })}
                     {invoices.length === 0 && (
-                        <div className="py-8 text-center text-xs text-slate-400 font-semibold">
+                        <div className="py-8 text-center text-xs text-muted-foreground font-semibold">
                             No hay facturas recientes
                         </div>
                     )}

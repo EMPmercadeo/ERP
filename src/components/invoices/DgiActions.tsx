@@ -86,14 +86,14 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
 
     return (
         <div className="space-y-6">
-            <Card className="border-slate-100 shadow-sm">
+            <Card className="border-border shadow-sm">
                 <CardHeader>
-                    <CardTitle className="text-sm font-semibold uppercase tracking-wider text-slate-500">Acciones Fiscales</CardTitle>
+                    <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Acciones Fiscales</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {loading ? (
                         <div className="flex items-center justify-center py-4">
-                            <RotateCw className="h-6 w-6 animate-spin text-slate-400" />
+                            <RotateCw className="h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
                     ) : (
                         <div className="flex flex-col gap-2">
@@ -112,7 +112,7 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
                             )}
 
                             {estadoDgi === 'canceled' && (
-                                <div className="text-sm text-center py-2 text-slate-500 font-medium">
+                                <div className="text-sm text-center py-2 text-muted-foreground font-medium">
                                     Esta factura ya ha sido anulada fiscalmente.
                                 </div>
                             )}
@@ -123,11 +123,11 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
 
             {/* Modal de Cancelación */}
             {showCancelModal && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-primary/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <Card className="w-full max-w-md border-0 shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-6">
-                            <CardTitle className="text-lg font-bold text-slate-900">Motivo de Anulación</CardTitle>
-                            <p className="text-xs text-slate-500 mt-1">
+                        <CardHeader className="bg-muted/50 border-b border-border p-6">
+                            <CardTitle className="text-lg font-bold text-foreground">Motivo de Anulación</CardTitle>
+                            <p className="text-xs text-muted-foreground mt-1">
                                 Indica la razón por la cual se está anulando esta factura en la DGI (Mín. 5 caracteres).
                             </p>
                         </CardHeader>
@@ -136,7 +136,7 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
                                 value={motivoCancelacion}
                                 onChange={(e) => setMotivoCancelacion(e.target.value)}
                                 placeholder="Ej. Error en los datos del cliente, devolución de mercancía..."
-                                className="w-full h-24 p-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-1 focus:border-transparent resize-none"
+                                className="w-full h-24 p-3 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-1 focus:border-transparent resize-none"
                             />
                             <div className="flex justify-end gap-2">
                                 <Button variant="outline" size="sm" onClick={() => setShowCancelModal(false)}>
@@ -153,14 +153,14 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
 
             {/* Auditoria Logs PAC */}
             {logs.length > 0 && (
-                <Card className="border-slate-100 shadow-sm">
+                <Card className="border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                        <CardTitle className="text-sm font-semibold uppercase tracking-wider text-slate-500">Historial PAC / DGI</CardTitle>
-                        <History className="h-4 w-4 text-slate-400" />
+                        <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Historial PAC / DGI</CardTitle>
+                        <History className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent className="p-0 max-h-60 overflow-y-auto">
                         <Table>
-                            <TableHeader className="bg-slate-50/50">
+                            <TableHeader className="bg-muted/50">
                                 <TableRow>
                                     <TableHead className="text-xs">Operación</TableHead>
                                     <TableHead className="text-xs">Resultado</TableHead>
@@ -169,9 +169,9 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
                             </TableHeader>
                             <TableBody>
                                 {logs.map((log) => (
-                                    <TableRow key={log.id} className="hover:bg-slate-50/30">
+                                    <TableRow key={log.id} className="hover:bg-accent/30">
                                         <TableCell className="py-2.5">
-                                            <span className="font-semibold text-xs text-slate-700 capitalize">
+                                            <span className="font-semibold text-xs text-foreground capitalize">
                                                 {log.tipoOperacion}
                                             </span>
                                         </TableCell>
@@ -183,16 +183,16 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
                                                     ) : (
                                                         <XCircle className="h-3 w-3 text-rose-500" />
                                                     )}
-                                                    <span className="text-xs font-medium text-slate-900">
+                                                    <span className="text-xs font-medium text-foreground">
                                                         {log.codigoResultado || 'N/A'}
                                                     </span>
                                                 </div>
-                                                <span className="text-[10px] text-slate-500 max-w-[150px] truncate block" title={log.mensajeResultado || ''}>
+                                                <span className="text-[10px] text-muted-foreground max-w-[150px] truncate block" title={log.mensajeResultado || ''}>
                                                     {log.mensajeResultado || 'Sin mensaje.'}
                                                 </span>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="py-2.5 text-right text-[10px] text-slate-500">
+                                        <TableCell className="py-2.5 text-right text-[10px] text-muted-foreground">
                                             {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </TableCell>
                                     </TableRow>

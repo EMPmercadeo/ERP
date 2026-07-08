@@ -233,17 +233,17 @@ export function TrendChart({ data }: TrendChartProps) {
                     {/* Tooltip Overlay */}
                     {hoveredPoint && (
                         <div
-                            className="absolute pointer-events-none bg-slate-950 text-white rounded-lg px-3 py-2 text-xs shadow-xl border border-slate-800 z-30 transition-all duration-150"
+                            className="absolute pointer-events-none bg-foreground text-white rounded-lg px-3 py-2 text-xs shadow-xl border border-border z-30 transition-all duration-150"
                             style={{
                                 left: `${hoveredPoint.x}%`,
                                 top: `calc(${hoveredPoint.y}% - 18px)`,
                                 transform: 'translate(-50%, -100%)',
                             }}
                         >
-                            <div className="font-bold border-b border-slate-800 pb-1 mb-1.5 text-slate-300">
+                            <div className="font-bold border-b border-border pb-1 mb-1.5 text-primary-foreground">
                                 {hoveredPoint.mes} 2026
                             </div>
-                            <div className="flex items-center gap-3 mb-1 text-slate-100">
+                            <div className="flex items-center gap-3 mb-1 text-primary-foreground">
                                 <span className="flex items-center gap-1.5">
                                     <i className="w-2 h-2 rounded-full" style={{ background: 'var(--info)' }} />
                                     Facturado:
@@ -252,7 +252,7 @@ export function TrendChart({ data }: TrendChartProps) {
                                     {formatCurrency(hoveredPoint.facturado)}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-3 text-slate-100">
+                            <div className="flex items-center gap-3 text-primary-foreground">
                                 <span className="flex items-center gap-1.5">
                                     <i className="w-2 h-2 rounded-full" style={{ background: 'var(--success)' }} />
                                     Cobrado:

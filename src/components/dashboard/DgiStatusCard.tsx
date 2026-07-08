@@ -115,7 +115,7 @@ export function DgiStatusCard({ data }: DgiStatusCardProps) {
                                 return (
                                     <div
                                         key={i}
-                                        className="flex items-center gap-3 px-3 py-1.5 rounded-xl transition-colors hover:bg-slate-50 cursor-default"
+                                        className="flex items-center gap-3 px-3 py-1.5 rounded-xl transition-colors hover:bg-accent cursor-default"
                                     >
                                         <i
                                             className="w-2.5 h-2.5 rounded-full shrink-0"

@@ -505,7 +505,7 @@ export function DeliveryNoteForm({ clients, products, quotes, users }: FormProps
                                     <span className="font-semibold">{formatCurrency(totals.totalItbms)}</span>
                                 </div>
                                 <hr />
-                                <div className="flex justify-between text-base font-bold text-slate-800">
+                                <div className="flex justify-between text-base font-bold text-foreground">
                                     <span>Total Estimado:</span>
                                     <span className="text-brand-1">{formatCurrency(totals.totalNeto)}</span>
                                 </div>

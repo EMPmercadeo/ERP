@@ -210,14 +210,14 @@ export function ProductList({
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4 font-semibold text-xs text-slate-700 hover:bg-transparent"
+                    className="-ml-4 font-semibold text-xs text-foreground hover:bg-transparent"
                 >
                     Código
                     <ArrowUpDown className="ml-1 h-3 w-3" />
                 </Button>
             ),
             cell: ({ row }) => (
-                <span className="font-mono text-xs font-bold text-slate-700 tracking-tight">
+                <span className="font-mono text-xs font-bold text-foreground tracking-tight">
                     {row.getValue('codigoInterno')}
                 </span>
             ),
@@ -228,7 +228,7 @@ export function ProductList({
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="-ml-4 font-semibold text-xs text-slate-700 hover:bg-transparent"
+                    className="-ml-4 font-semibold text-xs text-foreground hover:bg-transparent"
                 >
                     Producto / Servicio
                     <ArrowUpDown className="ml-1 h-3 w-3" />
@@ -236,10 +236,10 @@ export function ProductList({
             ),
             cell: ({ row }) => (
                 <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center bg-slate-100 text-slate-500 shrink-0 select-none">
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center bg-muted text-muted-foreground shrink-0 select-none">
                         <Package className="h-3.5 w-3.5" />
                     </div>
-                    <span className="font-semibold text-slate-800 text-xs sm:text-sm truncate max-w-[280px]" title={row.getValue('descripcion')}>
+                    <span className="font-semibold text-foreground text-xs sm:text-sm truncate max-w-[280px]" title={row.getValue('descripcion')}>
                         {row.getValue('descripcion')}
                     </span>
                 </div>
@@ -248,7 +248,7 @@ export function ProductList({
         {
             accessorKey: 'precioVenta',
             header: () => (
-                <div className="text-right font-semibold text-xs text-slate-700 pr-2">Precio Venta</div>
+                <div className="text-right font-semibold text-xs text-foreground pr-2">Precio Venta</div>
             ),
             cell: ({ row }) => {
                 const cost = row.original.costoUnitario;
@@ -256,7 +256,7 @@ export function ProductList({
                 const margin = cost > 0 ? calculateMargin(cost, price) : null;
                 return (
                     <div className="text-right pr-2">
-                        <span className="font-mono text-xs sm:text-sm font-bold tabular-nums text-slate-800 block">
+                        <span className="font-mono text-xs sm:text-sm font-bold tabular-nums text-foreground block">
                             {formatCurrency(price)}
                         </span>
                         {margin !== null && (
@@ -279,7 +279,7 @@ export function ProductList({
                     <Badge variant={isExempt ? "secondary" : "outline"} className={cn(
                         "text-[10px] font-bold px-2 py-0.5 rounded",
                         isExempt 
-                            ? "bg-slate-100 text-slate-600 border-transparent" 
+                            ? "bg-muted text-muted-foreground border-transparent" 
                             : "bg-brand-1/5 text-brand-1 border-brand-1/20"
                     )}>
                         {label}
@@ -323,7 +323,7 @@ export function ProductList({
             accessorKey: 'unidadMedida',
             header: 'Unidad',
             cell: ({ row }) => (
-                <span className="text-slate-600 font-semibold text-xs">
+                <span className="text-muted-foreground font-semibold text-xs">
                     {row.getValue('unidadMedida') || 'UND'}
                 </span>
             ),
@@ -354,7 +354,7 @@ export function ProductList({
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-brand-1 hover:bg-slate-100 rounded-lg" asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-accent rounded-lg" asChild>
                                         <Link href={`/products/${product.id}`}>
                                             <Edit className="h-3.5 w-3.5" />
                                         </Link>
@@ -365,7 +365,7 @@ export function ProductList({
 
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-brand-1 hover:bg-slate-100 rounded-lg" asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-accent rounded-lg" asChild>
                                         <Link href={`/products/${product.id}?tab=history`}>
                                             <History className="h-3.5 w-3.5" />
                                         </Link>
@@ -518,15 +518,15 @@ export function ProductList({
                 {/* Header with Title and actions (Unified Row) */}
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between py-2">
                     <div>
-                        <h2 className="text-xl font-bold tracking-tight text-slate-800">Catálogo de Productos</h2>
+                        <h2 className="text-xl font-bold tracking-tight text-foreground">Catálogo de Productos</h2>
                         <p className="text-xs text-muted-foreground mt-0.5">
                             Gestiona productos y servicios con precios e ITBMS
                         </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         <ImportProductsDialog />
-                        <Button variant="outline" onClick={handleExport} className="h-9 font-semibold text-xs border-slate-200">
-                            <Download className="mr-1.5 h-3.5 w-3.5 text-slate-500" />
+                        <Button variant="outline" onClick={handleExport} className="h-9 font-semibold text-xs border-border">
+                            <Download className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
                             Exportar Excel
                         </Button>
                         <Button asChild className="h-9 bg-brand-1 hover:bg-brand-2 text-white font-bold text-xs shadow-sm">
@@ -539,26 +539,26 @@ export function ProductList({
                 </div>
 
                 {/* Compact Filters Grid (h-10 controls) */}
-                <Card className="bg-white shadow-sm border border-slate-100 rounded-xl overflow-visible">
+                <Card className="bg-white shadow-sm border border-border rounded-xl overflow-visible">
                     <CardContent className="p-4">
                         <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-x-4">
                             {/* Buscar */}
                             <div className="lg:col-span-2 space-y-1">
-                                <Label htmlFor="globalSearch" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Buscar producto</Label>
+                                <Label htmlFor="globalSearch" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Buscar producto</Label>
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         id="globalSearch"
                                         placeholder="Código, descripción..."
                                         value={globalFilter}
                                         onChange={(e) => setGlobalFilter(e.target.value)}
-                                        className="h-10 text-xs sm:text-sm pl-9 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                        className="h-10 text-xs sm:text-sm pl-9 bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full"
                                     />
                                     {globalFilter && (
                                         <button
                                             type="button"
                                             onClick={() => setGlobalFilter('')}
-                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
                                         >
                                             <X className="h-4 w-4" />
                                         </button>
@@ -568,9 +568,9 @@ export function ProductList({
 
                             {/* Estado */}
                             <div className="space-y-1">
-                                <Label htmlFor="statusFilter" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Estado</Label>
+                                <Label htmlFor="statusFilter" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Estado</Label>
                                 <Select value={status} onValueChange={(val) => handleFilterChange('status', val)}>
-                                    <SelectTrigger id="statusFilter" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                    <SelectTrigger id="statusFilter" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
                                         <SelectValue placeholder="Estado" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-lg">
@@ -583,9 +583,9 @@ export function ProductList({
 
                             {/* ITBMS */}
                             <div className="space-y-1">
-                                <Label htmlFor="taxFilter" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">ITBMS</Label>
+                                <Label htmlFor="taxFilter" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">ITBMS</Label>
                                 <Select value={tax} onValueChange={(val) => handleFilterChange('tax', val)}>
-                                    <SelectTrigger id="taxFilter" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                    <SelectTrigger id="taxFilter" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
                                         <SelectValue placeholder="ITBMS" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-lg">
@@ -600,9 +600,9 @@ export function ProductList({
 
                             {/* Stock */}
                             <div className="space-y-1">
-                                <Label htmlFor="stockFilter" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Stock</Label>
+                                <Label htmlFor="stockFilter" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Stock</Label>
                                 <Select value={stockStatus} onValueChange={(val) => handleFilterChange('stockStatus', val)}>
-                                    <SelectTrigger id="stockFilter" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                    <SelectTrigger id="stockFilter" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
                                         <SelectValue placeholder="Stock" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-lg">
@@ -616,9 +616,9 @@ export function ProductList({
 
                             {/* Unidad */}
                             <div className="space-y-1">
-                                <Label htmlFor="unitFilter" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Unidad</Label>
+                                <Label htmlFor="unitFilter" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Unidad</Label>
                                 <Select value={unidad} onValueChange={(val) => handleFilterChange('unidad', val)}>
-                                    <SelectTrigger id="unitFilter" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                    <SelectTrigger id="unitFilter" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
                                         <SelectValue placeholder="Unidad" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-lg">
@@ -636,16 +636,16 @@ export function ProductList({
                 </Card>
 
                 {/* Table */}
-                <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
+                <Card className="bg-white border border-border shadow-sm rounded-xl overflow-hidden">
                     <CardContent className="p-0">
                         {/* Desktop Table View */}
                         <div className="hidden md:block overflow-x-auto min-h-[300px]">
-                            <Table className="border-b border-slate-100">
-                                <TableHeader className="bg-slate-50 border-b border-slate-100">
+                            <Table className="border-b border-border">
+                                <TableHeader className="bg-muted border-b border-border">
                                     {table.getHeaderGroups().map((headerGroup) => (
                                         <TableRow key={headerGroup.id} className="hover:bg-transparent">
                                             {headerGroup.headers.map((header) => (
-                                                <TableHead key={header.id} className="h-10 font-bold text-slate-700 text-xs">
+                                                <TableHead key={header.id} className="h-10 font-bold text-foreground text-xs">
                                                     {header.isPlaceholder
                                                         ? null
                                                         : flexRender(
@@ -662,11 +662,11 @@ export function ProductList({
                                         table.getRowModel().rows.map((row) => (
                                             <TableRow
                                                 key={row.id}
-                                                className="hover:bg-slate-50/50 border-b border-slate-100 last:border-0 cursor-pointer"
+                                                className="hover:bg-accent/50 border-b border-border last:border-0 cursor-pointer"
                                                 onClick={() => router.push(`/products/${row.original.id}`)}
                                             >
                                                 {row.getVisibleCells().map((cell) => (
-                                                    <TableCell key={cell.id} className="py-2.5 text-xs text-slate-600">
+                                                    <TableCell key={cell.id} className="py-2.5 text-xs text-muted-foreground">
                                                         {flexRender(
                                                             cell.column.columnDef.cell,
                                                             cell.getContext()
@@ -689,7 +689,7 @@ export function ProductList({
                                                         : "Aún no has registrado ningún producto en tu catálogo."}
                                                     action={
                                                         (globalFilter || status !== 'all' || tax !== 'all' || stockStatus !== 'all' || unidad !== 'all') ? (
-                                                            <Button onClick={handleResetFilters} variant="outline" className="h-9 font-semibold text-xs border-slate-200 gap-1.5">
+                                                            <Button onClick={handleResetFilters} variant="outline" className="h-9 font-semibold text-xs border-border gap-1.5">
                                                                 <RotateCcw className="h-3.5 w-3.5" />
                                                                  Restablecer Filtros
                                                             </Button>
@@ -721,11 +721,11 @@ export function ProductList({
                                         <div 
                                             key={product.id}
                                             onClick={() => router.push(`/products/${product.id}`)}
-                                            className="bg-slate-50/50 border border-slate-100 rounded-xl p-3 flex flex-col justify-between shadow-sm active:scale-98 transition-transform cursor-pointer relative"
+                                            className="bg-muted/50 border border-border rounded-xl p-3 flex flex-col justify-between shadow-sm active:scale-98 transition-transform cursor-pointer relative"
                                         >
                                             <div>
                                                 {/* Image Thumbnail Container */}
-                                                <div className="w-full aspect-square rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden mb-2 border border-slate-200/50 relative">
+                                                <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center overflow-hidden mb-2 border border-border/50 relative">
                                                     {product.imagenUrl ? (
                                                         /* eslint-disable-next-line @next/next/no-img-element -- URL dinámica de producto de usuario no predecible para next/config */
                                                         <img 
@@ -734,11 +734,11 @@ export function ProductList({
                                                             className="w-full h-full object-cover" 
                                                         />
                                                     ) : (
-                                                        <Package className="h-7 w-7 text-slate-400" />
+                                                        <Package className="h-7 w-7 text-muted-foreground" />
                                                     )}
                                                     
                                                     {/* ITBMS Badge */}
-                                                    <span className="absolute top-1.5 left-1.5 bg-white/95 text-slate-800 backdrop-blur-sm text-[9px] font-bold px-1.5 py-0.5 rounded border border-slate-200 shadow-sm leading-none">
+                                                    <span className="absolute top-1.5 left-1.5 bg-white/95 text-foreground backdrop-blur-sm text-[9px] font-bold px-1.5 py-0.5 rounded border border-border shadow-sm leading-none">
                                                         {product.codigoTasaItbms === '00' ? 'Exento' : `${itbmsConfig[product.codigoTasaItbms] || product.codigoTasaItbms}`}
                                                     </span>
 
@@ -761,28 +761,28 @@ export function ProductList({
                                                 </div>
 
                                                 {/* SKU */}
-                                                <span className="font-mono text-[9px] font-bold text-slate-400 block tracking-tight truncate">
+                                                <span className="font-mono text-[9px] font-bold text-muted-foreground block tracking-tight truncate">
                                                     {product.codigoInterno}
                                                 </span>
 
                                                 {/* Name */}
-                                                <h4 className="font-bold text-slate-800 text-[11px] leading-tight line-clamp-2 mt-0.5 min-h-[2rem]" title={product.descripcion}>
+                                                <h4 className="font-bold text-foreground text-[11px] leading-tight line-clamp-2 mt-0.5 min-h-[2rem]" title={product.descripcion}>
                                                     {product.descripcion}
                                                 </h4>
                                             </div>
 
                                             <div>
                                                 {/* Price */}
-                                                <div className="mt-2 border-t border-slate-100/60 pt-2 flex items-baseline justify-between">
+                                                <div className="mt-2 border-t border-border/60 pt-2 flex items-baseline justify-between">
                                                     <div className="flex flex-col">
-                                                        <span className="font-mono text-xs font-bold text-slate-800">
+                                                        <span className="font-mono text-xs font-bold text-foreground">
                                                             {formatCurrency(priceWithTax)}
                                                         </span>
-                                                        <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider leading-none">
+                                                        <span className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider leading-none">
                                                             c/Impuesto
                                                         </span>
                                                     </div>
-                                                    <span className="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1 py-0.5 rounded">
+                                                    <span className="text-[9px] font-semibold text-muted-foreground bg-muted px-1 py-0.5 rounded">
                                                         {product.unidadMedida || 'UND'}
                                                     </span>
                                                 </div>
@@ -790,14 +790,14 @@ export function ProductList({
                                                 {/* Actions */}
                                                 <div className="flex gap-1 mt-2.5" onClick={(e) => e.stopPropagation()}>
                                                     <Link href={`/products/${product.id}`} className="flex-1">
-                                                        <Button variant="outline" size="sm" className="w-full h-8 text-[9px] font-bold text-slate-600 rounded-lg p-0">
-                                                            <Edit className="h-3 w-3 mr-1 text-slate-500" />
+                                                        <Button variant="outline" size="sm" className="w-full h-8 text-[9px] font-bold text-muted-foreground rounded-lg p-0">
+                                                            <Edit className="h-3 w-3 mr-1 text-muted-foreground" />
                                                             Editar
                                                         </Button>
                                                     </Link>
                                                     <Link href={`/products/${product.id}?tab=history`} className="flex-1">
-                                                        <Button variant="outline" size="sm" className="w-full h-8 text-[9px] font-bold text-slate-600 rounded-lg p-0">
-                                                            <History className="h-3 w-3 mr-1 text-slate-500" />
+                                                        <Button variant="outline" size="sm" className="w-full h-8 text-[9px] font-bold text-muted-foreground rounded-lg p-0">
+                                                            <History className="h-3 w-3 mr-1 text-muted-foreground" />
                                                             Ver
                                                         </Button>
                                                     </Link>
@@ -815,26 +815,26 @@ export function ProductList({
                                     );
                                 })
                             ) : (
-                                <div className="col-span-2 py-12 text-center text-xs text-slate-400 font-semibold">
+                                <div className="col-span-2 py-12 text-center text-xs text-muted-foreground font-semibold">
                                     No hay productos registrados
                                 </div>
                             )}
                         </div>
 
                         {/* Pagination (Backend Powered) */}
-                        <div className="flex items-center justify-between px-4 py-3 bg-slate-50/30">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-slate-500">
+                        <div className="flex items-center justify-between px-4 py-3 bg-muted/30">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-muted-foreground">
                                 <span>
                                     Mostrando {totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0} a{' '}
                                     {Math.min(currentPage * pageSize, totalCount)} de {totalCount} productos
                                 </span>
-                                <span className="hidden sm:inline text-slate-200">|</span>
-                                <span className="font-semibold text-slate-700">
+                                <span className="hidden sm:inline text-muted-foreground">|</span>
+                                <span className="font-semibold text-foreground">
                                     Página {currentPage} de {pageCount || 1}
                                 </span>
                             </div>
                             <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-2 text-xs text-slate-500">
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                     <span className="hidden sm:inline">Filas por página:</span>
                                     <Select
                                         value={String(pageSize)}
@@ -863,9 +863,9 @@ export function ProductList({
                                             router.push(`${pathname}?${query}`);
                                         }}
                                         disabled={currentPage <= 1}
-                                        className="h-8 text-xs font-semibold px-3 border-slate-200 rounded-lg"
+                                        className="h-8 text-xs font-semibold px-3 border-border rounded-lg"
                                     >
-                                        <ChevronLeft className="h-3.5 w-3.5 mr-1 text-slate-500" />
+                                        <ChevronLeft className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
                                         Anterior
                                     </Button>
                                     <Button
@@ -876,10 +876,10 @@ export function ProductList({
                                             router.push(`${pathname}?${query}`);
                                         }}
                                         disabled={currentPage >= pageCount}
-                                        className="h-8 text-xs font-semibold px-3 border-slate-200 rounded-lg"
+                                        className="h-8 text-xs font-semibold px-3 border-border rounded-lg"
                                     >
                                         Siguiente
-                                        <ChevronRight className="h-3.5 w-3.5 ml-1 text-slate-500" />
+                                        <ChevronRight className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
                                     </Button>
                                 </div>
                             </div>

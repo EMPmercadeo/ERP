@@ -73,15 +73,15 @@ export function PwaManager() {
     if (!isInstallable || isDismissed) return null;
 
     return (
-        <div className="fixed bottom-20 left-4 right-4 z-50 md:bottom-6 md:left-auto md:right-6 md:w-80 rounded-xl bg-white border border-slate-200 p-4 shadow-xl animate-in slide-in-from-bottom-5 duration-300 font-sans">
+        <div className="fixed bottom-20 left-4 right-4 z-50 md:bottom-6 md:left-auto md:right-6 md:w-80 rounded-xl bg-white border border-border p-4 shadow-xl animate-in slide-in-from-bottom-5 duration-300 font-sans">
             <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
-                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Instalar Aplicación</h4>
-                    <p className="text-[11px] text-slate-500 mt-1 leading-normal">Instala ERP Panamá en tu dispositivo móvil para un acceso rápido y mejor rendimiento.</p>
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Instalar Aplicación</h4>
+                    <p className="text-[11px] text-muted-foreground mt-1 leading-normal">Instala ERP Panamá en tu dispositivo móvil para un acceso rápido y mejor rendimiento.</p>
                 </div>
                 <button 
                     onClick={() => setIsDismissed(true)}
-                    className="text-slate-400 hover:text-slate-600 rounded p-0.5 hover:bg-slate-100 transition-colors"
+                    className="text-muted-foreground hover:text-muted-foreground rounded p-0.5 hover:bg-accent transition-colors"
                 >
                     <X className="h-4 w-4" />
                 </button>
@@ -97,7 +97,7 @@ export function PwaManager() {
                 <Button 
                     variant="ghost" 
                     onClick={() => setIsDismissed(true)} 
-                    className="h-9 text-xs text-slate-500 font-semibold px-3"
+                    className="h-9 text-xs text-muted-foreground font-semibold px-3"
                 >
                     Quizás luego
                 </Button>

@@ -146,11 +146,11 @@ export default function LoginPage() {
             {/* Overlay Modals */}
             {activeModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl p-6 max-w-sm w-full text-gray-800 shadow-2xl relative space-y-4 border border-gray-100">
+                    <div className="bg-white rounded-3xl p-6 max-w-sm w-full text-foreground shadow-2xl relative space-y-4 border border-border">
                         <button
                             type="button"
                             onClick={() => setActiveModal(null)}
-                            className="absolute top-4 right-4 p-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors cursor-pointer"
+                            className="absolute top-4 right-4 p-1 rounded-full bg-muted hover:bg-accent text-muted-foreground transition-colors cursor-pointer"
                         >
                             <X className="h-5 w-5" />
                         </button>
@@ -160,8 +160,8 @@ export default function LoginPage() {
                                 <div className="w-12 h-12 bg-blue-100 text-brand-1 rounded-full flex items-center justify-center mx-auto">
                                     <Fingerprint className="h-6 w-6" />
                                 </div>
-                                <h3 className="text-lg font-black text-gray-900">Permiso Biométrico DGI</h3>
-                                <p className="text-xs text-gray-600 leading-relaxed">
+                                <h3 className="text-lg font-black text-foreground">Permiso Biométrico DGI</h3>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
                                     Para autorizar tu huella digital o Face ID en este dispositivo, escribe tu correo y pulsa el ícono de huella nuevamente para vincular la seguridad del dispositivo con tu cuenta.
                                 </p>
                                 <button
@@ -182,8 +182,8 @@ export default function LoginPage() {
                                 <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
                                     <MessageSquare className="h-6 w-6" />
                                 </div>
-                                <h3 className="text-lg font-black text-gray-900">Soporte DGI 24/7</h3>
-                                <p className="text-xs text-gray-600 leading-relaxed">
+                                <h3 className="text-lg font-black text-foreground">Soporte DGI 24/7</h3>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
                                     Contamos con especialistas en facturación electrónica PAC y firma fiscal disponibles para ayudarte en todo momento.
                                 </p>
                                 <Link
@@ -200,8 +200,8 @@ export default function LoginPage() {
                                 <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto">
                                     <Shield className="h-6 w-6" />
                                 </div>
-                                <h3 className="text-lg font-black text-gray-900">Seguridad Bancaria</h3>
-                                <p className="text-xs text-gray-600 leading-relaxed">
+                                <h3 className="text-lg font-black text-foreground">Seguridad Bancaria</h3>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
                                     Tus certificados fiscales (.p12) y las llaves contables están blindados con encriptación militar AES-256 en servidores certificados.
                                 </p>
                                 <Link
@@ -216,31 +216,31 @@ export default function LoginPage() {
                         {activeModal === 'planes' && (
                             <div className="space-y-3">
                                 <div className="text-center">
-                                    <h3 className="text-lg font-black text-gray-900">Planes ERP Panamá</h3>
-                                    <p className="text-xs text-gray-500">Facturación ilimitada sin costos ocultos</p>
+                                    <h3 className="text-lg font-black text-foreground">Planes ERP Panamá</h3>
+                                    <p className="text-xs text-muted-foreground">Facturación ilimitada sin costos ocultos</p>
                                 </div>
                                 <div className="space-y-2 text-xs">
                                     <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-100 flex justify-between items-center">
                                         <div>
-                                            <strong className="text-gray-900 block font-bold">Emprendedor</strong>
-                                            <span className="text-gray-500">1 Usuario • 150 documentos/mes</span>
+                                            <strong className="text-foreground block font-bold">Emprendedor</strong>
+                                            <span className="text-muted-foreground">1 Usuario • 150 documentos/mes</span>
                                         </div>
                                         <span className="font-extrabold text-brand-1">$19.99/mes</span>
                                     </div>
                                     <div className="p-2.5 rounded-xl bg-blue-50 border-2 border-brand-1 flex justify-between items-center shadow-sm">
                                         <div>
                                             <span className="bg-brand-1 text-white text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Recomendado</span>
-                                            <strong className="text-gray-900 block font-bold mt-0.5">Pro</strong>
-                                            <span className="text-gray-500">5 Usuarios • 600 documentos/mes</span>
+                                            <strong className="text-foreground block font-bold mt-0.5">Pro</strong>
+                                            <span className="text-muted-foreground">5 Usuarios • 600 documentos/mes</span>
                                         </div>
                                         <span className="font-extrabold text-brand-1">$54.99/mes</span>
                                     </div>
-                                    <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-200 flex justify-between items-center">
+                                    <div className="p-2.5 rounded-xl bg-muted border border-border flex justify-between items-center">
                                         <div>
-                                            <strong className="text-gray-900 block font-bold">Empresa</strong>
-                                            <span className="text-gray-500">10 Usuarios • 1000 documentos/mes</span>
+                                            <strong className="text-foreground block font-bold">Empresa</strong>
+                                            <span className="text-muted-foreground">10 Usuarios • 1000 documentos/mes</span>
                                         </div>
-                                        <span className="font-extrabold text-gray-700">$89.99/mes</span>
+                                        <span className="font-extrabold text-foreground">$89.99/mes</span>
                                     </div>
                                 </div>
                                 <Link
@@ -254,11 +254,11 @@ export default function LoginPage() {
 
                         {activeModal === 'qr' && (
                             <div className="text-center space-y-3">
-                                <div className="w-16 h-16 bg-gray-900 rounded-2xl flex items-center justify-center mx-auto text-white border-2 border-dashed border-blue-400 relative animate-pulse">
+                                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto text-white border-2 border-dashed border-blue-400 relative animate-pulse">
                                     <Camera className="h-8 w-8 text-blue-400" />
                                 </div>
-                                <h3 className="text-lg font-black text-gray-900">Verificador QR DGI</h3>
-                                <p className="text-xs text-gray-600 leading-relaxed">
+                                <h3 className="text-lg font-black text-foreground">Verificador QR DGI</h3>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
                                     Escanea el código QR de cualquier factura electrónica o albarán para auditar su validez en tiempo real ante el PAC y la DGI.
                                 </p>
                                 <button
@@ -307,21 +307,21 @@ export default function LoginPage() {
                 {/* Formulario con Espaciados Fieles a la Referencia */}
                 <form onSubmit={handleSubmit} className="flex flex-col gap-2 shrink-0 w-full min-w-0">
                     {/* Input 1: Usuario / Correo */}
-                    <div className="bg-white rounded-2xl h-11 sm:h-12 px-3.5 shadow-sm flex items-center gap-2.5 text-gray-800 w-full min-w-0">
-                        <User className="h-4.5 w-4.5 text-gray-400 shrink-0" />
+                    <div className="bg-white rounded-2xl h-11 sm:h-12 px-3.5 shadow-sm flex items-center gap-2.5 text-foreground w-full min-w-0">
+                        <User className="h-4.5 w-4.5 text-muted-foreground shrink-0" />
                         <input
                             type="email"
                             placeholder="Usuario o Correo DGI"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full min-w-0 text-xs sm:text-sm font-medium"
+                            className="bg-transparent border-none text-foreground placeholder:text-muted-foreground focus:outline-none w-full min-w-0 text-xs sm:text-sm font-medium"
                         />
                         {email && (
                             <button
                                 type="button"
                                 onClick={() => setEmail('')}
-                                className="text-gray-400 hover:text-gray-600 px-1 text-sm font-bold cursor-pointer shrink-0"
+                                className="text-muted-foreground hover:text-muted-foreground px-1 text-sm font-bold cursor-pointer shrink-0"
                             >
                                 ✕
                             </button>
@@ -330,15 +330,15 @@ export default function LoginPage() {
 
                     {/* Input 2: Contraseña + Botón Biométrico */}
                     <div className="flex gap-2 items-center w-full min-w-0">
-                        <div className="bg-white rounded-2xl h-11 sm:h-12 px-3.5 shadow-sm flex items-center gap-2 flex-1 text-gray-800 min-w-0">
-                            <Lock className="h-4.5 w-4.5 text-gray-400 shrink-0" />
+                        <div className="bg-white rounded-2xl h-11 sm:h-12 px-3.5 shadow-sm flex items-center gap-2 flex-1 text-foreground min-w-0">
+                            <Lock className="h-4.5 w-4.5 text-muted-foreground shrink-0" />
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 placeholder="Contraseña"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full min-w-0 text-xs sm:text-sm font-medium"
+                                className="bg-transparent border-none text-foreground placeholder:text-muted-foreground focus:outline-none w-full min-w-0 text-xs sm:text-sm font-medium"
                             />
                             <button
                                 type="button"
@@ -383,7 +383,7 @@ export default function LoginPage() {
                         type="button"
                         onClick={handleGoogleLogin}
                         disabled={isGoogleLoading}
-                        className="w-full bg-white/90 text-gray-800 font-semibold text-xs h-10 px-3 rounded-2xl shadow hover:bg-white flex items-center justify-center gap-1.5 transition-all cursor-pointer truncate"
+                        className="w-full bg-white/90 text-foreground font-semibold text-xs h-10 px-3 rounded-2xl shadow hover:bg-white flex items-center justify-center gap-1.5 transition-all cursor-pointer truncate"
                     >
                         <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -431,34 +431,34 @@ export default function LoginPage() {
                 <h2 className="text-3xl font-extrabold text-brand-2 tracking-tight mb-1">
                     Iniciar Sesión
                 </h2>
-                <p className="text-sm text-gray-500 font-medium leading-relaxed mb-6">
+                <p className="text-sm text-muted-foreground font-medium leading-relaxed mb-6">
                     Ingresa a tu portal de facturación y gestión fiscal
                 </p>
 
                 {/* Formulario Escritorio */}
                 <form onSubmit={handleSubmit} className="space-y-3.5">
-                    <div className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 flex items-center gap-3 focus-within:border-brand-1 focus-within:ring-2 focus-within:ring-brand-1/10 transition-all shadow-sm">
-                        <User className="h-5 w-5 text-gray-400 shrink-0" />
+                    <div className="bg-white border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-3 focus-within:border-brand-1 focus-within:ring-2 focus-within:ring-brand-1/10 transition-all shadow-sm">
+                        <User className="h-5 w-5 text-muted-foreground shrink-0" />
                         <input
                             type="email"
                             placeholder="Usuario o Correo DGI"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="w-full bg-transparent text-sm text-gray-900 font-medium placeholder:text-gray-400 outline-none"
+                            className="w-full bg-transparent text-sm text-foreground font-medium placeholder:text-muted-foreground outline-none"
                         />
                     </div>
 
                     <div className="flex gap-2.5 items-center">
-                        <div className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 flex items-center gap-3 flex-1 focus-within:border-brand-1 focus-within:ring-2 focus-within:ring-brand-1/10 transition-all shadow-sm">
-                            <Lock className="h-5 w-5 text-gray-400 shrink-0" />
+                        <div className="bg-white border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-3 flex-1 focus-within:border-brand-1 focus-within:ring-2 focus-within:ring-brand-1/10 transition-all shadow-sm">
+                            <Lock className="h-5 w-5 text-muted-foreground shrink-0" />
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 placeholder="Contraseña"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="w-full bg-transparent text-sm text-gray-900 font-medium placeholder:text-gray-400 outline-none"
+                                className="w-full bg-transparent text-sm text-foreground font-medium placeholder:text-muted-foreground outline-none"
                             />
                             <button
                                 type="button"
@@ -474,7 +474,7 @@ export default function LoginPage() {
                             type="button"
                             onClick={handleBiometricLogin}
                             title="Ingresar con Huella Digital / Passkey"
-                            className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm flex items-center justify-center text-brand-1 hover:bg-blue-50/60 transition-all shrink-0 active:scale-95 cursor-pointer"
+                            className="bg-white border border-border rounded-xl p-3 shadow-sm flex items-center justify-center text-brand-1 hover:bg-blue-50/60 transition-all shrink-0 active:scale-95 cursor-pointer"
                         >
                             <Fingerprint className="h-5 w-5" />
                         </button>
@@ -511,7 +511,7 @@ export default function LoginPage() {
                         type="button"
                         onClick={handleGoogleLogin}
                         disabled={isGoogleLoading}
-                        className="w-full bg-white border border-gray-200 text-gray-700 font-semibold py-3 rounded-xl shadow-sm hover:bg-gray-50 flex items-center justify-center gap-2.5 text-sm transition-all cursor-pointer"
+                        className="w-full bg-white border border-border text-foreground font-semibold py-3 rounded-xl shadow-sm hover:bg-accent flex items-center justify-center gap-2.5 text-sm transition-all cursor-pointer"
                     >
                         <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

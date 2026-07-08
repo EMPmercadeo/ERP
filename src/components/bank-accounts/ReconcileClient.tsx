@@ -94,7 +94,7 @@ export function ReconcileClient({
                         </Button>
                     </Link>
                     <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Conciliación Bancaria</h2>
+                        <h2 className="text-2xl font-bold tracking-tight text-foreground">Conciliación Bancaria</h2>
                         <p className="text-muted-foreground text-sm">
                             {cuentaNombre} · Cuenta contable {cuentaContableLabel}
                         </p>
@@ -128,16 +128,16 @@ export function ReconcileClient({
                                         'w-full text-left border rounded-lg p-3 transition-colors',
                                         selectedMovimiento === m.id
                                             ? 'border-brand-1 bg-brand-1/5 ring-1 ring-brand-1'
-                                            : 'border-slate-200 hover:bg-slate-50'
+                                            : 'border-border hover:bg-accent'
                                     )}
                                 >
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs text-slate-500">{formatDate(m.fecha)}</span>
+                                        <span className="text-xs text-muted-foreground">{formatDate(m.fecha)}</span>
                                         <Badge variant={m.tipo === 'DEPOSITO' ? 'success' : 'destructive'} className="text-[10px]">
                                             {m.tipo === 'DEPOSITO' ? 'Depósito' : 'Retiro'}
                                         </Badge>
                                     </div>
-                                    <p className="text-sm font-medium text-slate-800 mt-1">{m.descripcion}</p>
+                                    <p className="text-sm font-medium text-foreground mt-1">{m.descripcion}</p>
                                     <p className={cn('font-mono text-sm font-bold mt-1', m.tipo === 'DEPOSITO' ? 'text-emerald-600' : 'text-red-600')}>
                                         {m.tipo === 'DEPOSITO' ? '+' : '-'}{formatCurrency(m.monto)}
                                     </p>
@@ -168,15 +168,15 @@ export function ReconcileClient({
                                         'w-full text-left border rounded-lg p-3 transition-colors',
                                         selectedAsiento === l.asientoContableId
                                             ? 'border-brand-1 bg-brand-1/5 ring-1 ring-brand-1'
-                                            : 'border-slate-200 hover:bg-slate-50'
+                                            : 'border-border hover:bg-accent'
                                     )}
                                 >
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs text-slate-500">{formatDate(l.fecha)} · Asiento #{l.asientoNumero}</span>
+                                        <span className="text-xs text-muted-foreground">{formatDate(l.fecha)} · Asiento #{l.asientoNumero}</span>
                                         <Badge variant="neutral" className="text-[10px]">{l.origen}</Badge>
                                     </div>
-                                    <p className="text-sm font-medium text-slate-800 mt-1">{l.concepto}</p>
-                                    <p className="font-mono text-xs mt-1 text-slate-600">
+                                    <p className="text-sm font-medium text-foreground mt-1">{l.concepto}</p>
+                                    <p className="font-mono text-xs mt-1 text-muted-foreground">
                                         Debe: {formatCurrency(l.debe)} · Haber: {formatCurrency(l.haber)}
                                     </p>
                                 </button>

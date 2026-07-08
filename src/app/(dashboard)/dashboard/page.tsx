@@ -375,7 +375,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                 {/* Quick Actions Row */}
                 <div className="grid gap-4 md:grid-cols-3">
                     <Link href="/invoices/new" className="block">
-                        <Card className="cursor-pointer transition-colors hover:bg-slate-50 border-border group h-full">
+                        <Card className="cursor-pointer transition-colors hover:bg-accent border-border group h-full">
                             <CardContent className="flex items-center gap-4 pt-6">
                                 <div className="rounded-lg bg-brand-1/10 p-3 group-hover:bg-brand-1 group-hover:text-white transition-colors text-brand-1">
                                     <FileText className="h-6 w-6" />
@@ -388,7 +388,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                         </Card>
                     </Link>
                     <Link href="/invoices?status=pendiente" className="block">
-                        <Card className="cursor-pointer transition-colors hover:bg-slate-50 border-border group h-full">
+                        <Card className="cursor-pointer transition-colors hover:bg-accent border-border group h-full">
                             <CardContent className="flex items-center gap-4 pt-6">
                                 <div className="rounded-lg bg-emerald-500/10 p-3 group-hover:bg-emerald-500 group-hover:text-white transition-colors text-emerald-500">
                                     <DollarSign className="h-6 w-6" />
@@ -401,7 +401,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                         </Card>
                     </Link>
                     <Link href="/reports" className="block">
-                        <Card className="cursor-pointer transition-colors hover:bg-slate-50 border-border group h-full">
+                        <Card className="cursor-pointer transition-colors hover:bg-accent border-border group h-full">
                             <CardContent className="flex items-center gap-4 pt-6">
                                 <div className="rounded-lg bg-purple-500/10 p-3 group-hover:bg-purple-500 group-hover:text-white transition-colors text-purple-500">
                                     <TrendingUp className="h-6 w-6" />

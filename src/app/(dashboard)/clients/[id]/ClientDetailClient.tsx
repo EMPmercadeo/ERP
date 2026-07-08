@@ -173,7 +173,7 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
                             </div>
                             <div>
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <h1 className="text-2xl font-bold text-slate-900">{client.razonSocial}</h1>
+                                    <h1 className="text-2xl font-bold text-foreground">{client.razonSocial}</h1>
                                     <Badge variant={statusVariants[client.estado] || 'neutral'}>
                                         {statusLabels[client.estado] || client.estado}
                                     </Badge>
@@ -278,14 +278,14 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
                                         <User className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Razón Social</span>
-                                            <span className="text-slate-800 font-medium">{client.razonSocial}</span>
+                                            <span className="text-foreground font-medium">{client.razonSocial}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2.5">
                                         <User className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Tipo RUC / Cédula</span>
-                                            <span className="text-slate-800 font-medium">
+                                            <span className="text-foreground font-medium">
                                                 {client.tipoRuc === '01' ? 'Natural' : client.tipoRuc === '02' ? 'Jurídica' : client.tipoRuc === '03' ? 'Gobierno' : 'Extranjero'}
                                             </span>
                                         </div>
@@ -294,14 +294,14 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
                                         <Mail className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Correo Electrónico</span>
-                                            <span className="text-slate-800 font-medium">{client.email || 'Sin correo registrado'}</span>
+                                            <span className="text-foreground font-medium">{client.email || 'Sin correo registrado'}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2.5">
                                         <Phone className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Teléfono</span>
-                                            <span className="text-slate-800 font-medium">{client.telefono || 'Sin teléfono registrado'}</span>
+                                            <span className="text-foreground font-medium">{client.telefono || 'Sin teléfono registrado'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -310,21 +310,21 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
                                         <MapPin className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Dirección</span>
-                                            <span className="text-slate-800 font-medium">{client.direccion || 'Sin dirección registrada'}</span>
+                                            <span className="text-foreground font-medium">{client.direccion || 'Sin dirección registrada'}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2.5">
                                         <CreditCard className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Condiciones de Pago</span>
-                                            <span className="text-slate-800 font-medium">{client.condicionPago}</span>
+                                            <span className="text-foreground font-medium">{client.condicionPago}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2.5">
                                         <Calendar className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Fecha de Registro</span>
-                                            <span className="text-slate-800 font-medium">{formatDate(client.createdAt)}</span>
+                                            <span className="text-foreground font-medium">{formatDate(client.createdAt)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -353,10 +353,10 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
                                         {invoices.length > 0 ? invoices.map(inv => (
                                             <TableRow 
                                                 key={inv.id} 
-                                                className="cursor-pointer hover:bg-slate-50/80"
+                                                className="cursor-pointer hover:bg-accent/80"
                                                 onClick={() => router.push(`/invoices/${inv.id}`)}
                                             >
-                                                <TableCell className="font-semibold text-slate-800">
+                                                <TableCell className="font-semibold text-foreground">
                                                     {inv.numeroCompleto || 'Borrador'}
                                                 </TableCell>
                                                 <TableCell>{formatDate(inv.fechaEmision)}</TableCell>
@@ -416,7 +416,7 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
                                     </TableHeader>
                                     <TableBody>
                                         {ledger.length > 0 ? ledger.map((entry, index) => (
-                                            <TableRow key={index} className="hover:bg-slate-50/50">
+                                            <TableRow key={index} className="hover:bg-accent/50">
                                                 <TableCell className="text-sm">{formatDate(entry.date.toISOString())}</TableCell>
                                                 <TableCell className="text-sm font-medium">
                                                     {entry.refLink ? (
@@ -424,7 +424,7 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
                                                             {entry.description}
                                                         </Link>
                                                     ) : (
-                                                        <span className="text-slate-800">{entry.description}</span>
+                                                        <span className="text-foreground">{entry.description}</span>
                                                     )}
                                                 </TableCell>
                                                 <TableCell className="text-right text-red-600 text-sm font-medium">
@@ -433,7 +433,7 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
                                                 <TableCell className="text-right text-emerald-600 text-sm font-medium">
                                                     {entry.type === 'credit' ? `-${formatCurrency(entry.amount)}` : ''}
                                                 </TableCell>
-                                                <TableCell className="text-right font-bold text-slate-800 text-sm">
+                                                <TableCell className="text-right font-bold text-foreground text-sm">
                                                     {formatCurrency(entry.runningBalance)}
                                                 </TableCell>
                                             </TableRow>
@@ -470,10 +470,10 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
                                         {deliveryNotes.length > 0 ? deliveryNotes.map(note => (
                                             <TableRow 
                                                 key={note.id} 
-                                                className="cursor-pointer hover:bg-slate-50/80"
+                                                className="cursor-pointer hover:bg-accent/80"
                                                 onClick={() => router.push(`/delivery-notes/${note.id}`)}
                                             >
-                                                <TableCell className="font-semibold text-slate-800">
+                                                <TableCell className="font-semibold text-foreground">
                                                     {note.numero}
                                                 </TableCell>
                                                 <TableCell>{formatDate(note.fechaEmision)}</TableCell>

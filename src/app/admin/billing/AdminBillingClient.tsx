@@ -197,13 +197,13 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
 
             {/* Pricing Cycle Selector */}
             <div className="flex flex-col items-center gap-4 mb-6">
-                <div className="inline-flex items-center p-1 bg-slate-100 rounded-lg border border-slate-200 shadow-inner">
+                <div className="inline-flex items-center p-1 bg-muted rounded-lg border border-border shadow-inner">
                     <button
                         onClick={() => setBillingCycle('monthly')}
                         className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
                             billingCycle === 'monthly'
-                                ? 'bg-white text-slate-900 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-900'
+                                ? 'bg-white text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
                         }`}
                     >
                         Facturación Mensual
@@ -213,7 +213,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                         className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-1.5 ${
                             billingCycle === 'yearly'
                                 ? 'bg-brand-1 text-white shadow-sm'
-                                : 'text-slate-500 hover:text-slate-900'
+                                : 'text-muted-foreground hover:text-foreground'
                         }`}
                     >
                         <span>Facturación Anual</span>
@@ -257,7 +257,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                                     {plan.id === 'free' && <Sparkles className="h-5 w-5 text-brand-1" />}
                                     {plan.id === 'basic' && <Zap className="h-5 w-5 text-brand-1" />}
                                     {plan.id === 'pro' && <Zap className="h-5 w-5 text-amber-500" />}
-                                    {plan.id === 'enterprise' && <Building className="h-5 w-5 text-slate-500" />}
+                                    {plan.id === 'enterprise' && <Building className="h-5 w-5 text-muted-foreground" />}
                                 </CardTitle>
                                 <CardDescription className="min-h-[40px] mt-2">
                                     {plan.description}
@@ -267,7 +267,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                             <CardContent className="flex-1 flex flex-col pt-0">
                                 {/* Price Section */}
                                 <div className="mb-6">
-                                    <span className="text-4xl font-extrabold tracking-tight text-slate-900">
+                                    <span className="text-4xl font-extrabold tracking-tight text-foreground">
                                         ${price}
                                     </span>
                                     <span className="text-muted-foreground ml-1 text-sm font-medium">/ mes</span>
@@ -281,13 +281,13 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                                 <Separator className="mb-6" />
 
                                 {/* Features List */}
-                                <ul className="space-y-3.5 flex-1 mb-8 text-sm text-slate-600">
+                                <ul className="space-y-3.5 flex-1 mb-8 text-sm text-muted-foreground">
                                     {plan.features.map((feature, i) => (
                                         <li key={i} className="flex items-start gap-2.5">
                                             <div className={`p-0.5 rounded-full mt-0.5 shrink-0 ${
                                                 plan.highlight
                                                     ? 'bg-brand-1/10 text-brand-2'
-                                                    : 'bg-slate-100 text-slate-700'
+                                                    : 'bg-muted text-foreground'
                                             }`}>
                                                 <Check className="h-3.5 w-3.5" />
                                             </div>
@@ -300,7 +300,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                                 <Button
                                     className={`w-full py-5 text-sm font-semibold transition-all ${
                                         isCurrent
-                                            ? 'bg-slate-100 text-slate-600 border-none cursor-default hover:bg-slate-100'
+                                            ? 'bg-muted text-muted-foreground border-none cursor-default hover:bg-muted'
                                             : plan.highlight
                                                 ? 'bg-brand-1 hover:bg-brand-2 text-white shadow-sm hover:shadow-md'
                                                 : 'border-brand-1/20 text-brand-2 bg-white hover:bg-brand-1/50'
@@ -327,16 +327,16 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
             </div>
 
             {/* Help / Payment Security Section */}
-            <Card className="border-slate-100 bg-slate-50/30">
+            <Card className="border-border bg-muted/30">
                 <CardContent className="flex flex-col md:flex-row items-center justify-between gap-6 py-6 px-8">
                     <div className="flex items-center gap-4">
-                        <CreditCard className="h-8 w-8 text-slate-500 shrink-0" />
+                        <CreditCard className="h-8 w-8 text-muted-foreground shrink-0" />
                         <div>
-                            <h4 className="font-semibold text-slate-900">¿Tienes dudas sobre los planes o facturación?</h4>
+                            <h4 className="font-semibold text-foreground">¿Tienes dudas sobre los planes o facturación?</h4>
                             <p className="text-sm text-muted-foreground">Estamos aquí para ayudarte a elegir el plan perfecto para cumplir con los requerimientos fiscales de la DGI.</p>
                         </div>
                     </div>
-                    <Button variant="outline" className="shrink-0 border-slate-300 hover:bg-slate-100">
+                    <Button variant="outline" className="shrink-0 border-border hover:bg-accent">
                         Contactar Asesor
                     </Button>
                 </CardContent>

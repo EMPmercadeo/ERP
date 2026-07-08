@@ -50,7 +50,7 @@ export default function ForgotPasswordPage() {
 
             <div className="text-center space-y-2">
                 <h2 className="text-2xl font-black text-white lg:text-foreground">Recuperar Contraseña</h2>
-                <p className="text-sm text-blue-100 lg:text-gray-500">
+                <p className="text-sm text-blue-100 lg:text-muted-foreground">
                     Ingresa tu correo institucional y te enviaremos las instrucciones para restablecer tu contraseña.
                 </p>
             </div>
@@ -66,8 +66,8 @@ export default function ForgotPasswordPage() {
                     <div className="mx-auto w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
                         <CheckCircle className="h-6 w-6" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-800">¡Correo enviado!</h3>
-                    <p className="text-sm text-gray-600">
+                    <h3 className="text-xl font-bold text-foreground">¡Correo enviado!</h3>
+                    <p className="text-sm text-muted-foreground">
                         Hemos enviado un enlace de recuperación a <strong>{email}</strong>. Revisa tu bandeja de entrada o spam.
                     </p>
                     <Link
@@ -79,15 +79,15 @@ export default function ForgotPasswordPage() {
                 </div>
             ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="bg-white rounded-2xl p-2 shadow-lg flex items-center gap-3 border border-transparent focus-within:ring-2 focus-within:ring-blue-300 transition-all text-gray-800">
-                        <Mail className="h-5 w-5 text-gray-400 ml-2 shrink-0" />
+                    <div className="bg-white rounded-2xl p-2 shadow-lg flex items-center gap-3 border border-transparent focus-within:ring-2 focus-within:ring-blue-300 transition-all text-foreground">
+                        <Mail className="h-5 w-5 text-muted-foreground ml-2 shrink-0" />
                         <input
                             type="email"
                             placeholder="correo@empresa.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="bg-transparent border-none text-gray-800 placeholder:text-gray-400 focus:outline-none w-full py-2 text-base font-medium"
+                            className="bg-transparent border-none text-foreground placeholder:text-muted-foreground focus:outline-none w-full py-2 text-base font-medium"
                         />
                     </div>
 

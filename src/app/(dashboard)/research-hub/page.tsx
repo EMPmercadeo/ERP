@@ -187,7 +187,7 @@ Al crear o editar productos:
                                     className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                                         selectedCategory === cat.id
                                             ? 'bg-brand-1 border-brand-1 text-white shadow-sm'
-                                            : 'bg-card border-border hover:bg-slate-50 text-muted-foreground'
+                                            : 'bg-card border-border hover:bg-accent text-muted-foreground'
                                     }`}
                                 >
                                     {cat.name}
@@ -201,7 +201,7 @@ Al crear o editar productos:
                         {filteredArticles.length === 0 ? (
                             <Card className="text-center py-16 text-muted-foreground border-dashed">
                                 <CardContent className="space-y-3">
-                                    <BookOpen className="h-12 w-12 mx-auto opacity-40 text-slate-400" />
+                                    <BookOpen className="h-12 w-12 mx-auto opacity-40 text-muted-foreground" />
                                     <p className="font-semibold text-sm">No se encontraron artículos</p>
                                     <p className="text-xs">Prueba ajustando los filtros o cambiando tu búsqueda.</p>
                                 </CardContent>
@@ -232,20 +232,20 @@ Al crear o editar productos:
                                                         {categories.find(c => c.id === art.category)?.name}
                                                     </span>
                                                 </div>
-                                                <h4 className="text-base font-bold text-slate-900 hover:text-brand-1 transition-colors">
+                                                <h4 className="text-base font-bold text-foreground hover:text-brand-1 transition-colors">
                                                     {art.title}
                                                 </h4>
                                                 <p className="text-xs text-muted-foreground leading-relaxed">
                                                     {art.summary}
                                                 </p>
                                             </div>
-                                            <div className="shrink-0 p-1 rounded-full bg-slate-50 border mt-1">
-                                                {isExpanded ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />}
+                                            <div className="shrink-0 p-1 rounded-full bg-muted border mt-1">
+                                                {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                                             </div>
                                         </button>
                                         
                                         {isExpanded && (
-                                            <CardContent className="border-t px-6 py-5 bg-slate-50/50 leading-relaxed text-xs text-slate-700 whitespace-pre-wrap">
+                                            <CardContent className="border-t px-6 py-5 bg-muted/50 leading-relaxed text-xs text-foreground whitespace-pre-wrap">
                                                 {art.content}
                                             </CardContent>
                                         )}
@@ -261,7 +261,7 @@ Al crear o editar productos:
                             <div className="flex items-center gap-4 text-left">
                                 <BookOpen className="h-8 w-8 text-brand-1 shrink-0" />
                                 <div>
-                                    <h4 className="font-bold text-slate-950">¿No encuentras lo que buscas?</h4>
+                                    <h4 className="font-bold text-foreground">¿No encuentras lo que buscas?</h4>
                                     <p className="text-xs text-muted-foreground">
                                         Explora el canal de soporte técnico directamente en la barra lateral para levantar un ticket.
                                     </p>

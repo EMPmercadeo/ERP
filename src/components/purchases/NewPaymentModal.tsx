@@ -98,7 +98,7 @@ export function NewPaymentModal({
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 py-2">
-                    <div className="bg-slate-50 p-3 rounded-lg border flex justify-between items-center">
+                    <div className="bg-muted p-3 rounded-lg border flex justify-between items-center">
                         <span className="text-xs text-muted-foreground font-medium">Saldo Pendiente:</span>
                         <span className="font-mono font-bold text-amber-600 text-base">{formatCurrency(saldoPendiente)}</span>
                     </div>

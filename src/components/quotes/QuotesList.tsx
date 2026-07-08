@@ -85,7 +85,7 @@ const palette = [
     'from-amber-500 to-orange-400 text-white',
     'from-brand-1 to-brand-2 text-white',
     'from-rose-500 to-red-400 text-white',
-    'from-slate-600 to-slate-800 text-white'
+    'from-primary to-primary/80 text-white'
 ];
 
 function formatCurrency(value: number) {

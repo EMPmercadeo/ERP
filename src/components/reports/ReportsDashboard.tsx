@@ -205,7 +205,7 @@ export function ReportsDashboard({
             );
         } else {
             return (
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-muted-foreground bg-slate-50 px-1.5 py-0.5 rounded">
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                     <Minus className="h-3 w-3" />
                     0.0%
                 </span>
@@ -477,10 +477,10 @@ export function ReportsDashboard({
         <div className="space-y-6 relative">
             {/* Loading Overlay */}
             {isLoading && (
-                <div className="fixed inset-0 bg-slate-900/10 backdrop-blur-[1px] z-50 flex items-center justify-center pointer-events-auto">
-                    <Card className="p-5 shadow-2xl flex items-center gap-3 bg-white border border-slate-100">
+                <div className="fixed inset-0 bg-primary/10 backdrop-blur-[1px] z-50 flex items-center justify-center pointer-events-auto">
+                    <Card className="p-5 shadow-2xl flex items-center gap-3 bg-white border border-border">
                         <Loader2 className="h-5 w-5 animate-spin text-brand-1" />
-                        <span className="text-xs font-bold text-slate-700">Cargando datos contables...</span>
+                        <span className="text-xs font-bold text-foreground">Cargando datos contables...</span>
                     </Card>
                 </div>
             )}
@@ -515,55 +515,55 @@ export function ReportsDashboard({
 
             {/* Active Filters Indicators */}
             {activeFiltersCount > 0 && (
-                <div className="flex flex-wrap items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs">
-                    <span className="font-bold text-slate-500">Filtros activos:</span>
+                <div className="flex flex-wrap items-center gap-2 p-3 bg-muted border border-border rounded-xl text-xs">
+                    <span className="font-bold text-muted-foreground">Filtros activos:</span>
                     {currentFilters.clienteId !== 'all' && (
-                        <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
+                        <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
                             Cliente: {filterClients.find(c => c.id === currentFilters.clienteId)?.razonSocial || 'Seleccionado'}
-                            <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('clienteId')} />
+                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground" onClick={() => removeFilter('clienteId')} />
                         </Badge>
                     )}
                     {currentFilters.productoId !== 'all' && (
-                        <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
+                        <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
                             Producto: {filterProducts.find(p => p.id === currentFilters.productoId)?.descripcion || 'Seleccionado'}
-                            <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('productoId')} />
+                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground" onClick={() => removeFilter('productoId')} />
                         </Badge>
                     )}
                     {currentFilters.creadorId !== 'all' && (
-                        <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
+                        <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
                             Vendedor: {filterSellers.find(s => s.id === currentFilters.creadorId)?.nombre || 'Seleccionado'}
-                            <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('creadorId')} />
+                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground" onClick={() => removeFilter('creadorId')} />
                         </Badge>
                     )}
                     {currentFilters.tipoDocumento !== 'all' && (
-                        <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
+                        <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
                             Tipo: {currentFilters.tipoDocumento}
-                            <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('tipoDocumento')} />
+                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground" onClick={() => removeFilter('tipoDocumento')} />
                         </Badge>
                     )}
                     {currentFilters.estadoDgi !== 'all' && (
-                        <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
+                        <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
                             DGI: {currentFilters.estadoDgi}
-                            <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('estadoDgi')} />
+                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground" onClick={() => removeFilter('estadoDgi')} />
                         </Badge>
                     )}
                     {currentFilters.paymentStatus !== 'all' && (
-                        <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
+                        <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
                             Pago: {currentFilters.paymentStatus}
-                            <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('paymentStatus')} />
+                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground" onClick={() => removeFilter('paymentStatus')} />
                         </Badge>
                     )}
                     {currentFilters.metodoPago && currentFilters.metodoPago !== 'all' && (
-                        <Badge variant="secondary" className="gap-1.5 bg-white border border-slate-200 text-slate-700">
+                        <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
                             Método: {currentFilters.metodoPago === 'efectivo' ? 'Efectivo' : currentFilters.metodoPago === 'transferencia' ? 'Transferencia' : currentFilters.metodoPago === 'tarjeta' ? 'Tarjeta' : currentFilters.metodoPago === 'cheque' ? 'Cheque' : currentFilters.metodoPago}
-                            <X className="h-3 w-3 cursor-pointer text-slate-400 hover:text-slate-600" onClick={() => removeFilter('metodoPago')} />
+                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground" onClick={() => removeFilter('metodoPago')} />
                         </Badge>
                     )}
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={handleReset}
-                        className="h-6 text-[10px] text-brand-1 font-bold hover:bg-slate-100"
+                        className="h-6 text-[10px] text-brand-1 font-bold hover:bg-accent"
                     >
                         Limpiar todos
                     </Button>
@@ -843,13 +843,13 @@ export function ReportsDashboard({
                                         if (s.status === 'aceptada') color = 'bg-green-500';
                                         if (s.status === 'rechazada') color = 'bg-red-500';
                                         if (s.status === 'pendiente') color = 'bg-yellow-500';
-                                        if (s.status === 'anulada') color = 'bg-slate-400';
+                                        if (s.status === 'anulada') color = 'bg-muted';
 
                                         const total = statusSales.reduce((a, b) => a + b.count, 0);
                                         const pct = total > 0 ? (s.count / total) * 100 : 0;
 
                                         return (
-                                            <div key={i} className="flex items-center justify-between text-xs py-1 hover:bg-slate-50 px-2 rounded transition-colors">
+                                            <div key={i} className="flex items-center justify-between text-xs py-1 hover:bg-accent px-2 rounded transition-colors">
                                                 <div className="flex items-center gap-2">
                                                     <span className={`w-2.5 h-2.5 rounded-full ${color}`} />
                                                     <span className="capitalize font-semibold text-muted-foreground">{s.status}</span>
@@ -882,7 +882,7 @@ export function ReportsDashboard({
                     ) : (
                         <div className="space-y-6">
                             {/* Horizontal cumulative progress bar */}
-                            <div className="w-full bg-slate-100 h-4 rounded-full flex overflow-hidden shadow-inner">
+                            <div className="w-full bg-muted h-4 rounded-full flex overflow-hidden shadow-inner">
                                 {receivablesAging.noVencido > 0 && (
                                     <div
                                         className="bg-green-500 h-full transition-all"
@@ -920,7 +920,7 @@ export function ReportsDashboard({
                                 )}
                                 {receivablesAging.sinVencimiento > 0 && (
                                     <div
-                                        className="bg-slate-400 h-full transition-all"
+                                        className="bg-muted h-full transition-all"
                                         style={{ width: `${(receivablesAging.sinVencimiento / totalAging) * 100}%` }}
                                         title={`Sin Vencimiento: ${formatCurrency(receivablesAging.sinVencimiento)}`}
                                     />
@@ -935,11 +935,11 @@ export function ReportsDashboard({
                                     { label: '31 - 60 días', val: receivablesAging.days60, color: 'bg-orange-400' },
                                     { label: '61 - 90 días', val: receivablesAging.days90, color: 'bg-rose-500' },
                                     { label: '+90 días', val: receivablesAging.daysOver90, color: 'bg-red-700' },
-                                    { label: 'Sin Vencimiento', val: receivablesAging.sinVencimiento, color: 'bg-slate-400' }
+                                    { label: 'Sin Vencimiento', val: receivablesAging.sinVencimiento, color: 'bg-muted' }
                                 ].map((bucket, i) => {
                                     const pct = totalAging > 0 ? (bucket.val / totalAging) * 100 : 0;
                                     return (
-                                        <div key={i} className="flex flex-col items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                        <div key={i} className="flex flex-col items-center bg-muted p-3 rounded-xl border border-border">
                                             <div className="flex items-center gap-1.5 mb-1 text-xs font-bold text-muted-foreground">
                                                 <span className={`w-2.5 h-2.5 rounded-full ${bucket.color}`} />
                                                 {bucket.label}
@@ -981,7 +981,7 @@ export function ReportsDashboard({
                                     const progress = (p.ingreso / maxProductIngreso) * 100;
                                     const margin = p.ingreso > 0 ? (p.gananciaBruta / p.ingreso) * 100 : 0;
                                     return (
-                                        <TableRow key={i} className="hover:bg-slate-50/50">
+                                        <TableRow key={i} className="hover:bg-accent/50">
                                             <TableCell className="font-semibold pl-5 py-3">
                                                 <div className="flex flex-col">
                                                     <span className="text-foreground max-w-[200px] truncate">{p.descripcion}</span>
@@ -993,7 +993,7 @@ export function ReportsDashboard({
                                             <TableCell className="text-right font-mono pr-5 py-3">
                                                 <div className="flex flex-col items-end">
                                                     <span className="font-bold text-foreground">{formatCurrency(p.ingreso)}</span>
-                                                    <div className="w-16 bg-slate-100 h-1 rounded-full mt-1.5 overflow-hidden">
+                                                    <div className="w-16 bg-muted h-1 rounded-full mt-1.5 overflow-hidden">
                                                         <div className="bg-brand-1 h-full rounded-full" style={{ width: `${progress}%` }} />
                                                     </div>
                                                 </div>
@@ -1036,7 +1036,7 @@ export function ReportsDashboard({
                                 {topClients.map((c, i) => {
                                     const progress = (c.totalFacturado / maxClientFacturado) * 100;
                                     return (
-                                        <TableRow key={i} className="hover:bg-slate-50/50">
+                                        <TableRow key={i} className="hover:bg-accent/50">
                                             <TableCell className="font-semibold pl-5 py-3">
                                                 <div className="flex flex-col">
                                                     <span className="text-foreground max-w-[200px] truncate">{c.razonSocial}</span>
@@ -1050,7 +1050,7 @@ export function ReportsDashboard({
                                             <TableCell className="text-right font-mono pr-5 py-3">
                                                 <div className="flex flex-col items-end">
                                                     <span className="font-bold text-foreground">{formatCurrency(c.totalFacturado)}</span>
-                                                    <div className="w-16 bg-slate-100 h-1 rounded-full mt-1.5 overflow-hidden">
+                                                    <div className="w-16 bg-muted h-1 rounded-full mt-1.5 overflow-hidden">
                                                         <div className="bg-emerald-600 h-full rounded-full" style={{ width: `${progress}%` }} />
                                                     </div>
                                                 </div>
@@ -1134,10 +1134,10 @@ export function ReportsDashboard({
                                 if (inv.estadoDgi === 'aceptada') badgeColor = 'bg-green-500';
                                 if (inv.estadoDgi === 'rechazada') badgeColor = 'bg-red-500';
                                 if (inv.estadoDgi === 'pendiente') badgeColor = 'bg-yellow-500';
-                                if (inv.estadoDgi === 'anulada') badgeColor = 'bg-slate-400';
+                                if (inv.estadoDgi === 'anulada') badgeColor = 'bg-muted';
 
                                 return (
-                                    <TableRow key={i} className="hover:bg-slate-50/50 cursor-pointer" onClick={() => router.push(`/invoices/${inv.id}`)}>
+                                    <TableRow key={i} className="hover:bg-accent/50 cursor-pointer" onClick={() => router.push(`/invoices/${inv.id}`)}>
                                         <TableCell className="font-mono text-xs font-bold text-brand-1 pl-5 py-3">{inv.numeroCompleto}</TableCell>
                                         <TableCell className="font-mono text-xs text-muted-foreground">
                                             {new Date(inv.fechaEmision).toLocaleDateString('es-PA', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -1173,7 +1173,7 @@ export function ReportsDashboard({
 
                     {/* Pagination control row */}
                     {invoiceDetail.pageCount > 1 && (
-                        <div className="flex items-center justify-between border-t px-5 py-4 bg-slate-50/50">
+                        <div className="flex items-center justify-between border-t px-5 py-4 bg-muted/50">
                             <span className="text-xs text-muted-foreground font-semibold">
                                 Mostrando {Math.min((currentFilters.page - 1) * currentFilters.limit + 1, invoiceDetail.totalCount)} a {Math.min(currentFilters.page * currentFilters.limit, invoiceDetail.totalCount)} de {invoiceDetail.totalCount} registros
                             </span>

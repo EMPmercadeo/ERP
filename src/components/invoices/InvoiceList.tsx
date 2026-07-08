@@ -92,7 +92,7 @@ const palette = [
     'from-amber-500 to-orange-400 text-white',
     'from-brand-1 to-brand-2 text-white',
     'from-rose-500 to-red-400 text-white',
-    'from-slate-600 to-slate-800 text-white'
+    'from-primary to-primary/80 text-white'
 ];
 
 
@@ -636,7 +636,7 @@ export function InvoiceList({
                                         <div 
                                             key={invoice.id} 
                                             onClick={() => router.push(`/invoices/${invoice.id}`)}
-                                            className="bg-slate-50/50 border border-slate-100 rounded-xl p-3.5 space-y-3 shadow-sm active:scale-98 transition-transform cursor-pointer"
+                                            className="bg-muted/50 border border-border rounded-xl p-3.5 space-y-3 shadow-sm active:scale-98 transition-transform cursor-pointer"
                                         >
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="flex items-center gap-2.5 min-w-0">
@@ -644,16 +644,16 @@ export function InvoiceList({
                                                         {initials}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <h4 className="font-bold text-slate-800 text-xs truncate max-w-[150px]">{invoice.clientName}</h4>
+                                                        <h4 className="font-bold text-foreground text-xs truncate max-w-[150px]">{invoice.clientName}</h4>
                                                         <p className="text-[10px] text-muted-foreground font-mono leading-none mt-0.5">{invoice.numeroCompleto}</p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="font-mono font-bold text-slate-800 text-xs">{formatCurrency(invoice.totalNeto)}</p>
-                                                    <p className="text-[9px] text-slate-400 font-semibold">{new Date(invoice.fechaEmision).toLocaleDateString('es-PA')}</p>
+                                                    <p className="font-mono font-bold text-foreground text-xs">{formatCurrency(invoice.totalNeto)}</p>
+                                                    <p className="text-[9px] text-muted-foreground font-semibold">{new Date(invoice.fechaEmision).toLocaleDateString('es-PA')}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center justify-between border-t border-slate-100/60 pt-2 flex-wrap gap-2">
+                                            <div className="flex items-center justify-between border-t border-border/60 pt-2 flex-wrap gap-2">
                                                 <div className="flex gap-1.5">
                                                     <StatusBadge status={invoice.estadoDgi} showIcon={false} className="h-5 text-[9px] px-2" />
                                                     <StatusBadge status={paymentStatus} showIcon={false} className="h-5 text-[9px] px-2" />
@@ -668,7 +668,7 @@ export function InvoiceList({
                                     );
                                 })
                             ) : (
-                                <div className="py-12 text-center text-xs text-slate-400 font-semibold">
+                                <div className="py-12 text-center text-xs text-muted-foreground font-semibold">
                                     No hay facturas registradas
                                 </div>
                             )}
@@ -742,10 +742,10 @@ export function InvoiceList({
             {/* Modal de Compartir Factura Creada */}
             {showShareModal && shareInvoiceId && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-2xl p-6 relative font-sans">
+                    <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl border border-border dark:border-border shadow-2xl p-6 relative font-sans">
                         <button
                             onClick={() => router.replace('/invoices')}
-                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                            className="absolute top-4 right-4 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground transition-colors"
                         >
                             <X className="h-5 w-5" />
                         </button>
@@ -757,25 +757,25 @@ export function InvoiceList({
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">¡Factura Emitida y Timbrada!</h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                <h3 className="text-lg font-bold text-foreground dark:text-white">¡Factura Emitida y Timbrada!</h3>
+                                <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                                     El documento ha sido procesado de forma oficial y autorizado por la DGI.
                                 </p>
                             </div>
 
-                            <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl p-4 space-y-2.5 text-xs">
+                            <div className="bg-muted dark:bg-card/50 border border-border dark:border-border rounded-xl p-4 space-y-2.5 text-xs">
                                 <div className="flex justify-between">
-                                    <span className="text-slate-500 dark:text-slate-400 font-medium">No. Documento:</span>
+                                    <span className="text-muted-foreground dark:text-muted-foreground font-medium">No. Documento:</span>
                                     <span className="font-mono font-bold text-brand-1 dark:text-blue-400">{shareInvoiceNum}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-slate-500 dark:text-slate-400 font-medium">Total Facturado:</span>
-                                    <span className="font-mono font-bold text-slate-800 dark:text-white">{formatCurrency(shareInvoiceTotal)}</span>
+                                    <span className="text-muted-foreground dark:text-muted-foreground font-medium">Total Facturado:</span>
+                                    <span className="font-mono font-bold text-foreground dark:text-white">{formatCurrency(shareInvoiceTotal)}</span>
                                 </div>
                             </div>
 
                             <div className="space-y-2.5">
-                                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                <label className="block text-[11px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                                     Compartir con el Cliente
                                 </label>
                                 
@@ -793,9 +793,9 @@ export function InvoiceList({
                                     </a>
                                     <a
                                         href={baseUrl && shareInvoiceNum && shareInvoiceId ? `mailto:?subject=${encodeURIComponent(`Factura Electrónica ${shareInvoiceNum}`)}&body=${encodeURIComponent(`Hola, adjunto su factura electrónica ${shareInvoiceNum} por un total de ${formatCurrency(shareInvoiceTotal)}.\n\nPuede visualizarla en el siguiente enlace: ${baseUrl}/invoices/${shareInvoiceId}`)}` : '#'}
-                                        className="h-11 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98"
+                                        className="h-11 px-4 rounded-xl bg-muted hover:bg-accent dark:bg-card dark:hover:bg-accent text-foreground dark:text-foreground font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98"
                                     >
-                                        <Mail className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                                        <Mail className="h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
                                         Correo
                                     </a>
                                 </div>
@@ -829,7 +829,7 @@ export function InvoiceList({
 
                             <Button
                                 type="button"
-                                className="w-full h-11 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold text-xs rounded-xl"
+                                className="w-full h-11 bg-primary hover:bg-accent dark:bg-muted dark:hover:bg-accent text-white dark:text-foreground font-bold text-xs rounded-xl"
                                 onClick={() => router.replace('/invoices')}
                             >
                                 Listo

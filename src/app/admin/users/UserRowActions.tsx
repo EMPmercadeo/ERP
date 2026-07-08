@@ -56,7 +56,7 @@ export function UserRowActions({ userId, initialRole, initialActive }: UserRowAc
                 onValueChange={handleRoleChange}
                 disabled={isPending}
             >
-                <SelectTrigger className="w-[140px] h-8 text-xs bg-white border border-border hover:bg-slate-50">
+                <SelectTrigger className="w-[140px] h-8 text-xs bg-white border border-border hover:bg-accent">
                     <SelectValue placeholder="Rol" />
                 </SelectTrigger>
                 <SelectContent>

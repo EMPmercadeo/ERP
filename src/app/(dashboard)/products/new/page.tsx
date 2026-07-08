@@ -84,17 +84,17 @@ export default function NewProductPage() {
     }, [state]);
 
     return (
-        <form action={formAction} className="flex flex-col min-h-screen bg-slate-50/50">
+        <form action={formAction} className="flex flex-col min-h-screen bg-secondary/50">
             <input type="hidden" name="imagenUrl" value={imagenUrl} />
             {/* Header Sticky - Compact */}
-            <div className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 md:px-6 py-2.5 flex items-center justify-between shadow-sm">
+            <div className="sticky top-0 z-30 bg-white border-b border-border px-4 md:px-6 py-2.5 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-3">
-                    <Link href="/products" className="text-slate-500 hover:text-slate-700 transition-colors p-1.5 rounded-full hover:bg-slate-100 shrink-0">
+                    <Link href="/products" className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-full hover:bg-accent shrink-0">
                         <ArrowLeft className="h-4.5 w-4.5" />
                     </Link>
                     <div className="truncate">
                         <div className="flex items-center gap-2 flex-wrap">
-                            <h1 className="text-sm md:text-base font-bold text-slate-800 truncate">
+                            <h1 className="text-sm md:text-base font-bold text-foreground truncate">
                                 Registrar Nuevo Producto
                             </h1>
                             <Badge className="bg-brand-1/10 text-brand-1 text-[10px] font-bold border-transparent px-2 py-0.5 rounded">
@@ -105,7 +105,7 @@ export default function NewProductPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <Button type="button" variant="ghost" onClick={() => router.back()} className="h-9 text-xs font-semibold text-slate-600">
+                    <Button type="button" variant="ghost" onClick={() => router.back()} className="h-9 text-xs font-semibold text-muted-foreground">
                         Cancelar
                     </Button>
                     <SubmitButton />
@@ -125,16 +125,16 @@ export default function NewProductPage() {
                     
                     {/* LEFT COLUMN: General Information (8 cols) */}
                     <div className="xl:col-span-8 space-y-4">
-                        <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-visible">
-                            <CardHeader className="py-4 px-5 border-b border-slate-100">
-                                <CardTitle className="text-sm font-bold text-slate-700 uppercase tracking-wider">Información General</CardTitle>
-                                <CardDescription className="text-xs text-slate-400">Datos básicos e identificación del producto o servicio en el sistema</CardDescription>
+                        <Card className="bg-white border border-border shadow-sm rounded-xl overflow-visible">
+                            <CardHeader className="py-4 px-5 border-b border-border">
+                                <CardTitle className="text-sm font-bold text-foreground uppercase tracking-wider">Información General</CardTitle>
+                                <CardDescription className="text-xs text-muted-foreground">Datos básicos e identificación del producto o servicio en el sistema</CardDescription>
                             </CardHeader>
                             <CardContent className="p-4 sm:p-5 space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {/* Código Interno */}
                                     <div className="space-y-1">
-                                        <Label htmlFor="codigoInterno" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Código Interno (SKU) *</Label>
+                                        <Label htmlFor="codigoInterno" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Código Interno (SKU) *</Label>
                                         <Input 
                                             id="codigoInterno"
                                             name="codigoInterno" 
@@ -142,29 +142,29 @@ export default function NewProductPage() {
                                             onChange={(e) => setCodigoInterno(e.target.value)}
                                             required 
                                             placeholder="PROD-001"
-                                            className={cn("h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.codigoInterno && "border-red-500")}
+                                            className={cn("h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.codigoInterno && "border-red-500")}
                                         />
                                         {state?.errors?.codigoInterno && <p className="text-[10px] text-red-500 font-bold mt-0.5">{state.errors.codigoInterno[0]}</p>}
                                     </div>
 
                                     {/* Código de Barras / SKU Alterno */}
                                     <div className="space-y-1">
-                                        <Label htmlFor="codigoBarras" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Código de Barras / SKU Alterno</Label>
+                                        <Label htmlFor="codigoBarras" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Código de Barras / SKU Alterno</Label>
                                         <Input 
                                             id="codigoBarras"
                                             name="codigoBarras" 
                                             value={codigoBarras} 
                                             onChange={(e) => setCodigoBarras(e.target.value)}
-                                            className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                            className="h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full"
                                             placeholder="Opcional"
                                         />
                                     </div>
 
                                     {/* Unidad de Medida */}
                                     <div className="space-y-1">
-                                        <Label htmlFor="unidadMedida" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Unidad de Medida</Label>
+                                        <Label htmlFor="unidadMedida" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Unidad de Medida</Label>
                                         <Select name="unidadMedida" value={unidadMedida} onValueChange={setUnidadMedida}>
-                                            <SelectTrigger id="unidadMedida" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                            <SelectTrigger id="unidadMedida" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-lg">
@@ -181,18 +181,18 @@ export default function NewProductPage() {
 
                                     {/* Estado predeterminado */}
                                     <div className="space-y-1">
-                                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Estado Inicial</Label>
+                                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Estado Inicial</Label>
                                         <Input 
                                             value="Activo (Por Defecto)" 
                                             disabled 
-                                            className="h-10 text-xs sm:text-sm bg-slate-100 text-slate-500 font-semibold border-slate-200 rounded-lg w-full cursor-not-allowed"
+                                            className="h-10 text-xs sm:text-sm bg-muted text-muted-foreground font-semibold border-border rounded-lg w-full cursor-not-allowed"
                                         />
                                     </div>
                                 </div>
 
                                 {/* Descripción Corta */}
                                 <div className="space-y-1">
-                                    <Label htmlFor="descripcion" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Descripción Corta *</Label>
+                                    <Label htmlFor="descripcion" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Descripción Corta *</Label>
                                     <Input 
                                         id="descripcion"
                                         name="descripcion" 
@@ -200,21 +200,21 @@ export default function NewProductPage() {
                                         onChange={(e) => setDescripcion(e.target.value)}
                                         required 
                                         placeholder="Nombre identificador del producto o servicio"
-                                        className={cn("h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.descripcion && "border-red-500")}
+                                        className={cn("h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.descripcion && "border-red-500")}
                                     />
                                     {state?.errors?.descripcion && <p className="text-[10px] text-red-500 font-bold mt-0.5">{state.errors.descripcion[0]}</p>}
                                 </div>
 
                                 {/* Descripción Detallada */}
                                 <div className="space-y-1">
-                                    <Label htmlFor="descripcionLarga" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Descripción Detallada / Observaciones para Facturación</Label>
+                                    <Label htmlFor="descripcionLarga" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Descripción Detallada / Observaciones para Facturación</Label>
                                     <Textarea 
                                         id="descripcionLarga"
                                         name="descripcionLarga" 
                                         value={descripcionLarga} 
                                         onChange={(e) => setDescripcionLarga(e.target.value)}
                                         rows={4} 
-                                        className="text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full resize-none p-3" 
+                                        className="text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full resize-none p-3" 
                                         placeholder="Detalles extendidos que aparecerán en la factura fiscal impresa..."
                                     />
                                 </div>
@@ -222,17 +222,17 @@ export default function NewProductPage() {
                         </Card>
 
                         {/* Multimedia Support */}
-                        <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
-                            <CardHeader className="py-3 px-5 border-b border-slate-100 bg-slate-50">
-                                <CardTitle className="text-xs font-bold text-slate-700 uppercase tracking-wider">Multimedia</CardTitle>
+                        <Card className="bg-white border border-border shadow-sm rounded-xl overflow-hidden">
+                            <CardHeader className="py-3 px-5 border-b border-border bg-muted">
+                                <CardTitle className="text-xs font-bold text-foreground uppercase tracking-wider">Multimedia</CardTitle>
                             </CardHeader>
                             <CardContent className="p-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {/* Left side: Upload controls */}
                                     <div className="space-y-4">
                                         <div className="space-y-1">
-                                            <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Cargar Imagen Local</Label>
-                                            <div className="border border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50/50 hover:bg-slate-50 transition-colors relative cursor-pointer group">
+                                            <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Cargar Imagen Local</Label>
+                                            <div className="border border-dashed border-border rounded-xl p-4 text-center bg-muted/50 hover:bg-muted transition-colors relative cursor-pointer group">
                                                 <Input 
                                                     type="file" 
                                                     accept="image/*"
@@ -248,35 +248,35 @@ export default function NewProductPage() {
                                                     }}
                                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                                 />
-                                                <ImageIcon className="mx-auto h-8 w-8 text-slate-400 group-hover:text-brand-1 transition-colors mb-2" />
-                                                <span className="text-xs font-bold text-slate-700 block">Arrastra o selecciona un archivo</span>
-                                                <span className="text-[10px] text-slate-400 block mt-0.5">PNG, JPG, GIF hasta 5MB (Se almacena en base de datos)</span>
+                                                <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground group-hover:text-brand-1 transition-colors mb-2" />
+                                                <span className="text-xs font-bold text-foreground block">Arrastra o selecciona un archivo</span>
+                                                <span className="text-[10px] text-muted-foreground block mt-0.5">PNG, JPG, GIF hasta 5MB (Se almacena en base de datos)</span>
                                             </div>
                                         </div>
 
                                         <div className="relative flex py-1 items-center">
-                                            <div className="flex-grow border-t border-slate-100"></div>
-                                            <span className="flex-shrink mx-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">O</span>
-                                            <div className="flex-grow border-t border-slate-100"></div>
+                                            <div className="flex-grow border-t border-border"></div>
+                                            <span className="flex-shrink mx-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">O</span>
+                                            <div className="flex-grow border-t border-border"></div>
                                         </div>
 
                                         <div className="space-y-1">
-                                            <Label htmlFor="urlImagenInput" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Enlace de Imagen (URL de Red)</Label>
+                                            <Label htmlFor="urlImagenInput" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Enlace de Imagen (URL de Red)</Label>
                                             <Input
                                                 id="urlImagenInput"
                                                 placeholder="https://ejemplo.com/imagen.jpg"
                                                 value={imagenUrl.startsWith('data:') ? '' : imagenUrl}
                                                 onChange={(e) => setImagenUrl(e.target.value)}
-                                                className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                                className="h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full"
                                             />
-                                            <span className="text-[9px] text-slate-400 block leading-tight">Pega una dirección web directa de imagen si está alojada en un servidor externo.</span>
+                                            <span className="text-[9px] text-muted-foreground block leading-tight">Pega una dirección web directa de imagen si está alojada en un servidor externo.</span>
                                         </div>
                                     </div>
 
                                     {/* Right side: Image Preview */}
                                     <div className="space-y-2">
-                                        <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Vista Previa</Label>
-                                        <div className="border border-slate-200 rounded-xl bg-slate-50/30 overflow-hidden flex items-center justify-center min-h-[220px] max-h-[240px] relative p-3">
+                                        <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Vista Previa</Label>
+                                        <div className="border border-border rounded-xl bg-muted/30 overflow-hidden flex items-center justify-center min-h-[220px] max-h-[240px] relative p-3">
                                             {imagenUrl ? (
                                                 <>
                                                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -294,8 +294,8 @@ export default function NewProductPage() {
                                                     </button>
                                                 </>
                                             ) : (
-                                                <div className="text-center text-slate-400 py-8">
-                                                    <ImageIcon className="mx-auto h-12 w-12 opacity-20 mb-2 text-slate-400" />
+                                                <div className="text-center text-muted-foreground py-8">
+                                                    <ImageIcon className="mx-auto h-12 w-12 opacity-20 mb-2 text-muted-foreground" />
                                                     <span className="text-xs font-semibold block">Sin imagen asignada</span>
                                                 </div>
                                             )}
@@ -310,9 +310,9 @@ export default function NewProductPage() {
                     <div className="xl:col-span-4 space-y-4">
                         
                         {/* Price & Margins Card */}
-                        <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
+                        <Card className="bg-white border border-border shadow-sm rounded-xl overflow-hidden">
                             {imagenUrl && (
-                                <div className="w-full h-32 bg-slate-50 border-b border-slate-100 flex items-center justify-center p-2 relative">
+                                <div className="w-full h-32 bg-muted border-b border-border flex items-center justify-center p-2 relative">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img 
                                         src={imagenUrl} 
@@ -321,18 +321,18 @@ export default function NewProductPage() {
                                     />
                                 </div>
                             )}
-                            <CardHeader className="bg-slate-50 border-b border-slate-100 py-3.5 px-4 flex flex-row items-center justify-between">
+                            <CardHeader className="bg-muted border-b border-border py-3.5 px-4 flex flex-row items-center justify-between">
                                 <div className="flex items-center gap-1.5">
                                     <Calculator className="h-4.5 w-4.5 text-brand-1" />
-                                    <CardTitle className="text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">Precios y Márgenes</CardTitle>
+                                    <CardTitle className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">Precios y Márgenes</CardTitle>
                                 </div>
                             </CardHeader>
                             <CardContent className="p-4 space-y-4">
                                 {/* Costo Unitario */}
                                 <div className="space-y-1">
-                                    <Label htmlFor="costoUnitario" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Costo Unitario (Base)</Label>
+                                    <Label htmlFor="costoUnitario" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Costo Unitario (Base)</Label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">$</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">$</span>
                                         <Input
                                             id="costoUnitario"
                                             name="costoUnitario"
@@ -340,18 +340,18 @@ export default function NewProductPage() {
                                             step="0.01"
                                             value={costoUnitario}
                                             onChange={(e) => setCostoUnitario(e.target.value)}
-                                            className="h-10 text-xs sm:text-sm pl-7 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                            className="h-10 text-xs sm:text-sm pl-7 bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full"
                                             placeholder="0.00"
                                         />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">USD</span>
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground">USD</span>
                                     </div>
                                 </div>
 
                                 {/* Precio de Venta */}
                                 <div className="space-y-1">
-                                    <Label htmlFor="precioVenta" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Precio de Venta (Neto) *</Label>
+                                    <Label htmlFor="precioVenta" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Precio de Venta (Neto) *</Label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">$</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">$</span>
                                         <Input
                                             id="precioVenta"
                                             name="precioVenta"
@@ -360,33 +360,33 @@ export default function NewProductPage() {
                                             value={precioVenta}
                                             onChange={(e) => setPrecioVenta(e.target.value)}
                                             required
-                                            className={cn("h-10 text-xs sm:text-sm pl-7 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.precioVenta && "border-red-500")}
+                                            className={cn("h-10 text-xs sm:text-sm pl-7 bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.precioVenta && "border-red-500")}
                                             placeholder="0.00"
                                         />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">USD</span>
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground">USD</span>
                                     </div>
                                     {state?.errors?.precioVenta && <p className="text-[10px] text-red-500 font-bold mt-0.5">{state.errors.precioVenta[0]}</p>}
                                 </div>
 
                                 {/* Margen & Rentabilidad */}
-                                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2">
+                                <div className="bg-muted rounded-xl p-3 border border-border space-y-2">
                                     <div className="flex items-center justify-between text-xs">
-                                        <span className="font-semibold text-slate-500">Rentabilidad</span>
+                                        <span className="font-semibold text-muted-foreground">Rentabilidad</span>
                                         <span className="font-bold text-emerald-600">+{formatCurrency(parseFloat(rentabilidad))}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[10px] text-slate-400">Margen Bruto</span>
+                                        <span className="text-[10px] text-muted-foreground">Margen Bruto</span>
                                         <Badge className="bg-emerald-50 text-emerald-600 border-transparent hover:bg-emerald-50 text-[10px] font-bold py-0.5 px-2 rounded-md">
                                             {margin}%
                                         </Badge>
                                     </div>
                                 </div>
 
-                                <div className="h-px bg-slate-100 w-full" />
+                                <div className="h-px bg-muted w-full" />
 
                                 {/* Tasa ITBMS */}
                                 <div className="space-y-2">
-                                    <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Tasa de ITBMS Fiscal</Label>
+                                    <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Tasa de ITBMS Fiscal</Label>
                                     <input type="hidden" name="codigoTasaItbms" value={codigoTasaItbms} />
                                     <div className="grid grid-cols-2 gap-2">
                                         {[
@@ -402,7 +402,7 @@ export default function NewProductPage() {
                                                     "cursor-pointer rounded-lg border p-2 text-center transition-all select-none",
                                                     codigoTasaItbms === rate.code
                                                         ? "border-brand-1 bg-brand-1/5 ring-1 ring-brand-1 text-brand-1 font-bold"
-                                                        : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                                                        : "border-border bg-white text-muted-foreground hover:bg-accent"
                                                 )}
                                             >
                                                 <div className="text-xs font-bold">{rate.label}</div>
@@ -413,17 +413,17 @@ export default function NewProductPage() {
                                 </div>
 
                                 {/* Fiscal Estimado box */}
-                                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-1 text-xs">
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Breakdown Fiscal Estimado</span>
-                                    <div className="flex justify-between text-slate-500 py-0.5">
+                                <div className="bg-muted rounded-xl p-3 border border-border space-y-1 text-xs">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block">Breakdown Fiscal Estimado</span>
+                                    <div className="flex justify-between text-muted-foreground py-0.5">
                                         <span>Precio Neto:</span>
-                                        <span className="font-mono text-slate-700">{formatCurrency(priceNum)}</span>
+                                        <span className="font-mono text-foreground">{formatCurrency(priceNum)}</span>
                                     </div>
-                                    <div className="flex justify-between text-slate-500 py-0.5">
+                                    <div className="flex justify-between text-muted-foreground py-0.5">
                                         <span>ITBMS ({codigoTasaItbms === '00' ? '0%' : codigoTasaItbms === '01' ? '7%' : codigoTasaItbms === '02' ? '10%' : '15%'}):</span>
-                                        <span className="font-mono text-slate-700">+{formatCurrency(parseFloat(itbmsEstimado))}</span>
+                                        <span className="font-mono text-foreground">+{formatCurrency(parseFloat(itbmsEstimado))}</span>
                                     </div>
-                                    <div className="h-px bg-slate-200 my-1" />
+                                    <div className="h-px bg-muted my-1" />
                                     <div className="flex justify-between font-bold text-brand-1 py-0.5">
                                         <span>Total al Consumidor:</span>
                                         <span className="font-mono">{formatCurrency(parseFloat(precioConImpuestos))}</span>
@@ -441,44 +441,44 @@ export default function NewProductPage() {
                         </Card>
 
                         {/* Inventory Card */}
-                        <Card className="bg-white border border-slate-100 shadow-sm rounded-xl overflow-hidden">
-                            <CardHeader className="bg-slate-50 border-b border-slate-100 py-3.5 px-4 flex flex-row items-center justify-between">
+                        <Card className="bg-white border border-border shadow-sm rounded-xl overflow-hidden">
+                            <CardHeader className="bg-muted border-b border-border py-3.5 px-4 flex flex-row items-center justify-between">
                                 <div className="flex items-center gap-1.5">
                                     <Package className="h-4.5 w-4.5 text-brand-1" />
-                                    <CardTitle className="text-xs font-bold text-slate-700 uppercase tracking-wider">Inventario Inicial</CardTitle>
+                                    <CardTitle className="text-xs font-bold text-foreground uppercase tracking-wider">Inventario Inicial</CardTitle>
                                 </div>
                             </CardHeader>
                             <CardContent className="p-4 space-y-4">
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-1">
-                                        <Label htmlFor="stockActual" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Stock Inicial</Label>
+                                        <Label htmlFor="stockActual" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Stock Inicial</Label>
                                         <Input
                                             id="stockActual"
                                             name="stockActual"
                                             type="number"
                                             value={stockActual}
                                             onChange={(e) => setStockActual(e.target.value)}
-                                            className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                            className="h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full"
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <Label htmlFor="stockMinimo" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Stock Mínimo</Label>
+                                        <Label htmlFor="stockMinimo" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Stock Mínimo</Label>
                                         <Input
                                             id="stockMinimo"
                                             name="stockMinimo"
                                             type="number"
                                             value={stockMinimo}
                                             onChange={(e) => setStockMinimo(e.target.value)}
-                                            className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                            className="h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full"
                                             placeholder="0"
                                         />
                                     </div>
                                 </div>
 
                                 <div className="space-y-1 pt-1">
-                                    <Label htmlFor="controlaLotes" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Control de Lotes y Vencimientos</Label>
+                                    <Label htmlFor="controlaLotes" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Control de Lotes y Vencimientos</Label>
                                     <Select name="controlaLotes" value={controlaLotes} onValueChange={setControlaLotes}>
-                                        <SelectTrigger id="controlaLotes" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                        <SelectTrigger id="controlaLotes" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="rounded-lg">

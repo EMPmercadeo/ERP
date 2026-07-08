@@ -95,7 +95,7 @@ export function EditSupplierModal({
                 <form onSubmit={handleSubmit} className="space-y-4 py-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Razón Social *</label>
+                            <label className="text-xs font-semibold text-foreground">Razón Social *</label>
                             <Input
                                 required
                                 value={formData.razonSocial}
@@ -105,7 +105,7 @@ export function EditSupplierModal({
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Nombre Comercial</label>
+                            <label className="text-xs font-semibold text-foreground">Nombre Comercial</label>
                             <Input
                                 value={formData.nombreComercial}
                                 onChange={e => handleChange('nombreComercial', e.target.value)}
@@ -116,7 +116,7 @@ export function EditSupplierModal({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-slate-700">RUC *</label>
+                            <label className="text-xs font-semibold text-foreground">RUC *</label>
                             <Input
                                 required
                                 value={formData.ruc}
@@ -125,7 +125,7 @@ export function EditSupplierModal({
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Dígito Verificador (DV)</label>
+                            <label className="text-xs font-semibold text-foreground">Dígito Verificador (DV)</label>
                             <Input
                                 value={formData.dv}
                                 onChange={e => handleChange('dv', e.target.value)}
@@ -135,7 +135,7 @@ export function EditSupplierModal({
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Nombre de Contacto</label>
+                            <label className="text-xs font-semibold text-foreground">Nombre de Contacto</label>
                             <Input
                                 value={formData.nombreContacto}
                                 onChange={e => handleChange('nombreContacto', e.target.value)}
@@ -144,7 +144,7 @@ export function EditSupplierModal({
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Correo Electrónico</label>
+                            <label className="text-xs font-semibold text-foreground">Correo Electrónico</label>
                             <Input
                                 type="email"
                                 value={formData.email}
@@ -154,7 +154,7 @@ export function EditSupplierModal({
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Teléfono</label>
+                            <label className="text-xs font-semibold text-foreground">Teléfono</label>
                             <Input
                                 value={formData.telefono}
                                 onChange={e => handleChange('telefono', e.target.value)}
@@ -165,7 +165,7 @@ export function EditSupplierModal({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Condición de Pago</label>
+                            <label className="text-xs font-semibold text-foreground">Condición de Pago</label>
                             <select
                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                 value={formData.condicionPago}
@@ -179,7 +179,7 @@ export function EditSupplierModal({
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Límite de Crédito (USD)</label>
+                            <label className="text-xs font-semibold text-foreground">Límite de Crédito (USD)</label>
                             <Input
                                 type="number"
                                 step="0.01"

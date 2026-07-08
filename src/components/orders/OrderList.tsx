@@ -119,8 +119,8 @@ export function OrderList({
         <ContentContainer>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Pedidos de Venta</h1>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <h1 className="text-2xl font-bold text-foreground tracking-tight">Pedidos de Venta</h1>
+                    <p className="text-sm text-muted-foreground mt-1">
                         Gestión comercial de pedidos y compromisos de entrega
                     </p>
                 </div>
@@ -134,10 +134,10 @@ export function OrderList({
                 </div>
             </div>
 
-            <Card className="mb-6 shadow-sm border-gray-200">
+            <Card className="mb-6 shadow-sm border-border">
                 <CardContent className="p-4">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                             placeholder="Buscar por número, cliente o RUC..."
                             value={searchTerm}
@@ -148,39 +148,39 @@ export function OrderList({
                 </CardContent>
             </Card>
 
-            <Card className="shadow-sm border-gray-200 overflow-hidden">
+            <Card className="shadow-sm border-border overflow-hidden">
                 <CardContent className="p-0">
                     <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/75">
-                                    <TableHead className="font-semibold text-gray-600">Número</TableHead>
-                                    <TableHead className="font-semibold text-gray-600">Cliente</TableHead>
-                                    <TableHead className="font-semibold text-gray-600">Emisión</TableHead>
-                                    <TableHead className="font-semibold text-gray-600">Entrega Estimada</TableHead>
-                                    <TableHead className="font-semibold text-gray-600 text-right">Total Neto</TableHead>
-                                    <TableHead className="font-semibold text-gray-600">Estado</TableHead>
-                                    <TableHead className="font-semibold text-gray-600 text-right">Acciones</TableHead>
+                                <TableRow className="bg-muted/75">
+                                    <TableHead className="font-semibold text-muted-foreground">Número</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground">Cliente</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground">Emisión</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground">Entrega Estimada</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground text-right">Total Neto</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground">Estado</TableHead>
+                                    <TableHead className="font-semibold text-muted-foreground text-right">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {filteredOrders.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center py-12 text-gray-500">
+                                        <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                                             No se encontraron pedidos registrados.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
                                     filteredOrders.map((order) => (
-                                        <TableRow key={order.id} className="hover:bg-gray-50/50 transition-colors">
-                                            <TableCell className="font-medium text-gray-900">{order.numero}</TableCell>
+                                        <TableRow key={order.id} className="hover:bg-accent/50 transition-colors">
+                                            <TableCell className="font-medium text-foreground">{order.numero}</TableCell>
                                             <TableCell>
-                                                <div className="font-medium text-gray-900">{order.cliente.razonSocial}</div>
-                                                <div className="text-xs text-gray-500">RUC: {order.cliente.ruc}</div>
+                                                <div className="font-medium text-foreground">{order.cliente.razonSocial}</div>
+                                                <div className="text-xs text-muted-foreground">RUC: {order.cliente.ruc}</div>
                                             </TableCell>
-                                            <TableCell className="text-gray-600">{order.fechaEmision}</TableCell>
-                                            <TableCell className="text-gray-600">{order.fechaEntrega || '—'}</TableCell>
-                                            <TableCell className="text-right font-semibold text-gray-900">
+                                            <TableCell className="text-muted-foreground">{order.fechaEmision}</TableCell>
+                                            <TableCell className="text-muted-foreground">{order.fechaEntrega || '—'}</TableCell>
+                                            <TableCell className="text-right font-semibold text-foreground">
                                                 {formatCurrency(order.totalNeto)}
                                             </TableCell>
                                             <TableCell>
@@ -222,7 +222,7 @@ export function OrderList({
                     </div>
 
                     {/* Pagination Controls */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-200 bg-gray-50/50 mt-4 rounded-b-lg">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-border bg-muted/50 mt-4 rounded-b-lg">
                         <div className="text-sm text-muted-foreground">
                             Mostrando <span className="font-medium">{initialData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> a <span className="font-medium">{Math.min(currentPage * pageSize, totalCount)}</span> de <span className="font-medium">{totalCount}</span> resultados
                         </div>

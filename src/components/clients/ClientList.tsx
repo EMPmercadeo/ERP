@@ -89,7 +89,7 @@ const palette = [
     'from-amber-500 to-orange-400 text-white',
     'from-brand-1 to-brand-2 text-white',
     'from-rose-500 to-red-400 text-white',
-    'from-slate-600 to-slate-800 text-white'
+    'from-primary to-primary/80 text-white'
 ];
 
 function formatCurrency(value: number) {
@@ -506,7 +506,7 @@ export function ClientList({
                                         <div 
                                             key={client.id}
                                             onClick={() => router.push(`/clients/${client.id}`)}
-                                            className="bg-slate-50/50 border border-slate-100 rounded-xl p-3.5 space-y-3 shadow-sm active:scale-98 transition-transform cursor-pointer"
+                                            className="bg-muted/50 border border-border rounded-xl p-3.5 space-y-3 shadow-sm active:scale-98 transition-transform cursor-pointer"
                                         >
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="flex items-center gap-2.5 min-w-0">
@@ -514,7 +514,7 @@ export function ClientList({
                                                         {initials}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <h4 className="font-bold text-slate-800 text-xs truncate max-w-[150px]">{client.razonSocial}</h4>
+                                                        <h4 className="font-bold text-foreground text-xs truncate max-w-[150px]">{client.razonSocial}</h4>
                                                         <p className="text-[10px] text-muted-foreground font-mono leading-none mt-0.5">RUC: {client.ruc} - DV {client.dv || '—'}</p>
                                                     </div>
                                                 </div>
@@ -522,30 +522,30 @@ export function ClientList({
                                             </div>
                                             
                                             {(client.telefono || client.email) && (
-                                                <div className="flex flex-col gap-1 text-[10px] text-slate-500 border-t border-slate-100/60 pt-2">
+                                                <div className="flex flex-col gap-1 text-[10px] text-muted-foreground border-t border-border/60 pt-2">
                                                     {client.telefono && (
                                                         <div className="flex items-center gap-1.5">
-                                                            <Phone className="h-3 w-3 text-slate-400" />
+                                                            <Phone className="h-3 w-3 text-muted-foreground" />
                                                             <span>{client.telefono}</span>
                                                         </div>
                                                     )}
                                                     {client.email && (
                                                         <div className="flex items-center gap-1.5">
-                                                            <Mail className="h-3 w-3 text-slate-400" />
+                                                            <Mail className="h-3 w-3 text-muted-foreground" />
                                                             <span className="truncate max-w-[200px]">{client.email}</span>
                                                         </div>
                                                     )}
                                                 </div>
                                             )}
 
-                                            <div className="flex gap-1.5 border-t border-slate-100/60 pt-2">
+                                            <div className="flex gap-1.5 border-t border-border/60 pt-2">
                                                 <Link href={`/clients/${client.id}`} className="flex-1">
-                                                    <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-slate-600 rounded-lg">
+                                                    <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-muted-foreground rounded-lg">
                                                         Detalle
                                                     </Button>
                                                 </Link>
                                                 <Link href={`/clients/${client.id}/edit`} className="flex-1">
-                                                    <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-slate-600 rounded-lg">
+                                                    <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-muted-foreground rounded-lg">
                                                         Editar
                                                     </Button>
                                                 </Link>
@@ -559,7 +559,7 @@ export function ClientList({
                                     );
                                 })
                             ) : (
-                                <div className="py-12 text-center text-xs text-slate-400 font-semibold">
+                                <div className="py-12 text-center text-xs text-muted-foreground font-semibold">
                                     No hay clientes registrados
                                 </div>
                             )}

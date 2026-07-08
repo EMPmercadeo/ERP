@@ -302,17 +302,17 @@ export function QuickSalePOS({
                     <div className="flex flex-col sm:flex-row gap-3">
                         {/* Search bar */}
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                                 placeholder="Buscar por código o nombre..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="h-11 pl-9 bg-white border-slate-200 focus-visible:ring-brand-1 rounded-xl text-sm"
+                                className="h-11 pl-9 bg-white border-border focus-visible:ring-brand-1 rounded-xl text-sm"
                             />
                             {searchQuery && (
                                 <button
                                     onClick={() => setSearchQuery('')}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
@@ -322,7 +322,7 @@ export function QuickSalePOS({
                         {bodegas.length >= 2 && (
                             <div className="w-full sm:w-48 shrink-0">
                                 <Select value={bodegaId} onValueChange={setBodegaId}>
-                                    <SelectTrigger className="h-11 bg-white border-slate-200 rounded-xl text-sm w-full">
+                                    <SelectTrigger className="h-11 bg-white border-border rounded-xl text-sm w-full">
                                         <SelectValue placeholder="Bodega..." />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl">
@@ -351,8 +351,8 @@ export function QuickSalePOS({
                                         onClick={() => !isAgotado && addToCart(product)}
                                         className={`bg-white border rounded-2xl p-2.5 flex flex-col justify-between shadow-sm relative transition-all select-none ${
                                             isAgotado 
-                                                ? 'opacity-60 cursor-not-allowed border-slate-100' 
-                                                : 'hover:border-slate-300 hover:shadow active:scale-[0.97] cursor-pointer border-slate-100'
+                                                ? 'opacity-60 cursor-not-allowed border-border' 
+                                                : 'hover:border-border hover:shadow active:scale-[0.97] cursor-pointer border-border'
                                         }`}
                                     >
                                         {/* Cart Quantity Badge Indicator */}
@@ -364,33 +364,33 @@ export function QuickSalePOS({
 
                                         <div>
                                             {/* Image */}
-                                            <div className="w-full aspect-square rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden mb-2 border border-slate-100 relative">
+                                            <div className="w-full aspect-square rounded-xl bg-muted flex items-center justify-center overflow-hidden mb-2 border border-border relative">
                                                 {product.imagenUrl ? (
                                                     /* eslint-disable-next-line @next/next/no-img-element -- URL dinámica de producto de usuario no predecible para next/config */
                                                     <img src={product.imagenUrl} alt={product.descripcion} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <Package className="h-8 w-8 text-slate-300" />
+                                                    <Package className="h-8 w-8 text-muted-foreground" />
                                                 )}
                                                 
                                                 {/* ITBMS Badge */}
-                                                <span className="absolute bottom-1.5 left-1.5 bg-white/95 text-slate-800 backdrop-blur-sm text-[8px] font-bold px-1.5 py-0.5 rounded border border-slate-200/50 shadow-sm leading-none">
+                                                <span className="absolute bottom-1.5 left-1.5 bg-white/95 text-foreground backdrop-blur-sm text-[8px] font-bold px-1.5 py-0.5 rounded border border-border/50 shadow-sm leading-none">
                                                     {product.itbms === '00' ? 'Exento' : `ITBMS ${product.itbms === '01' ? '7%' : product.itbms === '02' ? '10%' : '15%'}`}
                                                 </span>
                                             </div>
 
                                             {/* SKU */}
-                                            <span className="font-mono text-[9px] font-bold text-slate-400 block tracking-tight truncate">
+                                            <span className="font-mono text-[9px] font-bold text-muted-foreground block tracking-tight truncate">
                                                 {product.codigo}
                                             </span>
 
                                             {/* Name */}
-                                            <h4 className="font-bold text-slate-800 text-[11px] leading-tight line-clamp-2 mt-0.5 min-h-[2rem]">
+                                            <h4 className="font-bold text-foreground text-[11px] leading-tight line-clamp-2 mt-0.5 min-h-[2rem]">
                                                 {product.descripcion}
                                             </h4>
                                         </div>
 
-                                        <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-baseline justify-between">
-                                            <span className="font-mono text-xs font-extrabold text-slate-800">
+                                        <div className="mt-2.5 pt-2 border-t border-border flex items-baseline justify-between">
+                                            <span className="font-mono text-xs font-extrabold text-foreground">
                                                 {formatCurrency(product.precio)}
                                             </span>
                                             
@@ -401,7 +401,7 @@ export function QuickSalePOS({
                                                     {product.stock} uds
                                                 </span>
                                             ) : (
-                                                <span className="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1 py-0.5 rounded">
+                                                <span className="text-[9px] font-semibold text-muted-foreground bg-muted px-1 py-0.5 rounded">
                                                     Stock: {product.stock}
                                                 </span>
                                             )}
@@ -410,7 +410,7 @@ export function QuickSalePOS({
                                 );
                             })
                         ) : (
-                            <div className="col-span-2 py-12 text-center text-xs text-slate-400 font-semibold">
+                            <div className="col-span-2 py-12 text-center text-xs text-muted-foreground font-semibold">
                                 No se encontraron productos.
                             </div>
                         )}
@@ -419,9 +419,9 @@ export function QuickSalePOS({
 
                 {/* Desktop Cart Section (Right 1 col on desktop) */}
                 <div className="hidden lg:block lg:col-span-1 space-y-4">
-                    <Card className="border border-slate-100 shadow-sm rounded-2xl h-[calc(100vh-210px)] flex flex-col justify-between overflow-hidden">
+                    <Card className="border border-border shadow-sm rounded-2xl h-[calc(100vh-210px)] flex flex-col justify-between overflow-hidden">
                         <div className="flex flex-col flex-1 min-h-0">
-                            <CardHeader className="py-3 px-4 border-b border-slate-100 shrink-0">
+                            <CardHeader className="py-3 px-4 border-b border-border shrink-0">
                                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                                     <ShoppingCart className="h-4 w-4 text-brand-1" />
                                     Detalle del Carrito
@@ -432,20 +432,20 @@ export function QuickSalePOS({
                             <div className="flex-1 overflow-y-auto p-4 space-y-3">
                                 {cart.length > 0 ? (
                                     cart.map(item => (
-                                        <div key={item.product.id} className="flex items-center gap-3 border-b border-slate-100/60 pb-3 last:border-0">
-                                            <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200/50 overflow-hidden">
+                                        <div key={item.product.id} className="flex items-center gap-3 border-b border-border/60 pb-3 last:border-0">
+                                            <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0 border border-border/50 overflow-hidden">
                                                 {item.product.imagenUrl ? (
                                                     /* eslint-disable-next-line @next/next/no-img-element -- URL dinámica de producto de usuario no predecible para next/config */
                                                     <img src={item.product.imagenUrl} alt={item.product.descripcion} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <Package className="h-5 w-5 text-slate-400" />
+                                                    <Package className="h-5 w-5 text-muted-foreground" />
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <h5 className="text-[11px] font-bold text-slate-800 truncate" title={item.product.descripcion}>
+                                                <h5 className="text-[11px] font-bold text-foreground truncate" title={item.product.descripcion}>
                                                     {item.product.descripcion}
                                                 </h5>
-                                                <p className="text-[10px] text-slate-500 font-mono mt-0.5">{formatCurrency(item.product.precio)} c/u</p>
+                                                <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{formatCurrency(item.product.precio)} c/u</p>
                                             </div>
                                             
                                             {/* Quantity control */}
@@ -472,25 +472,25 @@ export function QuickSalePOS({
                                     ))
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center text-center py-12">
-                                        <ShoppingCart className="h-10 w-10 text-slate-200 mb-2" />
-                                        <p className="text-xs text-slate-400 font-semibold">Agrega productos tocando la cuadrícula de la izquierda</p>
+                                        <ShoppingCart className="h-10 w-10 text-muted-foreground mb-2" />
+                                        <p className="text-xs text-muted-foreground font-semibold">Agrega productos tocando la cuadrícula de la izquierda</p>
                                     </div>
                                 )}
                             </div>
                         </div>
 
                         {/* Cart Summary & Checkout */}
-                        <div className="p-4 border-t border-slate-100 bg-slate-50/50 shrink-0 space-y-4">
+                        <div className="p-4 border-t border-border bg-muted/50 shrink-0 space-y-4">
                             <div className="space-y-1.5 text-xs">
-                                <div className="flex justify-between text-slate-500">
+                                <div className="flex justify-between text-muted-foreground">
                                     <span>Subtotal</span>
                                     <span className="font-mono">{formatCurrency(totals.subtotal)}</span>
                                 </div>
-                                <div className="flex justify-between text-slate-500">
+                                <div className="flex justify-between text-muted-foreground">
                                     <span>ITBMS</span>
                                     <span className="font-mono">{formatCurrency(totals.itbms)}</span>
                                 </div>
-                                <div className="flex justify-between border-t border-slate-200/50 pt-2 text-sm font-bold text-slate-900">
+                                <div className="flex justify-between border-t border-border/50 pt-2 text-sm font-bold text-foreground">
                                     <span>Total a Pagar</span>
                                     <span className="font-mono text-brand-1 text-base">{formatCurrency(totals.total)}</span>
                                 </div>
@@ -508,10 +508,10 @@ export function QuickSalePOS({
                 </div>
 
                 {/* Mobile Floating Drawer bar */}
-                <div className="fixed bottom-16 left-0 right-0 z-30 lg:hidden bg-white border-t border-slate-200 px-4 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.06)] font-sans">
+                <div className="fixed bottom-16 left-0 right-0 z-30 lg:hidden bg-white border-t border-border px-4 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.06)] font-sans">
                     <button
                         onClick={() => cart.length > 0 && setIsCartOpen(!isCartOpen)}
-                        className="flex items-center gap-2 text-left bg-slate-50 border border-slate-100 px-3.5 py-2.5 rounded-xl active:scale-95 transition-all select-none"
+                        className="flex items-center gap-2 text-left bg-muted border border-border px-3.5 py-2.5 rounded-xl active:scale-95 transition-all select-none"
                     >
                         <div className="relative shrink-0">
                             <ShoppingCart className="h-5 w-5 text-brand-1" />
@@ -522,11 +522,11 @@ export function QuickSalePOS({
                             )}
                         </div>
                         <div className="leading-none">
-                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Ver Detalle</span>
-                            <span className="font-mono font-bold text-xs text-slate-800">{formatCurrency(totals.total)}</span>
+                            <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider block">Ver Detalle</span>
+                            <span className="font-mono font-bold text-xs text-foreground">{formatCurrency(totals.total)}</span>
                         </div>
                         {cart.length > 0 && (
-                            isCartOpen ? <ChevronDown className="h-4 w-4 text-slate-400 ml-1" /> : <ChevronUp className="h-4 w-4 text-slate-400 ml-1" />
+                            isCartOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground ml-1" /> : <ChevronUp className="h-4 w-4 text-muted-foreground ml-1" />
                         )}
                     </button>
                     
@@ -544,30 +544,30 @@ export function QuickSalePOS({
             {isCartOpen && cart.length > 0 && (
                 <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden animate-in fade-in">
                     <div className="fixed bottom-32 left-0 right-0 bg-white border-t rounded-t-2xl shadow-2xl max-h-[60vh] flex flex-col font-sans pb-2">
-                        <div className="px-4 py-3 border-b flex justify-between items-center bg-slate-50/50">
-                            <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <div className="px-4 py-3 border-b flex justify-between items-center bg-muted/50">
+                            <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                 <ShoppingCart className="h-4 w-4 text-brand-1" />
                                 Artículos Agregados
                             </h4>
-                            <button onClick={() => setIsCartOpen(false)} className="text-slate-400 hover:text-slate-600">
+                            <button onClick={() => setIsCartOpen(false)} className="text-muted-foreground hover:text-muted-foreground">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
                         
                         <div className="flex-1 overflow-y-auto p-4 space-y-3">
                             {cart.map(item => (
-                                <div key={item.product.id} className="flex items-center gap-3 border-b border-slate-100/60 pb-3 last:border-0">
-                                    <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 border overflow-hidden">
+                                <div key={item.product.id} className="flex items-center gap-3 border-b border-border/60 pb-3 last:border-0">
+                                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0 border overflow-hidden">
                                         {item.product.imagenUrl ? (
                                             /* eslint-disable-next-line @next/next/no-img-element -- URL dinámica de producto de usuario no predecible para next/config */
                                             <img src={item.product.imagenUrl} alt={item.product.descripcion} className="w-full h-full object-cover" />
                                         ) : (
-                                            <Package className="h-5 w-5 text-slate-400" />
+                                            <Package className="h-5 w-5 text-muted-foreground" />
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h5 className="text-[11px] font-bold text-slate-800 truncate">{item.product.descripcion}</h5>
-                                        <p className="text-[10px] text-slate-500 font-mono mt-0.5">{formatCurrency(item.product.precio)} c/u</p>
+                                        <h5 className="text-[11px] font-bold text-foreground truncate">{item.product.descripcion}</h5>
+                                        <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{formatCurrency(item.product.precio)} c/u</p>
                                     </div>
                                     
                                     <div className="flex items-center gap-1.5">
@@ -599,10 +599,10 @@ export function QuickSalePOS({
             {/* Checkout Form Modal */}
             {showCheckoutModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-2xl p-6 relative font-sans">
+                    <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl border border-border dark:border-border shadow-2xl p-6 relative font-sans">
                         <button
                             onClick={() => setShowCheckoutModal(false)}
-                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                            className="absolute top-4 right-4 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground transition-colors"
                             disabled={isCheckingOut}
                         >
                             <X className="h-5 w-5" />
@@ -610,24 +610,24 @@ export function QuickSalePOS({
 
                         <div className="space-y-5">
                             <div>
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Procesar Venta POS</h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                <h3 className="text-lg font-bold text-foreground dark:text-white">Procesar Venta POS</h3>
+                                <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
                                     Completa los datos del cobro para emitir el comprobante oficial.
                                 </p>
                             </div>
 
                             {/* Summary alert of totals */}
-                            <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 p-4 rounded-xl space-y-2 text-xs">
+                            <div className="bg-muted dark:bg-card/40 border border-border dark:border-border p-4 rounded-xl space-y-2 text-xs">
                                 <div className="flex justify-between">
-                                    <span className="text-slate-500 dark:text-slate-400 font-medium">Subtotal:</span>
-                                    <span className="font-mono text-slate-800 dark:text-slate-200">{formatCurrency(totals.subtotal)}</span>
+                                    <span className="text-muted-foreground dark:text-muted-foreground font-medium">Subtotal:</span>
+                                    <span className="font-mono text-foreground dark:text-foreground">{formatCurrency(totals.subtotal)}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-slate-500 dark:text-slate-400 font-medium">ITBMS:</span>
-                                    <span className="font-mono text-slate-800 dark:text-slate-200">{formatCurrency(totals.itbms)}</span>
+                                    <span className="text-muted-foreground dark:text-muted-foreground font-medium">ITBMS:</span>
+                                    <span className="font-mono text-foreground dark:text-foreground">{formatCurrency(totals.itbms)}</span>
                                 </div>
-                                <div className="flex justify-between border-t border-slate-200/50 dark:border-slate-800 pt-2 mt-1">
-                                    <span className="text-slate-500 dark:text-slate-400 font-bold">Total a Cobrar:</span>
+                                <div className="flex justify-between border-t border-border/50 dark:border-border pt-2 mt-1">
+                                    <span className="text-muted-foreground dark:text-muted-foreground font-bold">Total a Cobrar:</span>
                                     <span className="font-mono font-bold text-brand-1 dark:text-blue-400 text-base">{formatCurrency(totals.total)}</span>
                                 </div>
                             </div>
@@ -636,19 +636,19 @@ export function QuickSalePOS({
                             <div className="space-y-4">
                                 {/* Cliente */}
                                 <div className="space-y-1.5">
-                                    <label htmlFor="clientPOS" className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                    <label htmlFor="clientPOS" className="block text-xs font-semibold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                                         Cliente / Razón Social
                                     </label>
                                     
                                     {!selectedClient ? (
                                         <div className="space-y-1">
                                             <div className="relative">
-                                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                                 <Input
                                                     placeholder="Buscar cliente..."
                                                     value={clientSearch}
                                                     onChange={(e) => setClientSearch(e.target.value)}
-                                                    className="h-10 pl-8 bg-slate-50/50 border-slate-200 rounded-lg text-sm w-full"
+                                                    className="h-10 pl-8 bg-muted/50 border-border rounded-lg text-sm w-full"
                                                 />
                                             </div>
                                             {clientSearch && (
@@ -662,26 +662,26 @@ export function QuickSalePOS({
                                                                     setClienteId(c.id);
                                                                     setClientSearch('');
                                                                 }}
-                                                                className="w-full px-3 py-2 text-left hover:bg-slate-50 text-xs flex justify-between items-center"
+                                                                className="w-full px-3 py-2 text-left hover:bg-accent text-xs flex justify-between items-center"
                                                             >
                                                                 <div>
-                                                                    <div className="font-bold text-slate-800">{c.razonSocial}</div>
-                                                                    <div className="text-[10px] text-slate-500 font-mono">RUC: {c.ruc}</div>
+                                                                    <div className="font-bold text-foreground">{c.razonSocial}</div>
+                                                                    <div className="text-[10px] text-muted-foreground font-mono">RUC: {c.ruc}</div>
                                                                 </div>
                                                                 <span className="text-[10px] text-indigo-600 font-bold uppercase">Seleccionar</span>
                                                             </button>
                                                         ))
                                                     ) : (
-                                                        <div className="p-2 text-center text-xs text-slate-400">No se encontraron clientes</div>
+                                                        <div className="p-2 text-center text-xs text-muted-foreground">No se encontraron clientes</div>
                                                     )}
                                                 </div>
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="p-3 border border-slate-100 rounded-xl bg-slate-50 flex items-center justify-between shadow-xs">
+                                        <div className="p-3 border border-border rounded-xl bg-muted flex items-center justify-between shadow-xs">
                                             <div className="min-w-0">
-                                                <div className="font-bold text-slate-900 text-xs truncate max-w-[200px]">{selectedClient.razonSocial}</div>
-                                                <div className="text-[10px] text-slate-500 font-mono">RUC: {selectedClient.ruc}</div>
+                                                <div className="font-bold text-foreground text-xs truncate max-w-[200px]">{selectedClient.razonSocial}</div>
+                                                <div className="text-[10px] text-muted-foreground font-mono">RUC: {selectedClient.ruc}</div>
                                             </div>
                                             <Button
                                                 variant="ghost"
@@ -697,7 +697,7 @@ export function QuickSalePOS({
 
                                 {/* Método de Pago */}
                                 <div className="space-y-1.5">
-                                    <label htmlFor="methodPOS" className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                    <label htmlFor="methodPOS" className="block text-xs font-semibold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                                         Método de Cobro
                                     </label>
                                     <Select 
@@ -705,7 +705,7 @@ export function QuickSalePOS({
                                         onValueChange={setMetodoPago}
                                         disabled={isCheckingOut}
                                     >
-                                        <SelectTrigger id="methodPOS" className="h-11 rounded-xl bg-slate-50/50 border-slate-200 w-full text-sm">
+                                        <SelectTrigger id="methodPOS" className="h-11 rounded-xl bg-muted/50 border-border w-full text-sm">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="rounded-xl">
@@ -718,7 +718,7 @@ export function QuickSalePOS({
                             </div>
 
                             {/* Limits Info */}
-                            <div className="flex items-center gap-2 text-[10px] text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-100/80">
+                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground bg-muted p-2.5 rounded-lg border border-border/80">
                                 <Zap className="h-3.5 w-3.5 text-indigo-500 fill-indigo-100" />
                                 <span>Folios mensuales incluidos: {remainingDocuments} restantes.</span>
                             </div>
@@ -759,10 +759,10 @@ export function QuickSalePOS({
             {/* Success ticket sharing Modal */}
             {successInvoice && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-2xl p-6 relative font-sans">
+                    <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl border border-border dark:border-border shadow-2xl p-6 relative font-sans">
                         <button
                             onClick={() => setSuccessInvoice(null)}
-                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                            className="absolute top-4 right-4 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground transition-colors"
                         >
                             <X className="h-5 w-5" />
                         </button>
@@ -774,25 +774,25 @@ export function QuickSalePOS({
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">¡Cobro Exitoso!</h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                <h3 className="text-lg font-bold text-foreground dark:text-white">¡Cobro Exitoso!</h3>
+                                <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                                     La transacción ha sido timbrada en la DGI y el saldo ha sido liquidado.
                                 </p>
                             </div>
 
-                            <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl p-4 space-y-2.5 text-xs">
+                            <div className="bg-muted dark:bg-card/50 border border-border dark:border-border rounded-xl p-4 space-y-2.5 text-xs">
                                 <div className="flex justify-between">
-                                    <span className="text-slate-500 dark:text-slate-400 font-medium">Factura No:</span>
+                                    <span className="text-muted-foreground dark:text-muted-foreground font-medium">Factura No:</span>
                                     <span className="font-mono font-bold text-brand-1 dark:text-blue-400">{successInvoice.numeroCompleto}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-slate-500 dark:text-slate-400 font-medium">Monto Recibido:</span>
-                                    <span className="font-mono font-bold text-slate-800 dark:text-white">{formatCurrency(successInvoice.totalNeto)}</span>
+                                    <span className="text-muted-foreground dark:text-muted-foreground font-medium">Monto Recibido:</span>
+                                    <span className="font-mono font-bold text-foreground dark:text-white">{formatCurrency(successInvoice.totalNeto)}</span>
                                 </div>
                             </div>
 
                             <div className="space-y-2.5">
-                                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                <label className="block text-[11px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                                     Entregar Comprobante
                                 </label>
                                 
@@ -810,9 +810,9 @@ export function QuickSalePOS({
                                     </a>
                                     <a
                                         href={emailUrl}
-                                        className="h-11 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98"
+                                        className="h-11 px-4 rounded-xl bg-muted hover:bg-accent dark:bg-card dark:hover:bg-accent text-foreground dark:text-foreground font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98"
                                     >
-                                        <Mail className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                                        <Mail className="h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
                                         Correo
                                     </a>
                                 </div>
@@ -846,7 +846,7 @@ export function QuickSalePOS({
 
                             <Button
                                 type="button"
-                                className="w-full h-11 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold text-xs rounded-xl"
+                                className="w-full h-11 bg-primary hover:bg-accent dark:bg-muted dark:hover:bg-accent text-white dark:text-foreground font-bold text-xs rounded-xl"
                                 onClick={() => setSuccessInvoice(null)}
                             >
                                 Nueva Venta

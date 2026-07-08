@@ -78,14 +78,14 @@ export function Topbar({ title, children }: TopbarProps) {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-1">
                     <span className="text-xs font-bold text-white font-mono">EP</span>
                 </div>
-                <span className="text-sm font-bold text-slate-800 tracking-tight">
+                <span className="text-sm font-bold text-foreground tracking-tight">
                     ERP Panamá
                 </span>
             </div>
 
             {/* Title */}
             {title && (
-                <h1 className="text-sm font-bold text-slate-700 uppercase tracking-wider hidden sm:block">
+                <h1 className="text-sm font-bold text-foreground uppercase tracking-wider hidden sm:block">
                     {title}
                 </h1>
             )}

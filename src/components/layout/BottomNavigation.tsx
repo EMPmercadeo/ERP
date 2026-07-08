@@ -153,18 +153,18 @@ export function BottomNavigation() {
     const MenuRow = ({ name, href, icon: Icon }: { name: string; href: string; icon: typeof Package }) => (
         <Link
             href={href}
-            className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-slate-700 hover:bg-white active:bg-slate-100 transition-colors"
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-foreground hover:bg-white active:bg-accent transition-colors"
         >
             <Icon className="h-4.5 w-4.5 text-brand-1 shrink-0" />
             <span className="flex-1">{name}</span>
-            <ChevronRight className="h-4 w-4 text-slate-300 shrink-0" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
         </Link>
     );
 
     return (
         <>
             {/* Bottom Nav Bar - Sticky to bottom on mobile */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 h-16 flex items-center justify-around px-2 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.05)] lg:hidden font-sans">
+            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-border h-16 flex items-center justify-around px-2 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.05)] lg:hidden font-sans">
                 {mainItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
                     const Icon = item.icon;
@@ -173,8 +173,8 @@ export function BottomNavigation() {
                             key={item.name}
                             href={item.href}
                             className={cn(
-                                "flex flex-col items-center justify-center py-1 px-3 rounded-lg text-slate-500 transition-all",
-                                isActive ? "text-brand-1 font-bold scale-105" : "hover:text-slate-700 active:scale-95"
+                                "flex flex-col items-center justify-center py-1 px-3 rounded-lg text-muted-foreground transition-all",
+                                isActive ? "text-brand-1 font-bold scale-105" : "hover:text-foreground active:scale-95"
                             )}
                         >
                             <Icon className={cn("h-5 w-5", isActive ? "stroke-[2.5px]" : "stroke-[1.8px]")} />
@@ -187,8 +187,8 @@ export function BottomNavigation() {
                 <button
                     onClick={() => setIsMenuOpen(true)}
                     className={cn(
-                        "flex flex-col items-center justify-center py-1 px-3 rounded-lg text-slate-500 transition-all",
-                        isMenuOpen ? "text-brand-1 font-bold scale-105" : "hover:text-slate-700 active:scale-95"
+                        "flex flex-col items-center justify-center py-1 px-3 rounded-lg text-muted-foreground transition-all",
+                        isMenuOpen ? "text-brand-1 font-bold scale-105" : "hover:text-foreground active:scale-95"
                     )}
                 >
                     <Menu className={cn("h-5 w-5", isMenuOpen ? "stroke-[2.5px]" : "stroke-[1.8px]")} />
@@ -200,32 +200,32 @@ export function BottomNavigation() {
             {isMenuOpen && (
                 <div
                     ref={menuRef}
-                    className="fixed inset-0 z-50 bg-slate-50 flex flex-col font-sans lg:hidden animate-in slide-in-from-bottom duration-300"
+                    className="fixed inset-0 z-50 bg-muted flex flex-col font-sans lg:hidden animate-in slide-in-from-bottom duration-300"
                 >
                     {/* Header */}
-                    <div className="bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between shrink-0">
+                    <div className="bg-white border-b border-border px-4 py-3 flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className="h-9 w-9 rounded-full bg-brand-1 text-white font-bold flex items-center justify-center text-xs shadow-sm shrink-0">
                                 {userName ? userName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
                             </div>
                             <div className="min-w-0">
-                                <h4 className="text-xs font-bold text-slate-800 truncate max-w-[160px]">{userName}</h4>
-                                <p className="text-[10px] text-slate-500 truncate max-w-[160px]">{user?.email}</p>
+                                <h4 className="text-xs font-bold text-foreground truncate max-w-[160px]">{userName}</h4>
+                                <p className="text-[10px] text-muted-foreground truncate max-w-[160px]">{user?.email}</p>
                             </div>
                             <Badge className={cn(
                                 "text-[8px] px-1.5 py-0 border-none font-bold uppercase shrink-0",
                                 userPlan === 'pro' && "bg-amber-500 text-white",
                                 userPlan === 'emprendedor' && "bg-indigo-500 text-white",
                                 userPlan === 'negocio' && "bg-cyan-600 text-white",
-                                userPlan === 'empresa' && "bg-slate-700 text-white",
-                                userPlan === 'free' && "bg-slate-200 text-slate-700"
+                                userPlan === 'empresa' && "bg-secondary text-white",
+                                userPlan === 'free' && "bg-muted text-foreground"
                             )}>
                                 {planLabel}
                             </Badge>
                         </div>
                         <button
                             onClick={() => setIsMenuOpen(false)}
-                            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 active:scale-90 transition-transform shrink-0"
+                            className="text-muted-foreground hover:text-muted-foreground p-1.5 rounded-full hover:bg-accent active:scale-90 transition-transform shrink-0"
                         >
                             <X className="h-5 w-5" />
                         </button>
@@ -235,10 +235,10 @@ export function BottomNavigation() {
                     <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4 pb-safe">
                         {moreSections.map((section) => (
                             <div key={section.titulo}>
-                                <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1">
+                                <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-3 mb-1">
                                     {section.titulo}
                                 </h5>
-                                <div className="bg-slate-100/60 rounded-xl overflow-hidden divide-y divide-white">
+                                <div className="bg-muted/60 rounded-xl overflow-hidden divide-y divide-white">
                                     {section.items.map((item) => (
                                         <MenuRow key={item.name} {...item} />
                                     ))}

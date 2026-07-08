@@ -414,7 +414,7 @@ export function NewPurchaseForm({
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-slate-50/80">
+                    <Card className="bg-muted/80">
                         <CardContent className="pt-6 space-y-3 font-mono text-sm">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Subtotal:</span>
@@ -430,7 +430,7 @@ export function NewPurchaseForm({
                                 <span className="text-muted-foreground">Total ITBMS:</span>
                                 <span>{formatCurrency(totalItbms)}</span>
                             </div>
-                            <div className="border-t pt-3 flex justify-between font-bold text-lg text-slate-900">
+                            <div className="border-t pt-3 flex justify-between font-bold text-lg text-foreground">
                                 <span>Total por Pagar:</span>
                                 <span className="text-brand-1">{formatCurrency(totalNeto)}</span>
                             </div>

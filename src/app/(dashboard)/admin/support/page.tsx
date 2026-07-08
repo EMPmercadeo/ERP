@@ -78,7 +78,7 @@ export default async function SupportAdminPage() {
                     {/* Header */}
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                            <h2 className="text-2xl font-bold tracking-tight text-slate-900">Consola de Mensajes</h2>
+                            <h2 className="text-2xl font-bold tracking-tight text-foreground">Consola de Mensajes</h2>
                             <p className="text-sm text-muted-foreground">
                                 Revisa los tickets de soporte técnico y el feedback que los clientes envían desde la barra lateral.
                             </p>
@@ -93,7 +93,7 @@ export default async function SupportAdminPage() {
                                 <Inbox className="h-4.5 w-4.5 text-indigo-600" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-slate-900">{totalTickets}</div>
+                                <div className="text-2xl font-bold text-foreground">{totalTickets}</div>
                                 <p className="text-xs text-muted-foreground mt-1">Soporte y feedback combinados</p>
                             </CardContent>
                         </Card>
@@ -103,7 +103,7 @@ export default async function SupportAdminPage() {
                                 <AlertCircle className="h-4.5 w-4.5 text-rose-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-slate-900">{supportCount}</div>
+                                <div className="text-2xl font-bold text-foreground">{supportCount}</div>
                                 <p className="text-xs text-muted-foreground mt-1">Solicitudes técnicas prioritarias</p>
                             </CardContent>
                         </Card>
@@ -113,7 +113,7 @@ export default async function SupportAdminPage() {
                                 <MessageSquare className="h-4.5 w-4.5 text-emerald-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-slate-900">{feedbackCount}</div>
+                                <div className="text-2xl font-bold text-foreground">{feedbackCount}</div>
                                 <p className="text-xs text-muted-foreground mt-1">Comentarios e ideas de producto</p>
                             </CardContent>
                         </Card>
@@ -130,12 +130,12 @@ export default async function SupportAdminPage() {
                         <CardContent className="pt-0">
                             {totalTickets === 0 ? (
                                 <div className="text-center py-16 text-muted-foreground">
-                                    <Inbox className="h-12 w-12 mx-auto mb-4 opacity-50 text-slate-400" />
+                                    <Inbox className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
                                     <p className="font-semibold text-sm">No hay mensajes registrados</p>
                                     <p className="text-xs mt-1">Los tickets de soporte y comentarios de los clientes aparecerán aquí.</p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-slate-100">
+                                <div className="divide-y divide-border">
                                     {supportLogs.map((log) => {
                                         const date = new Date(log.createdAt).toLocaleDateString('es-PA', {
                                             day: 'numeric',
@@ -156,7 +156,7 @@ export default async function SupportAdminPage() {
                                                             {isSupport ? 'Soporte' : 'Feedback'}
                                                         </Badge>
                                                         {isSupport && (
-                                                            <span className="text-sm font-bold text-slate-900">
+                                                            <span className="text-sm font-bold text-foreground">
                                                                 {data?.subject || 'Sin Asunto'}
                                                             </span>
                                                         )}
@@ -167,22 +167,22 @@ export default async function SupportAdminPage() {
                                                     </div>
                                                 </div>
 
-                                                <div className="text-xs text-slate-700 bg-slate-50 border rounded-lg p-4 leading-relaxed whitespace-pre-wrap">
+                                                <div className="text-xs text-foreground bg-muted border rounded-lg p-4 leading-relaxed whitespace-pre-wrap">
                                                     {isSupport ? data?.message : data?.text}
                                                 </div>
 
                                                 <div className="flex flex-wrap items-center gap-4 text-[11px] text-muted-foreground">
                                                     <div className="flex items-center gap-1">
-                                                        <User className="h-3.5 w-3.5 text-slate-400" />
-                                                        <span className="font-semibold text-slate-700">{log.usuario.nombre}</span>
+                                                        <User className="h-3.5 w-3.5 text-muted-foreground" />
+                                                        <span className="font-semibold text-foreground">{log.usuario.nombre}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1">
-                                                        <Mail className="h-3.5 w-3.5 text-slate-400" />
-                                                        <span className="text-slate-600">{log.usuario.email}</span>
+                                                        <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                                                        <span className="text-muted-foreground">{log.usuario.email}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1">
-                                                        <Building2 className="h-3.5 w-3.5 text-slate-400" />
-                                                        <span className="text-slate-600">{log.usuario.empresa.razonSocial}</span>
+                                                        <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                                                        <span className="text-muted-foreground">{log.usuario.empresa.razonSocial}</span>
                                                     </div>
                                                 </div>
                                             </div>

@@ -14,7 +14,7 @@ export default function AdminError({
     }, [error]);
 
     return (
-        <div className="flex items-center justify-center min-h-screen px-4 bg-gray-50">
+        <div className="flex items-center justify-center min-h-screen px-4 bg-secondary">
             <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-red-900 shadow-sm max-w-lg w-full text-center">
                 <div className="text-4xl mb-4">🔒</div>
                 <h2 className="text-xl font-bold mb-3">Error en el Panel de Administración</h2>

@@ -34,7 +34,7 @@ export function HeaderInicio() {
                         <a
                             key={link.href}
                             href={link.href}
-                            className="text-sm font-medium text-slate-600 transition-colors hover:text-brand-1"
+                            className="text-sm font-medium text-muted-foreground transition-colors hover:text-brand-1"
                         >
                             {link.label}
                         </a>
@@ -43,7 +43,7 @@ export function HeaderInicio() {
 
                 {/* Derecha - desktop */}
                 <div className="hidden lg:flex lg:items-center lg:gap-3">
-                    <Link href="/login" className="text-sm font-medium text-slate-600 transition-colors hover:text-brand-1">
+                    <Link href="/login" className="text-sm font-medium text-muted-foreground transition-colors hover:text-brand-1">
                         Iniciar sesión
                     </Link>
                     <Button asChild className="bg-brand-1 hover:bg-brand-2">
@@ -54,7 +54,7 @@ export function HeaderInicio() {
                 {/* Mobile hamburger */}
                 <button
                     type="button"
-                    className="inline-flex items-center justify-center rounded-md p-2 text-slate-600 lg:hidden"
+                    className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground lg:hidden"
                     onClick={() => setIsMobileOpen((v) => !v)}
                     aria-label={isMobileOpen ? 'Cerrar menú' : 'Abrir menú'}
                     aria-expanded={isMobileOpen}
@@ -71,7 +71,7 @@ export function HeaderInicio() {
                             <a
                                 key={link.href}
                                 href={link.href}
-                                className="rounded-md px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                className="rounded-md px-3 py-2.5 text-sm font-medium text-foreground hover:bg-accent"
                                 onClick={() => setIsMobileOpen(false)}
                             >
                                 {link.label}
@@ -80,7 +80,7 @@ export function HeaderInicio() {
                         <div className="mt-3 flex flex-col gap-2 border-t border-brand-3/10 pt-4">
                             <Link
                                 href="/login"
-                                className="rounded-md px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                className="rounded-md px-3 py-2.5 text-sm font-medium text-foreground hover:bg-accent"
                                 onClick={() => setIsMobileOpen(false)}
                             >
                                 Iniciar sesión

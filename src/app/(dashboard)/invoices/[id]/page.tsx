@@ -75,7 +75,7 @@ export default async function InvoiceDetailPage(props: PageProps) {
                 return 'bg-green-600 hover:bg-green-700 text-white';
             case 'canceled':
             case 'anulada':
-                return 'bg-slate-500 hover:bg-slate-600 text-white';
+                return 'bg-secondary hover:bg-accent text-white';
             case 'error':
             case 'rechazada':
                 return 'bg-red-600 hover:bg-red-700 text-white';
@@ -83,7 +83,7 @@ export default async function InvoiceDetailPage(props: PageProps) {
             case 'pendiente':
                 return 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse';
             default:
-                return 'bg-slate-400 hover:bg-slate-500 text-white';
+                return 'bg-muted hover:bg-accent text-white';
         }
     };
 

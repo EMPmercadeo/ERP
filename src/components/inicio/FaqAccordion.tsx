@@ -27,13 +27,13 @@ export function FaqAccordion({ items }: { items: FaqItem[] }) {
                             <span className="text-sm font-semibold text-brand-3 sm:text-base">{item.question}</span>
                             <ChevronDown
                                 className={cn(
-                                    'h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200',
+                                    'h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200',
                                     isOpen && 'rotate-180'
                                 )}
                             />
                         </button>
                         {isOpen && (
-                            <div className="px-5 pb-4 text-sm leading-relaxed text-slate-600 sm:text-base">
+                            <div className="px-5 pb-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
                                 {item.answer}
                             </div>
                         )}

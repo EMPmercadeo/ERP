@@ -245,12 +245,12 @@ export default function PaginaInicio() {
                         <h1 className="text-3xl font-bold tracking-tight text-white sm:text-5xl">
                             Contabilidad, facturación electrónica DGI e inventario, en un solo sistema
                         </h1>
-                        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+                        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg" /* design-token-exempt */>
                             Cada factura genera su asiento contable automáticamente. Deja de operar tu negocio
                             entre hojas de cálculo sueltas.
                         </p>
                         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                            <Button asChild size="lg" className="w-full bg-white text-brand-3 hover:bg-slate-100 sm:w-auto">
+                            <Button asChild size="lg" className="w-full bg-white text-brand-3 hover:bg-slate-100 sm:w-auto" /* design-token-exempt */>
                                 <Link href="/register">
                                     Crear cuenta gratis
                                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -274,18 +274,18 @@ export default function PaginaInicio() {
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
                         <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Funcionalidades</h2>
-                        <p className="mt-4 text-base text-slate-600">
+                        <p className="mt-4 text-base text-muted-foreground">
                             Todo lo que necesitas para llevar la parte financiera de tu negocio, sin conectar sistemas sueltos.
                         </p>
                     </div>
                     <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         {FUNCIONALIDADES.map((item) => (
-                            <div key={item.title} className="rounded-xl border border-slate-200 p-6">
+                            <div key={item.title} className="rounded-xl border border-border p-6">
                                 <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-1/10">
                                     <item.icon className="h-5 w-5 text-brand-1" />
                                 </div>
                                 <h3 className="mt-4 text-base font-semibold text-brand-3">{item.title}</h3>
-                                <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.description}</p>
+                                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.description}</p>
                             </div>
                         ))}
                     </div>
@@ -293,11 +293,11 @@ export default function PaginaInicio() {
             </section>
 
             {/* Cómo funciona */}
-            <section id="como-funciona" className="scroll-mt-20 bg-slate-50 py-16 sm:py-24">
+            <section id="como-funciona" className="scroll-mt-20 bg-secondary py-16 sm:py-24">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
                         <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Cómo funciona</h2>
-                        <p className="mt-4 text-base text-slate-600">De cero a tu primera factura, en cuatro pasos.</p>
+                        <p className="mt-4 text-base text-muted-foreground">De cero a tu primera factura, en cuatro pasos.</p>
                     </div>
                     <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
                         {PASOS.map((paso, index) => (
@@ -309,7 +309,7 @@ export default function PaginaInicio() {
                                     Paso {index + 1}
                                 </span>
                                 <h3 className="mt-1 text-base font-semibold text-brand-3">{paso.title}</h3>
-                                <p className="mt-2 text-sm leading-relaxed text-slate-600">{paso.description}</p>
+                                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{paso.description}</p>
                             </div>
                         ))}
                     </div>
@@ -322,11 +322,11 @@ export default function PaginaInicio() {
                     <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-16">
                         <div>
                             <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Para tu tipo de negocio</h2>
-                            <p className="mt-4 text-base text-slate-600">
+                            <p className="mt-4 text-base text-muted-foreground">
                                 Pensado para negocios panameños que facturan ante la DGI, sin importar el rubro.
                             </p>
                         </div>
-                        <dl className="divide-y divide-slate-200 border-t border-slate-200">
+                        <dl className="divide-y divide-border border-t border-border">
                             {RUBROS.map((rubro) => (
                                 <div key={rubro.title} className="flex items-start gap-5 py-6 first:pt-0">
                                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-1/10">
@@ -334,7 +334,7 @@ export default function PaginaInicio() {
                                     </div>
                                     <div>
                                         <dt className="text-base font-semibold text-brand-3">{rubro.title}</dt>
-                                        <dd className="mt-1 text-sm leading-relaxed text-slate-600">{rubro.description}</dd>
+                                        <dd className="mt-1 text-sm leading-relaxed text-muted-foreground">{rubro.description}</dd>
                                     </div>
                                 </div>
                             ))}
@@ -344,19 +344,19 @@ export default function PaginaInicio() {
             </section>
 
             {/* Glosario */}
-            <section id="glosario" className="scroll-mt-20 bg-slate-50 py-16 sm:py-24">
+            <section id="glosario" className="scroll-mt-20 bg-secondary py-16 sm:py-24">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
                         <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Glosario</h2>
-                        <p className="mt-4 text-base text-slate-600">
+                        <p className="mt-4 text-base text-muted-foreground">
                             Términos que todo dueño de negocio panameño necesita entender antes de facturar electrónicamente.
                         </p>
                     </div>
                     <dl className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2">
                         {GLOSARIO.map((item) => (
-                            <div key={item.term} className="border-t border-slate-200 pt-4">
+                            <div key={item.term} className="border-t border-border pt-4">
                                 <dt className="font-mono text-sm font-semibold tracking-tight text-brand-1">{item.term}</dt>
-                                <dd className="mt-1.5 text-sm leading-relaxed text-slate-600">{item.def}</dd>
+                                <dd className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{item.def}</dd>
                             </div>
                         ))}
                     </dl>
@@ -368,14 +368,14 @@ export default function PaginaInicio() {
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
                         <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Precios</h2>
-                        <p className="mt-4 text-base text-slate-600">Planes en dólares (USD), la moneda oficial de Panamá.</p>
+                        <p className="mt-4 text-base text-muted-foreground">Planes en dólares (USD), la moneda oficial de Panamá.</p>
                     </div>
                     <div className="mx-auto mt-12 grid max-w-6xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
                         {PLANES.map((plan) => (
                             <div
                                 key={plan.name}
                                 className={`flex flex-col rounded-2xl border p-8 ${
-                                    plan.highlighted ? 'border-brand-1 shadow-lg ring-1 ring-brand-1' : 'border-slate-200'
+                                    plan.highlighted ? 'border-brand-1 shadow-lg ring-1 ring-brand-1' : 'border-border'
                                 }`}
                             >
                                 {plan.highlighted && (
@@ -384,14 +384,14 @@ export default function PaginaInicio() {
                                     </span>
                                 )}
                                 <h3 className="text-lg font-bold text-brand-3">{plan.name}</h3>
-                                <p className="mt-1 text-sm text-slate-600">{plan.description}</p>
+                                <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
                                 <div className="mt-6 flex items-baseline gap-1">
                                     <span className="text-4xl font-bold tracking-tight text-brand-3">{plan.price}</span>
-                                    <span className="text-sm text-slate-500">/mes</span>
+                                    <span className="text-sm text-muted-foreground">/mes</span>
                                 </div>
                                 <ul className="mt-6 flex-1 space-y-3">
                                     {plan.features.map((feature) => (
-                                        <li key={feature} className="flex items-start gap-2 text-sm text-slate-600">
+                                        <li key={feature} className="flex items-start gap-2 text-sm text-muted-foreground">
                                             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand-1" />
                                             <span>{feature}</span>
                                         </li>
@@ -407,14 +407,14 @@ export default function PaginaInicio() {
                             </div>
                         ))}
                     </div>
-                    <p className="mx-auto mt-8 max-w-2xl text-center text-xs text-slate-500">
+                    <p className="mx-auto mt-8 max-w-2xl text-center text-xs text-muted-foreground">
                         Precios en dólares (USD). Puedes cambiar de plan en cualquier momento desde la configuración de tu cuenta.
                     </p>
                 </div>
             </section>
 
             {/* FAQ */}
-            <section className="bg-slate-50 py-16 sm:py-24">
+            <section className="bg-secondary py-16 sm:py-24">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
                         <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Preguntas frecuentes</h2>
@@ -431,9 +431,9 @@ export default function PaginaInicio() {
                     <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
                         Empieza a facturar y contabilizar en un solo lugar
                     </h2>
-                    <p className="mt-4 text-base text-slate-300">Crea tu cuenta gratis, sin tarjeta de crédito.</p>
+                    <p className="mt-4 text-base text-slate-300" /* design-token-exempt */>Crea tu cuenta gratis, sin tarjeta de crédito.</p>
                     <div className="mt-8">
-                        <Button asChild size="lg" className="bg-white text-brand-3 hover:bg-slate-100">
+                        <Button asChild size="lg" className="bg-white text-brand-3 hover:bg-slate-100" /* design-token-exempt */>
                             <Link href="/register">
                                 Crear cuenta gratis
                                 <ArrowRight className="ml-2 h-4 w-4" />

@@ -46,13 +46,13 @@ export default async function CreditNotesListPage() {
             <ContentContainer>
                 <div className="space-y-6 max-w-7xl mx-auto pb-12">
                     {/* Header */}
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-border shadow-sm">
                         <div>
-                            <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2.5">
+                            <h1 className="text-2xl font-extrabold text-foreground flex items-center gap-2.5">
                                 <FileText className="h-7 w-7 text-red-600" />
                                 Notas de Crédito y Devoluciones (DGI)
                             </h1>
-                            <p className="text-sm text-gray-500 mt-0.5">
+                            <p className="text-sm text-muted-foreground mt-0.5">
                                 Historial de notas de crédito fiscales emitidas en Panamá para devoluciones, descuentos o anulaciones.
                             </p>
                         </div>
@@ -65,9 +65,9 @@ export default async function CreditNotesListPage() {
                     </div>
 
                     {/* Tabla de Notas de Crédito */}
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
                         <Table>
-                            <TableHeader className="bg-gray-50 text-xs text-gray-500 font-bold uppercase">
+                            <TableHeader className="bg-muted text-xs text-muted-foreground font-bold uppercase">
                                 <TableRow>
                                     <TableHead className="pl-6">Número DGI</TableHead>
                                     <TableHead>Fecha Emisión</TableHead>
@@ -78,14 +78,14 @@ export default async function CreditNotesListPage() {
                                     <TableHead className="text-right pr-6">Total Devolución</TableHead>
                                 </TableRow>
                             </TableHeader>
-                            <TableBody className="divide-y divide-gray-100 text-sm">
+                            <TableBody className="divide-y divide-border text-sm">
                                 {creditNotes.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center py-16 text-gray-400">
+                                        <TableCell colSpan={7} className="text-center py-16 text-muted-foreground">
                                             <div className="flex flex-col items-center gap-2">
-                                                <FileText className="h-10 w-10 text-gray-300" />
-                                                <p className="font-bold text-gray-600">No hay notas de crédito emitidas</p>
-                                                <p className="text-xs text-gray-400">Emite tu primera nota de crédito fiscal desde el botón superior.</p>
+                                                <FileText className="h-10 w-10 text-muted-foreground" />
+                                                <p className="font-bold text-muted-foreground">No hay notas de crédito emitidas</p>
+                                                <p className="text-xs text-muted-foreground">Emite tu primera nota de crédito fiscal desde el botón superior.</p>
                                                 <Link href="/credit-notes/new" className="mt-2">
                                                     <Button variant="outline" size="sm" className="rounded-xl">
                                                         + Crear Nota de Crédito
@@ -96,25 +96,25 @@ export default async function CreditNotesListPage() {
                                     </TableRow>
                                 ) : (
                                     creditNotes.map((nc) => (
-                                        <TableRow key={nc.id} className="hover:bg-gray-50/50 transition-colors">
-                                            <TableCell className="pl-6 font-bold text-gray-900">
+                                        <TableRow key={nc.id} className="hover:bg-accent/50 transition-colors">
+                                            <TableCell className="pl-6 font-bold text-foreground">
                                                 {nc.numeroCompleto}
                                             </TableCell>
-                                            <TableCell className="text-gray-600 text-xs">
+                                            <TableCell className="text-muted-foreground text-xs">
                                                 {new Date(nc.fechaEmision).toLocaleDateString('es-PA')}
                                             </TableCell>
-                                            <TableCell className="font-semibold text-gray-800">
+                                            <TableCell className="font-semibold text-foreground">
                                                 {nc.cliente.razonSocial}
-                                                <span className="block text-[11px] text-gray-400 font-normal">RUC: {nc.cliente.ruc}</span>
+                                                <span className="block text-[11px] text-muted-foreground font-normal">RUC: {nc.cliente.ruc}</span>
                                             </TableCell>
-                                            <TableCell className="text-xs text-gray-600">
+                                            <TableCell className="text-xs text-muted-foreground">
                                                 {nc.facturaOrigen ? (
                                                     <span className="font-semibold text-blue-600">{nc.facturaOrigen.numeroCompleto}</span>
                                                 ) : (
-                                                    <span className="text-gray-400 font-mono">Ref. Externa / CUFE</span>
+                                                    <span className="text-muted-foreground font-mono">Ref. Externa / CUFE</span>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="max-w-xs truncate text-xs text-gray-600" title={nc.motivoAnulacion || ''}>
+                                            <TableCell className="max-w-xs truncate text-xs text-muted-foreground" title={nc.motivoAnulacion || ''}>
                                                 {nc.motivoAnulacion || 'Devolución fiscal'}
                                             </TableCell>
                                             <TableCell>
@@ -124,7 +124,7 @@ export default async function CreditNotesListPage() {
                                                             ? 'bg-green-100 text-green-800 border-green-200'
                                                             : nc.estadoDgi === 'pendiente'
                                                             ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                                                            : 'bg-gray-100 text-gray-800 border-gray-200'
+                                                            : 'bg-muted text-foreground border-border'
                                                     }`}
                                                 >
                                                     {nc.estadoDgi.toUpperCase()}

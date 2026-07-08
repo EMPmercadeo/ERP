@@ -288,14 +288,14 @@ export function ReportFilters({
     };
 
     return (
-        <Card className="bg-white shadow-sm border border-slate-100 rounded-xl overflow-visible">
+        <Card className="bg-white shadow-sm border border-border rounded-xl overflow-visible">
             <CardContent className="p-4 sm:p-5">
                 <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-x-4 lg:gap-y-3">
                     {/* FILA 1: Filtros Visibles Principales */}
                     
                     {/* Desde */}
                     <div className="space-y-1">
-                        <Label htmlFor="dateFrom" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Desde</Label>
+                        <Label htmlFor="dateFrom" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Desde</Label>
                         <div className="relative">
                             <Input
                                 id="dateFrom"
@@ -305,17 +305,17 @@ export function ReportFilters({
                                     setDateFrom(e.target.value);
                                     setPeriodoRapido('personalizado');
                                 }}
-                                className={`h-10 text-xs sm:text-sm pl-9 pr-2 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full transition-colors ${
+                                className={`h-10 text-xs sm:text-sm pl-9 pr-2 bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full transition-colors ${
                                     isDateRangeInvalid ? 'border-red-500 focus-visible:ring-red-500 bg-red-50/10' : ''
                                 }`}
                             />
-                            <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${isDateRangeInvalid ? 'text-red-400' : 'text-slate-400'}`} />
+                            <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${isDateRangeInvalid ? 'text-red-400' : 'text-muted-foreground'}`} />
                         </div>
                     </div>
 
                     {/* Hasta */}
                     <div className="space-y-1">
-                        <Label htmlFor="dateTo" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Hasta</Label>
+                        <Label htmlFor="dateTo" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Hasta</Label>
                         <div className="relative">
                             <Input
                                 id="dateTo"
@@ -325,19 +325,19 @@ export function ReportFilters({
                                     setDateTo(e.target.value);
                                     setPeriodoRapido('personalizado');
                                 }}
-                                className={`h-10 text-xs sm:text-sm pl-9 pr-2 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full transition-colors ${
+                                className={`h-10 text-xs sm:text-sm pl-9 pr-2 bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full transition-colors ${
                                     isDateRangeInvalid ? 'border-red-500 focus-visible:ring-red-500 bg-red-50/10' : ''
                                 }`}
                             />
-                            <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${isDateRangeInvalid ? 'text-red-400' : 'text-slate-400'}`} />
+                            <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${isDateRangeInvalid ? 'text-red-400' : 'text-muted-foreground'}`} />
                         </div>
                     </div>
 
                     {/* Agrupar gráfico */}
                     <div className="space-y-1">
-                        <Label htmlFor="groupBy" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Agrupar gráfico</Label>
+                        <Label htmlFor="groupBy" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Agrupar gráfico</Label>
                         <Select value={groupBy} onValueChange={(val) => setGroupBy(val as 'day' | 'week' | 'month')}>
-                            <SelectTrigger id="groupBy" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                            <SelectTrigger id="groupBy" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
                                 <SelectValue placeholder="Agrupación" />
                             </SelectTrigger>
                             <SelectContent className="rounded-lg">
@@ -350,7 +350,7 @@ export function ReportFilters({
 
                     {/* Cliente Autocomplete */}
                     <div className="space-y-1 relative" ref={clientRef}>
-                        <Label htmlFor="clienteSearch" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Cliente</Label>
+                        <Label htmlFor="clienteSearch" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Cliente</Label>
                         <div className="relative">
                             <Input
                                 id="clienteSearch"
@@ -365,21 +365,21 @@ export function ReportFilters({
                                     }
                                 }}
                                 onFocus={() => setShowClientDropdown(true)}
-                                className="h-10 text-xs sm:text-sm pl-9 pr-8 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                className="h-10 text-xs sm:text-sm pl-9 pr-8 bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full"
                             />
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             {clientSearch && (
                                 <button
                                     type="button"
                                     onClick={handleClearClient}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
                             )}
                         </div>
                         {showClientDropdown && (clientSuggestions.length > 0 || clientLoading) && (
-                            <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                            <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-border rounded-lg shadow-lg max-h-56 overflow-y-auto">
                                 {clientLoading ? (
                                     <div className="p-3 text-xs text-muted-foreground font-semibold">Buscando clientes...</div>
                                 ) : (
@@ -391,10 +391,10 @@ export function ReportFilters({
                                                 setClienteId(c.id);
                                                 setShowClientDropdown(false);
                                             }}
-                                            className="p-2.5 text-xs hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
+                                            className="p-2.5 text-xs hover:bg-accent cursor-pointer border-b border-border last:border-0"
                                         >
-                                            <div className="font-bold text-slate-800">{c.razonSocial}</div>
-                                            <div className="text-[10px] text-slate-500 font-mono mt-0.5">RUC: {c.ruc}{c.dv ? `-${c.dv}` : ''}</div>
+                                            <div className="font-bold text-foreground">{c.razonSocial}</div>
+                                            <div className="text-[10px] text-muted-foreground font-mono mt-0.5">RUC: {c.ruc}{c.dv ? `-${c.dv}` : ''}</div>
                                         </div>
                                     ))
                                 )}
@@ -404,7 +404,7 @@ export function ReportFilters({
 
                     {/* Producto Autocomplete */}
                     <div className="space-y-1 relative" ref={productRef}>
-                        <Label htmlFor="productoSearch" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Producto</Label>
+                        <Label htmlFor="productoSearch" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Producto</Label>
                         <div className="relative">
                             <Input
                                 id="productoSearch"
@@ -419,21 +419,21 @@ export function ReportFilters({
                                     }
                                 }}
                                 onFocus={() => setShowProductDropdown(true)}
-                                className="h-10 text-xs sm:text-sm pl-9 pr-8 bg-slate-50/50 border-slate-200 focus-visible:ring-brand-1 rounded-lg w-full"
+                                className="h-10 text-xs sm:text-sm pl-9 pr-8 bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full"
                             />
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             {productSearch && (
                                 <button
                                     type="button"
                                     onClick={handleClearProduct}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
                             )}
                         </div>
                         {showProductDropdown && (productSuggestions.length > 0 || productLoading) && (
-                            <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                            <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-border rounded-lg shadow-lg max-h-56 overflow-y-auto">
                                 {productLoading ? (
                                     <div className="p-3 text-xs text-muted-foreground font-semibold">Buscando productos...</div>
                                 ) : (
@@ -445,10 +445,10 @@ export function ReportFilters({
                                                 setProductoId(p.id);
                                                 setShowProductDropdown(false);
                                             }}
-                                            className="p-2.5 text-xs hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
+                                            className="p-2.5 text-xs hover:bg-accent cursor-pointer border-b border-border last:border-0"
                                         >
-                                            <div className="font-bold text-slate-800">{p.descripcion}</div>
-                                            <div className="text-[10px] text-slate-500 font-mono mt-0.5">Código: {p.codigoInterno}</div>
+                                            <div className="font-bold text-foreground">{p.descripcion}</div>
+                                            <div className="text-[10px] text-muted-foreground font-mono mt-0.5">Código: {p.codigoInterno}</div>
                                         </div>
                                     ))
                                 )}
@@ -458,9 +458,9 @@ export function ReportFilters({
 
                     {/* Vendedor */}
                     <div className="space-y-1">
-                        <Label htmlFor="creadorId" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Vendedor</Label>
+                        <Label htmlFor="creadorId" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Vendedor</Label>
                         <Select value={creadorId} onValueChange={setCreadorId}>
-                            <SelectTrigger id="creadorId" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                            <SelectTrigger id="creadorId" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
                                 <SelectValue placeholder="Vendedor" />
                             </SelectTrigger>
                             <SelectContent className="rounded-lg">
@@ -479,9 +479,9 @@ export function ReportFilters({
                         <>
                             {/* Periodo Rápido */}
                             <div className="space-y-1">
-                                <Label htmlFor="periodoRapido" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Periodo rápido</Label>
+                                <Label htmlFor="periodoRapido" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Periodo rápido</Label>
                                 <Select value={periodoRapido} onValueChange={handleQuickPeriodChange}>
-                                    <SelectTrigger id="periodoRapido" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                    <SelectTrigger id="periodoRapido" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
                                         <SelectValue placeholder="Periodo rápido" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-lg">
@@ -497,9 +497,9 @@ export function ReportFilters({
 
                             {/* Tipo Documento */}
                             <div className="space-y-1">
-                                <Label htmlFor="tipoDocumento" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Tipo de Documento</Label>
+                                <Label htmlFor="tipoDocumento" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Tipo de Documento</Label>
                                 <Select value={tipoDocumento} onValueChange={setTipoDocumento}>
-                                    <SelectTrigger id="tipoDocumento" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                    <SelectTrigger id="tipoDocumento" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
                                         <SelectValue placeholder="Tipo" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-lg">
@@ -512,9 +512,9 @@ export function ReportFilters({
 
                             {/* Estado DGI */}
                             <div className="space-y-1">
-                                <Label htmlFor="estadoDgi" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Estado DGI</Label>
+                                <Label htmlFor="estadoDgi" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Estado DGI</Label>
                                 <Select value={estadoDgi} onValueChange={setEstadoDgi}>
-                                    <SelectTrigger id="estadoDgi" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                    <SelectTrigger id="estadoDgi" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
                                         <SelectValue placeholder="Estado DGI" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-lg">
@@ -530,9 +530,9 @@ export function ReportFilters({
 
                             {/* Estado Pago */}
                             <div className="space-y-1">
-                                <Label htmlFor="paymentStatus" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Estado de Pago</Label>
+                                <Label htmlFor="paymentStatus" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Estado de Pago</Label>
                                 <Select value={paymentStatus} onValueChange={setPaymentStatus}>
-                                    <SelectTrigger id="paymentStatus" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                    <SelectTrigger id="paymentStatus" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
                                         <SelectValue placeholder="Estado de Pago" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-lg">
@@ -548,9 +548,9 @@ export function ReportFilters({
 
                             {/* Método de Pago */}
                             <div className="space-y-1">
-                                <Label htmlFor="metodoPago" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Método de Pago</Label>
+                                <Label htmlFor="metodoPago" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Método de Pago</Label>
                                 <Select value={metodoPago} onValueChange={setMetodoPago}>
-                                    <SelectTrigger id="metodoPago" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                    <SelectTrigger id="metodoPago" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
                                         <SelectValue placeholder="Método de pago" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-lg">
@@ -565,7 +565,7 @@ export function ReportFilters({
 
                             {/* Empresa / Tenant (Visibilidad condicionada a Super Admin) */}
                             <div className="space-y-1">
-                                <Label htmlFor="empresaFilter" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Empresa / Tenant</Label>
+                                <Label htmlFor="empresaFilter" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Empresa / Tenant</Label>
                                 {isSuperAdmin ? (
                                     <Select
                                         value={searchParams.get('x-impersonation') || 'all'}
@@ -579,7 +579,7 @@ export function ReportFilters({
                                             router.push(`${pathname}?${params.toString()}`);
                                         }}
                                     >
-                                        <SelectTrigger id="empresaFilter" className="h-10 text-xs sm:text-sm bg-slate-50/50 border-slate-200 rounded-lg w-full">
+                                        <SelectTrigger id="empresaFilter" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
                                             <SelectValue placeholder="Empresa impersonada" />
                                         </SelectTrigger>
                                         <SelectContent className="rounded-lg">
@@ -597,7 +597,7 @@ export function ReportFilters({
                                         type="text"
                                         value="Locked Tenant Context"
                                         disabled
-                                        className="h-10 text-xs sm:text-sm bg-slate-100 border-slate-200 text-slate-400 font-semibold rounded-lg w-full cursor-not-allowed"
+                                        className="h-10 text-xs sm:text-sm bg-muted border-border text-muted-foreground font-semibold rounded-lg w-full cursor-not-allowed"
                                     />
                                 )}
                             </div>
@@ -622,14 +622,14 @@ export function ReportFilters({
                             type="button"
                             variant="outline"
                             onClick={() => setIsAdvancedExpanded(!isAdvancedExpanded)}
-                            className="h-10 text-xs font-bold text-slate-600 border-slate-200 rounded-lg w-full flex items-center justify-center gap-1.5 transition-all hover:bg-slate-50 shrink-0 lg:col-span-1"
+                            className="h-10 text-xs font-bold text-muted-foreground border-border rounded-lg w-full flex items-center justify-center gap-1.5 transition-all hover:bg-accent shrink-0 lg:col-span-1"
                         >
-                            <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
+                            <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
                             <span>{isAdvancedExpanded ? 'Menos filtros' : 'Más filtros'}</span>
                             {isAdvancedExpanded ? (
-                                <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
+                                <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
                             ) : (
-                                <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+                                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                             )}
                         </Button>
 
@@ -638,20 +638,20 @@ export function ReportFilters({
                             <DropdownMenuTrigger asChild id="export-report-trigger">
                                 <Button
                                     variant="outline"
-                                    className="h-10 text-xs font-bold text-slate-600 border-slate-200 rounded-lg w-full flex items-center justify-center gap-1.5 transition-all hover:bg-slate-50 shrink-0 lg:col-span-1"
+                                    className="h-10 text-xs font-bold text-muted-foreground border-border rounded-lg w-full flex items-center justify-center gap-1.5 transition-all hover:bg-accent shrink-0 lg:col-span-1"
                                 >
-                                    <Download className="h-3.5 w-3.5 text-slate-500" />
+                                    <Download className="h-3.5 w-3.5 text-muted-foreground" />
                                     <span>Exportar</span>
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 rounded-lg shadow-md border-slate-200">
-                                <DropdownMenuLabel className="text-xs font-bold text-slate-500 px-3 py-2">Formatos de Exportación</DropdownMenuLabel>
-                                <DropdownMenuSeparator className="bg-slate-100" />
-                                <DropdownMenuItem onClick={onExportExcel} className="cursor-pointer text-xs font-semibold py-2 hover:bg-slate-50">
+                            <DropdownMenuContent align="end" className="w-48 rounded-lg shadow-md border-border">
+                                <DropdownMenuLabel className="text-xs font-bold text-muted-foreground px-3 py-2">Formatos de Exportación</DropdownMenuLabel>
+                                <DropdownMenuSeparator className="bg-muted" />
+                                <DropdownMenuItem onClick={onExportExcel} className="cursor-pointer text-xs font-semibold py-2 hover:bg-accent">
                                     <FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" />
                                     Reporte Excel (.xlsx)
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={onExportCSV} className="cursor-pointer text-xs font-semibold py-2 hover:bg-slate-50">
+                                <DropdownMenuItem onClick={onExportCSV} className="cursor-pointer text-xs font-semibold py-2 hover:bg-accent">
                                     <FileText className="mr-2 h-4 w-4 text-blue-500" />
                                     Detalle CSV (.csv)
                                 </DropdownMenuItem>
@@ -663,9 +663,9 @@ export function ReportFilters({
                             type="button"
                             variant="outline"
                             onClick={handleReset}
-                            className="h-10 text-xs font-bold text-slate-600 border-slate-200 rounded-lg w-full flex items-center justify-center gap-1.5 transition-all hover:bg-slate-50 shrink-0 lg:col-span-1"
+                            className="h-10 text-xs font-bold text-muted-foreground border-border rounded-lg w-full flex items-center justify-center gap-1.5 transition-all hover:bg-accent shrink-0 lg:col-span-1"
                         >
-                            <RotateCcw className="h-3.5 w-3.5 text-slate-500" />
+                            <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
                             <span>Limpiar</span>
                         </Button>
 
@@ -676,7 +676,7 @@ export function ReportFilters({
                             disabled={isDateRangeInvalid}
                             className={`h-10 text-xs font-bold text-white rounded-lg w-full flex items-center justify-center gap-1.5 shadow-sm transition-all shrink-0 lg:col-span-1 ${
                                 isDateRangeInvalid 
-                                ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' 
+                                ? 'bg-muted text-muted-foreground cursor-not-allowed shadow-none' 
                                 : 'bg-brand-1 hover:bg-brand-2 active:scale-95'
                             }`}
                         >

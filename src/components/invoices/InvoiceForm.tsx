@@ -322,11 +322,11 @@ export function InvoiceForm({
                                                                     setClienteId(client.id);
                                                                     setClientSearch('');
                                                                 }}
-                                                                className="w-full px-4 py-3 md:py-2.5 text-left hover:bg-slate-50 transition-colors flex justify-between items-center"
+                                                                className="w-full px-4 py-3 md:py-2.5 text-left hover:bg-accent transition-colors flex justify-between items-center"
                                                             >
                                                                 <div>
-                                                                    <div className="font-medium text-slate-800 text-sm">{client.razonSocial}</div>
-                                                                    <div className="text-xs text-slate-500">RUC: {client.ruc}</div>
+                                                                    <div className="font-medium text-foreground text-sm">{client.razonSocial}</div>
+                                                                    <div className="text-xs text-muted-foreground">RUC: {client.ruc}</div>
                                                                 </div>
                                                                 <span className="text-xs text-indigo-600 font-semibold uppercase tracking-wider">Elegir</span>
                                                             </button>
@@ -344,14 +344,14 @@ export function InvoiceForm({
                                         </div>
                                     ) : (
                                         selectedClient && (
-                                            <div className="p-4 border rounded-xl bg-slate-50 flex items-center justify-between shadow-sm">
+                                            <div className="p-4 border rounded-xl bg-muted flex items-center justify-between shadow-sm">
                                                 <div className="flex items-center gap-3">
                                                     <div className="h-10 w-10 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
                                                         {selectedClient.razonSocial.slice(0, 2).toUpperCase()}
                                                     </div>
                                                     <div>
-                                                        <h4 className="font-semibold text-slate-900">{selectedClient.razonSocial}</h4>
-                                                        <p className="text-xs text-slate-500">RUC: {selectedClient.ruc}</p>
+                                                        <h4 className="font-semibold text-foreground">{selectedClient.razonSocial}</h4>
+                                                        <p className="text-xs text-muted-foreground">RUC: {selectedClient.ruc}</p>
                                                     </div>
                                                 </div>
                                                 <Button 
@@ -479,10 +479,10 @@ export function InvoiceForm({
                                                 {items.map(item => (
                                                     <div 
                                                         key={item.id}
-                                                        className="border border-slate-100 rounded-xl p-3 bg-slate-50/50 space-y-2 flex flex-col justify-between"
+                                                        className="border border-border rounded-xl p-3 bg-muted/50 space-y-2 flex flex-col justify-between"
                                                     >
                                                         <div className="flex justify-between items-start gap-2">
-                                                            <span className="font-semibold text-slate-800 text-xs sm:text-sm">{item.descripcion}</span>
+                                                            <span className="font-semibold text-foreground text-xs sm:text-sm">{item.descripcion}</span>
                                                             <Button 
                                                                 type="button" 
                                                                 variant="ghost" 
@@ -494,13 +494,13 @@ export function InvoiceForm({
                                                             </Button>
                                                         </div>
                                                         
-                                                        <div className="flex items-center justify-between border-t border-slate-100/60 pt-2">
+                                                        <div className="flex items-center justify-between border-t border-border/60 pt-2">
                                                             <div className="flex flex-col">
-                                                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">P. Unitario</span>
-                                                                <span className="font-mono text-xs text-slate-800 font-bold mt-0.5">{formatCurrency(item.precioUnitario)}</span>
+                                                                <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider leading-none">P. Unitario</span>
+                                                                <span className="font-mono text-xs text-foreground font-bold mt-0.5">{formatCurrency(item.precioUnitario)}</span>
                                                             </div>
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-xs text-slate-500">Cant:</span>
+                                                                <span className="text-xs text-muted-foreground">Cant:</span>
                                                                 <Input 
                                                                     type="number" 
                                                                     min="0.01" 
@@ -512,14 +512,14 @@ export function InvoiceForm({
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex justify-between items-center text-[10px] text-slate-500 border-t border-slate-100/60 pt-2">
+                                                        <div className="flex justify-between items-center text-[10px] text-muted-foreground border-t border-border/60 pt-2">
                                                             <div className="flex flex-col gap-0.5">
                                                                 <span>Subtotal: {formatCurrency(item.subtotal)}</span>
                                                                 <span>ITBMS ({(itbmsRates[item.codigoTasaItbms] * 100).toFixed(0)}%): {formatCurrency(item.itbms)}</span>
                                                             </div>
                                                             <div className="text-right">
-                                                                <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider leading-none">Total</span>
-                                                                <span className="font-mono font-bold text-xs text-slate-800">{formatCurrency(item.total)}</span>
+                                                                <span className="text-[9px] text-muted-foreground block font-bold uppercase tracking-wider leading-none">Total</span>
+                                                                <span className="font-mono font-bold text-xs text-foreground">{formatCurrency(item.total)}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -637,7 +637,7 @@ export function InvoiceForm({
 
                         <div className="space-y-6">
                             <div className="text-center">
-                                <h3 className="text-xl font-bold text-slate-900">Comprar Bloque de Documentos</h3>
+                                <h3 className="text-xl font-bold text-foreground">Comprar Bloque de Documentos</h3>
                                 <p className="text-xs text-muted-foreground mt-1">Adquiere folios electrónicos adicionales para poder timbrar esta factura inmediatamente.</p>
                             </div>
 
@@ -656,7 +656,7 @@ export function InvoiceForm({
                                             className={`p-3 border rounded-lg flex flex-col items-center justify-center gap-1 transition-all ${
                                                 selectedBlockSize === block.size
                                                     ? 'border-indigo-600 bg-indigo-50/50 text-indigo-950 ring-2 ring-indigo-600/10'
-                                                    : 'border-border bg-white text-slate-700 hover:bg-slate-50'
+                                                    : 'border-border bg-white text-foreground hover:bg-accent'
                                             }`}
                                         >
                                             <span className="text-xs font-bold">{block.label}</span>

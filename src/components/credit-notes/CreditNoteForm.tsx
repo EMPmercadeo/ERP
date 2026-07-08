@@ -246,20 +246,20 @@ export function CreditNoteForm({
             <input type="hidden" name="items" value={JSON.stringify(items)} />
 
             {/* Encabezado */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-border shadow-sm">
                 <div>
-                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                        <Link href="/invoices" className="hover:text-gray-900 flex items-center gap-1 transition-colors">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                        <Link href="/invoices" className="hover:text-foreground flex items-center gap-1 transition-colors">
                             <ArrowLeft className="h-4 w-4" /> Facturación
                         </Link>
                         <span>/</span>
-                        <span className="text-gray-900 font-medium">Nota de Crédito</span>
+                        <span className="text-foreground font-medium">Nota de Crédito</span>
                     </div>
-                    <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2.5">
+                    <h1 className="text-2xl font-extrabold text-foreground flex items-center gap-2.5">
                         <FileText className="h-7 w-7 text-red-600" />
                         Emisión de Nota de Crédito Fiscal (DGI)
                     </h1>
-                    <p className="text-sm text-gray-500 mt-0.5">
+                    <p className="text-sm text-muted-foreground mt-0.5">
                         Genera devoluciones, descuentos posteriores o anulaciones fiscales cumpliendo la normativa de Panamá.
                     </p>
                 </div>
@@ -287,25 +287,25 @@ export function CreditNoteForm({
             )}
 
             {/* Selección de Modo y Factura Origen */}
-            <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
-                <CardHeader className="bg-gray-50/60 border-b border-gray-100 pb-4">
+            <Card className="rounded-2xl border-border shadow-sm overflow-hidden">
+                <CardHeader className="bg-muted/60 border-b border-border pb-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
-                            <CardTitle className="text-base font-bold text-gray-900">
+                            <CardTitle className="text-base font-bold text-foreground">
                                 1. Documento de Referencia DGI
                             </CardTitle>
-                            <CardDescription className="text-xs text-gray-500">
+                            <CardDescription className="text-xs text-muted-foreground">
                                 Selecciona una factura emitida por el sistema o ingresa el CUFE manualmente si es de una vigencia anterior.
                             </CardDescription>
                         </div>
-                        <div className="flex bg-gray-200/70 p-1 rounded-xl w-fit">
+                        <div className="flex bg-muted/70 p-1 rounded-xl w-fit">
                             <button
                                 type="button"
                                 onClick={() => setMode('select')}
                                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                                     mode === 'select'
-                                        ? 'bg-white text-gray-900 shadow-sm'
-                                        : 'text-gray-600 hover:text-gray-900'
+                                        ? 'bg-white text-foreground shadow-sm'
+                                        : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
                                 Factura del Sistema
@@ -315,8 +315,8 @@ export function CreditNoteForm({
                                 onClick={() => setMode('manual')}
                                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                                     mode === 'manual'
-                                        ? 'bg-white text-gray-900 shadow-sm'
-                                        : 'text-gray-600 hover:text-gray-900'
+                                        ? 'bg-white text-foreground shadow-sm'
+                                        : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
                                 Ingreso Manual (CUFE)
@@ -328,20 +328,20 @@ export function CreditNoteForm({
                     {mode === 'select' ? (
                         <div className="space-y-4">
                             <div className="relative max-w-md">
-                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder="Buscar por número, cliente o RUC..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10 h-11 rounded-xl border-gray-200 text-sm"
+                                    className="pl-10 h-11 rounded-xl border-border text-sm"
                                 />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 max-h-[300px] overflow-y-auto pr-1">
                                 {filteredInvoices.length === 0 ? (
-                                    <div className="col-span-full py-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                        <p className="text-sm font-medium text-gray-500">No se encontraron facturas elegibles.</p>
-                                        <p className="text-xs text-gray-400 mt-1">Intenta cambiar el criterio de búsqueda o usa el modo manual.</p>
+                                    <div className="col-span-full py-8 text-center bg-muted rounded-xl border border-dashed border-border">
+                                        <p className="text-sm font-medium text-muted-foreground">No se encontraron facturas elegibles.</p>
+                                        <p className="text-xs text-muted-foreground mt-1">Intenta cambiar el criterio de búsqueda o usa el modo manual.</p>
                                     </div>
                                 ) : (
                                     filteredInvoices.map((inv) => {
@@ -353,27 +353,27 @@ export function CreditNoteForm({
                                                 className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 ${
                                                     isSelected
                                                         ? 'border-red-500 bg-red-50/30 ring-2 ring-red-500/20 shadow-sm'
-                                                        : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50/50'
+                                                        : 'border-border hover:border-border bg-white hover:bg-accent/50'
                                                 }`}
                                             >
                                                 <div className="flex justify-between items-start gap-2">
                                                     <div className="min-w-0">
-                                                        <span className="text-xs font-bold text-gray-900 block truncate">
+                                                        <span className="text-xs font-bold text-foreground block truncate">
                                                             {inv.numeroCompleto}
                                                         </span>
-                                                        <span className="text-xs text-gray-500 block truncate">
+                                                        <span className="text-xs text-muted-foreground block truncate">
                                                             {inv.cliente.razonSocial}
                                                         </span>
                                                     </div>
-                                                    <Badge variant="outline" className="text-[10px] font-semibold bg-gray-50 shrink-0">
+                                                    <Badge variant="outline" className="text-[10px] font-semibold bg-muted shrink-0">
                                                         {new Date(inv.fechaEmision).toLocaleDateString()}
                                                     </Badge>
                                                 </div>
-                                                <div className="flex justify-between items-end border-t border-gray-100 pt-2 mt-1">
-                                                    <span className="text-[11px] text-gray-400">
+                                                <div className="flex justify-between items-end border-t border-border pt-2 mt-1">
+                                                    <span className="text-[11px] text-muted-foreground">
                                                         {inv.items.length} {inv.items.length === 1 ? 'ítem' : 'ítems'}
                                                     </span>
-                                                    <span className="text-sm font-extrabold text-gray-900">
+                                                    <span className="text-sm font-extrabold text-foreground">
                                                         {formatCurrency(inv.totalNeto)}
                                                     </span>
                                                 </div>
@@ -402,7 +402,7 @@ export function CreditNoteForm({
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-gray-700">
+                                <label className="text-xs font-bold text-foreground">
                                     CUFE de Referencia (66 caracteres hex) <span className="text-red-500">*</span>
                                 </label>
                                 <Input
@@ -410,19 +410,19 @@ export function CreditNoteForm({
                                     value={cufeReferencia}
                                     onChange={(e) => setCufeReferencia(e.target.value)}
                                     maxLength={66}
-                                    className="font-mono text-xs h-11 rounded-xl border-gray-200"
+                                    className="font-mono text-xs h-11 rounded-xl border-border"
                                 />
-                                <span className="text-[11px] text-gray-400">
+                                <span className="text-[11px] text-muted-foreground">
                                     Longitud actual: {cufeReferencia.length}/66 caracteres
                                 </span>
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-gray-700">
+                                <label className="text-xs font-bold text-foreground">
                                     Cliente Afectado <span className="text-red-500">*</span>
                                 </label>
                                 <Select value={selectedClientId} onValueChange={setSelectedClientId}>
-                                    <SelectTrigger className="h-11 rounded-xl border-gray-200 text-sm">
+                                    <SelectTrigger className="h-11 rounded-xl border-border text-sm">
                                         <SelectValue placeholder="Seleccione un cliente" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -440,22 +440,22 @@ export function CreditNoteForm({
             </Card>
 
             {/* Motivo Fiscal DGI */}
-            <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
-                <CardHeader className="bg-gray-50/60 border-b border-gray-100 pb-4">
-                    <CardTitle className="text-base font-bold text-gray-900">
+            <Card className="rounded-2xl border-border shadow-sm overflow-hidden">
+                <CardHeader className="bg-muted/60 border-b border-border pb-4">
+                    <CardTitle className="text-base font-bold text-foreground">
                         2. Motivo Fiscal (Normativa DGI)
                     </CardTitle>
-                    <CardDescription className="text-xs text-gray-500">
+                    <CardDescription className="text-xs text-muted-foreground">
                         Especifica la razón fiscal para la emisión de este documento de crédito.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
                     <div className="max-w-xl space-y-1.5">
-                        <label className="text-xs font-bold text-gray-700">
+                        <label className="text-xs font-bold text-foreground">
                             Tipo de Nota de Crédito <span className="text-red-500">*</span>
                         </label>
                         <Select value={motivoDgi} onValueChange={setMotivoDgi}>
-                            <SelectTrigger className="h-11 rounded-xl border-gray-200 text-sm font-medium">
+                            <SelectTrigger className="h-11 rounded-xl border-border text-sm font-medium">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -471,13 +471,13 @@ export function CreditNoteForm({
             </Card>
 
             {/* Ítems a Devolver / Anular */}
-            <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
-                <CardHeader className="bg-gray-50/60 border-b border-gray-100 pb-4 flex flex-row items-center justify-between">
+            <Card className="rounded-2xl border-border shadow-sm overflow-hidden">
+                <CardHeader className="bg-muted/60 border-b border-border pb-4 flex flex-row items-center justify-between">
                     <div>
-                        <CardTitle className="text-base font-bold text-gray-900">
+                        <CardTitle className="text-base font-bold text-foreground">
                             3. Ítems Afectados y Devolución de ITBMS
                         </CardTitle>
-                        <CardDescription className="text-xs text-gray-500">
+                        <CardDescription className="text-xs text-muted-foreground">
                             Ajusta las cantidades o precios a reembolsar. El ITBMS se recalcula automáticamente por ítem.
                         </CardDescription>
                     </div>
@@ -509,7 +509,7 @@ export function CreditNoteForm({
                 </CardHeader>
                 <CardContent className="p-0 overflow-x-auto">
                     <Table>
-                        <TableHeader className="bg-gray-50 text-xs text-gray-500 font-bold uppercase">
+                        <TableHeader className="bg-muted text-xs text-muted-foreground font-bold uppercase">
                             <TableRow>
                                 <TableHead className="pl-6 w-[30%]">Descripción / Producto</TableHead>
                                 <TableHead className="text-right w-[12%]">Cantidad</TableHead>
@@ -521,10 +521,10 @@ export function CreditNoteForm({
                                 <TableHead className="w-[5%]"></TableHead>
                             </TableRow>
                         </TableHeader>
-                        <TableBody className="divide-y divide-gray-100 text-sm">
+                        <TableBody className="divide-y divide-border text-sm">
                             {items.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="text-center py-12 text-gray-400">
+                                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
                                         No hay ítems en la nota de crédito. Selecciona una factura o agrega ítems manualmente.
                                     </TableCell>
                                 </TableRow>
@@ -537,12 +537,12 @@ export function CreditNoteForm({
                                     const totalLinea = neto + itbmsLinea;
 
                                     return (
-                                        <TableRow key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <TableRow key={item.id} className="hover:bg-accent/50 transition-colors">
                                             <TableCell className="pl-6">
                                                 <Input
                                                     value={item.descripcion}
                                                     onChange={(e) => handleUpdateItem(item.id, 'descripcion', e.target.value)}
-                                                    className="h-9 text-xs font-medium rounded-lg border-gray-200"
+                                                    className="h-9 text-xs font-medium rounded-lg border-border"
                                                     placeholder="Descripción del ítem"
                                                 />
                                             </TableCell>
@@ -553,7 +553,7 @@ export function CreditNoteForm({
                                                     step="any"
                                                     value={item.cantidad}
                                                     onChange={(e) => handleUpdateItem(item.id, 'cantidad', parseFloat(e.target.value) || 0)}
-                                                    className="h-9 text-xs font-semibold text-right rounded-lg border-gray-200 w-24 ml-auto"
+                                                    className="h-9 text-xs font-semibold text-right rounded-lg border-border w-24 ml-auto"
                                                 />
                                             </TableCell>
                                             <TableCell className="text-right">
@@ -563,7 +563,7 @@ export function CreditNoteForm({
                                                     step="0.01"
                                                     value={item.precioUnitario}
                                                     onChange={(e) => handleUpdateItem(item.id, 'precioUnitario', parseFloat(e.target.value) || 0)}
-                                                    className="h-9 text-xs font-semibold text-right rounded-lg border-gray-200 w-28 ml-auto"
+                                                    className="h-9 text-xs font-semibold text-right rounded-lg border-border w-28 ml-auto"
                                                 />
                                             </TableCell>
                                             <TableCell className="text-right">
@@ -573,7 +573,7 @@ export function CreditNoteForm({
                                                     step="0.01"
                                                     value={item.descuento}
                                                     onChange={(e) => handleUpdateItem(item.id, 'descuento', parseFloat(e.target.value) || 0)}
-                                                    className="h-9 text-xs text-right rounded-lg border-gray-200 w-24 ml-auto"
+                                                    className="h-9 text-xs text-right rounded-lg border-border w-24 ml-auto"
                                                 />
                                             </TableCell>
                                             <TableCell className="text-center">
@@ -581,7 +581,7 @@ export function CreditNoteForm({
                                                     value={item.codigoTasaItbms}
                                                     onValueChange={(val) => handleUpdateItem(item.id, 'codigoTasaItbms', val)}
                                                 >
-                                                    <SelectTrigger className="h-9 text-xs font-semibold rounded-lg border-gray-200 mx-auto w-28">
+                                                    <SelectTrigger className="h-9 text-xs font-semibold rounded-lg border-border mx-auto w-28">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -595,14 +595,14 @@ export function CreditNoteForm({
                                             <TableCell className="text-right font-semibold text-blue-600 text-xs">
                                                 {formatCurrency(itbmsLinea)}
                                             </TableCell>
-                                            <TableCell className="text-right pr-6 font-extrabold text-gray-900 text-xs">
+                                            <TableCell className="text-right pr-6 font-extrabold text-foreground text-xs">
                                                 {formatCurrency(totalLinea)}
                                             </TableCell>
                                             <TableCell className="text-center">
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveItem(item.id)}
-                                                    className="text-gray-400 hover:text-red-600 p-1 rounded-md transition-colors"
+                                                    className="text-muted-foreground hover:text-red-600 p-1 rounded-md transition-colors"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </button>
@@ -618,8 +618,8 @@ export function CreditNoteForm({
 
             {/* Resumen Fiscal */}
             <div className="flex justify-end">
-                <Card className="w-full sm:w-96 rounded-2xl border-gray-100 shadow-md bg-white overflow-hidden">
-                    <CardHeader className="bg-gray-900 text-white p-4">
+                <Card className="w-full sm:w-96 rounded-2xl border-border shadow-md bg-white overflow-hidden">
+                    <CardHeader className="bg-primary text-white p-4">
                         <CardTitle className="text-sm font-bold flex items-center justify-between">
                             <span>Resumen de Devolución</span>
                             <Badge className="bg-red-500 text-white text-[10px] uppercase font-bold border-none">
@@ -628,9 +628,9 @@ export function CreditNoteForm({
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-5 space-y-3">
-                        <div className="flex justify-between text-xs text-gray-600">
+                        <div className="flex justify-between text-xs text-muted-foreground">
                             <span>Subtotal Bruto a Devolver:</span>
-                            <span className="font-semibold text-gray-900">{formatCurrency(totals.subtotal)}</span>
+                            <span className="font-semibold text-foreground">{formatCurrency(totals.subtotal)}</span>
                         </div>
                         {totals.descuento > 0 && (
                             <div className="flex justify-between text-xs text-red-600">
@@ -638,11 +638,11 @@ export function CreditNoteForm({
                                 <span className="font-semibold">-{formatCurrency(totals.descuento)}</span>
                             </div>
                         )}
-                        <div className="flex justify-between text-xs text-blue-600 font-semibold pt-1 border-t border-gray-100">
+                        <div className="flex justify-between text-xs text-blue-600 font-semibold pt-1 border-t border-border">
                             <span>Devolución ITBMS (Impuesto):</span>
                             <span>{formatCurrency(totals.itbms)}</span>
                         </div>
-                        <div className="flex justify-between items-baseline pt-2 border-t-2 border-gray-900 text-base font-extrabold text-gray-900">
+                        <div className="flex justify-between items-baseline pt-2 border-t-2 border-border text-base font-extrabold text-foreground">
                             <span>Total Nota de Crédito:</span>
                             <span className="text-xl text-red-600">{formatCurrency(totals.neto)}</span>
                         </div>

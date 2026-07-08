@@ -69,7 +69,7 @@ export default async function AdminUsersPage(props: PageProps) {
             case 'vendedor':
             default:
                 return (
-                    <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700 font-medium">
+                    <Badge variant="outline" className="border-border bg-muted text-foreground font-medium">
                         Vendedor
                     </Badge>
                 );
@@ -87,14 +87,14 @@ export default async function AdminUsersPage(props: PageProps) {
             </div>
 
             {/* Filters */}
-            <Suspense fallback={<div className="h-10 bg-slate-100 animate-pulse rounded-md mb-6" />}>
+            <Suspense fallback={<div className="h-10 bg-muted animate-pulse rounded-md mb-6" />}>
                 <UserFilters />
             </Suspense>
 
             {/* User List Card Container */}
             <div className="rounded-md border bg-white shadow overflow-hidden">
                 <Table>
-                    <TableHeader className="bg-slate-50/50">
+                    <TableHeader className="bg-muted/50">
                         <TableRow>
                             <TableHead className="font-semibold">Usuario</TableHead>
                             <TableHead className="font-semibold">Rol Actual</TableHead>
@@ -113,15 +113,15 @@ export default async function AdminUsersPage(props: PageProps) {
                             </TableRow>
                         ) : (
                             users.map((user) => (
-                                <TableRow key={user.id} className="hover:bg-slate-50/50 transition-colors">
+                                <TableRow key={user.id} className="hover:bg-accent/50 transition-colors">
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="font-semibold text-slate-900">{user.nombre}</span>
+                                            <span className="font-semibold text-foreground">{user.nombre}</span>
                                             <span className="text-xs text-muted-foreground">{user.email}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>{getRoleBadge(user.rol)}</TableCell>
-                                    <TableCell className="text-slate-700 font-medium">{user.empresaName}</TableCell>
+                                    <TableCell className="text-foreground font-medium">{user.empresaName}</TableCell>
                                     <TableCell className="text-xs text-muted-foreground">
                                         {format(new Date(user.createdAt), 'dd MMM yyyy', { locale: es })}
                                     </TableCell>
@@ -146,11 +146,11 @@ export default async function AdminUsersPage(props: PageProps) {
 
                 {/* Pagination Controls */}
                 {totalCount > 0 && (
-                    <div className="flex items-center justify-between px-4 py-4 bg-slate-50/50 border-t border-border sm:px-6">
+                    <div className="flex items-center justify-between px-4 py-4 bg-muted/50 border-t border-border sm:px-6">
                         <div className="flex flex-1 justify-between sm:hidden">
                             <Link
                                 href={currentPage > 1 ? buildPageUrl(currentPage - 1) : '#'}
-                                className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${
+                                className={`relative inline-flex items-center rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-foreground hover:bg-accent ${
                                     currentPage <= 1 ? 'pointer-events-none opacity-50' : ''
                                 }`}
                             >
@@ -158,7 +158,7 @@ export default async function AdminUsersPage(props: PageProps) {
                             </Link>
                             <Link
                                 href={currentPage < totalPages ? buildPageUrl(currentPage + 1) : '#'}
-                                className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${
+                                className={`relative ml-3 inline-flex items-center rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-foreground hover:bg-accent ${
                                     currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''
                                 }`}
                             >
@@ -177,7 +177,7 @@ export default async function AdminUsersPage(props: PageProps) {
                                 <nav className="isolate inline-flex -space-x-px rounded-md shadow-xs bg-white" aria-label="Paginación">
                                     <Link
                                         href={currentPage > 1 ? buildPageUrl(currentPage - 1) : '#'}
-                                        className={`relative inline-flex items-center rounded-l-md px-3 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${
+                                        className={`relative inline-flex items-center rounded-l-md px-3 py-2 text-muted-foreground ring-1 ring-inset ring-border hover:bg-accent focus:z-20 focus:outline-offset-0 ${
                                             currentPage <= 1 ? 'pointer-events-none opacity-50' : ''
                                         }`}
                                     >
@@ -185,13 +185,13 @@ export default async function AdminUsersPage(props: PageProps) {
                                         <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                                     </Link>
                                     
-                                    <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 focus:outline-offset-0 bg-slate-50/20">
+                                    <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-foreground ring-1 ring-inset ring-border focus:outline-offset-0 bg-muted/20">
                                         Página {currentPage} de {totalPages || 1}
                                     </span>
 
                                     <Link
                                         href={currentPage < totalPages ? buildPageUrl(currentPage + 1) : '#'}
-                                        className={`relative inline-flex items-center rounded-r-md px-3 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${
+                                        className={`relative inline-flex items-center rounded-r-md px-3 py-2 text-muted-foreground ring-1 ring-inset ring-border hover:bg-accent focus:z-20 focus:outline-offset-0 ${
                                             currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''
                                         }`}
                                     >

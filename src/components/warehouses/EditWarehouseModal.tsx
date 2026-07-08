@@ -74,7 +74,7 @@ export function EditWarehouseModal({ bodega, sucursales }: { bodega: BodegaDetai
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-brand-1">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-brand-1">
                     <Edit2 className="h-4 w-4" />
                 </Button>
             </DialogTrigger>

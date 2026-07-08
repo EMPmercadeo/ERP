@@ -67,7 +67,7 @@ const palette = [
     'from-blue-600 to-brand-1 text-white',
     'from-emerald-500 to-teal-400 text-white',
     'from-amber-500 to-orange-400 text-white',
-    'from-slate-700 to-slate-500 text-white',
+    'from-primary to-primary/80 text-white',
     'from-rose-500 to-red-400 text-white',
 ];
 
@@ -195,7 +195,7 @@ export function PurchaseList({
                                         const isPaid = p.saldoPendiente <= 0;
                                         return (
                                             <TableRow key={p.id}>
-                                                <TableCell className="font-mono font-bold text-slate-800">
+                                                <TableCell className="font-mono font-bold text-foreground">
                                                     #{p.numeroFactura}
                                                 </TableCell>
                                                 <TableCell>
@@ -211,7 +211,7 @@ export function PurchaseList({
                                                 </TableCell>
                                                 <TableCell className="text-xs font-mono space-y-0.5">
                                                     <div>Emisión: {p.fechaEmision}</div>
-                                                    <div className="text-slate-400">Vence: {p.fechaVencimiento}</div>
+                                                    <div className="text-muted-foreground">Vence: {p.fechaVencimiento}</div>
                                                 </TableCell>
                                                 <TableCell>
                                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
@@ -225,7 +225,7 @@ export function PurchaseList({
                                                     {formatCurrency(p.totalNeto)}
                                                 </TableCell>
                                                 <TableCell className="text-right font-mono font-bold">
-                                                    <span className={!isPaid ? 'text-amber-600 font-bold' : 'text-slate-400'}>
+                                                    <span className={!isPaid ? 'text-amber-600 font-bold' : 'text-muted-foreground'}>
                                                         {formatCurrency(p.saldoPendiente)}
                                                     </span>
                                                 </TableCell>
@@ -266,14 +266,14 @@ export function PurchaseList({
                                 const gradClass = palette[idx % palette.length];
                                 const isPaid = p.saldoPendiente <= 0;
                                 return (
-                                    <div key={p.id} className="bg-slate-50/60 border border-slate-100 rounded-xl p-3.5 space-y-3 shadow-sm">
+                                    <div key={p.id} className="bg-muted/60 border border-border rounded-xl p-3.5 space-y-3 shadow-sm">
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="flex items-center gap-2.5 min-w-0">
                                                 <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0`}>
                                                     {getInitials(p.proveedor.razonSocial)}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <h4 className="font-bold text-slate-800 text-sm truncate">{p.proveedor.razonSocial}</h4>
+                                                    <h4 className="font-bold text-foreground text-sm truncate">{p.proveedor.razonSocial}</h4>
                                                     <p className="text-xs font-mono text-brand-1 font-bold">Fact. #{p.numeroFactura}</p>
                                                 </div>
                                             </div>
@@ -284,24 +284,24 @@ export function PurchaseList({
                                                 }`}>
                                                     {isPaid ? 'Pagada' : p.estadoPago}
                                                 </span>
-                                                <p className="text-[10px] text-slate-400 font-mono mt-1">{p.fechaEmision}</p>
+                                                <p className="text-[10px] text-muted-foreground font-mono mt-1">{p.fechaEmision}</p>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center justify-between border-t border-slate-100/80 pt-2 text-xs">
+                                        <div className="flex items-center justify-between border-t border-border/80 pt-2 text-xs">
                                             <div>
-                                                <span className="text-slate-400 text-[10px] block">Total Factura</span>
-                                                <span className="font-mono font-semibold text-slate-700">{formatCurrency(p.totalNeto)}</span>
+                                                <span className="text-muted-foreground text-[10px] block">Total Factura</span>
+                                                <span className="font-mono font-semibold text-foreground">{formatCurrency(p.totalNeto)}</span>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-slate-400 text-[10px] block">Por Pagar</span>
-                                                <span className={`font-mono font-bold ${!isPaid ? 'text-amber-600' : 'text-slate-400'}`}>
+                                                <span className="text-muted-foreground text-[10px] block">Por Pagar</span>
+                                                <span className={`font-mono font-bold ${!isPaid ? 'text-amber-600' : 'text-muted-foreground'}`}>
                                                     {formatCurrency(p.saldoPendiente)}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <div className="flex gap-2 pt-1 border-t border-slate-100/80">
+                                        <div className="flex gap-2 pt-1 border-t border-border/80">
                                             {!isPaid && (
                                                 <div className="flex-1">
                                                     <NewPaymentModal
@@ -322,14 +322,14 @@ export function PurchaseList({
                                 );
                             })
                         ) : (
-                            <div className="py-12 text-center text-xs text-slate-400 font-semibold">
+                            <div className="py-12 text-center text-xs text-muted-foreground font-semibold">
                                 No se encontraron facturas de compra.
                             </div>
                         )}
                     </div>
 
                     {/* Pagination Controls */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-200 bg-gray-50/50 mt-4 rounded-b-lg">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-border bg-muted/50 mt-4 rounded-b-lg">
                         <div className="text-sm text-muted-foreground">
                             Mostrando <span className="font-medium">{initialData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> a <span className="font-medium">{Math.min(currentPage * pageSize, totalCount)}</span> de <span className="font-medium">{totalCount}</span> resultados
                         </div>

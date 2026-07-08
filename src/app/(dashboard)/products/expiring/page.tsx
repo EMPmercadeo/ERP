@@ -71,16 +71,16 @@ export default async function ExpiringProductsPage() {
             <ContentContainer>
                 <div className="flex flex-col gap-6">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Control de Lotes por Vencer</h1>
-                        <p className="text-sm text-slate-500">
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground dark:text-white">Control de Lotes por Vencer</h1>
+                        <p className="text-sm text-muted-foreground">
                             Visualiza los lotes de productos almacenados ordenados por su fecha de caducidad más cercana.
                         </p>
                     </div>
 
-                    <Card className="border-slate-100 shadow-sm overflow-hidden">
+                    <Card className="border-border shadow-sm overflow-hidden">
                         <div className="overflow-x-auto">
                             <Table>
-                                <TableHeader className="bg-slate-50/50">
+                                <TableHeader className="bg-muted/50">
                                     <TableRow>
                                         <TableHead>Producto</TableHead>
                                         <TableHead>Bodega</TableHead>
@@ -93,9 +93,9 @@ export default async function ExpiringProductsPage() {
                                 <TableBody>
                                     {formattedLotes.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="text-center py-12 text-slate-500">
+                                            <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
                                                 <div className="flex flex-col items-center justify-center gap-2">
-                                                    <Calendar className="h-8 w-8 text-slate-300" />
+                                                    <Calendar className="h-8 w-8 text-muted-foreground" />
                                                     <p className="text-sm font-medium">No hay lotes con fecha de vencimiento</p>
                                                     <p className="text-xs">
                                                         Todos tus productos con control de lotes tienen stock al día o no tienen vencimiento próximo.
@@ -105,23 +105,23 @@ export default async function ExpiringProductsPage() {
                                         </TableRow>
                                     ) : (
                                         formattedLotes.map((l) => (
-                                            <TableRow key={l.id} className="hover:bg-slate-50/30">
+                                            <TableRow key={l.id} className="hover:bg-accent/30">
                                                 <TableCell>
                                                     <div className="flex flex-col">
-                                                        <span className="font-medium text-slate-900">{l.productoDescripcion}</span>
-                                                        <span className="text-xs text-slate-500 font-mono">{l.productoCodigo}</span>
+                                                        <span className="font-medium text-foreground">{l.productoDescripcion}</span>
+                                                        <span className="text-xs text-muted-foreground font-mono">{l.productoCodigo}</span>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="text-slate-600">
+                                                <TableCell className="text-muted-foreground">
                                                     <div className="flex items-center gap-1.5">
-                                                        <Warehouse className="h-3.5 w-3.5 text-slate-400" />
+                                                        <Warehouse className="h-3.5 w-3.5 text-muted-foreground" />
                                                         {l.bodegaNombre}
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="font-mono text-slate-700">
+                                                <TableCell className="font-mono text-foreground">
                                                     {l.numeroLote}
                                                 </TableCell>
-                                                <TableCell className="text-slate-700">
+                                                <TableCell className="text-foreground">
                                                     {l.fechaVencimiento}
                                                 </TableCell>
                                                 <TableCell>
@@ -139,7 +139,7 @@ export default async function ExpiringProductsPage() {
                                                         </Badge>
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="text-right font-semibold text-slate-900">
+                                                <TableCell className="text-right font-semibold text-foreground">
                                                     {l.cantidadDisponible}
                                                 </TableCell>
                                             </TableRow>

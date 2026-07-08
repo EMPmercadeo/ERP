@@ -107,7 +107,7 @@ export function BankAccountList({
         <ContentContainer className="py-4 space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight text-slate-900">Cuentas Bancarias</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground">Cuentas Bancarias</h2>
                     <p className="text-muted-foreground text-sm">
                         Administra las cuentas bancarias de la empresa y su vínculo con el plan de cuentas
                     </p>
@@ -131,7 +131,7 @@ export function BankAccountList({
 
                     <div className="rounded-lg border overflow-hidden">
                         <Table>
-                            <TableHeader className="bg-slate-100/80">
+                            <TableHeader className="bg-muted/80">
                                 <TableRow>
                                     <TableHead>Cuenta</TableHead>
                                     <TableHead>Banco</TableHead>
@@ -146,21 +146,21 @@ export function BankAccountList({
                             <TableBody>
                                 {filtered.length > 0 ? (
                                     filtered.map((c) => (
-                                        <TableRow key={c.id} className="hover:bg-slate-50/60">
+                                        <TableRow key={c.id} className="hover:bg-accent/60">
                                             <TableCell>
                                                 <div className="flex items-center gap-2.5">
                                                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-brand-1 to-brand-2 text-white shrink-0">
                                                         <Landmark className="h-4 w-4" />
                                                     </div>
-                                                    <Link href={`/bank-accounts/${c.id}`} className="font-semibold text-slate-800 hover:text-brand-1">
+                                                    <Link href={`/bank-accounts/${c.id}`} className="font-semibold text-foreground hover:text-brand-1">
                                                         {c.nombre}
                                                     </Link>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-xs font-medium text-slate-700">{c.banco}</TableCell>
+                                            <TableCell className="text-xs font-medium text-foreground">{c.banco}</TableCell>
                                             <TableCell className="font-mono text-xs">{c.numeroCuenta}</TableCell>
                                             <TableCell className="text-xs capitalize">{c.tipoCuenta.toLowerCase()}</TableCell>
-                                            <TableCell className="text-xs text-slate-600">
+                                            <TableCell className="text-xs text-muted-foreground">
                                                 {c.cuentaContableCodigo} — {c.cuentaContableNombre}
                                             </TableCell>
                                             <TableCell className="text-right font-mono text-xs">{formatCurrency(c.saldoInicial)}</TableCell>
@@ -172,14 +172,14 @@ export function BankAccountList({
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-1">
                                                     <Link href={`/bank-accounts/${c.id}`}>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-brand-1 hover:bg-brand-1/10" title="Ver Detalle">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-brand-1/10" title="Ver Detalle">
                                                             <Eye className="h-4 w-4" />
                                                         </Button>
                                                     </Link>
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="h-8 w-8 text-slate-600 hover:text-amber-600 hover:bg-amber-50"
+                                                        className="h-8 w-8 text-muted-foreground hover:text-amber-600 hover:bg-amber-50"
                                                         title="Editar"
                                                         onClick={() => setEditingCuenta(c)}
                                                     >

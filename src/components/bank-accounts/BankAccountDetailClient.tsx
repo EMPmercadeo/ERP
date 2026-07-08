@@ -98,7 +98,7 @@ export function BankAccountDetailClient({
                         <Landmark className="h-5 w-5" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">{cuenta.nombre}</h2>
+                        <h2 className="text-2xl font-bold tracking-tight text-foreground">{cuenta.nombre}</h2>
                         <p className="text-muted-foreground text-sm">
                             {cuenta.banco} · {cuenta.numeroCuenta} · Vinculada a {cuenta.cuentaContableCodigo} — {cuenta.cuentaContableNombre}
                         </p>
@@ -121,7 +121,7 @@ export function BankAccountDetailClient({
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Saldo Inicial</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-slate-900">{formatCurrency(cuenta.saldoInicial)}</div>
+                        <div className="text-2xl font-bold text-foreground">{formatCurrency(cuenta.saldoInicial)}</div>
                     </CardContent>
                 </Card>
                 <Card className="shadow-sm">
@@ -156,7 +156,7 @@ export function BankAccountDetailClient({
                 <CardContent className="pt-6">
                     <div className="rounded-lg border overflow-hidden">
                         <Table>
-                            <TableHeader className="bg-slate-100/80">
+                            <TableHeader className="bg-muted/80">
                                 <TableRow>
                                     <TableHead>Fecha</TableHead>
                                     <TableHead>Descripción</TableHead>
@@ -169,9 +169,9 @@ export function BankAccountDetailClient({
                             <TableBody>
                                 {movimientos.length > 0 ? (
                                     movimientos.map((m) => (
-                                        <TableRow key={m.id} className="hover:bg-slate-50/60">
+                                        <TableRow key={m.id} className="hover:bg-accent/60">
                                             <TableCell className="text-xs">{formatDate(m.fecha)}</TableCell>
-                                            <TableCell className="text-xs font-medium text-slate-700">{m.descripcion}</TableCell>
+                                            <TableCell className="text-xs font-medium text-foreground">{m.descripcion}</TableCell>
                                             <TableCell className="text-xs">
                                                 <Badge variant={m.tipo === 'DEPOSITO' ? 'success' : 'destructive'} className="text-[10px]">
                                                     {m.tipo === 'DEPOSITO' ? 'Depósito' : 'Retiro'}
@@ -185,7 +185,7 @@ export function BankAccountDetailClient({
                                                 {m.conciliado ? (
                                                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                                                 ) : (
-                                                    <Circle className="h-4 w-4 text-slate-300" />
+                                                    <Circle className="h-4 w-4 text-muted-foreground" />
                                                 )}
                                             </TableCell>
                                         </TableRow>

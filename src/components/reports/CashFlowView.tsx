@@ -35,7 +35,7 @@ export function CashFlowView({
     return (
         <ContentContainer className="py-4 space-y-6">
             <div>
-                <h2 className="text-2xl font-bold tracking-tight text-slate-900">Flujo de Caja Proyectado</h2>
+                <h2 className="text-2xl font-bold tracking-tight text-foreground">Flujo de Caja Proyectado</h2>
                 <p className="text-muted-foreground text-sm">
                     Ingresos esperados (CxC) contra egresos esperados (CxP), agrupados por vencimiento
                 </p>
@@ -86,7 +86,7 @@ export function CashFlowView({
                 <CardContent className="pt-6">
                     <div className="rounded-lg border overflow-hidden">
                         <Table>
-                            <TableHeader className="bg-slate-100/80">
+                            <TableHeader className="bg-muted/80">
                                 <TableRow>
                                     <TableHead>Período</TableHead>
                                     <TableHead className="text-right">Ingresos (CxC)</TableHead>
@@ -96,8 +96,8 @@ export function CashFlowView({
                             </TableHeader>
                             <TableBody>
                                 {data.map((row) => (
-                                    <TableRow key={row.label} className="hover:bg-slate-50/60">
-                                        <TableCell className="font-medium text-slate-800">{row.label}</TableCell>
+                                    <TableRow key={row.label} className="hover:bg-accent/60">
+                                        <TableCell className="font-medium text-foreground">{row.label}</TableCell>
                                         <TableCell className="text-right font-mono text-xs text-emerald-600">
                                             {formatCurrency(row.ingresos)}
                                         </TableCell>
@@ -109,7 +109,7 @@ export function CashFlowView({
                                         </TableCell>
                                     </TableRow>
                                 ))}
-                                <TableRow className="bg-slate-50 font-bold border-t-2">
+                                <TableRow className="bg-muted font-bold border-t-2">
                                     <TableCell>Total</TableCell>
                                     <TableCell className="text-right font-mono text-xs text-emerald-700">{formatCurrency(totales.ingresos)}</TableCell>
                                     <TableCell className="text-right font-mono text-xs text-red-700">{formatCurrency(totales.egresos)}</TableCell>

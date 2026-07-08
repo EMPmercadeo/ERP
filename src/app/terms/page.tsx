@@ -4,7 +4,7 @@ import { Footer } from '@/components/layout/Footer';
 
 export default function TermsPage() {
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
+        <div className="min-h-screen bg-secondary flex flex-col justify-between">
             {/* Header */}
             <header className="bg-foreground text-white py-6">
                 <div className="max-w-4xl mx-auto px-4">

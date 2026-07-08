@@ -160,7 +160,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
     // Printable minimal template
     if (printMode) {
         return (
-            <div className="p-8 max-w-4xl mx-auto bg-white text-slate-800 space-y-6">
+            <div className="p-8 max-w-4xl mx-auto bg-white text-foreground space-y-6">
                 <div className="flex justify-between items-start border-b pb-6">
                     <div>
                         <h1 className="text-3xl font-extrabold text-brand-1">NOTA DE ENTREGA</h1>
@@ -192,10 +192,10 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                 </div>
 
                 <div className="space-y-4">
-                    <h3 className="font-bold text-slate-800 text-sm">Artículos / Servicios Entregados</h3>
+                    <h3 className="font-bold text-foreground text-sm">Artículos / Servicios Entregados</h3>
                     <table className="w-full text-left border-collapse text-sm">
                         <thead>
-                            <tr className="border-b bg-slate-50 text-slate-600 font-semibold">
+                            <tr className="border-b bg-muted text-muted-foreground font-semibold">
                                 <th className="p-2.5">Descripción</th>
                                 <th className="p-2.5 text-right w-28">Cant. Solicitada</th>
                                 <th className="p-2.5 text-right w-28">Cant. Entregada</th>
@@ -209,7 +209,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                 <tr key={item.id} className="border-b">
                                     <td className="p-2.5 font-medium">{item.descripcion}</td>
                                     <td className="p-2.5 text-right">{item.cantidadPedida}</td>
-                                    <td className="p-2.5 text-right font-bold text-slate-900">{item.cantidad}</td>
+                                    <td className="p-2.5 text-right font-bold text-foreground">{item.cantidad}</td>
                                     <td className="p-2.5 text-right text-amber-600">{item.cantidadPendiente}</td>
                                     <td className="p-2.5 text-right">{formatCurrency(item.precioUnitario)}</td>
                                     <td className="p-2.5 text-right font-semibold">{formatCurrency(item.cantidadPedida * item.precioUnitario)}</td>
@@ -224,7 +224,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                         {note.observaciones && (
                             <div>
                                 <h4 className="font-bold text-xs uppercase text-muted-foreground">Notas al Cliente:</h4>
-                                <p className="text-slate-600 italic mt-1">{note.observaciones}</p>
+                                <p className="text-muted-foreground italic mt-1">{note.observaciones}</p>
                             </div>
                         )}
                         <div className="pt-12 flex gap-8">
@@ -280,7 +280,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                             <Button
                                 variant="outline"
                                 onClick={() => window.open(`?print=true`, '_blank')}
-                                className="gap-2 border-slate-200 hover:bg-slate-50"
+                                className="gap-2 border-border hover:bg-accent"
                             >
                                 <Printer className="h-4 w-4" />
                                 Imprimir / PDF
@@ -340,7 +340,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                             </div>
                             <div>
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <h1 className="text-2xl font-bold text-slate-900">Nota de Entrega {note.numero}</h1>
+                                    <h1 className="text-2xl font-bold text-foreground">Nota de Entrega {note.numero}</h1>
                                     <StatusBadge status={note.estado} />
                                 </div>
                                 <p className="text-sm text-muted-foreground mt-0.5">
@@ -373,7 +373,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                             <Phone className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                             <div>
                                                 <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Contacto Entrega</span>
-                                                <span className="text-slate-800 font-medium">
+                                                <span className="text-foreground font-medium">
                                                     {note.nombreContacto || 'No especificado'} {note.telefonoContacto ? `(${note.telefonoContacto})` : ''}
                                                 </span>
                                             </div>
@@ -382,7 +382,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                             <Mail className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                             <div>
                                                 <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Correo Cliente</span>
-                                                <span className="text-slate-800 font-medium">{note.cliente.email || 'No registrado'}</span>
+                                                <span className="text-foreground font-medium">{note.cliente.email || 'No registrado'}</span>
                                             </div>
                                         </div>
                                         {note.cotizacion && (
@@ -402,14 +402,14 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                             <MapPin className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                             <div>
                                                 <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Dirección de Entrega</span>
-                                                <span className="text-slate-800 font-medium">{note.direccionEntrega || note.cliente.direccion || 'Dirección de oficina principal'}</span>
+                                                <span className="text-foreground font-medium">{note.direccionEntrega || note.cliente.direccion || 'Dirección de oficina principal'}</span>
                                             </div>
                                         </div>
                                         <div className="flex items-start gap-2.5">
                                             <Calendar className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                             <div>
                                                 <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Fecha Est. Entrega</span>
-                                                <span className="text-slate-800 font-medium">
+                                                <span className="text-foreground font-medium">
                                                     {note.fechaEstimadaEntrega ? formatDate(note.fechaEstimadaEntrega) : 'No programada'}
                                                 </span>
                                             </div>
@@ -427,7 +427,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                             <User className="h-4.5 w-4.5 text-muted-foreground mt-0.5" />
                                             <div>
                                                 <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider">Responsable Logística</span>
-                                                <span className="text-slate-800 font-medium">{note.responsable?.nombre || 'No asignado'}</span>
+                                                <span className="text-foreground font-medium">{note.responsable?.nombre || 'No asignado'}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -455,7 +455,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                                 <TableRow key={item.id}>
                                                     <TableCell className="font-medium">{item.descripcion}</TableCell>
                                                     <TableCell className="text-right">{item.cantidadPedida}</TableCell>
-                                                    <TableCell className="text-right font-bold text-slate-800">{item.cantidad}</TableCell>
+                                                    <TableCell className="text-right font-bold text-foreground">{item.cantidad}</TableCell>
                                                     <TableCell className="text-right font-semibold text-amber-600">{item.cantidadPendiente}</TableCell>
                                                     <TableCell className="text-right">{formatCurrency(item.precioUnitario)}</TableCell>
                                                     <TableCell className="text-right font-semibold">{formatCurrency(item.cantidadPedida * item.precioUnitario)}</TableCell>
@@ -487,7 +487,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                         <span className="font-semibold">{formatCurrency(note.totalItbms)}</span>
                                     </div>
                                     <hr />
-                                    <div className="flex justify-between text-base font-bold text-slate-800">
+                                    <div className="flex justify-between text-base font-bold text-foreground">
                                         <span>Total Neto:</span>
                                         <span className="text-brand-1">{formatCurrency(note.totalNeto)}</span>
                                     </div>
@@ -502,7 +502,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                     {note.observaciones && (
                                         <div>
                                             <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-1">Notas para el Cliente (Visibles)</span>
-                                            <p className="text-slate-700 text-sm whitespace-pre-line bg-slate-50 p-3 rounded-lg border border-slate-100 italic">&quot;{note.observaciones}&quot;</p>
+                                            <p className="text-foreground text-sm whitespace-pre-line bg-muted p-3 rounded-lg border border-border italic">&quot;{note.observaciones}&quot;</p>
                                         </div>
                                     )}
                                     {note.notasInternas && (
@@ -532,7 +532,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                                     hist.estadoNuevo === 'entregado' ? 'border-green-500 bg-green-500' :
                                                     hist.estadoNuevo === 'anulado' ? 'border-red-500 bg-red-500' : 'border-brand-1 bg-brand-1'
                                                 }`} />
-                                                <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                                                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 flex-wrap">
                                                     {hist.estadoAnterior ? getEstadoLabel(hist.estadoAnterior) : 'Creación'}
                                                     <ChevronRight className="h-3 w-3 text-muted-foreground" />
                                                     <span className={
@@ -541,7 +541,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                                         hist.estadoNuevo === 'anulado' ? 'text-red-600' : 'text-brand-1'
                                                     }>{getEstadoLabel(hist.estadoNuevo)}</span>
                                                 </p>
-                                                {hist.notas && <p className="text-[11px] text-slate-600 mt-0.5">{hist.notas}</p>}
+                                                {hist.notas && <p className="text-[11px] text-muted-foreground mt-0.5">{hist.notas}</p>}
                                                 <p className="text-[10px] text-muted-foreground mt-1 flex justify-between gap-2">
                                                     <span>Por: {hist.usuario.nombre}</span>
                                                     <span>{formatDate(hist.fechaCambio)}</span>
@@ -550,7 +550,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                         ))}
 
                                         {note.estado === 'facturado' && note.factura && (
-                                            <div className="relative pt-2 border-t border-slate-100">
+                                            <div className="relative pt-2 border-t border-border">
                                                 <div className="absolute -left-[31px] top-4 h-3.5 w-3.5 rounded-full border-2 border-emerald-600 bg-emerald-600" />
                                                 <p className="text-xs font-bold text-emerald-600">Facturado</p>
                                                 <Link 

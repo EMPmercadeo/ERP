@@ -4,7 +4,7 @@ import { Footer } from '@/components/layout/Footer';
 
 export default function CookiesPage() {
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
+        <div className="min-h-screen bg-secondary flex flex-col justify-between">
             <div>
                 {/* Header */}
                 <header className="bg-foreground text-white py-6">

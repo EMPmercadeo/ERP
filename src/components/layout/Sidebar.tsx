@@ -355,8 +355,8 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                             "text-[9px] px-1.5 py-0 border-none font-bold uppercase",
                                             userPlan === 'pro' && "bg-amber-500 hover:bg-amber-500 text-white shadow-sm",
                                             userPlan === 'basic' && "bg-indigo-500 hover:bg-indigo-500 text-white",
-                                            userPlan === 'enterprise' && "bg-slate-700 hover:bg-slate-700 text-white",
-                                            userPlan === 'free' && "bg-slate-200 hover:bg-slate-200 text-slate-700"
+                                            userPlan === 'enterprise' && "bg-secondary hover:bg-secondary text-white",
+                                            userPlan === 'free' && "bg-muted hover:bg-muted text-foreground"
                                         )}>
                                             {planLabel}
                                         </Badge>
@@ -385,8 +385,8 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                                     "text-[9px] font-bold uppercase px-1 rounded",
                                                     userPlan === 'pro' && "text-amber-600 bg-amber-50",
                                                     userPlan === 'basic' && "text-indigo-600 bg-indigo-50",
-                                                    userPlan === 'enterprise' && "text-slate-700 bg-slate-100",
-                                                    userPlan === 'free' && "text-slate-500 bg-slate-50"
+                                                    userPlan === 'enterprise' && "text-foreground bg-muted",
+                                                    userPlan === 'free' && "text-muted-foreground bg-muted"
                                                 )}>
                                                     {planLabel}
                                                 </span>
@@ -599,13 +599,13 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                             <div className="h-12 w-12 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
                                 🎁
                             </div>
-                            <h3 className="text-lg font-bold text-slate-900">Refiere a un amigo</h3>
+                            <h3 className="text-lg font-bold text-foreground">Refiere a un amigo</h3>
                             <p className="text-xs text-muted-foreground">
                                 Comparte tu código único de referido. Cuando tu amigo se suscriba a un plan de pago, ambos recibirán un 50% de descuento en el próximo mes.
                             </p>
                         </div>
-                        <div className="mt-6 p-4 bg-slate-50 border border-dashed rounded-lg flex items-center justify-between">
-                            <span className="font-mono text-sm font-bold text-slate-700 tracking-wider text-center flex-1">ERPPANAMA50</span>
+                        <div className="mt-6 p-4 bg-muted border border-dashed rounded-lg flex items-center justify-between">
+                            <span className="font-mono text-sm font-bold text-foreground tracking-wider text-center flex-1">ERPPANAMA50</span>
                             <Button size="sm" variant="outline" onClick={copyReferralCode}>
                                 <Copy className="h-4 w-4 mr-1.5" />
                                 Copiar
@@ -626,7 +626,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                             <X className="h-5 w-5" />
                         </button>
                         <form onSubmit={handleSendFeedback} className="space-y-4">
-                            <h3 className="text-lg font-bold text-slate-900">Danos tu opinión</h3>
+                            <h3 className="text-lg font-bold text-foreground">Danos tu opinión</h3>
                             <p className="text-xs text-muted-foreground">
                                 ¿Tienes ideas, reportes de fallos o sugerencias? Déjanos tus comentarios abajo.
                             </p>
@@ -662,7 +662,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                             <X className="h-5 w-5" />
                         </button>
                         <form onSubmit={handleSendSupport} className="space-y-4">
-                            <h3 className="text-lg font-bold text-slate-900">Contactar Soporte</h3>
+                            <h3 className="text-lg font-bold text-foreground">Contactar Soporte</h3>
                             <p className="text-xs text-muted-foreground">
                                 Nuestro equipo técnico está para ayudarte. Completa los detalles de tu consulta.
                             </p>
@@ -709,7 +709,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
 function Badge({ children, className }: { children: React.ReactNode, className?: string }) {
     return (
         <span className={cn(
-            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ring-gray-500/10",
+            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ring-border/10",
             className
         )}>
             {children}

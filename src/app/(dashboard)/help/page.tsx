@@ -80,7 +80,7 @@ export default function HelpPage() {
                         <div className="h-12 w-12 bg-brand-1/10 text-brand-1 rounded-full flex items-center justify-center mx-auto">
                             <HelpCircle className="h-6 w-6" />
                         </div>
-                        <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">¿Cómo podemos ayudarte?</h2>
+                        <h2 className="text-3xl font-extrabold tracking-tight text-foreground">¿Cómo podemos ayudarte?</h2>
                         <p className="text-sm text-muted-foreground max-w-xl mx-auto">
                             Encuentra guías paso a paso, respuestas a preguntas frecuentes o ponte en contacto con nuestro equipo de soporte técnico para ayudarte en tu facturación.
                         </p>
@@ -123,14 +123,14 @@ export default function HelpPage() {
                     <div className="grid gap-8 md:grid-cols-3 pt-4">
                         {/* FAQs Section */}
                         <div className="md:col-span-2 space-y-6">
-                            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                            <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                                 <FileText className="h-5 w-5 text-brand-1" />
                                 Preguntas Frecuentes (FAQs)
                             </h3>
                             <div className="space-y-4">
                                 {faqs.map((faq, idx) => (
                                     <div key={idx} className="border rounded-lg p-5 bg-card shadow-sm space-y-2">
-                                        <h4 className="text-sm font-semibold text-slate-900">{faq.q}</h4>
+                                        <h4 className="text-sm font-semibold text-foreground">{faq.q}</h4>
                                         <p className="text-xs text-muted-foreground leading-relaxed">
                                             {faq.a}
                                         </p>
@@ -141,7 +141,7 @@ export default function HelpPage() {
 
                         {/* Contact Support Sidebar */}
                         <div className="space-y-6">
-                            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                            <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                                 <PhoneCall className="h-5 w-5 text-brand-1" />
                                 Canales de Soporte
                             </h3>
