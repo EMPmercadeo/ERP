@@ -241,8 +241,16 @@ export default function PaginaInicio() {
             <HeaderInicio />
 
             {/* Hero */}
-            <section className="relative overflow-hidden bg-brand-3 py-16 sm:py-24">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <section className="relative overflow-hidden bg-brand-3 py-16 sm:py-28">
+                {/* Textura sutil de puntos — profundidad sin gradientes ni color decorativo */}
+                <div
+                    className="pointer-events-none absolute inset-0 opacity-[0.15]"
+                    style={{
+                        backgroundImage:
+                            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Ccircle cx='1.5' cy='1.5' r='1.5' fill='white'/%3E%3C/svg%3E\")",
+                    }}
+                />
+                <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
                         {/* Columna de texto */}
                         <div className="text-center lg:text-left">
@@ -250,8 +258,9 @@ export default function PaginaInicio() {
                                 <ShieldCheck className="h-3.5 w-3.5" />
                                 Hecho para PyMEs panameñas
                             </span>
-                            <h1 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-5xl">
-                                Contabilidad, facturación electrónica DGI e inventario, en un solo sistema
+                            <h1 className="mt-5 text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+                                Contabilidad, facturación DGI e inventario,
+                                <br className="hidden lg:block" /> en un solo sistema
                             </h1>
                             <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg lg:mx-0" /* design-token-exempt */>
                                 Cada factura genera su asiento contable automáticamente. Deja de operar tu negocio
@@ -277,26 +286,33 @@ export default function PaginaInicio() {
                         </div>
 
                         {/* Bento de producto: vista previa real del sistema, no fotos de stock */}
-                        <div className="relative mx-auto w-full max-w-md lg:mx-0 lg:max-w-none">
+                        <div className="relative mx-auto w-full max-w-md pt-6 lg:mx-0 lg:max-w-none lg:pt-0">
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Ventas del mes */}
-                                <div className="col-span-2 rounded-xl bg-white p-5 shadow-xl">
+                                <div className="col-span-2 rounded-xl bg-white p-5 shadow-2xl">
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs font-medium text-muted-foreground">Ventas del mes</span>
                                         <span className="rounded-full bg-success-bg px-2 py-0.5 text-[10px] font-bold text-success">+18%</span>
                                     </div>
                                     <p className="mt-1.5 text-2xl font-bold text-brand-3">$12,432.00</p>
-                                    <div className="mt-4 flex h-10 items-end gap-1.5">
-                                        {[40, 55, 35, 70, 50, 80, 65].map((h, i) => (
-                                            <div key={i} className="flex-1 rounded-sm bg-brand-1/15">
-                                                <div className="rounded-sm bg-brand-1" style={{ height: `${h}%` }} />
-                                            </div>
-                                        ))}
-                                    </div>
+                                    <svg viewBox="0 0 300 70" preserveAspectRatio="none" className="mt-3 h-14 w-full">
+                                        <path
+                                            d="M0,50 C30,55 45,22 75,30 C105,38 120,10 150,18 C180,26 195,42 225,32 C255,22 270,14 300,18 L300,70 L0,70 Z"
+                                            fill="#073674"
+                                            fillOpacity="0.12"
+                                        />
+                                        <path
+                                            d="M0,50 C30,55 45,22 75,30 C105,38 120,10 150,18 C180,26 195,42 225,32 C255,22 270,14 300,18"
+                                            fill="none"
+                                            stroke="#073674"
+                                            strokeWidth="2.5"
+                                            strokeLinecap="round"
+                                        />
+                                    </svg>
                                 </div>
 
                                 {/* Factura autorizada */}
-                                <div className="rounded-xl bg-white p-4 shadow-xl">
+                                <div className="rounded-xl bg-white p-4 shadow-2xl">
                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-success-bg text-success">
                                         <Check className="h-4 w-4" />
                                     </div>
@@ -305,7 +321,7 @@ export default function PaginaInicio() {
                                 </div>
 
                                 {/* Documentos usados */}
-                                <div className="rounded-xl bg-white p-4 shadow-xl">
+                                <div className="rounded-xl bg-white p-4 shadow-2xl">
                                     <p className="text-[10px] font-medium text-muted-foreground">Documentos usados</p>
                                     <p className="mt-1 text-lg font-bold text-brand-3">
                                         128<span className="text-xs font-normal text-muted-foreground">/300</span>
@@ -314,14 +330,44 @@ export default function PaginaInicio() {
                                         <div className="h-1.5 rounded-full bg-brand-1" style={{ width: '42%' }} />
                                     </div>
                                 </div>
+
+                                {/* Equipo / multiusuario */}
+                                <div className="col-span-2 flex items-center gap-3 rounded-xl bg-white p-4 shadow-2xl">
+                                    <div className="flex -space-x-2">
+                                        {['MG', 'JR', 'AL', '+7'].map((initials) => (
+                                            <div
+                                                key={initials}
+                                                className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-brand-1 text-[9px] font-bold text-white"
+                                            >
+                                                {initials}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">Multiusuario con permisos por rol</p>
+                                </div>
                             </div>
 
                             {/* Badge flotante de cumplimiento */}
-                            <div className="absolute -top-4 -right-3 hidden rounded-xl border border-border bg-white px-3 py-2 shadow-xl sm:flex sm:items-center sm:gap-2">
+                            <div className="absolute -top-3 -right-3 hidden -rotate-2 items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 shadow-2xl sm:flex">
                                 <ShieldCheck className="h-4 w-4 text-brand-1" />
                                 <span className="text-[10px] font-semibold text-brand-3">DGI · PAC · CAFE</span>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Highlights honestos, sin cifras inventadas */}
+                    <div className="mt-16 grid grid-cols-2 gap-6 border-t border-white/10 pt-8 sm:grid-cols-4 lg:mt-20">
+                        {[
+                            { label: 'Asientos automáticos', value: '100%' },
+                            { label: 'Bodegas y sucursales', value: 'Ilimitadas' },
+                            { label: 'Documentos DGI', value: 'FE · NC · ND' },
+                            { label: 'Soporte', value: 'En español' },
+                        ].map((item) => (
+                            <div key={item.label} className="text-center lg:text-left">
+                                <p className="text-lg font-bold text-white sm:text-xl">{item.value}</p>
+                                <p className="mt-0.5 text-xs text-slate-400">{item.label}</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
