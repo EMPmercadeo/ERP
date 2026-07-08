@@ -520,43 +520,43 @@ export function ReportsDashboard({
                     {currentFilters.clienteId !== 'all' && (
                         <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
                             Cliente: {filterClients.find(c => c.id === currentFilters.clienteId)?.razonSocial || 'Seleccionado'}
-                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground" onClick={() => removeFilter('clienteId')} />
+                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeFilter('clienteId')} />
                         </Badge>
                     )}
                     {currentFilters.productoId !== 'all' && (
                         <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
                             Producto: {filterProducts.find(p => p.id === currentFilters.productoId)?.descripcion || 'Seleccionado'}
-                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground" onClick={() => removeFilter('productoId')} />
+                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeFilter('productoId')} />
                         </Badge>
                     )}
                     {currentFilters.creadorId !== 'all' && (
                         <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
                             Vendedor: {filterSellers.find(s => s.id === currentFilters.creadorId)?.nombre || 'Seleccionado'}
-                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground" onClick={() => removeFilter('creadorId')} />
+                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeFilter('creadorId')} />
                         </Badge>
                     )}
                     {currentFilters.tipoDocumento !== 'all' && (
                         <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
                             Tipo: {currentFilters.tipoDocumento}
-                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground" onClick={() => removeFilter('tipoDocumento')} />
+                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeFilter('tipoDocumento')} />
                         </Badge>
                     )}
                     {currentFilters.estadoDgi !== 'all' && (
                         <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
                             DGI: {currentFilters.estadoDgi}
-                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground" onClick={() => removeFilter('estadoDgi')} />
+                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeFilter('estadoDgi')} />
                         </Badge>
                     )}
                     {currentFilters.paymentStatus !== 'all' && (
                         <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
                             Pago: {currentFilters.paymentStatus}
-                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground" onClick={() => removeFilter('paymentStatus')} />
+                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeFilter('paymentStatus')} />
                         </Badge>
                     )}
                     {currentFilters.metodoPago && currentFilters.metodoPago !== 'all' && (
                         <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
                             Método: {currentFilters.metodoPago === 'efectivo' ? 'Efectivo' : currentFilters.metodoPago === 'transferencia' ? 'Transferencia' : currentFilters.metodoPago === 'tarjeta' ? 'Tarjeta' : currentFilters.metodoPago === 'cheque' ? 'Cheque' : currentFilters.metodoPago}
-                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-muted-foreground" onClick={() => removeFilter('metodoPago')} />
+                            <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeFilter('metodoPago')} />
                         </Badge>
                     )}
                     <Button

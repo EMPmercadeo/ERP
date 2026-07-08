@@ -558,7 +558,7 @@ export function ProductList({
                                         <button
                                             type="button"
                                             onClick={() => setGlobalFilter('')}
-                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
+                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                         >
                                             <X className="h-4 w-4" />
                                         </button>

@@ -353,7 +353,7 @@ export function CreditNoteForm({
                                                 className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 ${
                                                     isSelected
                                                         ? 'border-red-500 bg-red-50/30 ring-2 ring-red-500/20 shadow-sm'
-                                                        : 'border-border hover:border-border bg-white hover:bg-accent/50'
+                                                        : 'border-border hover:border-brand-1/40 bg-white hover:bg-accent/50'
                                                 }`}
                                             >
                                                 <div className="flex justify-between items-start gap-2">

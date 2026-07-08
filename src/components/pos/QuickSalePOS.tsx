@@ -312,7 +312,7 @@ export function QuickSalePOS({
                             {searchQuery && (
                                 <button
                                     onClick={() => setSearchQuery('')}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
@@ -549,7 +549,7 @@ export function QuickSalePOS({
                                 <ShoppingCart className="h-4 w-4 text-brand-1" />
                                 Artículos Agregados
                             </h4>
-                            <button onClick={() => setIsCartOpen(false)} className="text-muted-foreground hover:text-muted-foreground">
+                            <button onClick={() => setIsCartOpen(false)} className="text-muted-foreground hover:text-foreground">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
@@ -602,7 +602,7 @@ export function QuickSalePOS({
                     <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl border border-border dark:border-border shadow-2xl p-6 relative font-sans">
                         <button
                             onClick={() => setShowCheckoutModal(false)}
-                            className="absolute top-4 right-4 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground transition-colors"
+                            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
                             disabled={isCheckingOut}
                         >
                             <X className="h-5 w-5" />
@@ -762,7 +762,7 @@ export function QuickSalePOS({
                     <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl border border-border dark:border-border shadow-2xl p-6 relative font-sans">
                         <button
                             onClick={() => setSuccessInvoice(null)}
-                            className="absolute top-4 right-4 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground transition-colors"
+                            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
                         >
                             <X className="h-5 w-5" />
                         </button>

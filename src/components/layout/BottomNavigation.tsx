@@ -225,7 +225,7 @@ export function BottomNavigation() {
                         </div>
                         <button
                             onClick={() => setIsMenuOpen(false)}
-                            className="text-muted-foreground hover:text-muted-foreground p-1.5 rounded-full hover:bg-accent active:scale-90 transition-transform shrink-0"
+                            className="text-muted-foreground hover:text-foreground p-1.5 rounded-full hover:bg-accent active:scale-90 transition-transform shrink-0"
                         >
                             <X className="h-5 w-5" />
                         </button>

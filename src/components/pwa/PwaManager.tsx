@@ -81,7 +81,7 @@ export function PwaManager() {
                 </div>
                 <button 
                     onClick={() => setIsDismissed(true)}
-                    className="text-muted-foreground hover:text-muted-foreground rounded p-0.5 hover:bg-accent transition-colors"
+                    className="text-muted-foreground hover:text-foreground rounded p-0.5 hover:bg-accent transition-colors"
                 >
                     <X className="h-4 w-4" />
                 </button>

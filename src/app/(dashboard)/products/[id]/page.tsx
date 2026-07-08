@@ -891,7 +891,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                         "h-10 w-10 rounded border overflow-hidden shrink-0 transition-all p-0.5 bg-white",
                                                         (activePreviewUrl || imagenUrl) === img.imageUrl 
                                                             ? "border-brand-1 scale-95 ring-1 ring-brand-1" 
-                                                            : "border-border hover:border-border"
+                                                            : "border-border hover:border-brand-1/40"
                                                     )}
                                                 >
                                                     {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -372,7 +372,7 @@ export function ReportFilters({
                                 <button
                                     type="button"
                                     onClick={handleClearClient}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
@@ -426,7 +426,7 @@ export function ReportFilters({
                                 <button
                                     type="button"
                                     onClick={handleClearProduct}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>

@@ -257,7 +257,7 @@ export function ReceivablesList({
                                 <button
                                     type="button"
                                     onClick={() => setGlobalFilter('')}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
@@ -496,7 +496,7 @@ export function ReceivablesList({
                     <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl border border-border dark:border-border shadow-2xl p-6 relative font-sans">
                         <button
                             onClick={() => setActiveInvoice(null)}
-                            className="absolute top-4 right-4 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground transition-colors"
+                            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
                             disabled={isSavingPayment}
                         >
                             <X className="h-5 w-5" />

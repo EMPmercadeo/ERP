@@ -745,7 +745,7 @@ export function InvoiceList({
                     <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl border border-border dark:border-border shadow-2xl p-6 relative font-sans">
                         <button
                             onClick={() => router.replace('/invoices')}
-                            className="absolute top-4 right-4 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground transition-colors"
+                            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
                         >
                             <X className="h-5 w-5" />
                         </button>

@@ -321,7 +321,7 @@ export default function LoginPage() {
                             <button
                                 type="button"
                                 onClick={() => setEmail('')}
-                                className="text-muted-foreground hover:text-muted-foreground px-1 text-sm font-bold cursor-pointer shrink-0"
+                                className="text-muted-foreground hover:text-foreground px-1 text-sm font-bold cursor-pointer shrink-0"
                             >
                                 ✕
                             </button>
