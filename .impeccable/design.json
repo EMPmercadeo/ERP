@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-08T00:00:00.000Z",
+  "title": "Design System: ERP Panamá",
+  "extensions": {
+    "colorMeta": {
+      "brand-primary": {
+        "role": "primary",
+        "displayName": "Bóveda Azul",
+        "canonical": "oklch(32% 0.13 255)",
+        "tonalRamp": [
+          "oklch(18% 0.06 255)",
+          "oklch(24% 0.09 255)",
+          "oklch(32% 0.13 255)",
+          "oklch(40% 0.14 255)",
+          "oklch(50% 0.15 255)",
+          "oklch(65% 0.13 255)",
+          "oklch(80% 0.08 255)",
+          "oklch(95% 0.02 255)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Gris Niebla",
+        "canonical": "oklch(96% 0.003 255)",
+        "tonalRamp": ["oklch(20% 0.01 255)", "oklch(96% 0.003 255)", "oklch(99% 0.001 255)"]
+      },
+      "success": {
+        "role": "status",
+        "displayName": "Éxito DGI",
+        "canonical": "oklch(58% 0.13 165)"
+      },
+      "warning": {
+        "role": "status",
+        "displayName": "Advertencia DGI",
+        "canonical": "oklch(66% 0.14 60)"
+      },
+      "info": {
+        "role": "status",
+        "displayName": "Info / Procesando",
+        "canonical": "oklch(56% 0.15 260)"
+      },
+      "danger": {
+        "role": "status",
+        "displayName": "Peligro / Rechazado",
+        "canonical": "oklch(63% 0.14 20)"
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Títulos de página (h1)." },
+      "label": { "displayName": "Label / Mono", "purpose": "Identificadores exactos: CUFE, números de factura, códigos de producto." }
+    },
+    "shadows": [
+      { "name": "premium", "value": "0 4px 20px -2px rgba(7,54,116,0.04), 0 2px 6px -1px rgba(7,54,116,0.02)", "purpose": "Elevación en reposo de cards y paneles flotantes." },
+      { "name": "premium-hover", "value": "0 10px 30px -4px rgba(7,54,116,0.08), 0 4px 12px -2px rgba(7,54,116,0.03)", "purpose": "Elevación al interactuar (hover)." }
+    ],
+    "motion": [
+      { "name": "transition-premium", "value": "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Transición estándar para hover/estado en componentes premium." }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal: guardar, crear factura, confirmar.",
+      "html": "<button class=\"ds-btn-primary\">Guardar factura</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #073674; color: #ffffff; font-size: 14px; font-weight: 500; height: 36px; padding: 0 16px; border-radius: 8px; border: none; transition: background 0.15s, transform 0.1s; cursor: pointer; } .ds-btn-primary:hover { background: #062d61; } .ds-btn-primary:active { transform: scale(0.98) translateY(0.5px); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(7,54,116,0.5); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Acción secundaria: cancelar, exportar, filtros.",
+      "html": "<button class=\"ds-btn-outline\">Exportar</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #F3F4F6; color: #172436; font-size: 14px; font-weight: 500; height: 36px; padding: 0 16px; border-radius: 8px; border: 1px solid #DEE4ED; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition: background 0.15s; cursor: pointer; } .ds-btn-outline:hover { background: #F4F7FA; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de texto estándar en formularios (clientes, productos, facturas).",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Nombre del cliente\" />",
+      "css": ".ds-input { width: 100%; height: 36px; padding: 4px 12px; font-size: 14px; color: #172436; background: transparent; border: 1px solid #DEE4ED; border-radius: 6px; outline: none; transition: box-shadow 0.15s, border-color 0.15s; } .ds-input::placeholder { color: #47576B; } .ds-input:focus-visible { border-color: #073674; box-shadow: 0 0 0 3px rgba(7,54,116,0.5); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Contenedor base para métricas, formularios y bloques de reporte.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Total facturado</div><div class=\"ds-card-body\">$12,450.00</div></div>",
+      "css": ".ds-card { background: #ffffff; border: 1px solid #DEE4ED; border-radius: 12px; padding: 24px; box-shadow: 0 4px 20px -2px rgba(7,54,116,0.04), 0 2px 6px -1px rgba(7,54,116,0.02); } .ds-card-title { font-size: 14px; color: #47576B; margin-bottom: 8px; } .ds-card-body { font-size: 24px; font-weight: 600; color: #172436; }"
+    },
+    {
+      "name": "Status Badge — Success",
+      "kind": "chip",
+      "refersTo": "status-badge-success",
+      "description": "Componente de firma: estado semántico de facturas DGI, pagos y clientes. Variante Éxito (aceptada/pagada/activo).",
+      "html": "<span class=\"ds-status-badge ds-status-success\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"/><polyline points=\"22 4 12 14.01 9 11.01\"/></svg>Aceptada</span>",
+      "css": ".ds-status-badge { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 118px; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; } .ds-status-success { background: #e9f8f1; color: #15a378; }"
+    },
+    {
+      "name": "Status Badge — Danger",
+      "kind": "chip",
+      "refersTo": "status-badge-danger",
+      "description": "Variante Peligro (rechazada/vencida/bloqueado).",
+      "html": "<span class=\"ds-status-badge ds-status-danger\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"15\" y1=\"9\" x2=\"9\" y2=\"15\"/><line x1=\"9\" y1=\"9\" x2=\"15\" y2=\"15\"/></svg>Rechazada</span>",
+      "css": ".ds-status-danger { background: #fdeeec; color: #ec6a64; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "La Bóveda Corporativa",
+    "overview": "El sistema entero se comporta como una bóveda de banco: azul profundo, superficies planas y frías, cada elemento con su lugar exacto. La solidez no se declara con ornamento — se transmite por la ausencia de ruido visual: jerarquía tipográfica estricta, una única familia sans-serif, y un azul de marca (#073674) que aparece con disciplina, nunca decorativo. La confianza del usuario (dueño de PyME, contador, cajero) se gana con precisión repetible, no con personalidad llamativa. El sistema rechaza explícitamente cualquier señal de informalidad: gradientes, iconografía juguetona, o inconsistencias entre pantallas — cualquiera de esas lecturas se traduce, en un ERP fiscal, en \"este sistema también podría equivocarse con mis impuestos.\"",
+    "keyCharacteristics": [
+      "Azul corporativo profundo como única marca de identidad, usado con moderación",
+      "Superficies blancas y grises fríos, sin calidez decorativa",
+      "Tipografía Geist única (sans + mono), sin mezcla de familias",
+      "Feedback táctil sutil (compresión de botones, sombras azules suaves) que refuerza precisión, no personalidad",
+      "Colores de estado reservados exclusivamente para semántica de datos, nunca decorativos"
+    ],
+    "rules": [
+      { "name": "La Regla del Azul Único", "body": "El azul de marca es la única fuente de identidad cromática. Nunca se introduce un segundo acento de marca; la variación viene de neutros y de los cuatro colores de estado, que están prohibidos fuera de su rol semántico.", "section": "colors" },
+      { "name": "La Regla del Mono para Datos", "body": "Cualquier valor que sea un identificador exacto (CUFE, número de factura, código de producto) se presenta en Geist Mono, nunca en el sans-serif de body.", "section": "typography" },
+      { "name": "La Regla del Tinte Azul", "body": "Ninguna sombra usa negro puro; todas llevan el tinte del azul de marca, incluso en su forma más sutil.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar el azul de marca (#073674) como única fuente de identidad cromática",
+      "Do reservar los cuatro colores de estado exclusivamente para semántica de datos DGI/pagos/inventario",
+      "Do usar Geist Mono para cualquier identificador exacto",
+      "Do mantener el tinte azul en todas las sombras",
+      "Do mantener el feedback táctil de botones en todo componente interactivo nuevo"
+    ],
+    "donts": [
+      "Don't introducir un segundo color de marca o acento decorativo",
+      "Don't usar gradientes, glassmorphism, o iconografía juguetona",
+      "Don't usar sombras con negro puro",
+      "Don't mezclar familias tipográficas fuera de Geist/Geist Mono",
+      "Don't usar los colores de estado para decoración general de UI"
+    ]
+  }
+}
