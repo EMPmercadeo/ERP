@@ -18,9 +18,9 @@ import {
     Receipt,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LandingHeader } from '@/components/landing/LandingHeader';
+import { HeaderInicio } from '@/components/inicio/HeaderInicio';
 import { Footer } from '@/components/layout/Footer';
-import { FaqAccordion } from '@/components/landing/FaqAccordion';
+import { FaqAccordion } from '@/components/inicio/FaqAccordion';
 
 export const metadata: Metadata = {
     title: 'ERP Panamá — Contabilidad, Facturación Electrónica DGI e Inventario en un solo sistema',
@@ -233,10 +233,10 @@ const FAQS = [
     },
 ];
 
-export default function LandingPage() {
+export default function PaginaInicio() {
     return (
         <div className="min-h-screen bg-white">
-            <LandingHeader />
+            <HeaderInicio />
 
             {/* Hero */}
             <section className="relative overflow-hidden bg-brand-3 py-16 sm:py-24">
@@ -246,9 +246,8 @@ export default function LandingPage() {
                             Contabilidad, facturación electrónica DGI e inventario, en un solo sistema
                         </h1>
                         <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
-                            ERP Panamá une la contabilidad de partida doble automática, la facturación electrónica ante la DGI
-                            y el control de inventario multi-sucursal — para que dejes de operar tu negocio entre hojas de
-                            cálculo sueltas.
+                            Cada factura genera su asiento contable automáticamente. Deja de operar tu negocio
+                            entre hojas de cálculo sueltas.
                         </p>
                         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
                             <Button asChild size="lg" className="w-full bg-white text-brand-3 hover:bg-slate-100 sm:w-auto">
@@ -271,7 +270,7 @@ export default function LandingPage() {
             </section>
 
             {/* Funcionalidades */}
-            <section id="funcionalidades" className="py-16 sm:py-24">
+            <section id="funcionalidades" className="scroll-mt-20 py-16 sm:py-24">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
                         <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Funcionalidades</h2>
@@ -294,7 +293,7 @@ export default function LandingPage() {
             </section>
 
             {/* Cómo funciona */}
-            <section id="como-funciona" className="bg-slate-50 py-16 sm:py-24">
+            <section id="como-funciona" className="scroll-mt-20 bg-slate-50 py-16 sm:py-24">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
                         <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Cómo funciona</h2>
@@ -318,30 +317,34 @@ export default function LandingPage() {
             </section>
 
             {/* Rubros */}
-            <section id="rubros" className="py-16 sm:py-24">
+            <section id="rubros" className="scroll-mt-20 py-16 sm:py-24">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="mx-auto max-w-2xl text-center">
-                        <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Para tu tipo de negocio</h2>
-                        <p className="mt-4 text-base text-slate-600">
-                            Pensado para negocios panameños que facturan ante la DGI, sin importar el rubro.
-                        </p>
-                    </div>
-                    <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                        {RUBROS.map((rubro) => (
-                            <div key={rubro.title} className="rounded-xl border border-slate-200 p-6 text-center">
-                                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg bg-brand-1/10">
-                                    <rubro.icon className="h-5 w-5 text-brand-1" />
+                    <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-16">
+                        <div>
+                            <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Para tu tipo de negocio</h2>
+                            <p className="mt-4 text-base text-slate-600">
+                                Pensado para negocios panameños que facturan ante la DGI, sin importar el rubro.
+                            </p>
+                        </div>
+                        <dl className="divide-y divide-slate-200 border-t border-slate-200">
+                            {RUBROS.map((rubro) => (
+                                <div key={rubro.title} className="flex items-start gap-5 py-6 first:pt-0">
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-1/10">
+                                        <rubro.icon className="h-5 w-5 text-brand-1" />
+                                    </div>
+                                    <div>
+                                        <dt className="text-base font-semibold text-brand-3">{rubro.title}</dt>
+                                        <dd className="mt-1 text-sm leading-relaxed text-slate-600">{rubro.description}</dd>
+                                    </div>
                                 </div>
-                                <h3 className="mt-4 text-base font-semibold text-brand-3">{rubro.title}</h3>
-                                <p className="mt-2 text-sm leading-relaxed text-slate-600">{rubro.description}</p>
-                            </div>
-                        ))}
+                            ))}
+                        </dl>
                     </div>
                 </div>
             </section>
 
             {/* Glosario */}
-            <section id="glosario" className="bg-slate-50 py-16 sm:py-24">
+            <section id="glosario" className="scroll-mt-20 bg-slate-50 py-16 sm:py-24">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
                         <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Glosario</h2>
@@ -349,11 +352,11 @@ export default function LandingPage() {
                             Términos que todo dueño de negocio panameño necesita entender antes de facturar electrónicamente.
                         </p>
                     </div>
-                    <dl className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-2">
+                    <dl className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2">
                         {GLOSARIO.map((item) => (
-                            <div key={item.term} className="rounded-xl bg-white p-5 shadow-sm">
-                                <dt className="text-sm font-bold text-brand-1">{item.term}</dt>
-                                <dd className="mt-1 text-sm leading-relaxed text-slate-600">{item.def}</dd>
+                            <div key={item.term} className="border-t border-slate-200 pt-4">
+                                <dt className="font-mono text-sm font-semibold tracking-tight text-brand-1">{item.term}</dt>
+                                <dd className="mt-1.5 text-sm leading-relaxed text-slate-600">{item.def}</dd>
                             </div>
                         ))}
                     </dl>
@@ -361,7 +364,7 @@ export default function LandingPage() {
             </section>
 
             {/* Precios */}
-            <section id="precios" className="py-16 sm:py-24">
+            <section id="precios" className="scroll-mt-20 py-16 sm:py-24">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
                         <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Precios</h2>

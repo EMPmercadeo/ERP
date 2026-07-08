@@ -13,7 +13,7 @@ const NAV_LINKS = [
     { href: '#precios', label: 'Precios' },
 ];
 
-export function LandingHeader() {
+export function HeaderInicio() {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
 
     return (
@@ -28,7 +28,7 @@ export function LandingHeader() {
                     </span>
                 </Link>
 
-                {/* Nav central - desktop */}
+                {/* Nav central - desktop: cada enlace es un ancla (#id) a su sección correspondiente en esta misma página */}
                 <nav className="hidden lg:flex lg:items-center lg:gap-8">
                     {NAV_LINKS.map((link) => (
                         <a

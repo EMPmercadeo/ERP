@@ -262,7 +262,11 @@
 
   html,
   body {
-    @apply bg-background text-foreground antialiased overflow-x-hidden max-w-full;
+    @apply bg-background text-foreground antialiased max-w-full;
+    /* overflow-x: clip (no overflow-x: hidden) a propósito: "hidden" fuerza a los navegadores a
+       computar overflow-y como "auto" en ambos ejes, lo que rompe todo `position: sticky` del
+       sitio (headers, tablas). "clip" evita el scroll horizontal sin ese efecto colateral. */
+    overflow-x: clip;
   }
 
   /* Typography defaults */
@@ -285,6 +289,13 @@
 
   h3 {
     @apply text-xl;
+  }
+}
+
+/* Scroll ancla suave para navegación con anclas (#seccion), respetando reduced-motion */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
   }
 }
 
