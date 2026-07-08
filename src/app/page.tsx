@@ -16,6 +16,8 @@ import {
     Building2,
     Package,
     Receipt,
+    Check,
+    ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HeaderInicio } from '@/components/inicio/HeaderInicio';
@@ -241,29 +243,84 @@ export default function PaginaInicio() {
             {/* Hero */}
             <section className="relative overflow-hidden bg-brand-3 py-16 sm:py-24">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="mx-auto max-w-3xl text-center">
-                        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-5xl">
-                            Contabilidad, facturación electrónica DGI e inventario, en un solo sistema
-                        </h1>
-                        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg" /* design-token-exempt */>
-                            Cada factura genera su asiento contable automáticamente. Deja de operar tu negocio
-                            entre hojas de cálculo sueltas.
-                        </p>
-                        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                            <Button asChild size="lg" className="w-full bg-white text-brand-3 hover:bg-slate-100 sm:w-auto" /* design-token-exempt */>
-                                <Link href="/register">
-                                    Crear cuenta gratis
-                                    <ArrowRight className="ml-2 h-4 w-4" />
-                                </Link>
-                            </Button>
-                            <Button
-                                asChild
-                                size="lg"
-                                variant="outline"
-                                className="w-full border-white/30 bg-transparent text-white hover:bg-white/10 sm:w-auto"
-                            >
-                                <a href="#precios">Ver precios</a>
-                            </Button>
+                    <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
+                        {/* Columna de texto */}
+                        <div className="text-center lg:text-left">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300">
+                                <ShieldCheck className="h-3.5 w-3.5" />
+                                Hecho para PyMEs panameñas
+                            </span>
+                            <h1 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-5xl">
+                                Contabilidad, facturación electrónica DGI e inventario, en un solo sistema
+                            </h1>
+                            <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg lg:mx-0" /* design-token-exempt */>
+                                Cada factura genera su asiento contable automáticamente. Deja de operar tu negocio
+                                entre hojas de cálculo sueltas.
+                            </p>
+                            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
+                                <Button asChild size="lg" className="w-full bg-white text-brand-3 hover:bg-slate-100 sm:w-auto" /* design-token-exempt */>
+                                    <Link href="/register">
+                                        Crear cuenta gratis
+                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Link>
+                                </Button>
+                                <Button
+                                    asChild
+                                    size="lg"
+                                    variant="outline"
+                                    className="w-full border-white/30 bg-transparent text-white hover:bg-white/10 sm:w-auto"
+                                >
+                                    <Link href="/precios">Ver precios</Link>
+                                </Button>
+                            </div>
+                            <p className="mt-4 text-xs text-slate-400">Sin tarjeta de crédito · Configuras tu empresa en minutos</p>
+                        </div>
+
+                        {/* Bento de producto: vista previa real del sistema, no fotos de stock */}
+                        <div className="relative mx-auto w-full max-w-md lg:mx-0 lg:max-w-none">
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Ventas del mes */}
+                                <div className="col-span-2 rounded-xl bg-white p-5 shadow-xl">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-medium text-muted-foreground">Ventas del mes</span>
+                                        <span className="rounded-full bg-success-bg px-2 py-0.5 text-[10px] font-bold text-success">+18%</span>
+                                    </div>
+                                    <p className="mt-1.5 text-2xl font-bold text-brand-3">$12,432.00</p>
+                                    <div className="mt-4 flex h-10 items-end gap-1.5">
+                                        {[40, 55, 35, 70, 50, 80, 65].map((h, i) => (
+                                            <div key={i} className="flex-1 rounded-sm bg-brand-1/15">
+                                                <div className="rounded-sm bg-brand-1" style={{ height: `${h}%` }} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Factura autorizada */}
+                                <div className="rounded-xl bg-white p-4 shadow-xl">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-success-bg text-success">
+                                        <Check className="h-4 w-4" />
+                                    </div>
+                                    <p className="mt-3 text-xs font-semibold text-brand-3">Factura Autorizada</p>
+                                    <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">FE-0001-000045</p>
+                                </div>
+
+                                {/* Documentos usados */}
+                                <div className="rounded-xl bg-white p-4 shadow-xl">
+                                    <p className="text-[10px] font-medium text-muted-foreground">Documentos usados</p>
+                                    <p className="mt-1 text-lg font-bold text-brand-3">
+                                        128<span className="text-xs font-normal text-muted-foreground">/300</span>
+                                    </p>
+                                    <div className="mt-2 h-1.5 w-full rounded-full bg-brand-1/10">
+                                        <div className="h-1.5 rounded-full bg-brand-1" style={{ width: '42%' }} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Badge flotante de cumplimiento */}
+                            <div className="absolute -top-4 -right-3 hidden rounded-xl border border-border bg-white px-3 py-2 shadow-xl sm:flex sm:items-center sm:gap-2">
+                                <ShieldCheck className="h-4 w-4 text-brand-1" />
+                                <span className="text-[10px] font-semibold text-brand-3">DGI · PAC · CAFE</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -277,6 +334,9 @@ export default function PaginaInicio() {
                         <p className="mt-4 text-base text-muted-foreground">
                             Todo lo que necesitas para llevar la parte financiera de tu negocio, sin conectar sistemas sueltos.
                         </p>
+                        <Link href="/funcionalidades" className="mt-4 inline-block text-sm font-medium text-brand-1 hover:underline">
+                            Ver todas las funcionalidades en detalle →
+                        </Link>
                     </div>
                     <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         {FUNCIONALIDADES.map((item) => (
@@ -298,6 +358,9 @@ export default function PaginaInicio() {
                     <div className="mx-auto max-w-2xl text-center">
                         <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Cómo funciona</h2>
                         <p className="mt-4 text-base text-muted-foreground">De cero a tu primera factura, en cuatro pasos.</p>
+                        <Link href="/como-funciona" className="mt-4 inline-block text-sm font-medium text-brand-1 hover:underline">
+                            Ver el paso a paso completo →
+                        </Link>
                     </div>
                     <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
                         {PASOS.map((paso, index) => (
@@ -325,6 +388,9 @@ export default function PaginaInicio() {
                             <p className="mt-4 text-base text-muted-foreground">
                                 Pensado para negocios panameños que facturan ante la DGI, sin importar el rubro.
                             </p>
+                            <Link href="/rubros" className="mt-4 inline-block text-sm font-medium text-brand-1 hover:underline">
+                                Ver todos los rubros en detalle →
+                            </Link>
                         </div>
                         <dl className="divide-y divide-border border-t border-border">
                             {RUBROS.map((rubro) => (
@@ -351,6 +417,9 @@ export default function PaginaInicio() {
                         <p className="mt-4 text-base text-muted-foreground">
                             Términos que todo dueño de negocio panameño necesita entender antes de facturar electrónicamente.
                         </p>
+                        <Link href="/glosario" className="mt-4 inline-block text-sm font-medium text-brand-1 hover:underline">
+                            Ver el glosario completo →
+                        </Link>
                     </div>
                     <dl className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2">
                         {GLOSARIO.map((item) => (
@@ -369,6 +438,9 @@ export default function PaginaInicio() {
                     <div className="mx-auto max-w-2xl text-center">
                         <h2 className="text-2xl font-bold tracking-tight text-brand-3 sm:text-3xl">Precios</h2>
                         <p className="mt-4 text-base text-muted-foreground">Planes en dólares (USD), la moneda oficial de Panamá.</p>
+                        <Link href="/precios" className="mt-4 inline-block text-sm font-medium text-brand-1 hover:underline">
+                            Ver detalle de planes y preguntas frecuentes →
+                        </Link>
                     </div>
                     <div className="mx-auto mt-12 grid max-w-6xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
                         {PLANES.map((plan) => (

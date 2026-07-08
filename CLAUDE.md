@@ -91,3 +91,4 @@ Plans: `free` → `emprendedor` → `negocio` → `pro` → `empresa`. Stored as
 - **`DESIGN.md`** — sistema visual: paleta (azul `#073674`), tipografía Geist, componentes (botones, cards, status badges).
 - **`.impeccable/design.json`** — sidecar con snippets HTML/CSS de componentes para el panel de `/impeccable live`.
 - **`.impeccable/live/config.json`** — config de `/impeccable live` (inyecta en `src/app/layout.tsx`); CSP en `next.config.ts` ya tiene el allowance dev-only para `localhost:8400`.
+- **`SITEMAP.md`** — mapa de rutas (páginas + API) generado desde `src/app/`. Es un snapshot manual, no se regenera solo — si agregas rutas, regenéralo con Glob sobre `src/app/**/page.tsx` y `src/app/api/**/route.ts`.

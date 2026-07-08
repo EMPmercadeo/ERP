@@ -50,19 +50,39 @@ import { getCurrentUserWithPlan } from '@/lib/actions/auth';
 import { createSupportTicket, submitFeedback } from '@/lib/actions/support';
 import { toast } from 'sonner';
 
-const mainNavigation = [
+const topNavigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Cotizaciones', href: '/quotes', icon: FileText },
-    { name: 'Pedidos', href: '/orders', icon: ClipboardList },
-    { name: 'Notas de Entrega', href: '/delivery-notes', icon: Truck },
-    { name: 'Facturas', href: '/invoices', icon: FileText },
-    { name: 'Clientes', href: '/clients', icon: Users },
-    { name: 'Proveedores', href: '/suppliers', icon: Building2 },
-    { name: 'Compras', href: '/purchases', icon: ShoppingCart },
-    { name: 'Productos', href: '/products', icon: Package },
-    { name: 'Bodegas', href: '/warehouses', icon: Warehouse },
-    { name: 'Bancos', href: '/bank-accounts', icon: Landmark },
-    { name: 'Reportes', href: '/reports', icon: BarChart3 },
+];
+
+// Navegación agrupada por flujo de trabajo (Ventas → Compras/Inventario → Finanzas)
+// en vez de una lista plana, para que el usuario ubique cada módulo más rápido.
+const navigationGroups: { label: string; items: { name: string; href: string; icon: LucideIcon }[] }[] = [
+    {
+        label: 'Ventas',
+        items: [
+            { name: 'Cotizaciones', href: '/quotes', icon: FileText },
+            { name: 'Pedidos', href: '/orders', icon: ClipboardList },
+            { name: 'Notas de Entrega', href: '/delivery-notes', icon: Truck },
+            { name: 'Facturas', href: '/invoices', icon: FileText },
+            { name: 'Clientes', href: '/clients', icon: Users },
+        ],
+    },
+    {
+        label: 'Compras e Inventario',
+        items: [
+            { name: 'Proveedores', href: '/suppliers', icon: Building2 },
+            { name: 'Compras', href: '/purchases', icon: ShoppingCart },
+            { name: 'Productos', href: '/products', icon: Package },
+            { name: 'Bodegas', href: '/warehouses', icon: Warehouse },
+        ],
+    },
+    {
+        label: 'Finanzas',
+        items: [
+            { name: 'Bancos', href: '/bank-accounts', icon: Landmark },
+            { name: 'Reportes', href: '/reports', icon: BarChart3 },
+        ],
+    },
 ];
 
 const adminNavigation = [
@@ -300,8 +320,24 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                 </>
                             )}
 
-                            {mainNavigation.map((item) => (
+                            {topNavigation.map((item) => (
                                 <NavItem key={item.name} item={item} />
+                            ))}
+
+                            {navigationGroups.map((group) => (
+                                <li key={group.label} className="pt-2">
+                                    <div className={cn(
+                                        "mb-1 px-3 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider",
+                                        isCollapsed && "hidden"
+                                    )}>
+                                        {group.label}
+                                    </div>
+                                    <ul className="space-y-1">
+                                        {group.items.map((item) => (
+                                            <NavItem key={item.name} item={item} />
+                                        ))}
+                                    </ul>
+                                </li>
                             ))}
                         </ul>
                     </TooltipProvider>
