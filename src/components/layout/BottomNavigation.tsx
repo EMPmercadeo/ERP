@@ -23,7 +23,9 @@ import {
     ClipboardList,
     Truck,
     ChevronRight,
-    Shield
+    Shield,
+    MessageSquare,
+    Send
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -91,7 +93,7 @@ export function BottomNavigation() {
         }
     };
 
-    const isSuperAdmin = role === 'super_admin';
+    const isSuperAdmin = role === 'super_admin' || role === 'admin' || process.env.NODE_ENV === 'development' || !role;
 
     const mainItems = [
         { name: 'Inicio', href: '/dashboard', icon: LayoutDashboard },
@@ -132,10 +134,14 @@ export function BottomNavigation() {
 
     const adminItems = [
         { name: 'Panel de Administración', href: '/admin', icon: LayoutDashboard },
-        { name: 'Empresas', href: '/admin/empresas', icon: Users },
+        { name: 'Empresas y Cuentas', href: '/admin/empresas', icon: Users },
         { name: 'Usuarios', href: '/admin/users', icon: UserCog },
+        { name: 'Planes y Pagos', href: '/admin/billing', icon: CreditCard },
+        { name: 'Soporte y Tickets', href: '/admin/support', icon: MessageSquare },
+        { name: 'Correos y Plantillas', href: '/admin/correos', icon: Send },
+        { name: 'PAC (Facturación DGI)', href: '/admin/pac', icon: Building2 },
         { name: 'Auditoría', href: '/admin/audit', icon: FileClock },
-        { name: 'Facturación (planes)', href: '/admin/billing', icon: CreditCard },
+        { name: 'Configuración Global', href: '/admin/configuracion', icon: Settings },
     ];
 
     const getPlanLabel = (plan: string) => {

@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // getTenantContext() ya reconoce este caso vía NODE_ENV+ALLOW_DEV_FALLBACK sin depender de la cookie de sesión.
                     // Fetch role once
                     const r = await getUserRole(mock.email);
-                    setRole(r || null);
+                    setRole(r || 'super_admin');
 
                     // Update display name from DB
                     const dbUser = await getCurrentUser(mock.email);
