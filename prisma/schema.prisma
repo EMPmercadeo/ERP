@@ -392,9 +392,15 @@ model Plan {
   maxUsers          Int
   featuresJson      Json
   isActive          Boolean        @default(true)
+  nombre            String?
+  precio            Decimal?
+  facturasIncluidas Int            @default(100)
+  activo            Boolean        @default(true)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   subscriptions     Subscription[]
+  cuentas           Cuenta[]
+  pagosCuenta       PagoCuenta[]
 }
 
 model Subscription {
@@ -971,3 +977,165 @@ model FacturaPACLog {
   @@index([empresaId])
   @@index([facturaId])
 }
+
+model Cuenta {
+  id               String            @id @default(cuid())
+  nombre           String
+  empresa          String
+  ruc              String            @unique
+  correo           String            @unique
+  telefono         String?
+  estado           String            @default("ACTIVA") // ACTIVA | SUSPENDIDA | BLOQUEADA
+  planId           String?
+  plan             Plan?             @relation(fields: [planId], references: [id])
+  saldoFacturas    Int               @default(0) // Cuotas de facturas electrónicas disponibles
+  ultimoAcceso     DateTime?
+  eliminadoEn      DateTime?         // soft-delete
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  pagos            PagoCuenta[]
+  facturas         FacturaEmitida[]
+  movimientosCuota MovimientoCuota[]
+  tickets          TicketSoporte[]
+
+  @@index([correo])
+  @@index([ruc])
+  @@index([estado, eliminadoEn])
+}
+
+model PagoCuenta {
+  id          String   @id @default(cuid())
+  cuentaId    String
+  cuenta      Cuenta   @relation(fields: [cuentaId], references: [id])
+  planId      String?
+  plan        Plan?    @relation(fields: [planId], references: [id])
+  monto       Decimal
+  metodo      String   // TARJETA | TRANSFERENCIA | YAPPY | OTRO
+  estado      String   @default("PENDIENTE") // PAGADO | FALLIDO | REEMBOLSADO | PENDIENTE
+  referencia  String   @unique   // id del proveedor de pago (idempotencia)
+  createdAt   DateTime @default(now())
+
+  @@index([cuentaId, createdAt])
+  @@index([estado, createdAt])
+  @@map("PagoCuenta")
+}
+
+model FacturaEmitida {
+  id         String   @id @default(cuid())
+  cuentaId   String
+  cuenta     Cuenta   @relation(fields: [cuentaId], references: [id])
+  cufe       String?  @unique   // identificador DGI
+  cliente    String             // receptor de la factura
+  total      Decimal
+  itbms      Decimal
+  estado     String   @default("ENVIADA") // ACEPTADA | RECHAZADA | ANULADA | ENVIADA
+  motivoRech String?
+  xmlUrl     String?
+  createdAt  DateTime @default(now())
+
+  @@index([cuentaId, createdAt])
+  @@index([estado, createdAt])
+}
+
+model MovimientoCuota {
+  id          String   @id @default(cuid())
+  cuentaId    String
+  cuenta      Cuenta   @relation(fields: [cuentaId], references: [id])
+  tipo        String   // CREDITO_COMPRA | DEBITO_EMISION | AJUSTE_MANUAL | REEMBOLSO
+  cantidad    Int      // positivo para crédito, negativo para débito
+  saldoAnte   Int
+  saldoPost   Int
+  nota        String?
+  referencia  String?  // ID de pago o factura
+  createdAt   DateTime @default(now())
+
+  @@index([cuentaId, createdAt])
+  @@index([tipo, createdAt])
+}
+
+model TicketSoporte {
+  id          String            @id @default(cuid())
+  cuentaId    String?
+  cuenta      Cuenta?           @relation(fields: [cuentaId], references: [id])
+  asunto      String
+  descripcion String
+  estado      String            @default("ABIERTO") // ABIERTO | EN_PROCESO | RESUELTO | CERRADO
+  prioridad   String            @default("NORMAL")  // BAJA | NORMAL | ALTA | URGENTE
+  asignadoA   String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  respuestas  RespuestaTicket[]
+
+  @@index([cuentaId, createdAt])
+  @@index([estado, prioridad, createdAt])
+}
+
+model RespuestaTicket {
+  id        String        @id @default(cuid())
+  ticketId  String
+  ticket    TicketSoporte @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  autor     String        // adminId o "cliente"
+  mensaje   String
+  createdAt DateTime      @default(now())
+
+  @@index([ticketId, createdAt])
+}
+
+model CorreoEnviado {
+  id           String   @id @default(cuid())
+  cuentaId     String?
+  destinatario String
+  asunto       String
+  plantillaId  String?
+  estado       String   @default("ENVIADO") // ENVIADO | FALLIDO
+  abierto      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([cuentaId, createdAt])
+}
+
+model PlantillaCorreo {
+  id       String  @id @default(cuid())
+  clave    String  @unique  // BIENVENIDA | VERIFICACION | SALDO_BAJO | VENCIMIENTO
+  asunto   String
+  cuerpo   String  @db.Text // HTML con variables {{nombre}}, {{saldo}}, etc.
+  activa   Boolean @default(true)
+}
+
+model ConfiguracionPAC {
+  id            String   @id @default(cuid())
+  proveedor     String
+  ambiente      String   @default("TEST") // TEST | PRODUCCION
+  credenciales  String   @db.Text         // CIFRADAS (nunca al cliente)
+  esRespaldo    Boolean  @default(false)
+  activo        Boolean  @default(true)
+  actualizadoEn DateTime @updatedAt
+}
+
+model ConfiguracionSMTP {
+  id              String   @id @default(cuid())
+  servidor        String
+  puerto          Int      @default(587)
+  usuario         String
+  passwordCifrado String   @db.Text
+  remitente       String   @default("noreply@erppanama.com")
+  activo          Boolean  @default(true)
+  actualizadoEn   DateTime @updatedAt
+}
+
+model LogAuditoria {
+  id         String   @id @default(cuid())
+  adminId    String   // o usuario que ejecutó la acción
+  accion     String   // EDITAR_CUENTA, SUSPENDER, AJUSTE_SALDO, etc.
+  objetivo   String   // Cuenta, PAC, Plantilla, etc.
+  objetivoId String?
+  detalles   Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId, createdAt])
+  @@index([accion, createdAt])
+  @@index([objetivo, objetivoId])
+}
+

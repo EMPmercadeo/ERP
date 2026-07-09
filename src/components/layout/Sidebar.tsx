@@ -92,11 +92,14 @@ const navigationGroups: { label: string; items: { name: string; href: string; ic
 ];
 
 const adminNavigation = [
-    { name: 'Empresas', href: '/admin/empresas', icon: Users },
+    { name: 'Empresas y Cuentas', href: '/admin/empresas', icon: Users },
     { name: 'Usuarios', href: '/admin/users', icon: UserCog },
+    { name: 'Planes y Pagos', href: '/admin/billing', icon: CreditCard },
+    { name: 'Soporte y Tickets', href: '/admin/support', icon: MessageSquare },
+    { name: 'Correos y Plantillas', href: '/admin/correos', icon: Send },
+    { name: 'PAC (Facturación DGI)', href: '/admin/pac', icon: Building2 },
     { name: 'Auditoría', href: '/admin/audit', icon: FileClock },
-    { name: 'Facturación', href: '/admin/billing', icon: CreditCard },
-    { name: 'Soporte y Feedback', href: '/admin/support', icon: MessageSquare },
+    { name: 'Configuración Global', href: '/admin/configuracion', icon: Settings },
 ];
 
 // Configuración and Ayuda are now rendered within the user profile popover

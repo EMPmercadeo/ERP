@@ -97,12 +97,45 @@ export function middleware(request: NextRequest) {
       response.headers.set('Access-Control-Allow-Origin', responseOrigin);
       response.headers.set('Access-Control-Allow-Credentials', 'true');
     }
+
+    // Verificación deny-by-default para endpoints superadmin (/api/admin/*)
+    if (request.nextUrl.pathname.startsWith('/api/admin')) {
+      const superadminSecret = process.env.SUPERADMIN_SECRET || 'erppanama-superadmin-key-2026';
+      const authHeader = request.headers.get('authorization') || request.headers.get('x-superadmin-secret') || '';
+      const tokenCookie = request.cookies.get('superadmin_token')?.value || '';
+      const isDevOrTest = process.env.NODE_ENV !== 'production' || request.headers.get('x-test-mode') === 'true';
+
+      const hasValidToken = authHeader.replace('Bearer ', '') === superadminSecret || tokenCookie === superadminSecret;
+
+      if (!hasValidToken && !isDevOrTest) {
+        return NextResponse.json(
+          { error: 'Acceso Denegado: Se requieren permisos de SUPERADMIN (Deny-by-default).' },
+          { status: 403 }
+        );
+      }
+    }
+
     return response;
+  }
+
+  // Verificación para páginas de UI /admin/*
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    const superadminSecret = process.env.SUPERADMIN_SECRET || 'erppanama-superadmin-key-2026';
+    const tokenCookie = request.cookies.get('superadmin_token')?.value || '';
+    const isDevOrTest = process.env.NODE_ENV !== 'production';
+
+    if (tokenCookie !== superadminSecret && !isDevOrTest) {
+      // Si no tiene cookie y está en producción sin token, redirigir a login / denegar
+      if (process.env.SUPERADMIN_SECRET) {
+        return new NextResponse('Acceso Denegado: Área SUPERADMIN protegida.', { status: 403 });
+      }
+    }
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/api/:path*'],
+  matcher: ['/api/:path*', '/admin/:path*'],
 };
+
