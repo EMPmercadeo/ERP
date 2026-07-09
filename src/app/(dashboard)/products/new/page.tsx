@@ -449,44 +449,58 @@ export default function NewProductPage() {
                                 </div>
                             </CardHeader>
                             <CardContent className="p-4 space-y-4">
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                        <Label htmlFor="stockActual" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Stock Inicial</Label>
-                                        <Input
-                                            id="stockActual"
-                                            name="stockActual"
-                                            type="number"
-                                            value={stockActual}
-                                            onChange={(e) => setStockActual(e.target.value)}
-                                            className="h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label htmlFor="stockMinimo" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Stock Mínimo</Label>
-                                        <Input
-                                            id="stockMinimo"
-                                            name="stockMinimo"
-                                            type="number"
-                                            value={stockMinimo}
-                                            onChange={(e) => setStockMinimo(e.target.value)}
-                                            className="h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full"
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                </div>
+                                {unidadMedida === 'SRV' ? (
+                                    <>
+                                        <Alert className="py-2.5 px-3 text-xs bg-blue-50 border-blue-200 text-blue-700">
+                                            <AlertCircle className="h-4 w-4 mr-2" />
+                                            <span>Este producto está marcado como <strong>Servicio</strong> (unidad SRV) — no lleva control de inventario. Se puede vender sin límite de stock.</span>
+                                        </Alert>
+                                        <input type="hidden" name="stockActual" value="0" />
+                                        <input type="hidden" name="stockMinimo" value="0" />
+                                        <input type="hidden" name="controlaLotes" value="false" />
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-1">
+                                                <Label htmlFor="stockActual" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Stock Inicial</Label>
+                                                <Input
+                                                    id="stockActual"
+                                                    name="stockActual"
+                                                    type="number"
+                                                    value={stockActual}
+                                                    onChange={(e) => setStockActual(e.target.value)}
+                                                    className="h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label htmlFor="stockMinimo" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Stock Mínimo</Label>
+                                                <Input
+                                                    id="stockMinimo"
+                                                    name="stockMinimo"
+                                                    type="number"
+                                                    value={stockMinimo}
+                                                    onChange={(e) => setStockMinimo(e.target.value)}
+                                                    className="h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full"
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                        </div>
 
-                                <div className="space-y-1 pt-1">
-                                    <Label htmlFor="controlaLotes" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Control de Lotes y Vencimientos</Label>
-                                    <Select name="controlaLotes" value={controlaLotes} onValueChange={setControlaLotes}>
-                                        <SelectTrigger id="controlaLotes" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-lg">
-                                            <SelectItem value="false" className="text-xs sm:text-sm cursor-pointer">No controla lotes</SelectItem>
-                                            <SelectItem value="true" className="text-xs sm:text-sm cursor-pointer">Este producto controla lotes y vencimientos</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                                        <div className="space-y-1 pt-1">
+                                            <Label htmlFor="controlaLotes" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Control de Lotes y Vencimientos</Label>
+                                            <Select name="controlaLotes" value={controlaLotes} onValueChange={setControlaLotes}>
+                                                <SelectTrigger id="controlaLotes" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="rounded-lg">
+                                                    <SelectItem value="false" className="text-xs sm:text-sm cursor-pointer">No controla lotes</SelectItem>
+                                                    <SelectItem value="true" className="text-xs sm:text-sm cursor-pointer">Este producto controla lotes y vencimientos</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </>
+                                )}
                             </CardContent>
                         </Card>
                     </div>

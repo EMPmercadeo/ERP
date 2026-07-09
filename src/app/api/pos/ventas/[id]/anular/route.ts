@@ -85,7 +85,7 @@ export async function POST(
       if (item.productoId && item.cantidad) {
         try {
           await prisma.producto.updateMany({
-            where: { id: item.productoId },
+            where: { id: item.productoId, unidadMedida: { not: 'SRV' } },
             data: { stockActual: { increment: item.cantidad } }
           });
         } catch {}

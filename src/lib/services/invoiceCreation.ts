@@ -283,8 +283,14 @@ export async function crearFacturaCompleta(params: CrearFacturaCompletaParams) {
 
             const prod = await tx.producto.findFirst({
                 where: { id: prodId },
-                select: { controlaLotes: true }
+                select: { controlaLotes: true, unidadMedida: true }
             });
+
+            // Los servicios (unidadMedida "SRV") no llevan inventario: no se descuenta stock,
+            // no se mueve bodega ni se toca control de lotes.
+            if (prod?.unidadMedida === 'SRV') {
+                return;
+            }
 
             await tx.producto.update({
                 where: { id: prodId },

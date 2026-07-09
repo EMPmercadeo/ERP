@@ -1,8 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Building2, ShieldCheck, Activity, Plus, Trash2, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Building2, ShieldCheck, Activity, Plus, Trash2, RefreshCw, Info } from 'lucide-react';
 import { toast } from 'sonner';
+import { ContentContainer } from '@/components/layout/Content';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export default function SuperadminPACPage() {
   const [pacs, setPacs] = useState<any[]>([]);
@@ -120,180 +126,176 @@ export default function SuperadminPACPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b111e] text-white p-6 space-y-6">
-      {/* Cabecera */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1e293b] pb-6">
+    <ContentContainer className="py-8 space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#00f0ff] flex items-center gap-2">
-            <Building2 className="h-7 w-7 text-[#00f0ff]" />
-            Configuración de PAC & Conectividad DGI (Superadmin)
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Building2 className="h-6 w-6 text-primary" />
+            PAC & Conectividad DGI (Plataforma)
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Administración de Proveedores de Autorización Certificada primario y de respaldo con monitoreo en tiempo real
+          <p className="text-sm text-muted-foreground mt-1">
+            Proveedor de Autorización Certificada primario y de respaldo a nivel de toda la plataforma
           </p>
         </div>
-        <button
-          onClick={cargarPACs}
-          className="flex items-center gap-2 px-4 py-2 bg-[#1e293b] hover:bg-[#334155] text-white rounded-lg text-sm font-medium transition"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-[#00f0ff]' : ''}`} />
+        <Button variant="outline" onClick={cargarPACs}>
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           Actualizar Lista
-        </button>
+        </Button>
+      </div>
+
+      <div className="flex items-start gap-2 text-xs text-muted-foreground bg-info-bg border border-info/30 rounded-lg p-3">
+        <Info className="h-4 w-4 text-info shrink-0 mt-0.5" />
+        <span>
+          Esto es distinto del certificado DGI que cada empresa carga en su propia <strong>Configuración → Facturación Electrónica</strong>.
+          Aquí se define el proveedor PAC de respaldo que usa la plataforma completa si el proveedor de una empresa falla o no tiene uno propio configurado.
+        </span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Columna Izquierda / Centro: Lista PACs */}
         <div className="lg:col-span-2 space-y-4">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-[#00f0ff]" />
+          <h3 className="text-base font-semibold flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-primary" />
             Proveedores PAC Configurados ({pacs.length})
           </h3>
 
           {loading ? (
-            <div className="py-12 bg-[#111827]/80 rounded-xl border border-[#1e293b] text-center text-slate-400">
-              Verificando conexiones y servidores PAC...
-            </div>
+            <Card><CardContent className="py-12 text-center text-muted-foreground pt-12">Verificando conexiones y servidores PAC...</CardContent></Card>
           ) : pacs.length === 0 ? (
-            <div className="py-12 bg-[#111827]/80 rounded-xl border border-[#1e293b] text-center text-slate-400">
-              No hay proveedores PAC configurados. Registra el primario a la derecha.
-            </div>
+            <Card><CardContent className="py-12 text-center text-muted-foreground pt-12">No hay proveedores PAC configurados. Registra el primario a la derecha.</CardContent></Card>
           ) : (
             <div className="space-y-4">
               {pacs.map((p) => (
-                <div
+                <Card
                   key={p.id}
-                  className={`bg-[#111827]/90 border rounded-xl p-5 transition relative overflow-hidden ${
-                    !p.esRespaldo ? 'border-[#00f0ff] shadow-lg shadow-[#00f0ff]/10' : 'border-[#1e293b]'
-                  }`}
+                  className={cn(!p.esRespaldo && 'border-primary shadow-sm')}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <CardContent className="pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-white">{p.proveedor}</span>
-                        <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
-                          p.ambiente === 'PRODUCCION' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                        }`}>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-lg font-bold">{p.proveedor}</span>
+                        <Badge variant={p.ambiente === 'PRODUCCION' ? 'warning' : 'info'} className="font-mono">
                           {p.ambiente}
-                        </span>
+                        </Badge>
                         {!p.esRespaldo ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#00f0ff] text-[#0b111e]">
-                            ★ PAC PRIMARIO (ACTIVO)
-                          </span>
+                          <Badge>★ PAC PRIMARIO (ACTIVO)</Badge>
                         ) : (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
-                            Respaldo / Secundario
-                          </span>
+                          <Badge variant="neutral">Respaldo / Secundario</Badge>
                         )}
                       </div>
-                      <div className="text-xs text-slate-400 flex items-center gap-4 pt-1">
-                        <span>Credenciales: <strong className="text-slate-200">{p.credencialesMasked}</strong> (cifradas en servidor)</span>
-                        <span>Estado: <strong className={p.activo ? 'text-emerald-400' : 'text-rose-400'}>{p.activo ? 'Operativo' : 'Inactivo'}</strong></span>
+                      <div className="text-xs text-muted-foreground flex items-center gap-4 pt-1 flex-wrap">
+                        <span>Credenciales: <strong className="text-foreground">{p.credencialesMasked}</strong> (cifradas en servidor)</span>
+                        <span>Estado: <strong className={p.activo ? 'text-success' : 'text-danger'}>{p.activo ? 'Operativo' : 'Inactivo'}</strong></span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleProbarConexion(p.id)}
                         disabled={testingId === p.id}
-                        className="px-3.5 py-2 rounded-lg bg-[#1e293b] hover:bg-[#334155] text-white text-xs font-semibold flex items-center gap-1.5 transition border border-slate-700"
                       >
-                        <Activity className={`h-3.5 w-3.5 text-[#00f0ff] ${testingId === p.id ? 'animate-spin' : ''}`} />
+                        <Activity className={`h-3.5 w-3.5 ${testingId === p.id ? 'animate-spin' : ''}`} />
                         {testingId === p.id ? 'Midiendo Latencia...' : 'Probar Conexión'}
-                      </button>
+                      </Button>
 
                       {p.esRespaldo && (
-                        <button
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleTogglePrimario(p.id)}
-                          className="px-3 py-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-xs font-semibold border border-emerald-500/30 transition"
+                          className="text-success border-success/30 hover:bg-success-bg"
                           title="Volver PAC Primario con 1 clic"
                         >
                           Conmutar como Primario
-                        </button>
+                        </Button>
                       )}
 
-                      <button
+                      <Button
+                        variant="outline"
+                        size="icon"
                         onClick={() => handleEliminar(p.id)}
-                        className="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition"
+                        className="text-danger border-danger/30 hover:bg-danger-bg"
                         title="Eliminar PAC"
                       >
                         <Trash2 className="h-4 w-4" />
-                      </button>
+                      </Button>
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
         </div>
 
         {/* Columna Derecha: Agregar PAC */}
-        <div>
-          <form onSubmit={handleGuardarPAC} className="bg-[#111827]/80 border border-[#1e293b] rounded-xl p-5 space-y-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Plus className="h-4 w-4 text-[#00f0ff]" />
+        <Card className="h-fit">
+          <CardHeader className="border-b pb-4">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Plus className="h-4 w-4 text-primary" />
               Registrar Nuevo Servidor PAC
-            </h3>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <form onSubmit={handleGuardarPAC} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs text-muted-foreground">Nombre del Proveedor</label>
+                <Input
+                  type="text"
+                  value={proveedor}
+                  onChange={(e) => setProveedor(e.target.value)}
+                  placeholder="Ej. The Factory HKA / PAC Panamá"
+                  className="text-xs"
+                  required
+                />
+              </div>
 
-            <div>
-              <label className="block text-xs text-slate-400 mb-1">Nombre del Proveedor</label>
-              <input
-                type="text"
-                value={proveedor}
-                onChange={(e) => setProveedor(e.target.value)}
-                placeholder="Ej. The Factory HKA / PAC Panamá"
-                className="w-full bg-[#0b111e] border border-[#1e293b] rounded px-3 py-2 text-white text-xs"
-                required
-              />
-            </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs text-muted-foreground">Ambiente de Operación</label>
+                <select
+                  value={ambiente}
+                  onChange={(e: any) => setAmbiente(e.target.value)}
+                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none"
+                >
+                  <option value="TEST">Pruebas / Simulación (TEST)</option>
+                  <option value="PRODUCCION">Certificación Real (PRODUCCIÓN)</option>
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-xs text-slate-400 mb-1">Ambiente de Operación</label>
-              <select
-                value={ambiente}
-                onChange={(e: any) => setAmbiente(e.target.value)}
-                className="w-full bg-[#0b111e] border border-[#1e293b] rounded px-3 py-2 text-white text-xs"
-              >
-                <option value="TEST">Pruebas / Simulación (TEST)</option>
-                <option value="PRODUCCION">Certificación Real (PRODUCCIÓN)</option>
-              </select>
-            </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs text-muted-foreground">Credenciales / Token CIF o Certificado Digital</label>
+                <textarea
+                  value={credenciales}
+                  onChange={(e) => setCredenciales(e.target.value)}
+                  rows={3}
+                  placeholder="Pegar cadena de autenticación o clave privada API del PAC..."
+                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-xs font-mono focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none"
+                  required
+                />
+                <p className="text-[10px] text-muted-foreground">Se encriptará con AES-256-GCM en la base de datos.</p>
+              </div>
 
-            <div>
-              <label className="block text-xs text-slate-400 mb-1">Credenciales / Token CIF o Certificado Digital</label>
-              <textarea
-                value={credenciales}
-                onChange={(e) => setCredenciales(e.target.value)}
-                rows={3}
-                placeholder="Pegar cadena de autenticación o clave privada API del PAC..."
-                className="w-full bg-[#0b111e] border border-[#1e293b] rounded px-3 py-2 text-white text-xs font-mono"
-                required
-              />
-              <p className="text-[10px] text-slate-500 mt-1">Se encriptará con AES/Base64 en la base de datos.</p>
-            </div>
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="esRespaldoChk"
+                  checked={esRespaldo}
+                  onChange={(e) => setEsRespaldo(e.target.checked)}
+                  className="rounded border-input"
+                />
+                <label htmlFor="esRespaldoChk" className="text-xs text-muted-foreground">
+                  Registrar como PAC de Respaldo (Secundario)
+                </label>
+              </div>
 
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="esRespaldoChk"
-                checked={esRespaldo}
-                onChange={(e) => setEsRespaldo(e.target.checked)}
-                className="rounded border-[#1e293b] bg-[#0b111e] text-[#00f0ff]"
-              />
-              <label htmlFor="esRespaldoChk" className="text-xs text-slate-300">
-                Registrar como PAC de Respaldo (Secundario)
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={guardando}
-              className="w-full py-2.5 bg-gradient-to-r from-[#00f0ff] to-[#0080ff] text-[#0b111e] font-bold rounded text-xs transition shadow-md shadow-[#00f0ff]/20"
-            >
-              {guardando ? 'Guardando...' : 'Guardar y Encriptar Credenciales'}
-            </button>
-          </form>
-        </div>
+              <Button type="submit" disabled={guardando} className="w-full">
+                {guardando ? 'Guardando...' : 'Guardar y Encriptar Credenciales'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </ContentContainer>
   );
 }

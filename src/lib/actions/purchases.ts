@@ -154,8 +154,18 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
                 if (item.productoId) {
                     const prod = await tx.producto.findFirst({
                         where: { id: item.productoId, empresaId },
-                        select: { controlaLotes: true }
+                        select: { controlaLotes: true, unidadMedida: true }
                     });
+
+                    // Los servicios (unidadMedida "SRV") no llevan inventario: solo se actualiza el
+                    // costo unitario de referencia, sin tocar stock/bodega/lotes.
+                    if (prod?.unidadMedida === 'SRV') {
+                        await tx.producto.updateMany({
+                            where: { id: item.productoId, empresaId },
+                            data: { costoUnitario: item.costoUnitario }
+                        });
+                        continue;
+                    }
 
                     await tx.producto.updateMany({
                         where: { id: item.productoId, empresaId },
@@ -228,11 +238,11 @@ export async function deletePurchase(id: string) {
         }
 
         await prisma.$transaction(async (tx) => {
-            // Revert inventory stock
+            // Revert inventory stock (nunca aplica a servicios, que no llevan inventario)
             for (const item of compra.items) {
                 if (item.productoId) {
                     await tx.producto.updateMany({
-                        where: { id: item.productoId, empresaId },
+                        where: { id: item.productoId, empresaId, unidadMedida: { not: 'SRV' } },
                         data: {
                             stockActual: { decrement: Math.round(Number(item.cantidad)) }
                         }
@@ -285,11 +295,11 @@ export async function anularPurchase(id: string, motivo?: string) {
         }
 
         await prisma.$transaction(async (tx) => {
-            // Revert inventory stock
+            // Revert inventory stock (nunca aplica a servicios, que no llevan inventario)
             for (const item of compra.items) {
                 if (item.productoId) {
                     await tx.producto.updateMany({
-                        where: { id: item.productoId, empresaId },
+                        where: { id: item.productoId, empresaId, unidadMedida: { not: 'SRV' } },
                         data: {
                             stockActual: { decrement: Math.round(Number(item.cantidad)) }
                         }

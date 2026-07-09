@@ -292,6 +292,15 @@ export function ProductList({
             header: () => <div className="text-center">Stock</div>,
             cell: ({ row }) => {
                 const stock = row.getValue('stockActual') as number;
+                if (row.original.unidadMedida === 'SRV') {
+                    return (
+                        <div className="text-center">
+                            <Badge className="bg-blue-50 text-blue-600 border-transparent hover:bg-blue-50 text-[10px] font-bold px-2 py-0.5 rounded">
+                                Servicio
+                            </Badge>
+                        </div>
+                    );
+                }
                 if (stock <= 0) {
                     return (
                         <div className="text-center">
@@ -744,7 +753,11 @@ export function ProductList({
 
                                                     {/* Stock Status Badge */}
                                                     <span className="absolute top-1.5 right-1.5 leading-none">
-                                                        {product.stockActual <= 0 ? (
+                                                        {product.unidadMedida === 'SRV' ? (
+                                                            <Badge className="bg-blue-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
+                                                                Servicio
+                                                            </Badge>
+                                                        ) : product.stockActual <= 0 ? (
                                                             <Badge className="bg-red-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
                                                                 Agotado
                                                             </Badge>

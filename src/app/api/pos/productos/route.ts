@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
         descripcion: p.descripcion,
         precioVenta: Number(p.precioVenta),
         codigoTasaItbms: p.codigoTasaItbms,
-        stockActual: p.stockActual
+        stockActual: p.stockActual,
+        unidadMedida: p.unidadMedida
       }))
     });
   } catch (error: any) {

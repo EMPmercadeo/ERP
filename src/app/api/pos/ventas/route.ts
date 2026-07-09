@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
       for (const it of items) {
         try {
           await prisma.producto.updateMany({
-            where: { id: it.productoId },
+            where: { id: it.productoId, unidadMedida: { not: 'SRV' } },
             data: { stockActual: { decrement: it.cantidad } }
           });
         } catch {}
@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
       for (const it of items) {
         try {
           await prisma.producto.updateMany({
-            where: { id: it.productoId },
+            where: { id: it.productoId, unidadMedida: { not: 'SRV' } },
             data: { stockActual: { decrement: it.cantidad } }
           });
         } catch {}

@@ -363,7 +363,11 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                     </TabsList>
 
                                     {/* TAB 1: INFORMACIÓN GENERAL */}
-                                    <TabsContent value="general" className="mt-4 space-y-4 outline-none">
+                                    {/* forceMount: el <form> envuelve TODAS las pestañas, y por defecto Radix
+                                        desmonta del DOM las pestañas inactivas — eso hacía desaparecer del
+                                        FormData los campos de las otras pestañas (precio, stock, imagen) al
+                                        guardar, disparando "Error de validación" aunque estuvieran bien llenos. */}
+                                    <TabsContent value="general" forceMount className="mt-4 space-y-4 outline-none data-[state=inactive]:hidden">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {/* Código Interno */}
                                             <div className="space-y-1">
@@ -456,7 +460,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                     </TabsContent>
 
                                     {/* TAB 2: PRECIOS E IMPUESTOS */}
-                                    <TabsContent value="prices" className="mt-2 space-y-3 outline-none">
+                                    <TabsContent value="prices" forceMount className="mt-2 space-y-3 outline-none data-[state=inactive]:hidden">
                                         {/* Fila 1: Costo unitario base & Precio de venta neto */}
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             {/* Costo Unitario */}
@@ -574,15 +578,26 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                     </TabsContent>
 
                                     {/* TAB 3: INVENTARIO */}
-                                    <TabsContent value="inventory" className="mt-4 space-y-4 outline-none">
+                                    <TabsContent value="inventory" forceMount className="mt-4 space-y-4 outline-none data-[state=inactive]:hidden">
+                                        {unidadMedida === 'SRV' ? (
+                                            <>
+                                                <Alert className="py-2.5 px-3 text-xs bg-blue-50 border-blue-200 text-blue-700">
+                                                    <AlertCircle className="h-4 w-4 mr-2" />
+                                                    <span>Este producto está marcado como <strong>Servicio</strong> (unidad SRV) — no lleva control de inventario. Se puede vender sin límite de stock.</span>
+                                                </Alert>
+                                                <input type="hidden" name="stockActual" value="0" />
+                                                <input type="hidden" name="stockMinimo" value="0" />
+                                                <input type="hidden" name="controlaLotes" value="false" />
+                                            </>
+                                        ) : (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {/* Stock Actual */}
                                             <div className="space-y-1">
                                                 <Label htmlFor="stockActual" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Stock Actual</Label>
-                                                <Input 
+                                                <Input
                                                     id="stockActual"
-                                                    name="stockActual" 
-                                                    value={stockActual} 
+                                                    name="stockActual"
+                                                    value={stockActual}
                                                     onChange={(e) => setStockActual(e.target.value)}
                                                     type="number"
                                                     className="h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full"
@@ -616,6 +631,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                 </Select>
                                             </div>
                                         </div>
+                                        )}
 
                                         {/* Sales History (Salidas de Facturación) */}
                                         <div className="space-y-2 pt-3">
@@ -663,12 +679,14 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                     </TabsContent>
 
                                     {/* TAB: KIT / PRODUCTO COMPUESTO */}
-                                    <TabsContent value="kit" className="mt-4 space-y-4 outline-none">
+                                    <TabsContent value="kit" forceMount className="mt-4 space-y-4 outline-none data-[state=inactive]:hidden">
                                         <KitTab productoId={product.id} initialEsKit={product.esKit} />
                                     </TabsContent>
 
                                     {/* TAB 4: MULTIMEDIA */}
-                                    <TabsContent value="multimedia" className="mt-2 space-y-6 outline-none">
+                                    {/* forceMount es obligatorio aquí: el input hidden "imagenUrl" vive en esta
+                                        pestaña y sin esto se perdía al guardar desde cualquier otra pestaña. */}
+                                    <TabsContent value="multimedia" forceMount className="mt-2 space-y-6 outline-none data-[state=inactive]:hidden">
                                         <input type="hidden" name="imagenUrl" value={imagenUrl} />
                                         
                                         {/* Upload Widget */}
@@ -786,7 +804,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                     </TabsContent>
 
                                     {/* TAB 5: HISTORIAL DE CAMBIOS (AUDITORIA REAL) */}
-                                    <TabsContent value="history" className="mt-4 outline-none space-y-4">
+                                    <TabsContent value="history" forceMount className="mt-4 outline-none space-y-4 data-[state=inactive]:hidden">
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-1.5 text-xs font-bold text-foreground uppercase tracking-wider">
                                                 <History className="h-4 w-4 text-muted-foreground" />
@@ -968,24 +986,32 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Estado de Stock:</span>
-                                        <Badge className={cn(
-                                            "text-[10px] font-bold px-2 py-0.5 rounded border-transparent",
-                                            stockActualNum <= 0 
-                                                ? "bg-red-50 text-red-600 hover:bg-red-50" 
-                                                : stockActualNum < stockMinimoNum 
-                                                ? "bg-amber-50 text-amber-600 hover:bg-amber-50" 
-                                                : "bg-emerald-50 text-emerald-600 hover:bg-emerald-50"
-                                        )}>
-                                            {stockActualNum <= 0 ? 'Agotado' : stockActualNum < stockMinimoNum ? 'Bajo Stock' : 'Saludable'}
-                                        </Badge>
+                                        {unidadMedida === 'SRV' ? (
+                                            <Badge className="text-[10px] font-bold px-2 py-0.5 rounded border-transparent bg-blue-50 text-blue-600 hover:bg-blue-50">
+                                                Servicio (sin inventario)
+                                            </Badge>
+                                        ) : (
+                                            <Badge className={cn(
+                                                "text-[10px] font-bold px-2 py-0.5 rounded border-transparent",
+                                                stockActualNum <= 0
+                                                    ? "bg-red-50 text-red-600 hover:bg-red-50"
+                                                    : stockActualNum < stockMinimoNum
+                                                    ? "bg-amber-50 text-amber-600 hover:bg-amber-50"
+                                                    : "bg-emerald-50 text-emerald-600 hover:bg-emerald-50"
+                                            )}>
+                                                {stockActualNum <= 0 ? 'Agotado' : stockActualNum < stockMinimoNum ? 'Bajo Stock' : 'Saludable'}
+                                            </Badge>
+                                        )}
                                     </div>
-                                    <div className="space-y-1">
-                                        <Progress value={stockPercentage} className="h-2 bg-muted [&>div]:bg-brand-1" />
-                                        <div className="flex justify-between text-[10px] font-semibold text-muted-foreground">
-                                            <span>Mínimo: {stockMinimoNum}</span>
-                                            <span className="text-muted-foreground font-bold">{stockActualNum} uds</span>
+                                    {unidadMedida !== 'SRV' && (
+                                        <div className="space-y-1">
+                                            <Progress value={stockPercentage} className="h-2 bg-muted [&>div]:bg-brand-1" />
+                                            <div className="flex justify-between text-[10px] font-semibold text-muted-foreground">
+                                                <span>Mínimo: {stockMinimoNum}</span>
+                                                <span className="text-muted-foreground font-bold">{stockActualNum} uds</span>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
 
                                 <div className="h-px bg-muted w-full" />

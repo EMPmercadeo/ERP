@@ -31,6 +31,7 @@ interface ProductoPOS {
   precioVenta: number;
   codigoTasaItbms: string; // '01' (7%), '00' (Exento)
   stockActual: number;
+  unidadMedida: string; // 'SRV' = servicio, no lleva inventario
 }
 
 interface ItemCarrito {
@@ -104,7 +105,8 @@ export default function POSMultiDispositivoPage() {
           descripcion: p.descripcion || 'Producto',
           precioVenta: Number(p.precioVenta ?? 0),
           codigoTasaItbms: p.codigoTasaItbms || '00',
-          stockActual: p.stockActual ?? 0
+          stockActual: p.stockActual ?? 0,
+          unidadMedida: p.unidadMedida || 'UND'
         }));
         setProductos(lista);
         if (lista.length === 0) {
@@ -125,7 +127,8 @@ export default function POSMultiDispositivoPage() {
   };
 
   const agregarAlCarrito = (p: ProductoPOS) => {
-    if (p.stockActual <= 0) {
+    const esServicio = p.unidadMedida === 'SRV';
+    if (!esServicio && p.stockActual <= 0) {
       alert('Stock agotado para ' + p.descripcion);
       return;
     }
@@ -133,7 +136,7 @@ export default function POSMultiDispositivoPage() {
     const itbmsPorcentaje = p.codigoTasaItbms === '01' ? 7 : 0;
 
     if (existe) {
-      if (existe.cantidad + 1 > p.stockActual) {
+      if (!esServicio && existe.cantidad + 1 > p.stockActual) {
         alert('No puedes agregar más del stock disponible (' + p.stockActual + ')');
         return;
       }
@@ -153,7 +156,7 @@ export default function POSMultiDispositivoPage() {
     setCarrito(carrito.map(it => {
       if (it.productoId === productoId) {
         const p = productos.find(prod => prod.id === productoId);
-        const maxStock = p?.stockActual || 999;
+        const maxStock = p?.unidadMedida === 'SRV' ? Infinity : (p?.stockActual || 999);
         const nueva = it.cantidad + delta;
         if (nueva <= 0) return null;
         if (nueva > maxStock) {
@@ -211,10 +214,10 @@ export default function POSMultiDispositivoPage() {
         setColaLocal(nuevaCola);
         localStorage.setItem('pos_ventas_queue', JSON.stringify(nuevaCola));
 
-        // Descontar en memoria local
+        // Descontar en memoria local (los servicios no llevan stock)
         setProductos(productos.map(p => {
           const itemCart = carrito.find(c => c.productoId === p.id);
-          return itemCart ? { ...p, stockActual: p.stockActual - itemCart.cantidad } : p;
+          return itemCart && p.unidadMedida !== 'SRV' ? { ...p, stockActual: p.stockActual - itemCart.cantidad } : p;
         }));
 
         setReciboVenta({
@@ -386,13 +389,16 @@ export default function POSMultiDispositivoPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pb-4">
-              {productosFiltrados.map((prod) => (
+              {productosFiltrados.map((prod) => {
+                const esServicio = prod.unidadMedida === 'SRV';
+                const agotado = !esServicio && prod.stockActual <= 0;
+                return (
                 <button
                   key={prod.id}
                   onClick={() => agregarAlCarrito(prod)}
-                  disabled={prod.stockActual <= 0}
+                  disabled={agotado}
                   className={`flex flex-col justify-between text-left p-3.5 rounded-xl border transition-all select-none group shadow-premium ${
-                    prod.stockActual <= 0
+                    agotado
                       ? 'bg-muted/40 border-border opacity-50 cursor-not-allowed'
                       : 'bg-card border-border hover:border-primary hover:shadow-premium-hover active:scale-95'
                   }`}
@@ -421,14 +427,21 @@ export default function POSMultiDispositivoPage() {
                       </span>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] text-muted-foreground block">Stock</span>
-                      <span className={`text-xs font-mono font-bold ${prod.stockActual <= 5 ? 'text-warning' : 'text-foreground'}`}>
-                        {prod.stockActual}
-                      </span>
+                      {esServicio ? (
+                        <span className="text-[10px] font-bold text-info bg-info-bg px-1.5 py-0.5 rounded">Servicio</span>
+                      ) : (
+                        <>
+                          <span className="text-[10px] text-muted-foreground block">Stock</span>
+                          <span className={`text-xs font-mono font-bold ${prod.stockActual <= 5 ? 'text-warning' : 'text-foreground'}`}>
+                            {prod.stockActual}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

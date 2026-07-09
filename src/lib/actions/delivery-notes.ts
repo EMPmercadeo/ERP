@@ -204,6 +204,11 @@ export async function createDeliveryNote(prevState: unknown, formData: FormData)
             if (isDeliveredState) {
                 for (const item of processedItems) {
                     if (item.productoId && item.cantidad > 0) {
+                        // Los servicios (unidadMedida "SRV") no llevan inventario: no se descuenta
+                        // stock ni se registra movimiento de Kardex para ellos.
+                        const prod = await tx.producto.findFirst({ where: { id: item.productoId }, select: { unidadMedida: true } });
+                        if (prod?.unidadMedida === 'SRV') continue;
+
                         await tx.producto.updateMany({
                             where: { id: item.productoId, empresaId },
                             data: {
@@ -292,6 +297,10 @@ export async function updateDeliveryNoteStatus(id: string, nuevoEstado: string, 
                 // Deduct stock and log salida
                 for (const item of albaran.items) {
                     if (item.productoId && item.cantidad.toNumber() > 0) {
+                        // Los servicios (unidadMedida "SRV") no llevan inventario.
+                        const prod = await tx.producto.findFirst({ where: { id: item.productoId }, select: { unidadMedida: true } });
+                        if (prod?.unidadMedida === 'SRV') continue;
+
                         await tx.producto.updateMany({
                             where: { id: item.productoId, empresaId },
                             data: {
@@ -317,6 +326,9 @@ export async function updateDeliveryNoteStatus(id: string, nuevoEstado: string, 
             if (wasDelivered && nuevoEstado === 'anulado') {
                 for (const item of albaran.items) {
                     if (item.productoId && item.cantidad.toNumber() > 0) {
+                        const prod = await tx.producto.findFirst({ where: { id: item.productoId }, select: { unidadMedida: true } });
+                        if (prod?.unidadMedida === 'SRV') continue;
+
                         await tx.producto.updateMany({
                             where: { id: item.productoId, empresaId },
                             data: {
@@ -467,6 +479,9 @@ export async function invoiceGroupedDeliveryNotes(albaranIds: string[]) {
                 if (alb.estado !== 'entregado') {
                     for (const item of alb.items) {
                         if (item.productoId && item.cantidad.toNumber() > 0) {
+                            const prod = await tx.producto.findFirst({ where: { id: item.productoId }, select: { unidadMedida: true } });
+                            if (prod?.unidadMedida === 'SRV') continue;
+
                             await tx.producto.updateMany({
                                 where: { id: item.productoId, empresaId },
                                 data: {
