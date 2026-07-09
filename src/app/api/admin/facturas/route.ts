@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { paginar } from '@/lib/paginar';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 
 export async function GET(request: NextRequest) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { searchParams } = new URL(request.url);
     const cursor = searchParams.get('cursor');

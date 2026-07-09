@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { enviarCorreoSuperadmin } from '@/lib/correo';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 import { z } from 'zod';
 
 const CrearUsuarioSchema = z.object({
@@ -16,6 +17,8 @@ const CrearUsuarioSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { searchParams } = new URL(request.url);
     const cursor = searchParams.get('cursor');
@@ -68,6 +71,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const body = await request.json();
     const validacion = CrearUsuarioSchema.safeParse(body);
@@ -103,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     // Registrar en auditoría
     await registrarLogAuditoria({
-      adminId: request.headers.get('x-admin-id') || 'SUPERADMIN',
+      adminId: auth.context.userId,
       accion: 'CREAR_CUENTA',
       objetivo: 'Cuenta',
       objetivoId: nuevaCuenta.id,

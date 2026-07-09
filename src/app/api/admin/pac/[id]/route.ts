@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 import { encrypt as cifrar } from '@/lib/utils/crypto';
 import { z } from 'zod';
 
@@ -14,9 +15,11 @@ const EditarPACSchema = z.object({
 });
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { id } = await params;
-    const adminId = request.headers.get('x-admin-id') || 'SUPERADMIN';
+    const adminId = auth.context.userId;
     const body = await request.json();
     const validacion = EditarPACSchema.safeParse(body);
 
@@ -70,9 +73,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { id } = await params;
-    const adminId = request.headers.get('x-admin-id') || 'SUPERADMIN';
+    const adminId = auth.context.userId;
 
     const pac = await prisma.configuracionPAC.findUnique({ where: { id } });
     if (!pac) {

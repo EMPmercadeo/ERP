@@ -98,38 +98,17 @@ export function middleware(request: NextRequest) {
       response.headers.set('Access-Control-Allow-Credentials', 'true');
     }
 
-    // Verificación deny-by-default para endpoints superadmin (/api/admin/*)
-    if (request.nextUrl.pathname.startsWith('/api/admin')) {
-      const superadminSecret = process.env.SUPERADMIN_SECRET || 'erppanama-superadmin-key-2026';
-      const authHeader = request.headers.get('authorization') || request.headers.get('x-superadmin-secret') || '';
-      const tokenCookie = request.cookies.get('superadmin_token')?.value || '';
-      const isDevOrTest = process.env.NODE_ENV !== 'production' || request.headers.get('x-test-mode') === 'true';
-
-      const hasValidToken = authHeader.replace('Bearer ', '') === superadminSecret || tokenCookie === superadminSecret;
-
-      if (!hasValidToken && !isDevOrTest) {
-        return NextResponse.json(
-          { error: 'Acceso Denegado: Se requieren permisos de SUPERADMIN (Deny-by-default).' },
-          { status: 403 }
-        );
-      }
-    }
+    // NOTA DE SEGURIDAD: la verificación real de rol super_admin para /api/admin/*
+    // se hace en cada route handler vía requireSuperAdminApi() (getTenantContext() +
+    // sesión Firebase real), NO aquí. El middleware corre en Edge y no puede consultar
+    // Postgres de forma segura y consistente con el resto de la app, así que ya no
+    // intenta validar aquí un secreto compartido: ese esquema (cookie/secret sin
+    // ningún flujo que la emitiera, con fallback a un valor hardcodeado en el código
+    // fuente y un bypass total vía header `x-test-mode`) era una autorización falsa
+    // que dejaba todos los endpoints /api/admin/* abiertos a cualquiera que conociera
+    // ese header. Deny-by-default real vive en cada route.ts.
 
     return response;
-  }
-
-  // Verificación para páginas de UI /admin/*
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    const superadminSecret = process.env.SUPERADMIN_SECRET || 'erppanama-superadmin-key-2026';
-    const tokenCookie = request.cookies.get('superadmin_token')?.value || '';
-    const isDevOrTest = process.env.NODE_ENV !== 'production';
-
-    if (tokenCookie !== superadminSecret && !isDevOrTest) {
-      // Si no tiene cookie y está en producción sin token, redirigir a login / denegar
-      if (process.env.SUPERADMIN_SECRET) {
-        return new NextResponse('Acceso Denegado: Área SUPERADMIN protegida.', { status: 403 });
-      }
-    }
   }
 
   return NextResponse.next();

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { enviarCorreoSuperadmin } from '@/lib/correo';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 import { z } from 'zod';
 
 const AjusteSaldoSchema = z.object({
@@ -21,9 +22,11 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; action: string }> }
 ) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { id, action } = await params;
-    const adminId = request.headers.get('x-admin-id') || 'SUPERADMIN';
+    const adminId = auth.context.userId;
 
     const cuenta = await prisma.cuenta.findUnique({ where: { id } });
     if (!cuenta) {

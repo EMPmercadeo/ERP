@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 import { z } from 'zod';
 
 const PlanSchema = z.object({
@@ -14,6 +15,8 @@ const PlanSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const planes = await prisma.plan.findMany({
       orderBy: { priceMonthly: 'asc' },
@@ -32,6 +35,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const body = await request.json();
     const validacion = PlanSchema.safeParse(body);
@@ -64,7 +69,7 @@ export async function POST(request: NextRequest) {
     });
 
     await registrarLogAuditoria({
-      adminId: request.headers.get('x-admin-id') || 'SUPERADMIN',
+      adminId: auth.context.userId,
       accion: 'CREAR_PLAN',
       objetivo: 'Plan',
       objetivoId: nuevoPlan.id,

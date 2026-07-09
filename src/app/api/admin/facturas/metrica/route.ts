@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 
 export async function GET(request: NextRequest) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     // 1. Total facturas emitidas en el periodo (o total global por estado)
     const porEstado = await prisma.facturaEmitida.groupBy({

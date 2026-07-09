@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 import { z } from 'zod';
 
 const EditarUsuarioSchema = z.object({
@@ -14,6 +15,8 @@ const EditarUsuarioSchema = z.object({
 });
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { id } = await params;
 
@@ -43,6 +46,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { id } = await params;
     const body = await request.json();
@@ -64,7 +69,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     });
 
     await registrarLogAuditoria({
-      adminId: request.headers.get('x-admin-id') || 'SUPERADMIN',
+      adminId: auth.context.userId,
       accion: 'EDITAR_CUENTA',
       objetivo: 'Cuenta',
       objetivoId: id,
@@ -79,6 +84,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { id } = await params;
     const anterior = await prisma.cuenta.findUnique({ where: { id } });
@@ -97,7 +104,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     });
 
     await registrarLogAuditoria({
-      adminId: request.headers.get('x-admin-id') || 'SUPERADMIN',
+      adminId: auth.context.userId,
       accion: 'ELIMINAR_CUENTA_SOFT',
       objetivo: 'Cuenta',
       objetivoId: id,

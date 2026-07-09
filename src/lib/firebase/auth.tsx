@@ -102,8 +102,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // Modo mock (ALLOW_DEV_FALLBACK): no existe un ID Token real de Firebase que verificar.
                     // getTenantContext() ya reconoce este caso vía NODE_ENV+ALLOW_DEV_FALLBACK sin depender de la cookie de sesión.
                     // Fetch role once
+                    // No hacer fallback a 'super_admin' aquí: esto solo controla qué se MUESTRA
+                    // en el menú local de desarrollo. La autorización real (páginas /admin/**
+                    // y rutas /api/admin/**) siempre revalida el rol contra Postgres vía
+                    // getTenantContext(), así que mentir sobre el rol aquí no daba acceso real,
+                    // pero sí confundía al mostrar el panel de Superadmin a cualquier usuario
+                    // dev sin rol asignado.
                     const r = await getUserRole(mock.email);
-                    setRole(r || 'super_admin');
+                    setRole(r || null);
 
                     // Update display name from DB
                     const dbUser = await getCurrentUser(mock.email);

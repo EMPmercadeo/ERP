@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { enviarCorreoSuperadmin } from '@/lib/correo';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 import { z } from 'zod';
 
 const TestSMTPSchema = z.object({
@@ -8,8 +9,10 @@ const TestSMTPSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
-    const adminId = request.headers.get('x-admin-id') || 'SUPERADMIN';
+    const adminId = auth.context.userId;
     const body = await request.json();
     const validacion = TestSMTPSchema.safeParse(body);
 

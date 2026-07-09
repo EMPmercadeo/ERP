@@ -93,7 +93,9 @@ export function BottomNavigation() {
         }
     };
 
-    const isSuperAdmin = role === 'super_admin' || role === 'admin' || process.env.NODE_ENV === 'development' || !role;
+    // Ver nota en Sidebar.tsx: solo controla visibilidad del enlace, la autorización
+    // real vive en admin/layout.tsx vía getTenantContext(). No aflojar con fallbacks.
+    const isSuperAdmin = role === 'super_admin';
 
     const mainItems = [
         { name: 'Inicio', href: '/dashboard', icon: LayoutDashboard },

@@ -166,7 +166,12 @@ export function Sidebar() {
     }, []);
 
     const isCollapsed = isMounted ? storedCollapsed : false;
-    const isSuperAdmin = role === 'super_admin' || role === 'admin' || process.env.NODE_ENV === 'development' || !role;
+    // Solo controla si se MUESTRA el enlace en el menú; la autorización real la hace
+    // admin/layout.tsx con getTenantContext() en el servidor (redirige si el rol real
+    // en Postgres no es super_admin). No aflojar esto con fallbacks de "!role" o modo
+    // desarrollo: aunque no era un hueco de seguridad real (el layout ya bloquea el
+    // acceso), sí mostraba el enlace de Superadministración a cualquier usuario sin rol.
+    const isSuperAdmin = role === 'super_admin';
 
     const handleLogout = async () => {
         try {

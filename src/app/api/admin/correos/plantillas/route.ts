@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 import { z } from 'zod';
 
 const PlantillaSchema = z.object({
@@ -11,6 +12,8 @@ const PlantillaSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const plantillas = await prisma.plantillaCorreo.findMany({
       orderBy: { clave: 'asc' }
@@ -23,8 +26,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
-    const adminId = request.headers.get('x-admin-id') || 'SUPERADMIN';
+    const adminId = auth.context.userId;
     const body = await request.json();
     const validacion = PlantillaSchema.safeParse(body);
 

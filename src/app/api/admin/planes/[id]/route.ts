@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 import { z } from 'zod';
 
 const EditarPlanSchema = z.object({
@@ -14,6 +15,8 @@ const EditarPlanSchema = z.object({
 });
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { id } = await params;
     const { searchParams } = new URL(request.url);
@@ -49,6 +52,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { id } = await params;
     const body = await request.json();
@@ -93,7 +98,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     });
 
     await registrarLogAuditoria({
-      adminId: request.headers.get('x-admin-id') || 'SUPERADMIN',
+      adminId: auth.context.userId,
       accion: 'EDITAR_PLAN',
       objetivo: 'Plan',
       objetivoId: id,
@@ -108,6 +113,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { id } = await params;
     const plan = await prisma.plan.findUnique({
@@ -127,7 +134,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       });
 
       await registrarLogAuditoria({
-        adminId: request.headers.get('x-admin-id') || 'SUPERADMIN',
+        adminId: auth.context.userId,
         accion: 'DESACTIVAR_PLAN_CON_SUSCRIPTORES',
         objetivo: 'Plan',
         objetivoId: id,
@@ -144,7 +151,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     await prisma.plan.delete({ where: { id } });
 
     await registrarLogAuditoria({
-      adminId: request.headers.get('x-admin-id') || 'SUPERADMIN',
+      adminId: auth.context.userId,
       accion: 'ELIMINAR_PLAN',
       objetivo: 'Plan',
       objetivoId: id,

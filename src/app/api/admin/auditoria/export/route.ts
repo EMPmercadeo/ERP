@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 
 export async function GET(request: NextRequest) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { searchParams } = new URL(request.url);
     const adminId = searchParams.get('adminId');
@@ -29,7 +32,7 @@ export async function GET(request: NextRequest) {
     });
 
     await registrarLogAuditoria({
-      adminId: request.headers.get('x-admin-id') || 'SUPERADMIN',
+      adminId: auth.context.userId,
       accion: 'EXPORTAR_AUDITORIA_CSV',
       objetivo: 'LogAuditoria',
       detalles: { totalExportados: logs.length, filtros: { adminId, accion, objetivo, fechaDesde, fechaHasta } }

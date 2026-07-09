@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
-    const adminId = request.headers.get('x-admin-id') || 'SUPERADMIN';
+    const adminId = auth.context.userId;
 
     // Buscar si hay algún PAC marcado como respaldo (esRespaldo = true)
     const pacRespaldo = await prisma.configuracionPAC.findFirst({

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 import { z } from 'zod';
 
 const EditarTicketSchema = z.object({
@@ -10,6 +11,8 @@ const EditarTicketSchema = z.object({
 });
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { id } = await params;
     const ticket = await prisma.ticketSoporte.findUnique({
@@ -32,9 +35,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { id } = await params;
-    const adminId = request.headers.get('x-admin-id') || 'SUPERADMIN';
+    const adminId = auth.context.userId;
     const body = await request.json();
     const validacion = EditarTicketSchema.safeParse(body);
 

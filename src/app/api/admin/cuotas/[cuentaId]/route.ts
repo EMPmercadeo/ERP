@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 import { z } from 'zod';
 
 const AjusteCuotaSchema = z.object({
@@ -11,6 +12,8 @@ const AjusteCuotaSchema = z.object({
 });
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ cuentaId: string }> }) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { cuentaId } = await params;
     const { searchParams } = new URL(request.url);
@@ -50,9 +53,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ cuentaId: string }> }) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const { cuentaId } = await params;
-    const adminId = request.headers.get('x-admin-id') || 'SUPERADMIN';
+    const adminId = auth.context.userId;
     const body = await request.json().catch(() => ({}));
     const validacion = AjusteCuotaSchema.safeParse(body);
 

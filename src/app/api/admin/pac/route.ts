@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { requireSuperAdminApi } from '@/lib/auth/admin';
 import { encrypt as cifrar } from '@/lib/utils/crypto';
 import { z } from 'zod';
 
@@ -13,6 +14,8 @@ const PACSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
     const configs = await prisma.configuracionPAC.findMany({
       orderBy: { esRespaldo: 'asc' }
@@ -38,8 +41,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperAdminApi();
+  if ('error' in auth) return auth.error;
   try {
-    const adminId = request.headers.get('x-admin-id') || 'SUPERADMIN';
+    const adminId = auth.context.userId;
     const body = await request.json();
     const validacion = PACSchema.safeParse(body);
 
