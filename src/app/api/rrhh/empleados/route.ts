@@ -82,12 +82,10 @@ export async function POST(request: NextRequest) {
 
     const data = parseResult.data;
 
-    // NOTA: `cedula` es @unique GLOBAL en el schema (no @@unique([empresaId, cedula])), así que
-    // dos empresas distintas nunca podrán registrar la misma cédula aunque sean tenants
-    // separados — es un bug de modelado de datos que requiere una migración para corregirse
-    // de raíz. Este chequeo previo evita al menos un error crudo de Postgres con un mensaje claro.
-    const existe = await prisma.empleado.findUnique({
-      where: { cedula: data.cedula }
+    // cedula ahora es única por empresa (@@unique([empresaId, cedula])), no global — dos
+    // empresas distintas pueden tener cada una un colaborador con la misma cédula.
+    const existe = await prisma.empleado.findFirst({
+      where: { cedula: data.cedula, empresaId }
     });
     if (existe) {
       return NextResponse.json({ error: 'Ya existe un colaborador registrado con esa cédula' }, { status: 400 });

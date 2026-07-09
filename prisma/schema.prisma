@@ -1151,7 +1151,7 @@ model Empleado {
   cuentaId      String?
   cuenta        Cuenta?                @relation(fields: [cuentaId], references: [id])
   nombre        String
-  cedula        String                 @unique
+  cedula        String
   cargo         String
   salarioBase   Decimal
   tipoContrato  String                 // INDEFINIDO | DEFINIDO | OBRA
@@ -1162,6 +1162,7 @@ model Empleado {
   movVacaciones MovimientoVacaciones[]
   actas         ActaDisciplinaria[]
 
+  @@unique([empresaId, cedula])
   @@index([empresaId])
   @@index([cuentaId])
 }
