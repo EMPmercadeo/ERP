@@ -1,6 +1,7 @@
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+<!-- rebuild trigger 2026-07-09: forzando redeploy limpio tras build colgado en prisma migrate deploy -->
 
 ## Commands
 
