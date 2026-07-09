@@ -83,6 +83,12 @@ const navigationGroups: { label: string; items: { name: string; href: string; ic
             { name: 'Reportes', href: '/reports', icon: BarChart3 },
         ],
     },
+    {
+        label: 'RRHH & Planilla',
+        items: [
+            { name: 'Planilla y RRHH', href: '/payroll', icon: Users },
+        ],
+    },
 ];
 
 const adminNavigation = [
