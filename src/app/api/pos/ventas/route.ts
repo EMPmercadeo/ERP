@@ -3,10 +3,14 @@ import { prisma } from '@/lib/db';
 import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { emitirFacturaPAC } from '@/lib/pac/mock-pac-client';
+import { getTenantContext } from '@/lib/auth/context';
 import { z } from 'zod';
 
+// empresaId ya NO se acepta del cliente — siempre se deriva de getTenantContext() en el
+// servidor. Antes este endpoint confiaba en el empresaId que mandaba el body del POST,
+// lo que permitía spoofear ventas contra cualquier empresa y además dejó de funcionar en
+// cuanto pos/page.tsx dejó de mandar empresaId (se quitó el fallback roto de localStorage).
 const VentaSchema = z.object({
-  empresaId: z.string().min(1, 'Empresa ID requerido'),
   cuentaId: z.string().optional(),
   tipoDoc: z.enum(['01', '02']), // 01 factura | 02 boleta
   clienteRuc: z.string().optional(),
@@ -23,14 +27,20 @@ const VentaSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
+    let empresaId: string;
+    try {
+      ({ empresaId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para ver las ventas del POS.' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const cursor = searchParams.get('cursor');
     const take = parseInt(searchParams.get('take') || '20', 10);
-    const empresaId = searchParams.get('empresaId');
     const estado = searchParams.get('estado'); // 'LOCAL' | 'EN_COLA' | 'AUTORIZADA' | 'RECHAZADA' | 'all'
 
-    const where: any = {};
-    if (empresaId) where.empresaId = empresaId;
+    // empresaId siempre viene de la sesión, nunca del query string — evita fugas cross-tenant.
+    const where: any = { empresaId };
     if (estado && estado !== 'all') where.estado = estado;
 
     const resultado = await paginar(prisma.venta, {
@@ -49,13 +59,21 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    let empresaId: string;
+    let userId: string;
+    try {
+      ({ empresaId, userId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para registrar ventas en el POS.' }, { status: 401 });
+    }
+
     const body = await request.json();
     const parseResult = VentaSchema.safeParse(body);
     if (!parseResult.success) {
       return NextResponse.json({ error: parseResult.error.issues[0].message }, { status: 400 });
     }
 
-    const { empresaId, cuentaId, tipoDoc, clienteRuc, items, metodoPago, offline } = parseResult.data;
+    const { cuentaId, tipoDoc, clienteRuc, items, metodoPago, offline } = parseResult.data;
 
     // Calcular subtotal, itbms y total
     let subtotal = 0;
@@ -68,15 +86,14 @@ export async function POST(request: NextRequest) {
     }
     const total = subtotal + itbmsTotal;
 
-    // Obtener cuenta/empresa para verificar saldo de emisiones ante el PAC (sólo si se intenta emitir en línea)
-    let cuenta = null;
-    if (cuentaId) {
-      cuenta = await prisma.cuenta.findUnique({ where: { id: cuentaId } });
-    } else {
-      const empresa = await prisma.empresa.findUnique({ where: { id: empresaId } });
-      if (empresa) {
-        cuenta = await prisma.cuenta.findFirst({ where: { ruc: empresa.ruc } });
-      }
+    // Obtener cuenta/empresa para verificar saldo de emisiones ante el PAC (sólo si se intenta emitir en línea).
+    // Siempre se resuelve vía el RUC de la empresa de la sesión — nunca se confía en un
+    // cuentaId que mande el cliente directamente, porque eso permitiría a cualquier usuario
+    // autenticado apuntar a la cuenta (y cuota prepago) de otra empresa.
+    const empresa = await prisma.empresa.findUnique({ where: { id: empresaId } });
+    let cuenta = empresa ? await prisma.cuenta.findFirst({ where: { ruc: empresa.ruc } }) : null;
+    if (cuentaId && cuenta && cuentaId !== cuenta.id) {
+      return NextResponse.json({ error: 'La cuenta indicada no pertenece a tu empresa.' }, { status: 403 });
     }
 
     // Regla 0: Si está en línea, consumir 1 cuota del saldo de facturas y verificar bloqueo a saldo 0
@@ -201,7 +218,7 @@ export async function POST(request: NextRequest) {
       }
 
       await registrarLogAuditoria({
-        adminId: empresaId,
+        adminId: userId,
         accion: 'EMISION_POS_ONLINE_AUTORIZADA',
         objetivo: 'Venta',
         objetivoId: venta.id,

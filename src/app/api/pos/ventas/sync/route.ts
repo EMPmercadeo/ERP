@@ -2,15 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { emitirFacturaPAC } from '@/lib/pac/mock-pac-client';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { getTenantContext } from '@/lib/auth/context';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { empresaId, ventasQueue } = body; // ventas locales o IDs en cola
-
-    if (!empresaId) {
-      return NextResponse.json({ error: 'Empresa ID requerido para retransmisión al PAC' }, { status: 400 });
+    // empresaId ya no se lee del body — se deriva de la sesión, igual que en /api/pos/ventas.
+    let empresaId: string;
+    let userId: string;
+    try {
+      ({ empresaId, userId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para sincronizar la cola del POS.' }, { status: 401 });
     }
+
+    const body = await request.json();
+    const { ventasQueue } = body; // ventas locales o IDs en cola
 
     const empresa = await prisma.empresa.findUnique({ where: { id: empresaId } });
     if (!empresa) {
@@ -29,12 +35,15 @@ export async function POST(request: NextRequest) {
       for (const itemLocal of ventasQueue) {
         if (!itemLocal.id?.startsWith('sync-')) {
           const vDB = await prisma.venta.findFirst({ where: { id: itemLocal.id } });
+          // Si la venta ya existe pero pertenece a otra empresa, la ignoramos por completo:
+          // nunca se debe poder tocar (ni re-encolar) una venta ajena vía este endpoint.
+          if (vDB && vDB.empresaId !== empresaId) continue;
           if (vDB && vDB.estado === 'AUTORIZADA') continue;
         }
 
         const v = await prisma.venta.upsert({
           where: { id: itemLocal.id || 'new-' + Math.random() },
-          update: { estado: 'EN_COLA' },
+          update: { estado: 'EN_COLA', empresaId },
           create: {
             empresaId,
             cuentaId: cuenta.id,
@@ -151,7 +160,7 @@ export async function POST(request: NextRequest) {
     }
 
     await registrarLogAuditoria({
-      adminId: empresaId,
+      adminId: userId,
       accion: 'RETRANSMISION_COLA_POS_DGI',
       objetivo: 'PosSyncLog',
       detalles: { totalCola: ventasParaSync.length, autorizadas, fallidas },

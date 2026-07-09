@@ -1,19 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { getTenantContext } from '@/lib/auth/context';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    let empresaId: string;
+    let userId: string;
+    try {
+      ({ empresaId, userId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para anular ventas.' }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await request.json();
-    const { motivo, usuarioId } = body;
+    const { motivo } = body;
 
     const venta = await prisma.venta.findUnique({ where: { id } });
     if (!venta) {
       return NextResponse.json({ error: 'Venta no encontrada' }, { status: 404 });
+    }
+
+    // Sin esto, cualquier usuario autenticado de cualquier empresa podía anular (y hacer que se
+    // reembolsara cuota de) una venta ajena con solo adivinar/conocer su ID.
+    if (venta.empresaId !== empresaId) {
+      return NextResponse.json({ error: 'No tienes permiso para anular esta venta.' }, { status: 403 });
     }
 
     if (venta.estado === 'ANULADA') {
@@ -79,7 +94,7 @@ export async function POST(
 
     // Auditoría tributaria y de caja
     await registrarLogAuditoria({
-      adminId: venta.empresaId,
+      adminId: userId,
       accion: 'ANULAR_VENTA_POS_NOTA_CREDITO',
       objetivo: 'Venta',
       objetivoId: venta.id,
@@ -87,7 +102,7 @@ export async function POST(
         cufe: venta.cufe || 'LOCAL_SIN_CUFE',
         total: venta.total,
         motivo: motivo || 'Anulación solicitada en caja por error de digitación o devolución',
-        autorizadoPor: usuarioId || 'ADMIN_TIENDA'
+        autorizadoPor: userId
       },
       ip: request.headers.get('x-forwarded-for') || '127.0.0.1'
     });

@@ -46,6 +46,7 @@ export default function POSMultiDispositivoPage() {
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
   const [buscar, setBuscar] = useState('');
   const [loading, setLoading] = useState(true);
+  const [errorCatalogo, setErrorCatalogo] = useState('');
 
   // Estado de Red y Cola Offline IndexedDB / LocalStorage
   const [isOnline, setIsOnline] = useState(true);
@@ -91,35 +92,33 @@ export default function POSMultiDispositivoPage() {
   const cargarProductos = async () => {
     setLoading(true);
     try {
-      const currentEmpresa = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
-      const res = await fetch(`/api/inventario/productos?empresaId=${currentEmpresa}&activo=true&take=60`);
+      // El catálogo se scopea a la empresa de la sesión actual en el servidor
+      // (getTenantContext), no por un empresaId que mande el cliente.
+      const res = await fetch('/api/pos/productos');
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        const data = await res.json();
         const lista = (data.items || []).map((p: any) => ({
           id: p.id,
           codigoInterno: p.codigoInterno || 'SKU-01',
           codigoBarras: p.codigoBarras,
           descripcion: p.descripcion || 'Producto',
-          precioVenta: Number(p.precioVenta || p.precio || 10),
-          codigoTasaItbms: p.codigoTasaItbms || (p.precioVenta > 100 ? '01' : '00'),
-          stockActual: p.stockActual || 25
+          precioVenta: Number(p.precioVenta ?? 0),
+          codigoTasaItbms: p.codigoTasaItbms || '00',
+          stockActual: p.stockActual ?? 0
         }));
         setProductos(lista);
+        if (lista.length === 0) {
+          setErrorCatalogo('No tienes productos activos todavía. Agrega productos en el módulo Productos para poder venderlos aquí.');
+        } else {
+          setErrorCatalogo('');
+        }
       } else {
-        // Fallback de demostración si la base no tiene aún productos en esa empresa
-        setProductos([
-          { id: 'prod-1', codigoInterno: 'CAF-01', codigoBarras: '7451101', descripcion: 'Café Geisha Especial 250g', precioVenta: 18.50, codigoTasaItbms: '01', stockActual: 30 },
-          { id: 'prod-2', codigoInterno: 'PAN-02', codigoBarras: '7451102', descripcion: 'Pan Artesanal Masa Madre', precioVenta: 4.50, codigoTasaItbms: '00', stockActual: 15 },
-          { id: 'prod-3', codigoInterno: 'AGU-03', codigoBarras: '7451103', descripcion: 'Agua Mineral Manantial 500ml', precioVenta: 1.25, codigoTasaItbms: '00', stockActual: 100 },
-          { id: 'prod-4', codigoInterno: 'CHO-04', codigoBarras: '7451104', descripcion: 'Chocolate Oscuro Bocas del Toro', precioVenta: 6.75, codigoTasaItbms: '01', stockActual: 20 },
-          { id: 'prod-5', codigoInterno: 'TEA-05', codigoBarras: '7451105', descripcion: 'Té Verde Orgánico Caja x20', precioVenta: 5.00, codigoTasaItbms: '00', stockActual: 40 }
-        ]);
+        setProductos([]);
+        setErrorCatalogo(data.error || 'No se pudo cargar el catálogo de productos.');
       }
     } catch {
-      setProductos([
-        { id: 'prod-1', codigoInterno: 'CAF-01', codigoBarras: '7451101', descripcion: 'Café Geisha Especial 250g', precioVenta: 18.50, codigoTasaItbms: '01', stockActual: 30 },
-        { id: 'prod-2', codigoInterno: 'PAN-02', codigoBarras: '7451102', descripcion: 'Pan Artesanal Masa Madre', precioVenta: 4.50, codigoTasaItbms: '00', stockActual: 15 }
-      ]);
+      setProductos([]);
+      setErrorCatalogo('Error de conexión al cargar el catálogo de productos.');
     } finally {
       setLoading(false);
     }
@@ -189,7 +188,6 @@ export default function POSMultiDispositivoPage() {
     const useOffline = !isOnline || contingenciaForzada;
 
     const payload = {
-      empresaId: localStorage.getItem('active_tenant_id') || 'empresa-demo-id',
       tipoDoc,
       clienteRuc: clienteRuc || (tipoDoc === '01' ? 'CF' : null),
       items: carrito,
@@ -289,7 +287,6 @@ export default function POSMultiDispositivoPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          empresaId: localStorage.getItem('active_tenant_id') || 'empresa-demo-id',
           ventasQueue: colaLocal
         })
       });
@@ -383,6 +380,10 @@ export default function POSMultiDispositivoPage() {
           {/* Grid de Productos (Botones Grandes Touch-First) */}
           {loading ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground animate-pulse">Cargando inventario para POS...</div>
+          ) : errorCatalogo ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center gap-2 p-8 text-muted-foreground">
+              <p className="text-sm font-medium">{errorCatalogo}</p>
+            </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pb-4">
               {productosFiltrados.map((prod) => (
