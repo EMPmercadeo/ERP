@@ -66,6 +66,8 @@ model Empresa {
   componentesKit            ProductoKitComponente[]
   configuracionFE           ConfiguracionFacturacionElectronica?
   facturasPACLog            FacturaPACLog[]
+  empleados                 Empleado[]
+  ventas                    Venta[]
 
   @@index([createdAt])
 }
@@ -998,6 +1000,9 @@ model Cuenta {
   facturas         FacturaEmitida[]
   movimientosCuota MovimientoCuota[]
   tickets          TicketSoporte[]
+  empleados        Empleado[]
+  ventas           Venta[]
+  configuracionWoo ConfiguracionWoo?
 
   @@index([correo])
   @@index([ruc])
@@ -1137,5 +1142,119 @@ model LogAuditoria {
   @@index([adminId, createdAt])
   @@index([accion, createdAt])
   @@index([objetivo, objetivoId])
+}
+
+model Empleado {
+  id            String                 @id @default(cuid())
+  empresaId     String
+  empresa       Empresa                @relation(fields: [empresaId], references: [id])
+  cuentaId      String?
+  cuenta        Cuenta?                @relation(fields: [cuentaId], references: [id])
+  nombre        String
+  cedula        String                 @unique
+  cargo         String
+  salarioBase   Decimal
+  tipoContrato  String                 // INDEFINIDO | DEFINIDO | OBRA
+  fechaIngreso  DateTime
+  fechaSalida   DateTime?              // soft-delete / baja
+  activo        Boolean                @default(true)
+  ausencias     Ausencia[]
+  movVacaciones MovimientoVacaciones[]
+  actas         ActaDisciplinaria[]
+
+  @@index([empresaId])
+  @@index([cuentaId])
+}
+
+model Ausencia {
+  id          String   @id @default(cuid())
+  empleadoId  String
+  empleado    Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  tipo        String   // VACACIONES | ENFERMEDAD | PERMISO | INJUSTIFICADA | MATERNIDAD | LUTO | OTRO
+  desde       DateTime
+  hasta       DateTime
+  dias        Int
+  justificada Boolean  @default(true)
+  documentoUrl String? // certificado de incapacidad CSS, etc.
+  estado      String   @default("PENDIENTE") // PENDIENTE | APROBADA | RECHAZADA
+  aprobadaPor String?
+  nota        String?
+  createdAt   DateTime @default(now())
+
+  @@index([empleadoId, desde])
+}
+
+model MovimientoVacaciones {
+  id             String   @id @default(cuid())
+  empleadoId     String
+  empleado       Empleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  tipo           String   // DEVENGO | TOMA | AJUSTE
+  dias           Decimal  // + devenga, - toma
+  saldoPosterior Decimal
+  referencia     String?
+  createdAt      DateTime @default(now())
+
+  @@index([empleadoId, createdAt])
+}
+
+model ActaDisciplinaria {
+  id             String    @id @default(cuid())
+  empleadoId     String
+  empleado       Empleado  @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+  tipo           String    // AMONESTACION_VERBAL | AMONESTACION_ESCRITA | MEMORANDO | SUSPENSION
+  falta          String    // categoría de la falta (ausentismo, incumplimiento, conducta, etc.)
+  descripcion    String
+  fechaHecho     DateTime
+  evidenciaUrl   String?   // foto, PDF, correo, registro de asistencia
+  emitidaPor     String    // supervisor/admin
+  acuseEmpleado  Boolean   @default(false) // el empleado firmó/recibió
+  fechaAcuse     DateTime?
+  reincidenciaDe String?   // id de acta previa (encadena reincidencias)
+  cerrada        Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+
+  @@index([empleadoId, fechaHecho])
+}
+
+model BaseConocimientoLaboral {
+  id        String   @id @default(cuid())
+  articulo  String
+  tema      String
+  contenido String   @db.Text
+  createdAt DateTime @default(now())
+}
+
+model Venta {
+  id            String   @id @default(cuid())
+  empresaId     String
+  empresa       Empresa  @relation(fields: [empresaId], references: [id])
+  cuentaId      String?
+  cuenta        Cuenta?  @relation(fields: [cuentaId], references: [id])
+  cufe          String?  @unique
+  tipoDoc       String   // 01 factura | 02 boleta
+  clienteRuc    String?
+  items         Json     // líneas: producto, cantidad, precio, itbms
+  subtotal      Decimal
+  itbms         Decimal
+  total         Decimal
+  metodoPago    String   // EFECTIVO | TARJETA | YAPPY | TRANSFERENCIA | MIXTO
+  estado        String   @default("LOCAL") // LOCAL | EN_COLA | AUTORIZADA | RECHAZADA | ANULADA
+  contingencia  Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([empresaId, createdAt])
+  @@index([cuentaId, createdAt])
+  @@index([estado, createdAt])
+}
+
+model ConfiguracionWoo {
+  id           String    @id @default(cuid())
+  cuentaId     String    @unique
+  cuenta       Cuenta    @relation(fields: [cuentaId], references: [id], onDelete: Cascade)
+  urlTienda    String
+  consumerKey  String    @db.Text // cifrada
+  consumerSec  String    @db.Text // cifrada
+  activo       Boolean   @default(true)
+  ultimaSync   DateTime?
 }
 
