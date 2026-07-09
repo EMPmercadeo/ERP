@@ -41,7 +41,7 @@ export default function AusenciasPage() {
   const cargarDatos = async () => {
     setLoading(true);
     try {
-      let currentEmpresa = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
+      const currentEmpresa = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
       setEmpresaId(currentEmpresa);
 
       const [resAus, resEmp] = await Promise.all([
@@ -222,7 +222,7 @@ export default function AusenciasPage() {
                         Periodo: <strong className="text-slate-200">{new Date(aus.desde).toLocaleDateString('es-PA')} al {new Date(aus.hasta).toLocaleDateString('es-PA')}</strong> &nbsp;|&nbsp; 
                         Duración: <strong className="text-[#00f0ff] font-mono">{aus.dias} días</strong>
                       </p>
-                      {aus.nota && <p className="text-xs text-slate-400 italic">Nota: "{aus.nota}"</p>}
+                      {aus.nota && <p className="text-xs text-slate-400 italic">Nota: &quot;{aus.nota}&quot;</p>}
                     </div>
 
                     <div className="flex items-center gap-4 justify-between md:justify-end">

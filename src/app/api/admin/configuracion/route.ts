@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { encrypt as cifrar } from '@/lib/utils/crypto';
 import { z } from 'zod';
 
 const ConfigSMTPSchema = z.object({
@@ -11,10 +12,6 @@ const ConfigSMTPSchema = z.object({
   remitente: z.string().email(),
   activo: z.boolean().default(true)
 });
-
-function cifrar(texto: string): string {
-  return Buffer.from(texto).toString('base64');
-}
 
 export async function GET(request: NextRequest) {
   try {

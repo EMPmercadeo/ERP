@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db';
 import { sendEmail } from '@/lib/email/mailer';
+import { decrypt } from '@/lib/utils/crypto';
 import nodemailer from 'nodemailer';
 
 export interface OpcionesEnvioCorreo {
@@ -57,14 +58,14 @@ export async function enviarCorreoSuperadmin(opciones: OpcionesEnvioCorreo) {
     });
 
     if (configSmtpDb) {
-      // Usar transporte SMTP de la base de datos
+      // La contraseña se guarda cifrada (AES-256-GCM); debe descifrarse antes de usarla en la autenticación SMTP.
       const transport = nodemailer.createTransport({
         host: configSmtpDb.servidor,
         port: configSmtpDb.puerto,
         secure: configSmtpDb.puerto === 465,
         auth: {
           user: configSmtpDb.usuario,
-          pass: configSmtpDb.passwordCifrado
+          pass: decrypt(configSmtpDb.passwordCifrado)
         }
       });
       await transport.sendMail({

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { encrypt as cifrar } from '@/lib/utils/crypto';
 import { z } from 'zod';
 
 const PACSchema = z.object({
@@ -10,11 +11,6 @@ const PACSchema = z.object({
   esRespaldo: z.boolean().default(false),
   activo: z.boolean().default(true)
 });
-
-// Helper de cifrado rápido en servidor para credenciales (o mock en dev)
-function cifrar(texto: string): string {
-  return Buffer.from(texto).toString('base64');
-}
 
 export async function GET(request: NextRequest) {
   try {

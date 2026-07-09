@@ -96,7 +96,7 @@ export default function POSMultiDispositivoPage() {
   const cargarProductos = async () => {
     setLoading(true);
     try {
-      let currentEmpresa = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
+      const currentEmpresa = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
       const res = await fetch(`/api/inventario/productos?empresaId=${currentEmpresa}&activo=true&take=60`);
       if (res.ok) {
         const data = await res.json();

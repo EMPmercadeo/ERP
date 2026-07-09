@@ -287,7 +287,7 @@ export default function FichaColaboradorPage() {
                       {ficha.movVacaciones?.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="py-8 text-center text-slate-500">
-                            No hay movimientos en el ledger. Presiona "Devengo Vacaciones" en el directorio para generar el primer abono de ley.
+                            No hay movimientos en el ledger. Presiona &quot;Devengo Vacaciones&quot; en el directorio para generar el primer abono de ley.
                           </td>
                         </tr>
                       ) : (

@@ -24,8 +24,21 @@ export async function POST(request: NextRequest) {
     // Equivalencia mensual exacta: 30 / 11 = 2.72727... redondeado a 2.73 días por mes trabajado
     const devengoMensual = 2.73;
     const movimientos = [];
+    const omitidos = [];
+
+    const ahora = new Date();
+    const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
 
     for (const emp of empleados) {
+      // Idempotencia: si ya se aplicó un devengo este mes calendario para este colaborador, se omite
+      const yaDevengadoEsteMes = emp.movVacaciones.some(
+        mov => mov.tipo === 'DEVENGO' && mov.createdAt >= inicioMes
+      );
+      if (yaDevengadoEsteMes) {
+        omitidos.push(emp.id);
+        continue;
+      }
+
       const saldoActual = emp.movVacaciones.reduce((acc, mov) => acc + Number(mov.dias), 0);
       const nuevoSaldo = Number((saldoActual + devengoMensual).toFixed(2));
 
@@ -47,15 +60,16 @@ export async function POST(request: NextRequest) {
         accion: 'DEVENGO_VACACIONES_MASIVO',
         objetivo: 'Empresa',
         objetivoId: empresaId,
-        detalles: { empleadosProcesados: empleados.length, devengoPorEmpleado: devengoMensual },
+        detalles: { empleadosProcesados: movimientos.length, omitidosPorDuplicado: omitidos.length, devengoPorEmpleado: devengoMensual },
         ip: request.headers.get('x-forwarded-for') || '127.0.0.1'
       });
     }
 
     return NextResponse.json({
       success: true,
-      message: `Devengo de vacaciones aplicado exitosamente a ${empleados.length} colaboradores activos`,
-      movimientos
+      message: `Devengo de vacaciones aplicado a ${movimientos.length} colaboradores. ${omitidos.length} ya tenían el devengo de este mes aplicado y fueron omitidos.`,
+      movimientos,
+      omitidos
     });
   } catch (error: any) {
     console.error('Error POST /api/rrhh/vacaciones/devengo:', error);

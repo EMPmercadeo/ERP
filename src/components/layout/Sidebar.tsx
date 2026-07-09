@@ -33,6 +33,9 @@ import {
     Truck,
     Landmark,
     Warehouse,
+    Store,
+    UserCheck,
+    CalendarDays,
     type LucideIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -60,6 +63,7 @@ const navigationGroups: { label: string; items: { name: string; href: string; ic
     {
         label: 'Ventas',
         items: [
+            { name: 'Punto de Venta (POS)', href: '/pos', icon: Store },
             { name: 'Cotizaciones', href: '/quotes', icon: FileText },
             { name: 'Pedidos', href: '/orders', icon: ClipboardList },
             { name: 'Notas de Entrega', href: '/delivery-notes', icon: Truck },
@@ -86,7 +90,9 @@ const navigationGroups: { label: string; items: { name: string; href: string; ic
     {
         label: 'RRHH & Planilla',
         items: [
-            { name: 'Planilla y RRHH', href: '/payroll', icon: Users },
+            { name: 'Colaboradores y Fichas', href: '/rrhh/empleados', icon: UserCheck },
+            { name: 'Ausencias y Permisos', href: '/rrhh/ausencias', icon: CalendarDays },
+            { name: 'Planilla y Nómina', href: '/payroll', icon: Users },
         ],
     },
 ];

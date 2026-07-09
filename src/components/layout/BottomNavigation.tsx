@@ -112,6 +112,8 @@ export function BottomNavigation() {
                 { name: 'Cotizaciones', href: '/quotes', icon: FileText },
                 { name: 'Pedidos', href: '/orders', icon: ClipboardList },
                 { name: 'Notas de Entrega', href: '/delivery-notes', icon: Truck },
+                { name: 'Colaboradores (RRHH)', href: '/rrhh/empleados', icon: Users },
+                { name: 'Ausencias y Permisos', href: '/rrhh/ausencias', icon: ClipboardList },
                 { name: 'Proveedores', href: '/suppliers', icon: Building2 },
                 { name: 'Compras', href: '/purchases', icon: Package },
                 { name: 'Cuentas por Cobrar', href: '/receivables', icon: CreditCard },

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import puppeteer from 'puppeteer';
 
 export async function GET(
   request: NextRequest,
@@ -83,10 +84,31 @@ export async function GET(
       </html>
     `;
 
-    return new NextResponse(htmlReporte, {
+    // Renderizamos el HTML a un PDF real en servidor (el endpoint promete un PDF, no HTML crudo)
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+
+    let pdfBuffer: Buffer;
+    try {
+      const page = await browser.newPage();
+      await page.setContent(htmlReporte, { waitUntil: 'domcontentloaded' });
+      pdfBuffer = Buffer.from(
+        await page.pdf({
+          format: 'letter',
+          printBackground: true,
+          margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
+        })
+      );
+    } finally {
+      await browser.close();
+    }
+
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Content-Disposition': `inline; filename="Expediente_Laboral_${empleado.cedula.replace(/\s+/g, '_')}.html"`
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename="Expediente_Laboral_${empleado.cedula.replace(/\s+/g, '_')}.pdf"`
       }
     });
   } catch (error: any) {

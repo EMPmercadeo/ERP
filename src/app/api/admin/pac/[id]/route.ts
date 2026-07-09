@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { encrypt as cifrar } from '@/lib/utils/crypto';
 import { z } from 'zod';
 
 const EditarPACSchema = z.object({
@@ -11,10 +12,6 @@ const EditarPACSchema = z.object({
   activo: z.boolean().optional(),
   makePrimary: z.boolean().optional() // 1 click toggle
 });
-
-function cifrar(texto: string): string {
-  return Buffer.from(texto).toString('base64');
-}
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

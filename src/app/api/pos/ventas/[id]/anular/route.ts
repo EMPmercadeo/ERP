@@ -20,11 +20,49 @@ export async function POST(
       return NextResponse.json({ error: 'Esta venta ya se encuentra anulada' }, { status: 400 });
     }
 
+    // Si la venta ya había sido AUTORIZADA ante el PAC, se consumió 1 cuota del saldo de facturas.
+    // Al anular, esa cuota debe reembolsarse al cliente; de lo contrario se le cobra por una factura anulada.
+    const debeReembolsarCuota = venta.estado === 'AUTORIZADA' && !!venta.cuentaId;
+
     // Regla de POS: Nada de borrar ventas: una venta emitida se corrige con nota de crédito o evento de anulación DGI
-    const ventaAnulada = await prisma.venta.update({
-      where: { id },
-      data: { estado: 'ANULADA' }
-    });
+    let ventaAnulada;
+    if (debeReembolsarCuota && venta.cuentaId) {
+      const cuenta = await prisma.cuenta.findUnique({ where: { id: venta.cuentaId } });
+      if (!cuenta) {
+        return NextResponse.json({ error: 'Cuenta fiscal asociada a la venta no encontrada' }, { status: 404 });
+      }
+
+      const saldoAnte = cuenta.saldoFacturas;
+      const saldoPost = saldoAnte + 1;
+
+      const [, , actualizada] = await prisma.$transaction([
+        prisma.cuenta.update({
+          where: { id: venta.cuentaId },
+          data: { saldoFacturas: { increment: 1 } }
+        }),
+        prisma.movimientoCuota.create({
+          data: {
+            cuentaId: venta.cuentaId,
+            tipo: 'REEMBOLSO',
+            cantidad: 1,
+            saldoAnte,
+            saldoPost,
+            nota: `Reembolso de cuota por anulación de venta POS - CUFE: ${venta.cufe || 'N/A'}`,
+            referencia: `ANULACION-${venta.id}`
+          }
+        }),
+        prisma.venta.update({
+          where: { id },
+          data: { estado: 'ANULADA' }
+        })
+      ]);
+      ventaAnulada = actualizada;
+    } else {
+      ventaAnulada = await prisma.venta.update({
+        where: { id },
+        data: { estado: 'ANULADA' }
+      });
+    }
 
     // Devolver inventario a bodega
     const items: any = Array.isArray(venta.items) ? venta.items : [];

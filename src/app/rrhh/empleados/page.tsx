@@ -47,7 +47,7 @@ export default function EmpleadosRRHHPage() {
     setLoading(true);
     try {
       // Obtenemos del contexto o localStorage (fallback a primera empresa si es multitenant en dev)
-      let currentEmpresa = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
+      const currentEmpresa = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
       setEmpresaId(currentEmpresa);
 
       const params = new URLSearchParams();
@@ -215,7 +215,7 @@ export default function EmpleadosRRHHPage() {
                 <Users className="h-12 w-12 text-slate-600 mx-auto mb-3" />
                 <h3 className="text-lg font-bold text-white mb-1">No se encontraron colaboradores</h3>
                 <p className="text-sm text-slate-400 max-w-md mx-auto">
-                  Utiliza el botón "Nuevo Colaborador" para registrar personal en esta empresa o verifica los filtros de búsqueda.
+                  Utiliza el botón &quot;Nuevo Colaborador&quot; para registrar personal en esta empresa o verifica los filtros de búsqueda.
                 </p>
               </CardContent>
             </Card>

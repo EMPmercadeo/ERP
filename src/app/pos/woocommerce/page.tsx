@@ -42,7 +42,7 @@ export default function WooCommerceSyncPage() {
   const cargarConfig = async () => {
     setLoading(true);
     try {
-      let cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
+      const cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
       const res = await fetch(`/api/pos/woocommerce?cuentaId=${cuentaId}`);
       if (res.ok) {
         const data = await res.json();
@@ -66,7 +66,7 @@ export default function WooCommerceSyncPage() {
     setMensaje('');
     setGuardando(true);
     try {
-      let cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
+      const cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
       const res = await fetch('/api/pos/woocommerce', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,7 +96,7 @@ export default function WooCommerceSyncPage() {
   const syncCatálgoStock = async () => {
     setSincronizandoStock(true);
     try {
-      let cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
+      const cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
       const res = await fetch('/api/pos/woocommerce/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -119,7 +119,7 @@ export default function WooCommerceSyncPage() {
   const importarPedidosPendientes = async () => {
     setImportandoPedidos(true);
     try {
-      let cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
+      const cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
       const res = await fetch('/api/pos/woocommerce/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -311,7 +311,7 @@ export default function WooCommerceSyncPage() {
                 <CardContent className="p-0">
                   {pedidosWoo.length === 0 ? (
                     <div className="text-center py-10 text-slate-500 text-xs">
-                      Presione "Buscar Pedidos" para consultar órdenes entrantes desde la tienda WooCommerce.
+                      Presione &quot;Buscar Pedidos&quot; para consultar órdenes entrantes desde la tienda WooCommerce.
                     </div>
                   ) : (
                     <div className="divide-y divide-slate-800">
