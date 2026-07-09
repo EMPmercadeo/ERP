@@ -1,43 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
-import crypto from 'crypto';
+import { getTenantContext } from '@/lib/auth/context';
+import { encrypt } from '@/lib/utils/crypto';
 
-// Utilidad de cifrado AES-256 en servidor
-const SECRET_KEY = process.env.WOO_AES_SECRET || 'erp-panama-secret-key-32-bytes-abc';
-const ALGORITHM = 'aes-256-cbc';
-
-function cifrar(texto: string): string {
-  const iv = crypto.randomBytes(16);
-  const key = crypto.createHash('sha256').update(String(SECRET_KEY)).digest();
-  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
-  let encrypted = cipher.update(texto, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  return iv.toString('hex') + ':' + encrypted;
-}
-
-function descifrar(textoCifrado: string): string {
-  try {
-    const parts = textoCifrado.split(':');
-    const iv = Buffer.from(parts[0], 'hex');
-    const encryptedText = parts[1];
-    const key = crypto.createHash('sha256').update(String(SECRET_KEY)).digest();
-    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
-    let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
-  } catch {
-    return '***CLAVE_PROTEGIDA***';
-  }
+/**
+ * Este endpoint no tenía NINGUNA autenticación: cuentaId venía directo del query/body del
+ * cliente, así que cualquiera podía leer o SOBRESCRIBIR las credenciales de WooCommerce
+ * (Consumer Key/Secret de la tienda en línea) de cualquier otra empresa con solo mandar su
+ * cuentaId. Además usaba un cifrado AES-256-CBC casero con una clave de respaldo hardcodeada
+ * en vez del encrypt()/decrypt() real (AES-256-GCM autenticado) que ya usa el resto del app.
+ * Ahora la cuenta se resuelve siempre desde la sesión, igual que en /api/pos/ventas.
+ */
+async function resolverCuentaDeSesion() {
+  const { empresaId } = await getTenantContext();
+  const empresa = await prisma.empresa.findUnique({ where: { id: empresaId } });
+  if (!empresa) return null;
+  return prisma.cuenta.findFirst({ where: { ruc: empresa.ruc } });
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const cuentaId = searchParams.get('cuentaId') || 'empresa-demo-id';
+    let cuenta;
+    try {
+      cuenta = await resolverCuentaDeSesion();
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para ver esta configuración.' }, { status: 401 });
+    }
+
+    if (!cuenta) {
+      return NextResponse.json({ config: null });
+    }
 
     const config = await prisma.configuracionWoo.findUnique({
-      where: { cuentaId }
+      where: { cuentaId: cuenta.id }
     });
 
     if (!config) {
@@ -49,8 +45,8 @@ export async function GET(request: NextRequest) {
         id: config.id,
         cuentaId: config.cuentaId,
         urlTienda: config.urlTienda,
-        consumerKeyMasked: config.consumerKey ? 'ck_**********' + config.consumerKey.slice(-4) : '',
-        consumerSecMasked: config.consumerSec ? 'cs_**********' + config.consumerSec.slice(-4) : '',
+        consumerKeyMasked: config.consumerKey ? 'ck_**********' : '',
+        consumerSecMasked: config.consumerSec ? 'cs_**********' : '',
         activo: config.activo,
         ultimaSync: config.ultimaSync
       }
@@ -63,18 +59,35 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { cuentaId, urlTienda, consumerKey, consumerSec, activo } = body;
+    let empresaId: string;
+    let userId: string;
+    try {
+      ({ empresaId, userId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para guardar esta configuración.' }, { status: 401 });
+    }
 
-    if (!cuentaId || !urlTienda || !consumerKey || !consumerSec) {
+    const empresa = await prisma.empresa.findUnique({ where: { id: empresaId } });
+    if (!empresa) {
+      return NextResponse.json({ error: 'Empresa no encontrada' }, { status: 404 });
+    }
+    let cuenta = await prisma.cuenta.findFirst({ where: { ruc: empresa.ruc } });
+    if (!cuenta) {
+      return NextResponse.json({ error: 'No hay cuenta fiscal vinculada a tu empresa. Contacta a soporte.' }, { status: 404 });
+    }
+
+    const body = await request.json();
+    const { urlTienda, consumerKey, consumerSec, activo } = body;
+
+    if (!urlTienda || !consumerKey || !consumerSec) {
       return NextResponse.json({ error: 'Todos los campos de conexión (URL, Consumer Key, Consumer Secret) son requeridos' }, { status: 400 });
     }
 
-    const keyCifrada = cifrar(consumerKey);
-    const secCifrada = cifrar(consumerSec);
+    const keyCifrada = encrypt(consumerKey);
+    const secCifrada = encrypt(consumerSec);
 
     const config = await prisma.configuracionWoo.upsert({
-      where: { cuentaId },
+      where: { cuentaId: cuenta.id },
       update: {
         urlTienda,
         consumerKey: keyCifrada,
@@ -82,7 +95,7 @@ export async function POST(request: NextRequest) {
         activo: activo !== undefined ? activo : true
       },
       create: {
-        cuentaId,
+        cuentaId: cuenta.id,
         urlTienda,
         consumerKey: keyCifrada,
         consumerSec: secCifrada,
@@ -91,7 +104,7 @@ export async function POST(request: NextRequest) {
     });
 
     await registrarLogAuditoria({
-      adminId: cuentaId,
+      adminId: userId,
       accion: 'ACTUALIZAR_CREDENCIALES_WOOCOMMERCE',
       objetivo: 'ConfiguracionWoo',
       objetivoId: config.id,
@@ -101,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Conexión con WooCommerce guardada con cifrado de grado bancario (AES-256).'
+      message: 'Conexión con WooCommerce guardada con cifrado AES-256-GCM.'
     });
   } catch (error: any) {
     console.error('Error POST /api/pos/woocommerce:', error);
