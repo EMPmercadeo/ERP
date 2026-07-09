@@ -25,7 +25,6 @@ export default function AusenciasPage() {
   const [empleados, setEmpleados] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState('PENDIENTE');
-  const [empresaId, setEmpresaId] = useState('');
 
   // Modal Nueva Ausencia
   const [showModal, setShowModal] = useState(false);
@@ -41,12 +40,9 @@ export default function AusenciasPage() {
   const cargarDatos = async () => {
     setLoading(true);
     try {
-      const currentEmpresa = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
-      setEmpresaId(currentEmpresa);
-
       const [resAus, resEmp] = await Promise.all([
         fetch(`/api/rrhh/ausencias?estado=${filtroEstado}&take=50`),
-        fetch(`/api/rrhh/empleados?estado=activo&empresaId=${currentEmpresa}`)
+        fetch(`/api/rrhh/empleados?estado=activo`)
       ]);
 
       if (resAus.ok) {

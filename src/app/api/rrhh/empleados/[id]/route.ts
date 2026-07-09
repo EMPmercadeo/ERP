@@ -1,13 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { getTenantContext } from '@/lib/auth/context';
 import { z } from 'zod';
+
+// Estos tres handlers no tenían NINGUNA autenticación: exponían nombre, cédula y salario de
+// cualquier colaborador de cualquier empresa a quien conociera/adivinara el id, y permitían
+// editar salario/cargo o dar de baja a un colaborador ajeno sin sesión. Ahora todos verifican
+// getTenantContext() y que el empleado pertenezca a esa empresa.
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    let empresaId: string;
+    try {
+      ({ empresaId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para ver esta ficha.' }, { status: 401 });
+    }
+
     const { id } = await params;
     const empleado = await prisma.empleado.findUnique({
       where: { id },
@@ -27,7 +40,7 @@ export async function GET(
       }
     });
 
-    if (!empleado) {
+    if (!empleado || empleado.empresaId !== empresaId) {
       return NextResponse.json({ error: 'Colaborador no encontrado' }, { status: 404 });
     }
 
@@ -51,7 +64,20 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    let empresaId: string;
+    let userId: string;
+    try {
+      ({ empresaId, userId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para editar esta ficha.' }, { status: 401 });
+    }
+
     const { id } = await params;
+    const existente = await prisma.empleado.findUnique({ where: { id } });
+    if (!existente || existente.empresaId !== empresaId) {
+      return NextResponse.json({ error: 'Colaborador no encontrado' }, { status: 404 });
+    }
+
     const body = await request.json();
 
     const empleado = await prisma.empleado.update({
@@ -66,7 +92,7 @@ export async function PATCH(
     });
 
     await registrarLogAuditoria({
-      adminId: empleado.empresaId,
+      adminId: userId,
       accion: 'EDITAR_EMPLEADO',
       objetivo: 'Empleado',
       objetivoId: empleado.id,
@@ -86,9 +112,17 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    let empresaId: string;
+    let userId: string;
+    try {
+      ({ empresaId, userId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para dar de baja a este colaborador.' }, { status: 401 });
+    }
+
     const { id } = await params;
     const empleado = await prisma.empleado.findUnique({ where: { id } });
-    if (!empleado) {
+    if (!empleado || empleado.empresaId !== empresaId) {
       return NextResponse.json({ error: 'Colaborador no encontrado' }, { status: 404 });
     }
 
@@ -102,7 +136,7 @@ export async function DELETE(
     });
 
     await registrarLogAuditoria({
-      adminId: empleado.empresaId,
+      adminId: userId,
       accion: 'BAJA_EMPLEADO_SOFT_DELETE',
       objetivo: 'Empleado',
       objetivoId: empleado.id,

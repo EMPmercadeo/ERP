@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { getTenantContext } from '@/lib/auth/context';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    let empresaId: string;
+    let userId: string;
+    try {
+      ({ empresaId, userId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para resolver una ausencia.' }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await request.json();
     const { estado, aprobadaPor, nota } = body; // 'APROBADA' | 'RECHAZADA'
@@ -22,6 +31,12 @@ export async function POST(
 
     if (!ausencia) {
       return NextResponse.json({ error: 'Ausencia no encontrada' }, { status: 404 });
+    }
+
+    // Sin esto, cualquier usuario autenticado de cualquier empresa podía aprobar/rechazar
+    // ausencias de colaboradores de otra empresa con solo conocer/adivinar el ID.
+    if (ausencia.empleado.empresaId !== empresaId) {
+      return NextResponse.json({ error: 'No tienes permiso sobre esta ausencia.' }, { status: 403 });
     }
 
     if (ausencia.estado !== 'PENDIENTE') {
@@ -59,7 +74,7 @@ export async function POST(
 
     // Auditoría
     await registrarLogAuditoria({
-      adminId: ausencia.empleado.empresaId,
+      adminId: userId,
       accion: `RESOLVER_AUSENCIA_${estado}`,
       objetivo: 'Ausencia',
       objetivoId: ausencia.id,

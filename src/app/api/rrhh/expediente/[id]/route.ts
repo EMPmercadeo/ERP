@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { getTenantContext } from '@/lib/auth/context';
 import { z } from 'zod';
 
 const ActaSchema = z.object({
@@ -18,7 +19,19 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    let empresaId: string;
+    try {
+      ({ empresaId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para ver el expediente.' }, { status: 401 });
+    }
+
     const { id } = await params; // id del empleado
+    const empleado = await prisma.empleado.findUnique({ where: { id } });
+    if (!empleado || empleado.empresaId !== empresaId) {
+      return NextResponse.json({ error: 'Colaborador no encontrado' }, { status: 404 });
+    }
+
     const actas = await prisma.actaDisciplinaria.findMany({
       where: { empleadoId: id },
       orderBy: { fechaHecho: 'desc' }
@@ -36,11 +49,27 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    let empresaId: string;
+    let userId: string;
+    try {
+      ({ empresaId, userId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para gestionar el expediente.' }, { status: 401 });
+    }
+
     const { id } = await params; // id del empleado
     const body = await request.json();
 
     // Si es una firma de acuse de un acta existente
     if (body.accion === 'FIRMA_ACUSE' && body.actaId) {
+      const actaExistente = await prisma.actaDisciplinaria.findUnique({
+        where: { id: body.actaId },
+        include: { empleado: true }
+      });
+      if (!actaExistente || actaExistente.empleado.empresaId !== empresaId) {
+        return NextResponse.json({ error: 'Acta no encontrada' }, { status: 404 });
+      }
+
       const actaActualizada = await prisma.actaDisciplinaria.update({
         where: { id: body.actaId },
         data: {
@@ -51,7 +80,7 @@ export async function POST(
       });
 
       await registrarLogAuditoria({
-        adminId: actaActualizada.empleado.empresaId,
+        adminId: userId,
         accion: 'FIRMA_ACUSE_DISCIPLINARIO',
         objetivo: 'ActaDisciplinaria',
         objetivoId: actaActualizada.id,
@@ -70,7 +99,7 @@ export async function POST(
 
     const data = parseResult.data;
     const empleado = await prisma.empleado.findUnique({ where: { id } });
-    if (!empleado) {
+    if (!empleado || empleado.empresaId !== empresaId) {
       return NextResponse.json({ error: 'Colaborador no encontrado' }, { status: 404 });
     }
 
@@ -88,7 +117,7 @@ export async function POST(
     });
 
     await registrarLogAuditoria({
-      adminId: empleado.empresaId,
+      adminId: userId,
       accion: 'EMITIR_ACTA_DISCIPLINARIA',
       objetivo: 'ActaDisciplinaria',
       objetivoId: acta.id,

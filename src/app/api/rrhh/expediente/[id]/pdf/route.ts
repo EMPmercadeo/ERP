@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getTenantContext } from '@/lib/auth/context';
 import puppeteer from 'puppeteer';
 
 export async function GET(
@@ -7,6 +8,15 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Sin esto, cualquiera con el ID de un colaborador (de cualquier empresa) podía descargar
+    // su expediente disciplinario probatorio completo (cédula, sanciones, evidencia) sin sesión.
+    let empresaId: string;
+    try {
+      ({ empresaId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para generar este reporte.' }, { status: 401 });
+    }
+
     const { id } = await params;
     const empleado = await prisma.empleado.findUnique({
       where: { id },
@@ -16,7 +26,7 @@ export async function GET(
       }
     });
 
-    if (!empleado) {
+    if (!empleado || empleado.empresaId !== empresaId) {
       return NextResponse.json({ error: 'Colaborador no encontrado' }, { status: 404 });
     }
 

@@ -1,19 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { getTenantContext } from '@/lib/auth/context';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { empresaId, empleadoId } = body;
-
-    if (!empresaId && !empleadoId) {
-      return NextResponse.json({ error: 'Debe especificar empresaId o empleadoId para aplicar devengo' }, { status: 400 });
+    // Este endpoint no tenía NINGUNA autenticación: cualquiera, sin sesión, podía mandar un
+    // empresaId ajeno y acreditar vacaciones masivamente a otra empresa. Ahora empresaId
+    // siempre sale de la sesión; empleadoId (si se manda) se valida contra esa misma empresa.
+    let empresaId: string;
+    let userId: string;
+    try {
+      ({ empresaId, userId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para aplicar el devengo de vacaciones.' }, { status: 401 });
     }
 
-    const where: any = { activo: true };
+    const body = await request.json().catch(() => ({}));
+    const { empleadoId } = body;
+
+    if (empleadoId) {
+      const empleadoObjetivo = await prisma.empleado.findUnique({ where: { id: empleadoId } });
+      if (!empleadoObjetivo || empleadoObjetivo.empresaId !== empresaId) {
+        return NextResponse.json({ error: 'Colaborador no encontrado en tu empresa.' }, { status: 404 });
+      }
+    }
+
+    const where: any = { activo: true, empresaId };
     if (empleadoId) where.id = empleadoId;
-    else if (empresaId) where.empresaId = empresaId;
 
     const empleados = await prisma.empleado.findMany({
       where,
@@ -54,16 +68,14 @@ export async function POST(request: NextRequest) {
       movimientos.push(mov);
     }
 
-    if (empresaId) {
-      await registrarLogAuditoria({
-        adminId: empresaId,
-        accion: 'DEVENGO_VACACIONES_MASIVO',
-        objetivo: 'Empresa',
-        objetivoId: empresaId,
-        detalles: { empleadosProcesados: movimientos.length, omitidosPorDuplicado: omitidos.length, devengoPorEmpleado: devengoMensual },
-        ip: request.headers.get('x-forwarded-for') || '127.0.0.1'
-      });
-    }
+    await registrarLogAuditoria({
+      adminId: userId,
+      accion: 'DEVENGO_VACACIONES_MASIVO',
+      objetivo: 'Empresa',
+      objetivoId: empresaId,
+      detalles: { empleadosProcesados: movimientos.length, omitidosPorDuplicado: omitidos.length, devengoPorEmpleado: devengoMensual },
+      ip: request.headers.get('x-forwarded-for') || '127.0.0.1'
+    });
 
     return NextResponse.json({
       success: true,

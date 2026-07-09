@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
+import { getTenantContext } from '@/lib/auth/context';
 import { z } from 'zod';
 
 const AusenciaSchema = z.object({
@@ -15,6 +16,16 @@ const AusenciaSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
+    // Sin esto, este endpoint devolvía las ausencias de TODAS las empresas del sistema a
+    // cualquiera que cargara la página (nombres, cédula, tipo de incapacidad médica, etc.
+    // de cada colaborador de cada empresa) — no filtraba por tenant en absoluto.
+    let empresaId: string;
+    try {
+      ({ empresaId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para ver las ausencias.' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const cursor = searchParams.get('cursor');
     const take = parseInt(searchParams.get('take') || '20', 10);
@@ -22,7 +33,7 @@ export async function GET(request: NextRequest) {
     const estado = searchParams.get('estado');
     const tipo = searchParams.get('tipo');
 
-    const where: any = {};
+    const where: any = { empleado: { empresaId } };
     if (empleadoId) where.empleadoId = empleadoId;
     if (estado && estado !== 'all') where.estado = estado;
     if (tipo && tipo !== 'all') where.tipo = tipo;
@@ -46,6 +57,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    let empresaId: string;
+    try {
+      ({ empresaId } = await getTenantContext());
+    } catch {
+      return NextResponse.json({ error: 'Debes iniciar sesión para registrar una ausencia.' }, { status: 401 });
+    }
+
     const body = await request.json();
     const parseResult = AusenciaSchema.safeParse(body);
     if (!parseResult.success) {
@@ -53,6 +71,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { empleadoId, tipo, desde, hasta, documentoUrl, nota } = parseResult.data;
+
+    // El empleado debe pertenecer a la empresa de la sesión — si no, cualquiera podría
+    // registrar ausencias contra colaboradores de otra empresa con solo conocer su ID.
+    const empleadoObjetivo = await prisma.empleado.findUnique({ where: { id: empleadoId } });
+    if (!empleadoObjetivo || empleadoObjetivo.empresaId !== empresaId) {
+      return NextResponse.json({ error: 'Colaborador no encontrado en tu empresa.' }, { status: 404 });
+    }
+
     const fechaDesde = new Date(desde);
     const fechaHasta = new Date(hasta);
 

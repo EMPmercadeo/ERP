@@ -29,8 +29,7 @@ export default function EmpleadosRRHHPage() {
   const [loading, setLoading] = useState(true);
   const [buscar, setBuscar] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('activo');
-  const [empresaId, setEmpresaId] = useState('');
-  
+
   // Estado para Modal de Nuevo Colaborador
   const [showModal, setShowModal] = useState(false);
   const [nombre, setNombre] = useState('');
@@ -42,18 +41,13 @@ export default function EmpleadosRRHHPage() {
   const [errorModal, setErrorModal] = useState('');
   const [guardando, setGuardando] = useState(false);
 
-  // Cargar lista y detectar empresa del contexto
+  // Cargar lista de colaboradores — el servidor deriva la empresa de la sesión, nunca del cliente
   const cargarEmpleados = async () => {
     setLoading(true);
     try {
-      // Obtenemos del contexto o localStorage (fallback a primera empresa si es multitenant en dev)
-      const currentEmpresa = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
-      setEmpresaId(currentEmpresa);
-
       const params = new URLSearchParams();
       if (buscar) params.append('buscar', buscar);
       if (filtroEstado !== 'all') params.append('estado', filtroEstado);
-      params.append('empresaId', currentEmpresa);
 
       const res = await fetch(`/api/rrhh/empleados?${params.toString()}`);
       if (res.ok) {
@@ -80,7 +74,6 @@ export default function EmpleadosRRHHPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          empresaId: empresaId || 'empresa-demo-id',
           nombre,
           cedula,
           cargo,
@@ -112,8 +105,7 @@ export default function EmpleadosRRHHPage() {
     try {
       const res = await fetch('/api/rrhh/vacaciones/devengo', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ empresaId: empresaId || 'empresa-demo-id' })
+        headers: { 'Content-Type': 'application/json' }
       });
       const data = await res.json();
       if (res.ok) {
