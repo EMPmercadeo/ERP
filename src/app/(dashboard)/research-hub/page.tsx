@@ -119,7 +119,7 @@ Al crear o editar productos:
             content: `El plan Pro y Enterprise te permiten conectar tu sistema administrativo interno (ERP, WooCommerce, Shopify, etc.) mediante webhooks.
 
 **Flujo de Webhooks:**
-1. Ve a **Configuración > WhatsApp y APIs**.
+1. Ve a **Configuración > Integraciones**.
 2. Especifica tu URL de destino (ej. \`https://mi-tienda.com/api/webhooks/factura\`).
 3. Ingresa tu firma secreta (Webhook Token) para autorizar las solicitudes.
 4. Cada vez que una factura sea autorizada ante la DGI o anulada, ERP Panamá enviará un payload JSON con toda la metadata del CUFE, estado fiscal e ítems facturados para que puedas conciliar stock y sincronizar tus ventas de inmediato.`

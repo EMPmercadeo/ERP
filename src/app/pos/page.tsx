@@ -11,8 +11,6 @@ import {
   Plus,
   Minus,
   Trash2,
-  CheckCircle2,
-  AlertTriangle,
   Wifi,
   WifiOff,
   Printer,
@@ -22,11 +20,8 @@ import {
   Smartphone,
   Layers,
   RefreshCw,
-  LogOut,
-  ShoppingBag,
   Store
 } from 'lucide-react';
-import Link from 'next/link';
 
 interface ProductoPOS {
   id: string;
@@ -51,7 +46,7 @@ export default function POSMultiDispositivoPage() {
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
   const [buscar, setBuscar] = useState('');
   const [loading, setLoading] = useState(true);
-  
+
   // Estado de Red y Cola Offline IndexedDB / LocalStorage
   const [isOnline, setIsOnline] = useState(true);
   const [contingenciaForzada, setContingenciaForzada] = useState(false);
@@ -325,33 +320,26 @@ export default function POSMultiDispositivoPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0b111e] text-slate-100 flex flex-col font-sans select-none overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans select-none overflow-x-hidden">
       {/* Topbar POS Pantalla Completa */}
-      <header className="h-16 border-b border-slate-800 bg-[#121b2d] px-4 flex items-center justify-between shadow-lg sticky top-0 z-30">
+      <header className="h-16 border-b border-border bg-card px-4 flex items-center justify-between shadow-premium sticky top-0 z-30">
         <div className="flex items-center gap-3">
-          <Store className="h-7 w-7 text-[#00f0ff]" />
+          <Store className="h-7 w-7 text-primary" />
           <div>
-            <h1 className="text-base font-bold text-white tracking-wide leading-none">PUNTO DE VENTA (POS) MULTI-DISPOSITIVO</h1>
-            <p className="text-[11px] text-slate-400 font-mono">ERP Panamá &bull; Conexión DGI & WooCommerce</p>
+            <h1 className="text-base font-bold text-foreground tracking-wide leading-none">Punto de Venta (POS)</h1>
+            <p className="text-[11px] text-muted-foreground font-mono">ERP Panamá &bull; Facturación electrónica DGI</p>
           </div>
         </div>
 
         {/* Indicadores en Tiempo Real y Acciones Rápidas */}
         <div className="flex items-center gap-3">
-          <Link href="/pos/woocommerce">
-            <Button variant="outline" size="sm" className="border-slate-700 bg-[#0b111e] hover:bg-slate-800 text-xs text-slate-300">
-              <ShoppingBag className="h-3.5 w-3.5 mr-1.5 text-pink-400" />
-              WooCommerce Sync
-            </Button>
-          </Link>
-
           {/* Botón de Estado y Contingencia */}
           <button
             onClick={() => setContingenciaForzada(!contingenciaForzada)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
               !isOnline || contingenciaForzada
-                ? 'bg-amber-500/10 text-amber-400 border-amber-500/40 animate-pulse'
-                : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40'
+                ? 'bg-warning-bg text-warning border-warning/40'
+                : 'bg-success-bg text-success border-success/40'
             }`}
           >
             {!isOnline || contingenciaForzada ? <WifiOff className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
@@ -363,7 +351,7 @@ export default function POSMultiDispositivoPage() {
             <Button
               onClick={retransmitirColaAlPAC}
               disabled={sincronizando || !isOnline}
-              className="bg-amber-500 hover:bg-amber-600 text-[#0b111e] font-bold text-xs h-9 px-3 shadow-md"
+              className="bg-warning hover:bg-warning/90 text-white font-bold text-xs h-9 px-3 shadow-premium"
             >
               <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${sincronizando ? 'animate-spin' : ''}`} />
               {sincronizando ? 'Retransmitiendo...' : `Retransmitir Cola PAC (${colaLocal.length})`}
@@ -377,16 +365,16 @@ export default function POSMultiDispositivoPage() {
         {/* PANEL IZQUIERDO: CATÁLOGO DE PRODUCTOS (8 COLUMNAS EN DESKTOP) */}
         <div className="lg:col-span-8 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-6rem)] pr-1">
           {/* Barra de Búsqueda y Filtror */}
-          <div className="flex items-center gap-3 bg-[#121b2d] p-3 rounded-lg border border-slate-800 shadow-sm">
-            <Search className="h-5 w-5 text-slate-400 ml-1 flex-shrink-0" />
+          <div className="flex items-center gap-3 bg-card p-3 rounded-lg border border-border shadow-premium">
+            <Search className="h-5 w-5 text-muted-foreground ml-1 flex-shrink-0" />
             <Input
-              placeholder="Buscar producto por SKU, nombre o código de barras touch..."
+              placeholder="Buscar producto por SKU, nombre o código de barras..."
               value={buscar}
               onChange={(e) => setBuscar(e.target.value)}
-              className="bg-[#0b111e] border-slate-700 text-white placeholder:text-slate-500 text-sm h-11 focus:border-[#00f0ff]"
+              className="text-sm h-11"
             />
             {buscar && (
-              <Button size="sm" variant="ghost" onClick={() => setBuscar('')} className="text-slate-400 hover:text-white">
+              <Button size="sm" variant="ghost" onClick={() => setBuscar('')} className="text-muted-foreground hover:text-foreground">
                 Limpiar
               </Button>
             )}
@@ -394,7 +382,7 @@ export default function POSMultiDispositivoPage() {
 
           {/* Grid de Productos (Botones Grandes Touch-First) */}
           {loading ? (
-            <div className="flex-1 flex items-center justify-center text-slate-400 animate-pulse">Cargando inventario para POS...</div>
+            <div className="flex-1 flex items-center justify-center text-muted-foreground animate-pulse">Cargando inventario para POS...</div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pb-4">
               {productosFiltrados.map((prod) => (
@@ -402,38 +390,38 @@ export default function POSMultiDispositivoPage() {
                   key={prod.id}
                   onClick={() => agregarAlCarrito(prod)}
                   disabled={prod.stockActual <= 0}
-                  className={`flex flex-col justify-between text-left p-3.5 rounded-xl border transition-all select-none group shadow-md ${
+                  className={`flex flex-col justify-between text-left p-3.5 rounded-xl border transition-all select-none group shadow-premium ${
                     prod.stockActual <= 0
-                      ? 'bg-slate-900/60 border-slate-800 opacity-50 cursor-not-allowed'
-                      : 'bg-[#121b2d] border-slate-800 hover:border-[#00f0ff] hover:bg-[#162238] active:scale-95'
+                      ? 'bg-muted/40 border-border opacity-50 cursor-not-allowed'
+                      : 'bg-card border-border hover:border-primary hover:shadow-premium-hover active:scale-95'
                   }`}
                 >
                   <div>
                     <div className="flex justify-between items-start gap-1 mb-1">
-                      <span className="text-[10px] font-mono font-bold text-slate-400 bg-[#0b111e] px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] font-mono font-bold text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
                         {prod.codigoInterno}
                       </span>
                       {prod.codigoTasaItbms === '01' && (
-                        <span className="text-[10px] font-bold text-[#00f0ff] bg-[#00f0ff]/10 px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] font-bold text-primary bg-accent px-1.5 py-0.5 rounded">
                           7% ITBMS
                         </span>
                       )}
                     </div>
-                    <h3 className="text-xs sm:text-sm font-bold text-white group-hover:text-[#00f0ff] line-clamp-2 transition-colors">
+                    <h3 className="text-xs sm:text-sm font-bold text-foreground group-hover:text-primary line-clamp-2 transition-colors">
                       {prod.descripcion}
                     </h3>
                   </div>
 
-                  <div className="mt-4 flex items-end justify-between border-t border-slate-800/80 pt-2">
+                  <div className="mt-4 flex items-end justify-between border-t border-border pt-2">
                     <div>
-                      <span className="text-[11px] text-slate-400 block">Precio</span>
-                      <span className="text-base font-bold font-mono text-[#00f0ff]">
+                      <span className="text-[11px] text-muted-foreground block">Precio</span>
+                      <span className="text-base font-bold font-mono text-primary">
                         ${prod.precioVenta.toFixed(2)}
                       </span>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] text-slate-500 block">Stock</span>
-                      <span className={`text-xs font-mono font-bold ${prod.stockActual <= 5 ? 'text-amber-400' : 'text-slate-300'}`}>
+                      <span className="text-[10px] text-muted-foreground block">Stock</span>
+                      <span className={`text-xs font-mono font-bold ${prod.stockActual <= 5 ? 'text-warning' : 'text-foreground'}`}>
                         {prod.stockActual}
                       </span>
                     </div>
@@ -445,19 +433,19 @@ export default function POSMultiDispositivoPage() {
         </div>
 
         {/* PANEL DERECHO: CARRITO Y TICKET DE VENTA (4 COLUMNAS EN DESKTOP) */}
-        <div className="lg:col-span-4 bg-[#121b2d] rounded-xl border border-slate-800 flex flex-col h-[calc(100vh-6rem)] shadow-2xl overflow-hidden">
+        <div className="lg:col-span-4 bg-card rounded-xl border border-border flex flex-col h-[calc(100vh-6rem)] shadow-premium overflow-hidden">
           {/* Header Carrito */}
-          <div className="p-4 border-b border-slate-800 bg-[#0b111e]/60 flex items-center justify-between">
+          <div className="p-4 border-b border-border bg-secondary flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5 text-[#00f0ff]" />
-              <h2 className="text-sm font-bold text-white uppercase">Ticket en Curso ({carrito.reduce((a, b) => a + b.cantidad, 0)} ítems)</h2>
+              <ShoppingCart className="h-5 w-5 text-primary" />
+              <h2 className="text-sm font-bold text-foreground uppercase">Ticket en Curso ({carrito.reduce((a, b) => a + b.cantidad, 0)} ítems)</h2>
             </div>
             {carrito.length > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setCarrito([])}
-                className="text-red-400 hover:text-red-300 hover:bg-red-500/10 text-xs h-7 px-2"
+                className="text-destructive hover:text-destructive hover:bg-danger-bg text-xs h-7 px-2"
               >
                 <Trash2 className="h-3.5 w-3.5 mr-1" /> Vaciar
               </Button>
@@ -465,38 +453,38 @@ export default function POSMultiDispositivoPage() {
           </div>
 
           {/* Lista de Ítems en Carrito */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2.5 divide-y divide-slate-800/50">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2.5 divide-y divide-border">
             {carrito.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 p-6">
-                <ShoppingCart className="h-12 w-12 text-slate-700 mb-2" />
+              <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground p-6">
+                <ShoppingCart className="h-12 w-12 text-muted-foreground/50 mb-2" />
                 <p className="text-xs font-medium">El carrito está vacío</p>
-                <p className="text-[11px] text-slate-600 mt-1">Selecciona productos del grid touch para comenzar el cobro</p>
+                <p className="text-[11px] text-muted-foreground mt-1">Selecciona productos del catálogo para comenzar el cobro</p>
               </div>
             ) : (
               carrito.map((item) => (
                 <div key={item.productoId} className="pt-2 flex flex-col gap-1.5 text-xs">
-                  <div className="flex justify-between items-start font-bold text-white">
+                  <div className="flex justify-between items-start font-bold text-foreground">
                     <span className="line-clamp-1">{item.descripcion}</span>
-                    <span className="font-mono text-[#00f0ff] flex-shrink-0 ml-2">
+                    <span className="font-mono text-primary flex-shrink-0 ml-2">
                       ${(item.cantidad * item.precioUnitario).toFixed(2)}
                     </span>
                   </div>
-                  
-                  <div className="flex items-center justify-between text-slate-400 text-[11px]">
+
+                  <div className="flex items-center justify-between text-muted-foreground text-[11px]">
                     <span>${item.precioUnitario.toFixed(2)} c/u {item.itbmsPorcentaje > 0 && `(+${item.itbmsPorcentaje}%)`}</span>
-                    
+
                     {/* Botones Touch + / - */}
-                    <div className="flex items-center gap-2 bg-[#0b111e] px-1 py-0.5 rounded border border-slate-800">
+                    <div className="flex items-center gap-2 bg-secondary px-1 py-0.5 rounded border border-border">
                       <button
                         onClick={() => modificarCantidad(item.productoId, -1)}
-                        className="h-6 w-6 rounded bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center active:scale-90"
+                        className="h-6 w-6 rounded bg-muted hover:bg-muted-foreground/20 text-foreground flex items-center justify-center active:scale-90"
                       >
                         <Minus className="h-3 w-3" />
                       </button>
-                      <span className="font-mono font-bold text-white w-6 text-center">{item.cantidad}</span>
+                      <span className="font-mono font-bold text-foreground w-6 text-center">{item.cantidad}</span>
                       <button
                         onClick={() => modificarCantidad(item.productoId, 1)}
-                        className="h-6 w-6 rounded bg-[#00f0ff] text-[#0b111e] font-bold flex items-center justify-center active:scale-90"
+                        className="h-6 w-6 rounded bg-primary text-primary-foreground font-bold flex items-center justify-center active:scale-90"
                       >
                         <Plus className="h-3 w-3" />
                       </button>
@@ -508,18 +496,18 @@ export default function POSMultiDispositivoPage() {
           </div>
 
           {/* Subtotal, ITBMS y Total Exacto */}
-          <div className="p-4 border-t border-slate-800 bg-[#0b111e] space-y-2">
-            <div className="flex justify-between text-xs text-slate-400">
+          <div className="p-4 border-t border-border bg-secondary space-y-2">
+            <div className="flex justify-between text-xs text-muted-foreground">
               <span>Subtotal:</span>
-              <span className="font-mono text-white">${subtotal.toFixed(2)}</span>
+              <span className="font-mono text-foreground">${subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-xs text-slate-400">
+            <div className="flex justify-between text-xs text-muted-foreground">
               <span>ITBMS 7% (Impuesto):</span>
-              <span className="font-mono text-white">${itbmsTotal.toFixed(2)}</span>
+              <span className="font-mono text-foreground">${itbmsTotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-base font-bold text-white pt-2 border-t border-slate-800">
+            <div className="flex justify-between text-base font-bold text-foreground pt-2 border-t border-border">
               <span>TOTAL A COBRAR:</span>
-              <span className="font-mono text-2xl text-[#00f0ff]">${total.toFixed(2)}</span>
+              <span className="font-mono text-2xl text-primary">${total.toFixed(2)}</span>
             </div>
 
             {/* Botón COBRAR Touch */}
@@ -530,7 +518,7 @@ export default function POSMultiDispositivoPage() {
                 setShowPagoModal(true);
               }}
               disabled={carrito.length === 0}
-              className="w-full bg-[#00f0ff] hover:bg-[#00f0ff]/90 text-[#0b111e] font-black text-base h-12 shadow-xl shadow-[#00f0ff]/20 mt-3 tracking-wider active:scale-95 transition-all"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base h-12 shadow-premium mt-3 tracking-wider active:scale-[0.98] transition-all"
             >
               <DollarSign className="h-5 w-5 mr-1" />
               COBRAR ${total.toFixed(2)}
@@ -541,32 +529,32 @@ export default function POSMultiDispositivoPage() {
 
       {/* MODAL DE COBRO MULTIPUNTO (EFECTIVO, YAPPY, TARJETA) */}
       {showPagoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <Card className="bg-[#121b2d] border-slate-700 w-full max-w-lg shadow-2xl">
-            <CardHeader className="border-b border-slate-800 pb-4">
-              <CardTitle className="text-lg font-bold text-white flex items-center justify-between">
-                <span>Pagar Venta: <strong className="text-[#00f0ff] font-mono">${total.toFixed(2)}</strong></span>
-                <Badge className="bg-slate-800 text-slate-300 font-mono text-xs">{carrito.length} ítems</Badge>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4">
+          <Card className="bg-card border-border w-full max-w-lg shadow-premium-hover">
+            <CardHeader className="border-b border-border pb-4">
+              <CardTitle className="text-lg font-bold text-foreground flex items-center justify-between">
+                <span>Pagar Venta: <strong className="text-primary font-mono">${total.toFixed(2)}</strong></span>
+                <Badge className="bg-secondary text-secondary-foreground font-mono text-xs">{carrito.length} ítems</Badge>
               </CardTitle>
-              <CardDescription className="text-xs text-slate-400">
+              <CardDescription className="text-xs text-muted-foreground">
                 Seleccione el método de cobro e identifique al cliente para emisión tributaria DGI.
               </CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-4 pt-4 text-xs">
               {errorPago && (
-                <div className="p-3 rounded bg-red-500/10 border border-red-500/30 text-red-400 font-medium">
+                <div className="p-3 rounded bg-danger-bg border border-destructive/30 text-destructive font-medium">
                   {errorPago}
                 </div>
               )}
 
               {/* Selector Tipo Comprobante DGI */}
-              <div className="grid grid-cols-2 gap-2 bg-[#0b111e] p-1.5 rounded-lg border border-slate-800">
+              <div className="grid grid-cols-2 gap-2 bg-secondary p-1.5 rounded-lg border border-border">
                 <button
                   type="button"
                   onClick={() => setTipoDoc('02')}
                   className={`py-2 rounded font-bold transition-all flex items-center justify-center gap-1.5 ${
-                    tipoDoc === '02' ? 'bg-[#00f0ff] text-[#0b111e]' : 'text-slate-400 hover:text-white'
+                    tipoDoc === '02' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Boleta Electrónica (02)
@@ -575,7 +563,7 @@ export default function POSMultiDispositivoPage() {
                   type="button"
                   onClick={() => setTipoDoc('01')}
                   className={`py-2 rounded font-bold transition-all flex items-center justify-center gap-1.5 ${
-                    tipoDoc === '01' ? 'bg-[#00f0ff] text-[#0b111e]' : 'text-slate-400 hover:text-white'
+                    tipoDoc === '01' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Factura Fiscal (01 - RUC)
@@ -584,26 +572,26 @@ export default function POSMultiDispositivoPage() {
 
               {/* RUC / Cédula Cliente */}
               <div>
-                <label className="font-semibold text-slate-300 block mb-1">
+                <label className="font-semibold text-foreground block mb-1">
                   {tipoDoc === '01' ? 'RUC o Cédula del Cliente (*Obligatorio para Factura 01):' : 'RUC o Cédula (Opcional, Consumidor Final):'}
                 </label>
                 <Input
                   placeholder={tipoDoc === '01' ? 'Ej. 8-NT-1-1234 o 8-800-1234' : 'CF (Consumidor Final)'}
                   value={clienteRuc}
                   onChange={(e) => setClienteRuc(e.target.value)}
-                  className="bg-[#0b111e] border-slate-700 text-white font-mono"
+                  className="font-mono"
                 />
               </div>
 
               {/* Selector de Métodos de Pago Pluggable */}
               <div>
-                <label className="font-semibold text-slate-300 block mb-2">Método de Pago:</label>
+                <label className="font-semibold text-foreground block mb-2">Método de Pago:</label>
                 <div className="grid grid-cols-4 gap-2">
                   <button
                     type="button"
                     onClick={() => setMetodoPago('EFECTIVO')}
                     className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-1 transition-all ${
-                      metodoPago === 'EFECTIVO' ? 'border-[#00f0ff] bg-[#00f0ff]/10 text-[#00f0ff] font-bold' : 'border-slate-800 bg-[#0b111e] text-slate-400 hover:text-white'
+                      metodoPago === 'EFECTIVO' ? 'border-primary bg-accent text-primary font-bold' : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     <DollarSign className="h-5 w-5" />
@@ -613,17 +601,17 @@ export default function POSMultiDispositivoPage() {
                     type="button"
                     onClick={() => setMetodoPago('YAPPY')}
                     className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-1 transition-all ${
-                      metodoPago === 'YAPPY' ? 'border-cyan-400 bg-cyan-500/10 text-cyan-400 font-bold' : 'border-slate-800 bg-[#0b111e] text-slate-400 hover:text-white'
+                      metodoPago === 'YAPPY' ? 'border-primary bg-accent text-primary font-bold' : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    <Smartphone className="h-5 w-5 text-cyan-400" />
+                    <Smartphone className="h-5 w-5" />
                     <span>Yappy</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setMetodoPago('TARJETA')}
                     className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-1 transition-all ${
-                      metodoPago === 'TARJETA' ? 'border-[#00f0ff] bg-[#00f0ff]/10 text-[#00f0ff] font-bold' : 'border-slate-800 bg-[#0b111e] text-slate-400 hover:text-white'
+                      metodoPago === 'TARJETA' ? 'border-primary bg-accent text-primary font-bold' : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     <CreditCard className="h-5 w-5" />
@@ -633,7 +621,7 @@ export default function POSMultiDispositivoPage() {
                     type="button"
                     onClick={() => setMetodoPago('MIXTO')}
                     className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-1 transition-all ${
-                      metodoPago === 'MIXTO' ? 'border-[#00f0ff] bg-[#00f0ff]/10 text-[#00f0ff] font-bold' : 'border-slate-800 bg-[#0b111e] text-slate-400 hover:text-white'
+                      metodoPago === 'MIXTO' ? 'border-primary bg-accent text-primary font-bold' : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     <Layers className="h-5 w-5" />
@@ -644,16 +632,16 @@ export default function POSMultiDispositivoPage() {
 
               {/* Pestaña dinámica según método */}
               {metodoPago === 'EFECTIVO' && (
-                <div className="bg-[#0b111e] p-3 rounded-lg border border-slate-800 space-y-3">
+                <div className="bg-secondary p-3 rounded-lg border border-border space-y-3">
                   <div className="flex justify-between items-center">
-                    <label className="font-semibold text-slate-300">Efectivo Recibido ($):</label>
+                    <label className="font-semibold text-foreground">Efectivo Recibido ($):</label>
                     <div className="flex gap-1.5">
                       {[10, 20, 50, 100].map(monto => (
                         <button
                           key={monto}
                           type="button"
                           onClick={() => setEfectivoRecibido(monto.toString())}
-                          className="bg-slate-800 hover:bg-slate-700 text-white px-2 py-1 rounded text-[11px] font-mono font-bold"
+                          className="bg-muted hover:bg-muted-foreground/20 text-foreground px-2 py-1 rounded text-[11px] font-mono font-bold"
                         >
                           ${monto}
                         </button>
@@ -665,11 +653,11 @@ export default function POSMultiDispositivoPage() {
                     step="0.01"
                     value={efectivoRecibido}
                     onChange={(e) => setEfectivoRecibido(e.target.value)}
-                    className="bg-[#121b2d] border-slate-700 text-lg font-mono font-bold text-[#00f0ff]"
+                    className="text-lg font-mono font-bold text-primary"
                   />
-                  <div className="flex justify-between items-center pt-2 border-t border-slate-800/80 text-sm">
-                    <span className="text-slate-400 font-bold">Vuelto a entregar:</span>
-                    <span className={`font-mono font-black ${vuelto < 0 ? 'text-red-400' : 'text-emerald-400 text-lg'}`}>
+                  <div className="flex justify-between items-center pt-2 border-t border-border text-sm">
+                    <span className="text-muted-foreground font-bold">Vuelto a entregar:</span>
+                    <span className={`font-mono font-black ${vuelto < 0 ? 'text-destructive' : 'text-success text-lg'}`}>
                       ${vuelto < 0 ? '0.00' : vuelto.toFixed(2)}
                     </span>
                   </div>
@@ -677,22 +665,22 @@ export default function POSMultiDispositivoPage() {
               )}
 
               {metodoPago === 'YAPPY' && (
-                <div className="bg-[#0b111e] p-4 rounded-lg border border-cyan-500/40 text-center space-y-2">
-                  <div className="inline-block bg-white p-3 rounded-lg">
-                    <QrCode className="h-24 w-24 text-black mx-auto" />
+                <div className="bg-secondary p-4 rounded-lg border border-primary/30 text-center space-y-2">
+                  <div className="inline-block bg-white p-3 rounded-lg border border-border">
+                    <QrCode className="h-24 w-24 text-ink mx-auto" />
                   </div>
-                  <p className="text-xs font-bold text-cyan-400">Escanee con la App de Yappy para pagar ${total.toFixed(2)}</p>
-                  <p className="text-[11px] text-slate-400">Directorio comercial: @ERPPANAMA_POS (o confirmación por webhook)</p>
+                  <p className="text-xs font-bold text-primary">Escanee con la App de Yappy para pagar ${total.toFixed(2)}</p>
+                  <p className="text-[11px] text-muted-foreground">Directorio comercial: @ERPPANAMA_POS (o confirmación por webhook)</p>
                 </div>
               )}
             </CardContent>
 
-            <div className="p-4 border-t border-slate-800 flex justify-end gap-3 bg-[#0b111e]/60">
+            <div className="p-4 border-t border-border flex justify-end gap-3 bg-secondary">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShowPagoModal(false)}
-                className="border-slate-700 text-slate-300 hover:bg-slate-800 text-xs"
+                className="text-xs"
               >
                 Cancelar
               </Button>
@@ -700,7 +688,7 @@ export default function POSMultiDispositivoPage() {
                 type="button"
                 onClick={handleProcesarVenta}
                 disabled={procesandoVenta}
-                className="bg-[#00f0ff] hover:bg-[#00f0ff]/90 text-[#0b111e] font-black text-xs px-6 shadow-xl"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs px-6 shadow-premium"
               >
                 {procesandoVenta ? 'Emitiendo PAC...' : `CONFIRMAR COBRO ($${total.toFixed(2)})`}
               </Button>
@@ -711,9 +699,9 @@ export default function POSMultiDispositivoPage() {
 
       {/* MODAL RECIBO TÉRMICO (80mm) & QR CUFE */}
       {reciboVenta && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="bg-white text-black font-mono text-xs w-full max-w-[340px] p-5 rounded shadow-2xl my-auto print:max-w-full print:shadow-none print:m-0">
-            <div className="text-center border-b-2 border-black pb-3 mb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white text-ink font-mono text-xs w-full max-w-[340px] p-5 rounded shadow-premium-hover my-auto print:max-w-full print:shadow-none print:m-0">
+            <div className="text-center border-b-2 border-ink pb-3 mb-3">
               <h2 className="font-black text-base uppercase">ERP PANAMÁ POS</h2>
               <p className="text-[10px]">RUC: 8-800-1234 DV 54 &bull; Panamá</p>
               <p className="font-bold text-xs mt-1">{reciboVenta.tipo}</p>
@@ -726,8 +714,8 @@ export default function POSMultiDispositivoPage() {
               <p><strong>Método de Pago:</strong> {reciboVenta.metodoPago}</p>
             </div>
 
-            <div className="border-b border-black pb-2 mb-2">
-              <div className="flex justify-between font-bold text-[11px] border-b border-gray-400 pb-1 mb-1">
+            <div className="border-b border-ink pb-2 mb-2">
+              <div className="flex justify-between font-bold text-[11px] border-b border-muted-foreground pb-1 mb-1">
                 <span>DESCRIPCIÓN</span>
                 <span>TOTAL</span>
               </div>
@@ -739,10 +727,10 @@ export default function POSMultiDispositivoPage() {
               ))}
             </div>
 
-            <div className="space-y-1 text-right text-[11px] border-b-2 border-black pb-3 mb-3">
+            <div className="space-y-1 text-right text-[11px] border-b-2 border-ink pb-3 mb-3">
               <div className="flex justify-between"><span>Subtotal:</span><span>${reciboVenta.subtotal.toFixed(2)}</span></div>
               <div className="flex justify-between"><span>ITBMS (7%):</span><span>${reciboVenta.itbms.toFixed(2)}</span></div>
-              <div className="flex justify-between font-black text-sm pt-1 border-t border-gray-400">
+              <div className="flex justify-between font-black text-sm pt-1 border-t border-muted-foreground">
                 <span>TOTAL:</span>
                 <span>${reciboVenta.total.toFixed(2)}</span>
               </div>
@@ -756,24 +744,24 @@ export default function POSMultiDispositivoPage() {
 
             {/* Código QR del CUFE o Contingencia */}
             <div className="text-center space-y-2 my-4">
-              <div className="inline-block border p-1 bg-white">
-                <QrCode className="h-28 w-28 text-black mx-auto" />
+              <div className="inline-block border border-border p-1 bg-white">
+                <QrCode className="h-28 w-28 text-ink mx-auto" />
               </div>
               {reciboVenta.cufe && (
-                <p className="text-[9px] break-all font-mono text-gray-700">CUFE: {reciboVenta.cufe}</p>
+                <p className="text-[9px] break-all font-mono text-ink-secondary">CUFE: {reciboVenta.cufe}</p>
               )}
-              <p className="text-[9px] italic text-gray-600 border-t border-gray-300 pt-2 leading-tight">
+              <p className="text-[9px] italic text-muted-foreground border-t border-border pt-2 leading-tight">
                 {reciboVenta.mensajeLegal}
               </p>
             </div>
 
             {/* Botones de Acción No imprimibles */}
-            <div className="pt-3 border-t border-gray-300 flex flex-col gap-2 print:hidden">
-              <Button onClick={imprimirTicket} className="w-full bg-black hover:bg-gray-800 text-white font-bold text-xs h-10">
+            <div className="pt-3 border-t border-border flex flex-col gap-2 print:hidden">
+              <Button onClick={imprimirTicket} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs h-10">
                 <Printer className="h-4 w-4 mr-2" />
                 Imprimir Recibo Térmico (80mm)
               </Button>
-              <Button variant="outline" onClick={() => setReciboVenta(null)} className="w-full border-gray-400 text-black text-xs h-9">
+              <Button variant="outline" onClick={() => setReciboVenta(null)} className="w-full text-xs h-9">
                 Cerrar / Nueva Venta
               </Button>
             </div>

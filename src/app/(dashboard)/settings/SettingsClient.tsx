@@ -16,7 +16,12 @@ import {
     Sparkles,
     Zap,
     Building,
-    X
+    X,
+    ShoppingBag,
+    RefreshCw,
+    Lock,
+    DownloadCloud,
+    FileText
 } from 'lucide-react';
 import { Topbar } from '@/components/layout/Topbar';
 import { ContentContainer } from '@/components/layout/Content';
@@ -92,6 +97,15 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
     const [company, setCompany] = useState(initialCompany);
     const [documentUsage, setDocumentUsage] = useState(initialDocumentUsage);
 
+    // Permite abrir una pestaña específica vía /settings?tab=integrations (usado por el
+    // antiguo enlace /pos/woocommerce, que ahora redirige aquí).
+    useEffect(() => {
+        const tab = new URLSearchParams(window.location.search).get('tab');
+        if (tab === 'dgi' || tab === 'users' || tab === 'billing' || tab === 'integrations') {
+            setActiveTab(tab);
+        }
+    }, []);
+
     // DGI Form state
     const [razonSocial, setRazonSocial] = useState(company.razonSocial);
     const [ruc, setRuc] = useState(company.ruc);
@@ -141,6 +155,18 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
     const [isConnectingPos, setIsConnectingPos] = useState(false);
     const [isSyncingPos, setIsSyncingPos] = useState<Record<string, boolean>>({});
 
+    // WooCommerce (tienda en línea) state — antes vivía en /pos/woocommerce, movido aquí
+    // porque es una integración, no una pantalla operativa de POS.
+    const [wooUrlTienda, setWooUrlTienda] = useState('');
+    const [wooConsumerKey, setWooConsumerKey] = useState('');
+    const [wooConsumerSec, setWooConsumerSec] = useState('');
+    const [wooActivo, setWooActivo] = useState(true);
+    const [wooUltimaSync, setWooUltimaSync] = useState<string | null>(null);
+    const [wooGuardando, setWooGuardando] = useState(false);
+    const [wooSincronizandoStock, setWooSincronizandoStock] = useState(false);
+    const [wooImportandoPedidos, setWooImportandoPedidos] = useState(false);
+    const [wooPedidos, setWooPedidos] = useState<{ idWoo: string; cliente: string; ruc: string; total: number; metodoPago: string; items?: { cantidad: number; descripcion: string }[] }[]>([]);
+
     useEffect(() => {
         if (activeTab === 'integrations') {
             setIsLoadingPos(true);
@@ -148,6 +174,18 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                 setPosIntegrations(data || []);
                 setIsLoadingPos(false);
             });
+
+            const cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
+            fetch(`/api/pos/woocommerce?cuentaId=${cuentaId}`)
+                .then(res => res.ok ? res.json() : null)
+                .then(data => {
+                    if (data?.config) {
+                        setWooUrlTienda(data.config.urlTienda || '');
+                        setWooActivo(data.config.activo);
+                        setWooUltimaSync(data.config.ultimaSync);
+                    }
+                })
+                .catch(() => {});
         }
     }, [activeTab]);
 
@@ -424,6 +462,80 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
         }
     };
 
+    const handleGuardarWooCredenciales = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setWooGuardando(true);
+        try {
+            const cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
+            const res = await fetch('/api/pos/woocommerce', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cuentaId,
+                    urlTienda: wooUrlTienda,
+                    consumerKey: wooConsumerKey,
+                    consumerSec: wooConsumerSec,
+                    activo: wooActivo
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success(data.message);
+            } else {
+                toast.error(data.error || 'Error al guardar credenciales de WooCommerce.');
+            }
+        } catch {
+            toast.error('Error de conexión al guardar credenciales de WooCommerce.');
+        } finally {
+            setWooGuardando(false);
+        }
+    };
+
+    const handleSincronizarStockWoo = async () => {
+        setWooSincronizandoStock(true);
+        try {
+            const cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
+            const res = await fetch('/api/pos/woocommerce/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cuentaId, accion: 'SYNC_STOCK_CATALOGO' })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success(data.message);
+                if (data.ultimaSync) setWooUltimaSync(data.ultimaSync);
+            } else {
+                toast.error(data.error || 'Error al sincronizar stock.');
+            }
+        } catch {
+            toast.error('Error al ejecutar la sincronización de stock.');
+        } finally {
+            setWooSincronizandoStock(false);
+        }
+    };
+
+    const handleImportarPedidosWoo = async () => {
+        setWooImportandoPedidos(true);
+        try {
+            const cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
+            const res = await fetch('/api/pos/woocommerce/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cuentaId, accion: 'IMPORTAR_PEDIDOS_WOO' })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setWooPedidos(data.pedidos || []);
+            } else {
+                toast.error(data.error || 'Error al importar pedidos de WooCommerce.');
+            }
+        } catch {
+            toast.error('Error en la solicitud de importación de pedidos.');
+        } finally {
+            setWooImportandoPedidos(false);
+        }
+    };
+
     const handleUpdatePlan = async (newPlan: string) => {
         if (newPlan === 'enterprise') {
             toast.info('Para adquirir el plan Enterprise con facturación a la medida, por favor contacta a soporte.');
@@ -692,8 +804,8 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                             <div className="flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2">
                                 <Zap className="h-4 w-4 shrink-0" />
                                 <span className="truncate">
-                                    <span className="sm:hidden">APIs</span>
-                                    <span className="hidden sm:inline">WhatsApp y APIs</span>
+                                    <span className="sm:hidden">Integ.</span>
+                                    <span className="hidden sm:inline">Integraciones</span>
                                 </span>
                             </div>
                         </button>
@@ -1171,10 +1283,10 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                     <div className="flex items-start gap-3">
                                         <Sparkles className="h-5 w-5 text-brand-1 mt-0.5" />
                                         <div>
-                                            <h3 className="font-semibold text-brand-3">WhatsApp API y Webhooks de Integración</h3>
+                                            <h3 className="font-semibold text-brand-3">Integraciones</h3>
                                             <p className="text-sm text-muted-foreground mt-1">
-                                                Configura el envío automático de facturas por WhatsApp y la recepción de eventos en tiempo real mediante Webhooks.
-                                                Estas características requieren un plan de pago habilitado.
+                                                Conecta ERP Panamá con WhatsApp, Webhooks externos, tu(s) punto(s) de venta y tu tienda en línea WooCommerce.
+                                                Algunas integraciones requieren un plan de pago habilitado.
                                             </p>
                                         </div>
                                     </div>
@@ -1536,6 +1648,150 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             </div>
                                         </div>
                                     )}
+                                </CardContent>
+                            </Card>
+
+                            {/* WooCommerce (tienda en línea) */}
+                            <Card className="mt-8">
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <ShoppingBag className="h-5 w-5 text-brand-1" />
+                                            Tienda en Línea (WooCommerce)
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Sincroniza inventario por SKU y factura electrónicamente los pedidos de tu tienda WooCommerce.
+                                        </CardDescription>
+                                    </div>
+                                    <Badge className={wooActivo ? 'bg-success-bg text-success border border-success/30' : 'bg-muted text-muted-foreground'}>
+                                        {wooActivo ? 'Integración Activa' : 'Inactiva'}
+                                    </Badge>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid gap-6 lg:grid-cols-12">
+                                        {/* Credenciales */}
+                                        <form onSubmit={handleGuardarWooCredenciales} className="lg:col-span-5 space-y-4">
+                                            <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                                                <Lock className="h-4 w-4 text-brand-1" />
+                                                Credenciales REST API (cifradas)
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">URL de su Tienda Online</label>
+                                                <Input
+                                                    required
+                                                    placeholder="https://tienda.miempresa.com"
+                                                    value={wooUrlTienda}
+                                                    onChange={(e) => setWooUrlTienda(e.target.value)}
+                                                    className="text-xs"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Consumer Key (ck_...)</label>
+                                                <Input
+                                                    required
+                                                    type="password"
+                                                    placeholder="ck_123456789abcdef012345678"
+                                                    value={wooConsumerKey}
+                                                    onChange={(e) => setWooConsumerKey(e.target.value)}
+                                                    className="text-xs font-mono"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Consumer Secret (cs_...)</label>
+                                                <Input
+                                                    required
+                                                    type="password"
+                                                    placeholder="cs_123456789abcdef012345678"
+                                                    value={wooConsumerSec}
+                                                    onChange={(e) => setWooConsumerSec(e.target.value)}
+                                                    className="text-xs font-mono"
+                                                />
+                                            </div>
+                                            <label className="flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={wooActivo}
+                                                    onChange={(e) => setWooActivo(e.target.checked)}
+                                                    className="rounded border-border text-brand-1 focus:ring-brand-1"
+                                                />
+                                                Activar sincronización y webhooks
+                                            </label>
+                                            <Button
+                                                type="submit"
+                                                disabled={wooGuardando}
+                                                className="w-full bg-brand-1 hover:bg-brand-2 text-white font-semibold text-xs"
+                                            >
+                                                {wooGuardando ? 'Guardando...' : 'Guardar Credenciales'}
+                                            </Button>
+                                        </form>
+
+                                        {/* Acciones y pedidos */}
+                                        <div className="lg:col-span-7 space-y-4 lg:border-l lg:pl-8 border-border">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border rounded-lg p-3">
+                                                <div className="text-xs text-muted-foreground space-y-1">
+                                                    <p>Empareja productos por Código Interno / SKU.</p>
+                                                    {wooUltimaSync && <p>Última sync: {new Date(wooUltimaSync).toLocaleString('es-PA')}</p>}
+                                                </div>
+                                                <Button
+                                                    onClick={handleSincronizarStockWoo}
+                                                    disabled={wooSincronizandoStock || !wooUrlTienda}
+                                                    size="sm"
+                                                    className="bg-brand-1 hover:bg-brand-2 text-white font-semibold text-xs flex-shrink-0"
+                                                >
+                                                    <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${wooSincronizandoStock ? 'animate-spin' : ''}`} />
+                                                    {wooSincronizandoStock ? 'Sincronizando...' : 'Sincronizar Stock'}
+                                                </Button>
+                                            </div>
+
+                                            <div className="border rounded-lg">
+                                                <div className="flex items-center justify-between p-3 border-b">
+                                                    <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                                                        <DownloadCloud className="h-4 w-4 text-brand-1" />
+                                                        Pedidos pendientes de facturación
+                                                    </div>
+                                                    <Button
+                                                        onClick={handleImportarPedidosWoo}
+                                                        disabled={wooImportandoPedidos}
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="text-xs"
+                                                    >
+                                                        <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${wooImportandoPedidos ? 'animate-spin' : ''}`} />
+                                                        Buscar Pedidos
+                                                    </Button>
+                                                </div>
+                                                {wooPedidos.length === 0 ? (
+                                                    <div className="text-center py-8 text-muted-foreground text-xs">
+                                                        Presiona &quot;Buscar Pedidos&quot; para consultar órdenes entrantes desde tu tienda WooCommerce.
+                                                    </div>
+                                                ) : (
+                                                    <div className="divide-y">
+                                                        {wooPedidos.map((ped) => (
+                                                            <div key={ped.idWoo} className="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                                                <div className="min-w-0">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-mono font-bold text-brand-1 text-xs">#{ped.idWoo}</span>
+                                                                        <span className="text-xs font-bold text-foreground truncate">{ped.cliente}</span>
+                                                                        <span className="text-xs text-muted-foreground font-mono">({ped.ruc})</span>
+                                                                    </div>
+                                                                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                                                                        {ped.items?.map((i) => `${i.cantidad}x ${i.descripcion}`).join(', ')} &bull; {ped.metodoPago}
+                                                                    </p>
+                                                                </div>
+                                                                <div className="flex items-center gap-3 justify-between sm:justify-end flex-shrink-0">
+                                                                    <span className="text-sm font-mono font-bold text-foreground">${ped.total.toFixed(2)}</span>
+                                                                    <Button size="sm" className="bg-brand-1 hover:bg-brand-2 text-white text-xs h-8 px-3">
+                                                                        <FileText className="h-3.5 w-3.5 mr-1" />
+                                                                        Emitir FE (DGI)
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </div>
