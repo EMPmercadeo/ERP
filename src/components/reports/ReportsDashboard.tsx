@@ -8,8 +8,6 @@ import {
     Percent,
     ArrowLeft,
     FileText,
-    ChevronLeft,
-    ChevronRight,
     ArrowUpRight,
     ArrowDownRight,
     Minus,
@@ -23,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PaginationBar } from '@/components/ui/pagination-bar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -1173,35 +1172,15 @@ export function ReportsDashboard({
 
                     {/* Pagination control row */}
                     {invoiceDetail.pageCount > 1 && (
-                        <div className="flex items-center justify-between border-t px-5 py-4 bg-muted/50">
-                            <span className="text-xs text-muted-foreground font-semibold">
-                                Mostrando {Math.min((currentFilters.page - 1) * currentFilters.limit + 1, invoiceDetail.totalCount)} a {Math.min(currentFilters.page * currentFilters.limit, invoiceDetail.totalCount)} de {invoiceDetail.totalCount} registros
-                            </span>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handlePageChange(currentFilters.page - 1)}
-                                    disabled={currentFilters.page <= 1}
-                                    className="h-8 font-semibold text-xs"
-                                >
-                                    <ChevronLeft className="mr-1 h-3.5 w-3.5" />
-                                    Anterior
-                                </Button>
-                                <span className="text-xs font-bold text-foreground px-2">
-                                    Pág {currentFilters.page} de {invoiceDetail.pageCount}
-                                </span>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handlePageChange(currentFilters.page + 1)}
-                                    disabled={currentFilters.page >= invoiceDetail.pageCount}
-                                    className="h-8 font-semibold text-xs"
-                                >
-                                    Siguiente
-                                    <ChevronRight className="ml-1 h-3.5 w-3.5" />
-                                </Button>
-                            </div>
+                        <div className="border-t bg-muted/50">
+                            <PaginationBar
+                                currentPage={currentFilters.page}
+                                pageCount={invoiceDetail.pageCount}
+                                pageSize={currentFilters.limit}
+                                totalCount={invoiceDetail.totalCount}
+                                entityLabel="registros"
+                                onPageChange={(page) => handlePageChange(page)}
+                            />
                         </div>
                     )}
                 </CardContent>

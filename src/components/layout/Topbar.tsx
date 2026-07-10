@@ -155,50 +155,57 @@ export function Topbar({ title, children }: TopbarProps) {
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* User menu */}
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild id="user-menu-trigger">
-                    <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                        <Avatar className="h-9 w-9">
-                            {user?.photoURL && (
-                                <AvatarImage src={user.photoURL} alt={displayName} />
-                            )}
-                            <AvatarFallback className="bg-brand-1 text-white text-sm">
-                                {initials}
-                            </AvatarFallback>
-                        </Avatar>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                        <div className="flex flex-col space-y-1">
-                            <p className="text-sm font-medium leading-none">{displayName}</p>
-                            <p className="text-xs leading-none text-muted-foreground">
-                                {user?.email}
-                            </p>
-                        </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                        <Link href="/profile" className="cursor-pointer">
-                            Perfil
-                        </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                        <Link href="/settings" className="cursor-pointer">
-                            Configuración
-                        </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                        className="text-destructive cursor-pointer"
-                        onClick={handleLogout}
-                    >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Cerrar sesión
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            {/* User menu — oculto en mobile: Perfil y Configuración ya están en el menú "Más"
+                del BottomNavigation, así que mostrarlo también aquí arriba era redundante y
+                quitaba espacio útil en una barra ya angosta. Se mantiene visible desde lg:
+                hacia arriba, donde no existe bottom nav. Se envuelve en un div en vez de pasar
+                "hidden" directo al Button, para no pelear con las clases de display que ya
+                trae el componente Button internamente. */}
+            <div className="hidden lg:block">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild id="user-menu-trigger">
+                        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                            <Avatar className="h-9 w-9">
+                                {user?.photoURL && (
+                                    <AvatarImage src={user.photoURL} alt={displayName} />
+                                )}
+                                <AvatarFallback className="bg-brand-1 text-white text-sm">
+                                    {initials}
+                                </AvatarFallback>
+                            </Avatar>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end" forceMount>
+                        <DropdownMenuLabel className="font-normal">
+                            <div className="flex flex-col space-y-1">
+                                <p className="text-sm font-medium leading-none">{displayName}</p>
+                                <p className="text-xs leading-none text-muted-foreground">
+                                    {user?.email}
+                                </p>
+                            </div>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link href="/profile" className="cursor-pointer">
+                                Perfil
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link href="/settings" className="cursor-pointer">
+                                Configuración
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            className="text-destructive cursor-pointer"
+                            onClick={handleLogout}
+                        >
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Cerrar sesión
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         </header>
     );
 }

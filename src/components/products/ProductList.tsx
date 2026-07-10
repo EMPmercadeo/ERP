@@ -20,8 +20,6 @@ import {
 import {
     Search,
     Plus,
-    ChevronLeft,
-    ChevronRight,
     ArrowUpDown,
     Edit,
     Trash2,
@@ -36,6 +34,7 @@ import { saveAs } from 'file-saver';
 import ExcelJS from 'exceljs';
 import { ImportProductsDialog } from './ImportProductsDialog';
 import { CategoriesManagerModal, type CategoriaItem } from './CategoriesManagerModal';
+import { PaginationBar } from '@/components/ui/pagination-bar';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -922,68 +921,21 @@ export function ProductList({
                         </div>
 
                         {/* Pagination (Backend Powered) */}
-                        <div className="flex items-center justify-between px-4 py-3 bg-muted/30">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-muted-foreground">
-                                <span>
-                                    Mostrando {totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0} a{' '}
-                                    {Math.min(currentPage * pageSize, totalCount)} de {totalCount} productos
-                                </span>
-                                <span className="hidden sm:inline text-muted-foreground">|</span>
-                                <span className="font-semibold text-foreground">
-                                    Página {currentPage} de {pageCount || 1}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <span className="hidden sm:inline">Filas por página:</span>
-                                    <Select
-                                        value={String(pageSize)}
-                                        onValueChange={(val) => {
-                                            const query = createQueryString({ limit: val, page: '1' });
-                                            router.push(`${pathname}?${query}`);
-                                        }}
-                                    >
-                                        <SelectTrigger className="h-8 w-[65px] text-xs rounded-lg">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-lg">
-                                            <SelectItem value="10" className="text-xs cursor-pointer">10</SelectItem>
-                                            <SelectItem value="20" className="text-xs cursor-pointer">20</SelectItem>
-                                            <SelectItem value="50" className="text-xs cursor-pointer">50</SelectItem>
-                                            <SelectItem value="100" className="text-xs cursor-pointer">100</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            const query = createQueryString({ page: String(currentPage - 1) });
-                                            router.push(`${pathname}?${query}`);
-                                        }}
-                                        disabled={currentPage <= 1}
-                                        className="h-8 text-xs font-semibold px-3 border-border rounded-lg"
-                                    >
-                                        <ChevronLeft className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-                                        Anterior
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            const query = createQueryString({ page: String(currentPage + 1) });
-                                            router.push(`${pathname}?${query}`);
-                                        }}
-                                        disabled={currentPage >= pageCount}
-                                        className="h-8 text-xs font-semibold px-3 border-border rounded-lg"
-                                    >
-                                        Siguiente
-                                        <ChevronRight className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
+                        <PaginationBar
+                            currentPage={currentPage}
+                            pageCount={pageCount}
+                            pageSize={pageSize}
+                            totalCount={totalCount}
+                            entityLabel="productos"
+                            onPageChange={(page) => {
+                                const query = createQueryString({ page: String(page) });
+                                router.push(`${pathname}?${query}`);
+                            }}
+                            onPageSizeChange={(val) => {
+                                const query = createQueryString({ limit: val, page: '1' });
+                                router.push(`${pathname}?${query}`);
+                            }}
+                        />
                     </CardContent>
                 </Card>
             </div>

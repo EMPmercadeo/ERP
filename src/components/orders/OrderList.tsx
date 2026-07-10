@@ -4,13 +4,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Search, FileText, CheckCircle, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, FileText, CheckCircle, Clock, ClipboardList } from 'lucide-react';
 import { updateSalesOrderStatus } from '@/lib/actions/sales-orders';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { PaginationBar } from '@/components/ui/pagination-bar';
 import {
     Table,
     TableBody,
@@ -19,13 +20,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 
 export interface OrderData {
     id: string;
@@ -150,7 +144,8 @@ export function OrderList({
 
             <Card className="shadow-sm border-border overflow-hidden">
                 <CardContent className="p-0">
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-muted/75">
@@ -221,59 +216,89 @@ export function OrderList({
                         </Table>
                     </div>
 
+                    {/* Mobile Card List View */}
+                    <div className="block md:hidden p-4 space-y-3 font-sans">
+                        {filteredOrders.length === 0 ? (
+                            <div className="py-12 text-center text-xs text-muted-foreground font-semibold">
+                                No se encontraron pedidos registrados.
+                            </div>
+                        ) : (
+                            filteredOrders.map((order) => (
+                                <div
+                                    key={order.id}
+                                    className="bg-muted/50 border border-border rounded-xl p-3.5 space-y-3 shadow-sm"
+                                >
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-brand-1/10 text-brand-1 shrink-0">
+                                                <ClipboardList className="h-4 w-4" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <h4 className="font-bold text-foreground text-xs truncate" title={order.cliente.razonSocial}>
+                                                    {order.cliente.razonSocial}
+                                                </h4>
+                                                <p className="text-[10px] text-muted-foreground font-mono leading-none mt-0.5 truncate">
+                                                    {order.numero} · RUC: {order.cliente.ruc}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <StatusBadge status={order.estado} showIcon={false} className="h-5 text-[9px] px-2 shrink-0" />
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-[10px] text-muted-foreground border-t border-border/60 pt-2">
+                                        <span>Emisión: {order.fechaEmision}</span>
+                                        <span>Entrega: {order.fechaEntrega || '—'}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-t border-border/60 pt-2">
+                                        <span className="font-mono text-sm font-bold text-foreground">
+                                            {formatCurrency(order.totalNeto)}
+                                        </span>
+                                        {order.estado === 'pendiente' && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-8 text-[10px] font-bold text-emerald-600 border-emerald-200 hover:bg-emerald-50 rounded-lg gap-1"
+                                                onClick={() => handleStatusChange(order.id, 'en_proceso')}
+                                            >
+                                                <Clock className="h-3.5 w-3.5" />
+                                                Procesar
+                                            </Button>
+                                        )}
+                                        {order.estado === 'en_proceso' && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-8 text-[10px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 rounded-lg gap-1"
+                                                onClick={() => handleStatusChange(order.id, 'entregado')}
+                                            >
+                                                <CheckCircle className="h-3.5 w-3.5" />
+                                                Entregado
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
                     {/* Pagination Controls */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-border bg-muted/50 mt-4 rounded-b-lg">
-                        <div className="text-sm text-muted-foreground">
-                            Mostrando <span className="font-medium">{initialData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> a <span className="font-medium">{Math.min(currentPage * pageSize, totalCount)}</span> de <span className="font-medium">{totalCount}</span> resultados
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <span className="hidden sm:inline">Filas por página:</span>
-                                <Select
-                                    value={String(pageSize)}
-                                    onValueChange={(val) => {
-                                        const query = createQueryString({ limit: val, page: '1' });
-                                        router.push(`${pathname}?${query}`);
-                                    }}
-                                >
-                                    <SelectTrigger className="h-8 w-[70px]">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="10">10</SelectItem>
-                                        <SelectItem value="20">20</SelectItem>
-                                        <SelectItem value="50">50</SelectItem>
-                                        <SelectItem value="100">100</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        const query = createQueryString({ page: String(currentPage - 1) });
-                                        router.push(`${pathname}?${query}`);
-                                    }}
-                                    disabled={currentPage <= 1}
-                                >
-                                    <ChevronLeft className="h-4 w-4 mr-1" />
-                                    Anterior
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        const query = createQueryString({ page: String(currentPage + 1) });
-                                        router.push(`${pathname}?${query}`);
-                                    }}
-                                    disabled={currentPage >= pageCount || pageCount === 0}
-                                >
-                                    Siguiente
-                                    <ChevronRight className="h-4 w-4 ml-1" />
-                                </Button>
-                            </div>
-                        </div>
+                    <div className="border-t border-border bg-muted/50 mt-4 rounded-b-lg">
+                        <PaginationBar
+                            currentPage={currentPage}
+                            pageCount={pageCount}
+                            pageSize={pageSize}
+                            totalCount={totalCount}
+                            entityLabel="pedidos"
+                            onPageChange={(page) => {
+                                const query = createQueryString({ page: String(page) });
+                                router.push(`${pathname}?${query}`);
+                            }}
+                            onPageSizeChange={(val) => {
+                                const query = createQueryString({ limit: val, page: '1' });
+                                router.push(`${pathname}?${query}`);
+                            }}
+                        />
                     </div>
                 </CardContent>
             </Card>

@@ -16,8 +16,6 @@ import {
     Search,
     Plus,
     MoreHorizontal,
-    ChevronLeft,
-    ChevronRight,
     ArrowUpDown,
     Edit,
     Trash2,
@@ -33,6 +31,7 @@ import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { PaginationBar } from '@/components/ui/pagination-bar';
 import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
@@ -51,13 +50,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 
 // Types match Prisma model structure roughly
 export interface ClientData {
@@ -392,11 +384,12 @@ export function ClientList({
                             Administra tu cartera de clientes y sus saldos
                         </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <ImportClientsDialog />
                         <Button variant="outline" onClick={handleExport}>
                             <Download className="mr-2 h-4 w-4" />
-                            Exportar Excel
+                            <span className="hidden sm:inline">Exportar Excel</span>
+                            <span className="sm:hidden">Excel</span>
                         </Button>
                         <Button asChild>
                             <Link href="/clients/new">
@@ -509,13 +502,13 @@ export function ClientList({
                                             className="bg-muted/50 border border-border rounded-xl p-3.5 space-y-3 shadow-sm active:scale-98 transition-transform cursor-pointer"
                                         >
                                             <div className="flex items-start justify-between gap-2">
-                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
                                                         {initials}
                                                     </div>
-                                                    <div className="min-w-0">
-                                                        <h4 className="font-bold text-foreground text-xs truncate max-w-[150px]">{client.razonSocial}</h4>
-                                                        <p className="text-[10px] text-muted-foreground font-mono leading-none mt-0.5">RUC: {client.ruc} - DV {client.dv || '—'}</p>
+                                                    <div className="min-w-0 flex-1">
+                                                        <h4 className="font-bold text-foreground text-xs truncate" title={client.razonSocial}>{client.razonSocial}</h4>
+                                                        <p className="text-[10px] text-muted-foreground font-mono leading-none mt-0.5 truncate">RUC: {client.ruc} - DV {client.dv || '—'}</p>
                                                     </div>
                                                 </div>
                                                 <StatusBadge status={client.estado} showIcon={false} className="h-5 text-[9px] px-2 shrink-0" />
@@ -566,66 +559,21 @@ export function ClientList({
                         </div>
 
                         {/* Pagination */}
-                        <div className="flex items-center justify-between border-t px-4 py-4">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
-                                <span>
-                                    Mostrando {totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0} a{' '}
-                                    {Math.min(currentPage * pageSize, totalCount)} de {totalCount} clientes
-                                </span>
-                                <span className="hidden sm:inline text-muted-foreground/30">|</span>
-                                <span className="font-medium text-foreground">
-                                    Página {currentPage} de {pageCount || 1}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <span className="hidden sm:inline">Filas por página:</span>
-                                    <Select
-                                        value={String(pageSize)}
-                                        onValueChange={(val) => {
-                                            const query = createQueryString({ limit: val, page: '1' });
-                                            router.push(`${pathname}?${query}`);
-                                        }}
-                                    >
-                                        <SelectTrigger className="h-8 w-[70px]">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="10">10</SelectItem>
-                                            <SelectItem value="20">20</SelectItem>
-                                            <SelectItem value="50">50</SelectItem>
-                                            <SelectItem value="100">100</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            const query = createQueryString({ page: String(currentPage - 1) });
-                                            router.push(`${pathname}?${query}`);
-                                        }}
-                                        disabled={currentPage <= 1}
-                                    >
-                                        <ChevronLeft className="h-4 w-4" />
-                                        Anterior
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            const query = createQueryString({ page: String(currentPage + 1) });
-                                            router.push(`${pathname}?${query}`);
-                                        }}
-                                        disabled={currentPage >= pageCount}
-                                    >
-                                        Siguiente
-                                        <ChevronRight className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
+                        <PaginationBar
+                            currentPage={currentPage}
+                            pageCount={pageCount}
+                            pageSize={pageSize}
+                            totalCount={totalCount}
+                            entityLabel="clientes"
+                            onPageChange={(page) => {
+                                const query = createQueryString({ page: String(page) });
+                                router.push(`${pathname}?${query}`);
+                            }}
+                            onPageSizeChange={(val) => {
+                                const query = createQueryString({ limit: val, page: '1' });
+                                router.push(`${pathname}?${query}`);
+                            }}
+                        />
                     </CardContent>
                 </Card>
             </div>

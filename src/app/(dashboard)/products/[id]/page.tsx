@@ -351,26 +351,31 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                         <Card className="bg-white border border-border shadow-sm rounded-xl overflow-visible">
                             <CardContent className="p-4 sm:p-5">
                                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4">
-                                    <TabsList className="bg-muted p-1 rounded-lg w-full justify-start h-10 border border-border">
-                                        <TabsTrigger value="general" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
-                                            General
-                                        </TabsTrigger>
-                                        <TabsTrigger value="prices" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
-                                            Precios
-                                        </TabsTrigger>
-                                        <TabsTrigger value="inventory" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
-                                            Inventario
-                                        </TabsTrigger>
-                                        <TabsTrigger value="kit" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
-                                            Kit
-                                        </TabsTrigger>
-                                        <TabsTrigger value="multimedia" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
-                                            Multimedia
-                                        </TabsTrigger>
-                                        <TabsTrigger value="history" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
-                                            Historial
-                                        </TabsTrigger>
-                                    </TabsList>
+                                    {/* En mobile las 6 pestañas no caben en una fila sin desbordarse — se
+                                        envuelven en un contenedor con scroll horizontal en vez de apretarlas
+                                        o cortarlas. shrink-0 evita que cada trigger se comprima. */}
+                                    <div className="-mx-1 px-1 overflow-x-auto">
+                                        <TabsList className="bg-muted p-1 rounded-lg w-full sm:w-full justify-start h-10 border border-border inline-flex sm:flex min-w-max sm:min-w-0">
+                                            <TabsTrigger value="general" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
+                                                General
+                                            </TabsTrigger>
+                                            <TabsTrigger value="prices" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
+                                                Precios
+                                            </TabsTrigger>
+                                            <TabsTrigger value="inventory" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
+                                                Inventario
+                                            </TabsTrigger>
+                                            <TabsTrigger value="kit" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
+                                                Kit
+                                            </TabsTrigger>
+                                            <TabsTrigger value="multimedia" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
+                                                Multimedia
+                                            </TabsTrigger>
+                                            <TabsTrigger value="history" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
+                                                Historial
+                                            </TabsTrigger>
+                                        </TabsList>
+                                    </div>
 
                                     {/* TAB 1: INFORMACIÓN GENERAL */}
                                     {/* forceMount: el <form> envuelve TODAS las pestañas, y por defecto Radix
@@ -562,7 +567,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                         {/* Fila 3: Cálculo fiscal estimado compacto */}
                                         <div className="bg-muted rounded-xl p-3 border border-border space-y-1 text-xs">
                                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Cálculo Fiscal Estimado Detallado</span>
-                                            <div className="grid grid-cols-3 gap-3 text-muted-foreground">
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-muted-foreground">
                                                 <div className="flex flex-col">
                                                     <span className="text-muted-foreground text-[10px]">Neto Gravable</span>
                                                     <span className="font-mono text-foreground mt-0.5">{formatearMoneda(priceNum)}</span>

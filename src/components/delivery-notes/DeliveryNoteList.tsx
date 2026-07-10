@@ -4,12 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Search, CheckSquare, Plus, Eye, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, CheckSquare, Plus, Eye, FileText } from 'lucide-react';
 import { invoiceGroupedDeliveryNotes } from '@/lib/actions/delivery-notes';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { PaginationBar } from '@/components/ui/pagination-bar';
 import { StatusBadge } from '@/components/ui/status-badge';
 import {
     Select,
@@ -383,58 +384,22 @@ export function DeliveryNoteList({
                     </div>
 
                     {/* Pagination Controls */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-border bg-muted/50 mt-4 rounded-b-lg">
-                        <div className="text-sm text-muted-foreground">
-                            Mostrando <span className="font-medium">{initialData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> a <span className="font-medium">{Math.min(currentPage * pageSize, totalCount)}</span> de <span className="font-medium">{totalCount}</span> resultados
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <span className="hidden sm:inline">Filas por página:</span>
-                                <Select
-                                    value={String(pageSize)}
-                                    onValueChange={(val) => {
-                                        const query = createQueryString({ limit: val, page: '1' });
-                                        router.push(`${pathname}?${query}`);
-                                    }}
-                                >
-                                    <SelectTrigger className="h-8 w-[70px]">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="10">10</SelectItem>
-                                        <SelectItem value="20">20</SelectItem>
-                                        <SelectItem value="50">50</SelectItem>
-                                        <SelectItem value="100">100</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        const query = createQueryString({ page: String(currentPage - 1) });
-                                        router.push(`${pathname}?${query}`);
-                                    }}
-                                    disabled={currentPage <= 1}
-                                >
-                                    <ChevronLeft className="h-4 w-4 mr-1" />
-                                    Anterior
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        const query = createQueryString({ page: String(currentPage + 1) });
-                                        router.push(`${pathname}?${query}`);
-                                    }}
-                                    disabled={currentPage >= pageCount || pageCount === 0}
-                                >
-                                    Siguiente
-                                    <ChevronRight className="h-4 w-4 ml-1" />
-                                </Button>
-                            </div>
-                        </div>
+                    <div className="border-t border-border bg-muted/50 mt-4 rounded-b-lg">
+                        <PaginationBar
+                            currentPage={currentPage}
+                            pageCount={pageCount}
+                            pageSize={pageSize}
+                            totalCount={totalCount}
+                            entityLabel="resultados"
+                            onPageChange={(page) => {
+                                const query = createQueryString({ page: String(page) });
+                                router.push(`${pathname}?${query}`);
+                            }}
+                            onPageSizeChange={(val) => {
+                                const query = createQueryString({ limit: val, page: '1' });
+                                router.push(`${pathname}?${query}`);
+                            }}
+                        />
                     </div>
                 </CardContent>
             </Card>
