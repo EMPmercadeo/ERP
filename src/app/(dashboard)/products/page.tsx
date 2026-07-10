@@ -17,6 +17,7 @@ interface PageProps {
         tax?: string;
         stockStatus?: string;
         unidad?: string;
+        categoriaId?: string;
     }>;
 }
 
@@ -34,6 +35,7 @@ export default async function ProductsPage(props: PageProps) {
     const tax = searchParams.tax || 'all';
     const stockStatus = searchParams.stockStatus || 'all';
     const unidad = searchParams.unidad || 'all';
+    const categoriaId = searchParams.categoriaId || 'all';
 
     const skip = (page - 1) * limit;
 
@@ -74,6 +76,12 @@ export default async function ProductsPage(props: PageProps) {
         where.unidadMedida = unidad;
     }
 
+    if (categoriaId === 'sin_categoria') {
+        where.categoriaId = null;
+    } else if (categoriaId && categoriaId !== 'all') {
+        where.categoriaId = categoriaId;
+    }
+
     const validSortFields = ['codigoInterno', 'descripcion', 'precioVenta', 'stockActual', 'activo', 'createdAt'];
     const orderByField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
 
@@ -82,7 +90,8 @@ export default async function ProductsPage(props: PageProps) {
             where,
             orderBy: { [orderByField]: sortOrder },
             skip,
-            take: limit
+            take: limit,
+            include: { categoria: { select: { id: true, nombre: true, descuentoPorcentaje: true } } }
         }),
         prisma.producto.count({ where })
     ]);
@@ -97,7 +106,11 @@ export default async function ProductsPage(props: PageProps) {
         stockActual: p.stockActual,
         activo: p.activo,
         unidadMedida: p.unidadMedida,
-        imagenUrl: p.imagenUrl
+        imagenUrl: p.imagenUrl,
+        descuentoPorcentaje: p.descuentoPorcentaje.toNumber(),
+        categoriaId: p.categoriaId,
+        categoriaNombre: p.categoria?.nombre ?? null,
+        categoriaDescuentoPorcentaje: p.categoria ? p.categoria.descuentoPorcentaje.toNumber() : null,
     }));
 
     const pageCount = Math.ceil(totalCount / limit);
@@ -118,6 +131,7 @@ export default async function ProductsPage(props: PageProps) {
                 initialTax={tax}
                 initialStockStatus={stockStatus}
                 initialUnidad={unidad}
+                initialCategoriaId={categoriaId}
             />
         </>
     );

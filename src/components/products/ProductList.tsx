@@ -29,11 +29,13 @@ import {
     Download,
     History,
     RotateCcw,
-    X
+    X,
+    Tags
 } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import ExcelJS from 'exceljs';
 import { ImportProductsDialog } from './ImportProductsDialog';
+import { CategoriesManagerModal, type CategoriaItem } from './CategoriesManagerModal';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -70,6 +72,10 @@ export interface ProductData {
     activo: boolean;
     unidadMedida: string;
     imagenUrl?: string | null;
+    descuentoPorcentaje?: number;
+    categoriaId?: string | null;
+    categoriaNombre?: string | null;
+    categoriaDescuentoPorcentaje?: number | null;
 }
 
 const itbmsConfig: Record<string, string> = {
@@ -120,7 +126,8 @@ export function ProductList({
     initialStatus,
     initialTax,
     initialStockStatus,
-    initialUnidad
+    initialUnidad,
+    initialCategoriaId
 }: {
     initialData: ProductData[];
     pageCount: number;
@@ -134,6 +141,7 @@ export function ProductList({
     initialTax: string;
     initialStockStatus: string;
     initialUnidad: string;
+    initialCategoriaId: string;
 }) {
     const router = useRouter();
     const pathname = usePathname();
@@ -151,6 +159,17 @@ export function ProductList({
     const tax = initialTax || 'all';
     const stockStatus = initialStockStatus || 'all';
     const unidad = initialUnidad || 'all';
+    const categoriaId = initialCategoriaId || 'all';
+
+    const [categorias, setCategorias] = useState<CategoriaItem[]>([]);
+    const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+
+    useEffect(() => {
+        fetch('/api/categories')
+            .then(res => res.ok ? res.json() : { items: [] })
+            .then(data => setCategorias(data.items || []))
+            .catch(() => setCategorias([]));
+    }, []);
 
     const createQueryString = (params: Record<string, string | null>) => {
         const newParams = new URLSearchParams(searchParams.toString());
@@ -284,6 +303,31 @@ export function ProductList({
                     )}>
                         {label}
                     </Badge>
+                );
+            },
+        },
+        {
+            accessorKey: 'categoriaNombre',
+            header: 'Categoría',
+            cell: ({ row }) => {
+                const categoria = row.original.categoriaNombre;
+                const descuentoCategoria = row.original.categoriaDescuentoPorcentaje || 0;
+                const descuentoProducto = row.original.descuentoPorcentaje || 0;
+                const mejorDescuento = Math.max(descuentoCategoria, descuentoProducto);
+                if (!categoria && mejorDescuento === 0) {
+                    return <span className="text-muted-foreground text-[11px]">—</span>;
+                }
+                return (
+                    <div className="flex flex-col gap-0.5">
+                        {categoria && (
+                            <span className="text-xs font-semibold text-foreground truncate max-w-[120px]">{categoria}</span>
+                        )}
+                        {mejorDescuento > 0 && (
+                            <Badge variant="info" className="text-[9px] w-fit px-1.5 py-0">
+                                {mejorDescuento}% desc.
+                            </Badge>
+                        )}
+                    </div>
                 );
             },
         },
@@ -533,6 +577,10 @@ export function ProductList({
                         </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
+                        <Button variant="outline" onClick={() => setShowCategoriesModal(true)} className="h-9 font-semibold text-xs border-border">
+                            <Tags className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
+                            Categorías
+                        </Button>
                         <ImportProductsDialog />
                         <Button variant="outline" onClick={handleExport} className="h-9 font-semibold text-xs border-border">
                             <Download className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
@@ -547,10 +595,16 @@ export function ProductList({
                     </div>
                 </div>
 
+                <CategoriesManagerModal
+                    open={showCategoriesModal}
+                    onClose={() => setShowCategoriesModal(false)}
+                    onChanged={setCategorias}
+                />
+
                 {/* Compact Filters Grid (h-10 controls) */}
                 <Card className="bg-white shadow-sm border border-border rounded-xl overflow-visible">
                     <CardContent className="p-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-x-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-7 gap-3 lg:gap-x-4">
                             {/* Buscar */}
                             <div className="lg:col-span-2 space-y-1">
                                 <Label htmlFor="globalSearch" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Buscar producto</Label>
@@ -640,6 +694,25 @@ export function ProductList({
                                     </SelectContent>
                                 </Select>
                             </div>
+
+                            {/* Categoría */}
+                            <div className="space-y-1">
+                                <Label htmlFor="categoriaFilter" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Categoría</Label>
+                                <Select value={categoriaId} onValueChange={(val) => handleFilterChange('categoriaId', val)}>
+                                    <SelectTrigger id="categoriaFilter" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
+                                        <SelectValue placeholder="Categoría" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-lg">
+                                        <SelectItem value="all" className="text-xs sm:text-sm cursor-pointer">Todas</SelectItem>
+                                        <SelectItem value="sin_categoria" className="text-xs sm:text-sm cursor-pointer">Sin categoría</SelectItem>
+                                        {categorias.map((c) => (
+                                            <SelectItem key={c.id} value={c.id} className="text-xs sm:text-sm cursor-pointer">
+                                                {c.nombre} {c.descuentoPorcentaje > 0 ? `(${c.descuentoPorcentaje}%)` : ''}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
@@ -693,11 +766,11 @@ export function ProductList({
                                                 <EmptyState
                                                     icon={Package}
                                                     title="No se encontraron productos"
-                                                    description={globalFilter || status !== 'all' || tax !== 'all' || stockStatus !== 'all' || unidad !== 'all'
+                                                    description={globalFilter || status !== 'all' || tax !== 'all' || stockStatus !== 'all' || unidad !== 'all' || categoriaId !== 'all'
                                                         ? "Ningún producto coincide con los filtros aplicados."
                                                         : "Aún no has registrado ningún producto en tu catálogo."}
                                                     action={
-                                                        (globalFilter || status !== 'all' || tax !== 'all' || stockStatus !== 'all' || unidad !== 'all') ? (
+                                                        (globalFilter || status !== 'all' || tax !== 'all' || stockStatus !== 'all' || unidad !== 'all' || categoriaId !== 'all') ? (
                                                             <Button onClick={handleResetFilters} variant="outline" className="h-9 font-semibold text-xs border-border gap-1.5">
                                                                 <RotateCcw className="h-3.5 w-3.5" />
                                                                  Restablecer Filtros
@@ -782,6 +855,20 @@ export function ProductList({
                                                 <h4 className="font-bold text-foreground text-[11px] leading-tight line-clamp-2 mt-0.5 min-h-[2rem]" title={product.descripcion}>
                                                     {product.descripcion}
                                                 </h4>
+
+                                                {/* Categoría / Descuento */}
+                                                {(product.categoriaNombre || Math.max(product.categoriaDescuentoPorcentaje || 0, product.descuentoPorcentaje || 0) > 0) && (
+                                                    <div className="flex items-center gap-1 mt-1 flex-wrap">
+                                                        {product.categoriaNombre && (
+                                                            <span className="text-[9px] text-muted-foreground font-semibold truncate max-w-[80px]">{product.categoriaNombre}</span>
+                                                        )}
+                                                        {Math.max(product.categoriaDescuentoPorcentaje || 0, product.descuentoPorcentaje || 0) > 0 && (
+                                                            <Badge variant="info" className="text-[8px] px-1 py-0">
+                                                                {Math.max(product.categoriaDescuentoPorcentaje || 0, product.descuentoPorcentaje || 0)}% desc.
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div>
