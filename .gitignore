@@ -57,3 +57,4 @@ dashboard-after-*.png
 
 # config local de asistentes IA (Claude Code / Cowork), no es parte del proyecto
 .claude/
+.trash_bin/
