@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { resolverBodegaId, moverInventarioBodega } from '@/lib/actions/bodegas';
 import { canCreateInvoice, incrementDocumentUsage } from '@/lib/actions/billing';
 import { generarAsientoFactura, generarAsientoCobro, generarAsientoCostoVenta } from '@/lib/contabilidad/asientos';
+import { obtenerTopeDescuentoSinAutorizacion, verificarPinAutorizacion } from '@/lib/services/discountAuth';
 
 interface ProductoConCosto {
     id: string;
@@ -38,6 +39,12 @@ export interface CrearFacturaCompletaParams {
     metodoPago?: string;
     bodegaId?: string | null;
     items: ItemFacturaInput[];
+    // Autorización de admin/gerente (PIN) para descuentos por encima del tope de la empresa
+    // o del usuario. Mismo mecanismo que ya se usa en el POS (src/app/api/pos/ventas) — se
+    // reutiliza aquí porque `crearFacturaCompleta` es la única fuente de verdad para crear
+    // facturas, tanto desde la UI interna como desde la API externa (api/v1/invoices), y
+    // antes NINGUNA de esas dos vías validaba el tope de descuento ni pedía autorización.
+    autorizacion?: { adminEmail: string; pin: string };
 }
 
 export async function getEmpresaDefaults(empresaId: string) {
@@ -160,6 +167,33 @@ export async function crearFacturaCompleta(params: CrearFacturaCompletaParams) {
     const hasRemainingDocs = await canCreateInvoice(empresaId);
     if (!hasRemainingDocs) {
         throw new FacturaCreationError('Has alcanzado el límite mensual de documentos electrónicos de tu plan. Compra un bloque adicional o actualiza tu plan.');
+    }
+
+    // Tope de descuento y autorización de admin/gerente — mismo esquema que el POS.
+    // Se mide el % de descuento de cada ítem contra su propio monto bruto (un descuento
+    // grande en un ítem barato no debe diluirse promediando entre ítems caros).
+    let maxDescuentoPorcentaje = 0;
+    for (const item of items) {
+        const montoBrutoItem = item.cantidad * item.precioUnitario;
+        if (montoBrutoItem > 0 && item.descuento) {
+            const pct = (item.descuento / montoBrutoItem) * 100;
+            if (pct > maxDescuentoPorcentaje) maxDescuentoPorcentaje = pct;
+        }
+    }
+
+    let autorizadoPor: { id: string; nombre: string } | null = null;
+    if (maxDescuentoPorcentaje > 0) {
+        const tope = await obtenerTopeDescuentoSinAutorizacion(empresaId, userId);
+        if (maxDescuentoPorcentaje > tope) {
+            if (!params.autorizacion) {
+                throw new FacturaCreationError(`El descuento aplicado (${maxDescuentoPorcentaje.toFixed(1)}%) excede tu límite de ${tope}% sin autorización. Se requiere el correo y PIN de un administrador o gerente.`);
+            }
+            const admin = await verificarPinAutorizacion(empresaId, params.autorizacion.adminEmail, params.autorizacion.pin);
+            if (!admin) {
+                throw new FacturaCreationError('PIN de autorización inválido, o el usuario indicado no tiene permiso para autorizar descuentos.');
+            }
+            autorizadoPor = { id: admin.id, nombre: admin.nombre };
+        }
     }
 
     const isFiscal = empresa.fiscalEnabled && empresa.planType !== 'free';
@@ -389,6 +423,24 @@ export async function crearFacturaCompleta(params: CrearFacturaCompletaParams) {
     });
 
     await incrementDocumentUsage(empresaId);
+
+    if (autorizadoPor) {
+        await prisma.auditoria.create({
+            data: {
+                usuarioId: userId,
+                entidad: 'Factura',
+                entidadId: invoice.id,
+                accion: 'editar',
+                datosDespues: {
+                    accionEspecial: 'AUTORIZAR_DESCUENTO_FACTURA',
+                    numeroCompleto: invoice.numeroCompleto,
+                    descuentoPorcentaje: Number(maxDescuentoPorcentaje.toFixed(2)),
+                    autorizadoPorId: autorizadoPor.id,
+                    autorizadoPorNombre: autorizadoPor.nombre
+                }
+            }
+        });
+    }
 
     return invoice;
 }

@@ -46,11 +46,11 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
             const res = await timbrarFacturaDGI(facturaId);
             if (res.success) {
                 toast.success(res.message, { id: 'timbrado' });
-                setEstadoDgi('authorized');
+                setEstadoDgi('aceptada');
                 window.location.reload();
             } else {
                 toast.error(res.message, { id: 'timbrado' });
-                setEstadoDgi('error');
+                setEstadoDgi('rechazada');
             }
         } catch (e: unknown) {
             toast.error(e instanceof Error ? e.message : 'Error al conectar con el servidor.', { id: 'timbrado' });
@@ -72,7 +72,7 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
             const res = await anularFacturaDGI(facturaId, motivoCancelacion);
             if (res.success) {
                 toast.success(res.message, { id: 'anulacion' });
-                setEstadoDgi('canceled');
+                setEstadoDgi('anulada');
                 window.location.reload();
             } else {
                 toast.error(res.message, { id: 'anulacion' });
@@ -97,21 +97,21 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
                         </div>
                     ) : (
                         <div className="flex flex-col gap-2">
-                            {(estadoDgi === 'borrador' || estadoDgi === 'error' || estadoDgi === 'pendiente' || estadoDgi === 'pending') && (
+                            {(estadoDgi === 'borrador' || estadoDgi === 'rechazada' || estadoDgi === 'pendiente') && (
                                 <Button onClick={handleTimbrar} className="w-full bg-brand-1 hover:bg-brand-2 text-white text-sm font-medium py-2">
                                     <RotateCw className="mr-2 h-4 w-4" />
                                     Enviar a DGI (Timbrar)
                                 </Button>
                             )}
 
-                            {estadoDgi === 'authorized' && (
+                            {estadoDgi === 'aceptada' && (
                                 <Button onClick={() => setShowCancelModal(true)} variant="destructive" className="w-full text-sm font-medium py-2">
                                     <XCircle className="mr-2 h-4 w-4" />
                                     Anular en DGI
                                 </Button>
                             )}
 
-                            {estadoDgi === 'canceled' && (
+                            {estadoDgi === 'anulada' && (
                                 <div className="text-sm text-center py-2 text-muted-foreground font-medium">
                                     Esta factura ya ha sido anulada fiscalmente.
                                 </div>

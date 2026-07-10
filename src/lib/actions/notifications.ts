@@ -34,7 +34,7 @@ export async function getNotificaciones(): Promise<Notificacion[]> {
         prisma.factura.count({
             where: {
                 empresaId,
-                estadoDgi: 'error',
+                estadoDgi: 'rechazada',
             },
         }),
         // Prisma no soporta comparar dos columnas entre sí directamente en un `where`,

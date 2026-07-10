@@ -93,13 +93,16 @@ export async function POST(request: NextRequest) {
                 });
             }
 
+            // No se audita el objeto `emp` completo: incluye certificadoDgi (llave privada
+            // .p12 en base64) y passwordPac (cifrada, pero sin necesidad de quedar en el log).
+            // Solo se registran los campos de negocio que realmente cambiaron aquí.
             await tx.auditoria.create({
                 data: {
                     usuarioId: userId,
                     entidad: 'Empresa',
                     entidadId: emp.id,
                     accion: 'editar',
-                    datosDespues: JSON.parse(JSON.stringify(emp))
+                    datosDespues: { ruc: emp.ruc, dv: emp.dv, razonSocial: emp.razonSocial, direccion: emp.direccion, telefono: emp.telefono, email: emp.email }
                 }
             });
 

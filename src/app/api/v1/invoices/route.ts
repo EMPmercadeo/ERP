@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     try {
         const { empresaId, userId } = await getTenantContext();
         const body = await request.json();
-        const { clienteId, items, condicionPago, metodoPago } = body;
+        const { clienteId, items, condicionPago, metodoPago, autorizacion } = body;
 
         if (!clienteId || !items || items.length === 0) {
             return NextResponse.json({ error: 'clienteId e items son requeridos.' }, { status: 400 });
@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
             condicionPago: condicionPago || 'contado',
             metodoPago,
             bodegaId: null,
-            items: items as InvoiceItemInput[]
+            items: items as InvoiceItemInput[],
+            autorizacion: autorizacion && autorizacion.adminEmail && autorizacion.pin ? autorizacion : undefined
         });
 
         // Auditoría específica de este endpoint: a diferencia de los flujos internos (UI, POS),

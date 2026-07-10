@@ -133,7 +133,12 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Empresa no encontrada.' }, { status: 404 });
         }
 
-        let planType = 'free';
+        // IMPORTANTE: se parte del plan ACTUAL de la empresa, no de 'free'. El recurso de
+        // eventos como PAYMENT.SALE.COMPLETED (cobro recurrente exitoso) es un objeto "Sale"
+        // que NO trae plan_id — antes, al no encontrar match, planType quedaba en 'free' y la
+        // empresa era degradada a gratis en CADA pago exitoso. Ahora solo cambia el plan
+        // cuando el evento explícitamente lo indica (plan_id presente, o cancelación/expiración).
+        let planType = empresa.planType;
         let subscriptionStatus = 'active';
 
         // Mapear los IDs de planes de PayPal a nuestros planes locales

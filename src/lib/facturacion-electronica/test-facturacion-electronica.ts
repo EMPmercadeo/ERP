@@ -1,3 +1,8 @@
+// Este script de prueba manual (npx tsx) necesita el kill-switch encendido para poder
+// ejercitar timbrarFacturaDGI/anularFacturaDGI de verdad — debe fijarse ANTES de que se
+// cargue src/lib/actions/billing-fe.ts (que lo lee una sola vez al importarse).
+process.env.PAC_INTEGRATION_ENABLED = 'true';
+
 // Intercept next/navigation and auth/context modules
 import Module from 'module';
 import type { Prisma } from '@prisma/client';
@@ -257,8 +262,8 @@ async function testFacturacionElectronica() {
       qrContent: dbInvoiceAutorizada.qrContent
     });
 
-    if (dbInvoiceAutorizada.estadoDgi !== 'authorized') {
-      throw new Error(`Estado DGI esperado 'authorized', obtenido: ${dbInvoiceAutorizada.estadoDgi}`);
+    if (dbInvoiceAutorizada.estadoDgi !== 'aceptada') {
+      throw new Error(`Estado DGI esperado 'aceptada', obtenido: ${dbInvoiceAutorizada.estadoDgi}`);
     }
     if (!dbInvoiceAutorizada.cufe || !dbInvoiceAutorizada.cufe.startsWith('FACT-PAN-')) {
       throw new Error(`CUFE no válido: ${dbInvoiceAutorizada.cufe}`);
@@ -289,8 +294,8 @@ async function testFacturacionElectronica() {
       where: { id: dbInvoice.id }
     });
 
-    if (!dbInvoiceAnulada || dbInvoiceAnulada.estadoDgi !== 'canceled') {
-      throw new Error(`Estado DGI esperado 'canceled' tras anulación, obtenido: ${dbInvoiceAnulada?.estadoDgi}`);
+    if (!dbInvoiceAnulada || dbInvoiceAnulada.estadoDgi !== 'anulada') {
+      throw new Error(`Estado DGI esperado 'anulada' tras anulación, obtenido: ${dbInvoiceAnulada?.estadoDgi}`);
     }
     console.log('   Factura anulada con éxito en la base de datos:', {
       estadoDgi: dbInvoiceAnulada.estadoDgi,

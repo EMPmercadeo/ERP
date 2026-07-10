@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { getTenantContext } from '@/lib/auth/context';
 import { encrypt } from '@/lib/utils/crypto';
+import { verifyPayPalSubscription } from '@/lib/services/paypalVerify';
 
 export async function updateDgiSettings(empresaId: string, data: {
     razonSocial: string;
@@ -37,6 +38,11 @@ export async function updateDgiSettings(empresaId: string, data: {
             };
         }
 
+        // La contraseña del PAC nunca se guarda en texto plano — se cifra con el mismo
+        // esquema AES-256-GCM ya usado para credenciales de WooCommerce. Si el usuario no
+        // envía una contraseña nueva, se conserva la que ya estaba guardada (cifrada).
+        const passwordPacCifrada = data.passwordPac ? encrypt(data.passwordPac) : undefined;
+
         await prisma.empresa.update({
             where: { id: empresaId },
             data: {
@@ -45,13 +51,13 @@ export async function updateDgiSettings(empresaId: string, data: {
                 dv: data.dv,
                 direccion: data.direccion,
                 usuarioPac: data.usuarioPac || null,
-                passwordPac: data.passwordPac || null,
+                ...(passwordPacCifrada !== undefined ? { passwordPac: passwordPacCifrada } : {}),
                 ambienteDgi: data.ambienteDgi || '1'
             }
         });
 
         // Upsert ConfiguracionFacturacionElectronica
-        const credencialCifrada = data.passwordPac ? encrypt(data.passwordPac) : '';
+        const credencialCifrada = passwordPacCifrada ?? '';
         const ambiente = data.ambienteDgi === '2' ? 1 : 2; // DGI: 1 = producción, 2 = pruebas
 
         await prisma.configuracionFacturacionElectronica.upsert({
@@ -80,7 +86,7 @@ export async function updateDgiSettings(empresaId: string, data: {
     }
 }
 
-export async function updateCompanyPlan(empresaId: string, planType: string) {
+export async function updateCompanyPlan(empresaId: string, planType: string, paypalSubscriptionId?: string) {
     try {
         const { empresaId: authEmpresaId } = await getTenantContext();
         if (authEmpresaId !== empresaId) {
@@ -89,6 +95,23 @@ export async function updateCompanyPlan(empresaId: string, planType: string) {
 
         if (!['free', 'basic', 'pro', 'enterprise'].includes(planType)) {
             return { success: false, message: 'Plan no válido.' };
+        }
+
+        // CRÍTICO: los downgrades a 'free' no requieren verificación (el usuario solo se
+        // perjudica a sí mismo). Pero cualquier upgrade a un plan pagado SÍ debe verificarse
+        // contra la API real de PayPal — antes esta función confiaba ciegamente en lo que
+        // mandara el cliente, así que cualquiera podía "activar" un plan pagado sin pagar
+        // llamando a esta server action directamente (p. ej. desde la consola del navegador).
+        if (planType !== 'free') {
+            const planIdEnvMap: Record<string, string | undefined> = {
+                basic: process.env.NEXT_PUBLIC_PLAN_BASIC_ID || process.env.NEXT_PUBLIC_PAYPAL_PLAN_BASIC_ID,
+                pro: process.env.NEXT_PUBLIC_PLAN_PRO_ID || process.env.NEXT_PUBLIC_PAYPAL_PLAN_PRO_ID,
+            };
+            const expectedPlanId = planIdEnvMap[planType];
+            const verificacion = await verifyPayPalSubscription(paypalSubscriptionId, empresaId, expectedPlanId);
+            if (!verificacion.ok) {
+                return { success: false, message: verificacion.reason || 'No se pudo verificar el pago con PayPal.' };
+            }
         }
 
         // If plan is pro or enterprise, enable fiscal integrations.

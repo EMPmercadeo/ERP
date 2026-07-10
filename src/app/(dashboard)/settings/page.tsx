@@ -144,7 +144,10 @@ export default async function SettingsPage() {
         dv: empresa.dv,
         direccion: empresa.direccion,
         ambienteDgi: empresa.ambienteDgi,
-        certificadoDgi: empresa.certificadoDgi,
+        // El certificado .p12 (llave privada) nunca se envía al navegador — solo un
+        // indicador booleano. El blob completo era enviado antes al cliente en cada carga
+        // de /settings, exponiendo material de firma electrónica innecesariamente.
+        hasCertificado: !!empresa.certificadoDgi,
         usuarioPac: empresa.usuarioPac || '',
         passwordPac: '',
         hasPacPassword: !!empresa.passwordPac,

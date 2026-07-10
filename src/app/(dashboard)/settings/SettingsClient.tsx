@@ -54,7 +54,7 @@ type WindowWithPayPal = Window & {
         Buttons: (options: {
             style?: Record<string, string>;
             createSubscription?: (_data: unknown, actions: PayPalSubscriptionActions) => Promise<string>;
-            onApprove?: (_data: unknown, _actions: unknown) => Promise<void>;
+            onApprove?: (_data: { subscriptionID?: string }, _actions: unknown) => Promise<void>;
             onError?: (err: unknown) => void;
         }) => { render: (selector: string) => void };
     };
@@ -68,7 +68,7 @@ interface SettingsClientProps {
         dv: string;
         direccion: string;
         ambienteDgi: string;
-        certificadoDgi: string | null;
+        hasCertificado: boolean;
         usuarioPac: string;
         passwordPac: string;
         hasPacPassword?: boolean;
@@ -241,7 +241,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                     setPaymentStep('simulating');
                     try {
                         setIsPlanLoading(true);
-                        const result = await updateCompanyPlan(company.id, selectedPlanForPay.id);
+                        const result = await updateCompanyPlan(company.id, selectedPlanForPay.id, _data.subscriptionID);
                         if (result.success) {
                             setCompany(prev => ({
                                 ...prev,
@@ -929,7 +929,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
                                                 <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                                                 <p className="text-sm text-muted-foreground mb-2">
-                                                    {certificado ? certificado.name : company.certificadoDgi ? 'certificado_dgi_guardado.p12' : 'Arrastra o selecciona tu certificado'}
+                                                    {certificado ? certificado.name : company.hasCertificado ? 'certificado_dgi_guardado.p12' : 'Arrastra o selecciona tu certificado'}
                                                 </p>
                                                 <Button variant="outline" size="sm" asChild>
                                                     <label className="cursor-pointer">

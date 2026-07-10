@@ -13,8 +13,19 @@ function getErrorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
+// Mismo kill-switch que src/lib/actions/invoices.ts. Se repite la comprobación AQUÍ ADENTRO
+// (y no solo en los call-sites de invoices.ts) para que sea imposible invocar un PAC real por
+// cualquier otra vía — incluyendo la API externa api/v1 — sin que este interruptor esté
+// explícitamente encendido en el entorno de producción. Defensa en profundidad: un solo lugar
+// que de verdad decide si se permite hablar con un PAC.
+const PAC_INTEGRATION_ENABLED = process.env.PAC_INTEGRATION_ENABLED === 'true';
+
 export async function timbrarFacturaDGI(facturaId: string) {
   try {
+    if (!PAC_INTEGRATION_ENABLED) {
+      return { success: false, message: 'La integración con el PAC todavía no está habilitada en este entorno.' };
+    }
+
     const { empresaId } = await getTenantContext();
 
     // 1. Cargar factura con todas las relaciones necesarias
@@ -77,11 +88,15 @@ export async function timbrarFacturaDGI(facturaId: string) {
     });
 
     // 6. Actualizar factura
+    // IMPORTANTE: estadoDgi usa el vocabulario en español ya establecido en toda la app
+    // (ver DgiStatus en src/components/ui/status-badge.tsx: aceptada/pendiente/rechazada/
+    // procesando/anulada/borrador). No introducir valores en inglés aquí — StatusBadge no
+    // los reconocería y las facturas mostrarían un badge en blanco/roto en toda la UI.
     if (response.exitoso) {
       await prisma.factura.update({
         where: { id: facturaId },
         data: {
-          estadoDgi: 'authorized',
+          estadoDgi: 'aceptada',
           cufe: response.cufe,
           protocoloAutorizacion: response.protocoloAutorizacion,
           fechaAutorizacionDGI: response.fechaAutorizacion,
@@ -96,7 +111,7 @@ export async function timbrarFacturaDGI(facturaId: string) {
       await prisma.factura.update({
         where: { id: facturaId },
         data: {
-          estadoDgi: 'error',
+          estadoDgi: 'rechazada',
           errorDgi: response.mensajeResultado || response.error || 'Rechazado por el PAC.'
         }
       });
@@ -111,6 +126,10 @@ export async function timbrarFacturaDGI(facturaId: string) {
 
 export async function anularFacturaDGI(facturaId: string, motivo: string) {
   try {
+    if (!PAC_INTEGRATION_ENABLED) {
+      return { success: false, message: 'La integración con el PAC todavía no está habilitada en este entorno.' };
+    }
+
     const { empresaId } = await getTenantContext();
 
     if (!motivo || motivo.trim().length < 5) {
@@ -169,7 +188,8 @@ export async function anularFacturaDGI(facturaId: string, motivo: string) {
       await prisma.factura.update({
         where: { id: facturaId },
         data: {
-          estadoDgi: 'canceled',
+          estadoDgi: 'anulada',
+          saldoPendiente: 0,
           motivoAnulacionDGI: motivo,
           fechaAnulacionDGI: response.fechaAnulacion || new Date()
         }
@@ -206,12 +226,14 @@ export async function consultarTransaccionDGI(facturaId: string) {
     try {
       response = await pacProvider.consultarTransaccion(factura.cufe);
 
-      // Update if authorized
+      // Update if authorized (response.estado usa el vocabulario del contrato PACTransaction
+      // en inglés — es el estado que reporta el PAC externo. Al guardar en Factura.estadoDgi
+      // se traduce al vocabulario en español que ya usa toda la UI).
       if (response.estado === 'authorized') {
         await prisma.factura.update({
           where: { id: facturaId },
           data: {
-            estadoDgi: 'authorized',
+            estadoDgi: 'aceptada',
             protocoloAutorizacion: response.protocoloAutorizacion,
             fechaAutorizacionDGI: response.fechaAutorizacion || new Date()
           }
