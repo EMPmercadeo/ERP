@@ -15,6 +15,8 @@ import {
     ReportFilters
 } from '@/lib/reports/report-queries';
 import { startOfMonth, endOfDay, parseISO, differenceInDays } from 'date-fns';
+import { puedeVerRuta } from '@/lib/permissions';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +42,7 @@ export default async function ReportsPage(props: PageProps) {
     const tenant = await getTenantContext();
     const empresaId = tenant.empresaId;
     const isSuperAdmin = tenant.role === 'super_admin';
+    if (!puedeVerRuta(tenant.role, '/reports')) redirect('/dashboard');
 
     const searchParams = await props.searchParams;
     const dateFromStr = searchParams.dateFrom;

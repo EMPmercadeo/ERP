@@ -64,6 +64,16 @@ export default function NewProductPage() {
     const [stockMinimo, setStockMinimo] = useState('0');
     const [controlaLotes, setControlaLotes] = useState('false');
     const [imagenUrl, setImagenUrl] = useState('');
+    const [categoriaId, setCategoriaId] = useState('none');
+    const [descuentoPorcentaje, setDescuentoPorcentaje] = useState('0');
+    const [categorias, setCategorias] = useState<{ id: string; nombre: string; descuentoPorcentaje: number }[]>([]);
+
+    useEffect(() => {
+        fetch('/api/categories')
+            .then(res => res.ok ? res.json() : { items: [] })
+            .then(data => setCategorias(data.items || []))
+            .catch(() => setCategorias([]));
+    }, []);
 
     // Derived Calculations using centralized fiscal utility
     const costNum = parseFloat(costoUnitario) || 0;
@@ -437,6 +447,47 @@ export default function NewProductPage() {
                                         <span>Advertencia: Margen negativo. El precio de venta es menor que el costo unitario.</span>
                                     </Alert>
                                 )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Categoría y Descuento */}
+                        <Card className="bg-white border border-border shadow-sm rounded-xl overflow-hidden">
+                            <CardHeader className="bg-muted border-b border-border py-3.5 px-4 flex flex-row items-center gap-1.5">
+                                <CardTitle className="text-xs font-bold text-foreground uppercase tracking-wider">Categoría y Descuento</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4 space-y-4">
+                                <div className="space-y-1">
+                                    <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Categoría</Label>
+                                    <Select name="categoriaId" value={categoriaId} onValueChange={setCategoriaId}>
+                                        <SelectTrigger className="h-10 text-xs sm:text-sm">
+                                            <SelectValue placeholder="Sin categoría" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">Sin categoría</SelectItem>
+                                            {categorias.map((c) => (
+                                                <SelectItem key={c.id} value={c.id}>
+                                                    {c.nombre} {c.descuentoPorcentaje > 0 ? `(desc. ${c.descuentoPorcentaje}%)` : ''}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="descuentoPorcentaje" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Descuento Individual (%)</Label>
+                                    <Input
+                                        id="descuentoPorcentaje"
+                                        name="descuentoPorcentaje"
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="0.01"
+                                        value={descuentoPorcentaje}
+                                        onChange={(e) => setDescuentoPorcentaje(e.target.value)}
+                                        className="h-10 text-xs sm:text-sm"
+                                        placeholder="0"
+                                    />
+                                    <p className="text-[10px] text-muted-foreground">Se sugiere automáticamente en POS/Facturación. Si el producto ya tiene descuento propio, este manda sobre el de su categoría.</p>
+                                </div>
                             </CardContent>
                         </Card>
 

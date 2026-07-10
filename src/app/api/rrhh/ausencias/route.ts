@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { getTenantContext } from '@/lib/auth/context';
+import { puedeVerRuta } from '@/lib/permissions';
 import { z } from 'zod';
 
 const AusenciaSchema = z.object({
@@ -20,10 +21,14 @@ export async function GET(request: NextRequest) {
     // cualquiera que cargara la página (nombres, cédula, tipo de incapacidad médica, etc.
     // de cada colaborador de cada empresa) — no filtraba por tenant en absoluto.
     let empresaId: string;
+    let role: string;
     try {
-      ({ empresaId } = await getTenantContext());
+      ({ empresaId, role } = await getTenantContext());
     } catch {
       return NextResponse.json({ error: 'Debes iniciar sesión para ver las ausencias.' }, { status: 401 });
+    }
+    if (!puedeVerRuta(role, '/rrhh/ausencias')) {
+      return NextResponse.json({ error: 'Tu rol no tiene acceso al módulo de RRHH.' }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -58,10 +63,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     let empresaId: string;
+    let role: string;
     try {
-      ({ empresaId } = await getTenantContext());
+      ({ empresaId, role } = await getTenantContext());
     } catch {
       return NextResponse.json({ error: 'Debes iniciar sesión para registrar una ausencia.' }, { status: 401 });
+    }
+    if (!puedeVerRuta(role, '/rrhh/ausencias')) {
+      return NextResponse.json({ error: 'Tu rol no tiene acceso al módulo de RRHH.' }, { status: 403 });
     }
 
     const body = await request.json();

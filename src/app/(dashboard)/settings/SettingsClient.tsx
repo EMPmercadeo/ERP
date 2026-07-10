@@ -33,6 +33,7 @@ import { Separator } from '@/components/ui/separator';
 import { updateDgiSettings, updateCompanyPlan, updateIntegrationSettings } from '@/lib/actions/settings';
 import { purchaseDocumentBlock } from '@/lib/actions/billing';
 import { getPOSIntegrations, connectPOS, disconnectPOS, syncPOSProducts, syncPOSSales, syncPOSInventory } from '@/lib/actions/pos';
+import { UsersManagementTab } from '@/components/settings/UsersManagementTab';
 
 interface PlanOption {
     id: string;
@@ -91,7 +92,7 @@ interface SettingsClientProps {
     userRole: string;
 }
 
-export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, initialDocumentUsage, userRole: _userRole }: SettingsClientProps) {
+export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, initialDocumentUsage, userRole }: SettingsClientProps) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'dgi' | 'users' | 'billing' | 'integrations'>('dgi');
     const [company, setCompany] = useState(initialCompany);
@@ -1023,20 +1024,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
 
                     {/* Users Tab */}
                     {activeTab === 'users' && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Gestión de Usuarios</CardTitle>
-                                <CardDescription>
-                                    Próximamente: Administra los usuarios y permisos de tu empresa
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-center py-12 text-muted-foreground">
-                                    <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                                    <p>Esta funcionalidad estará disponible próximamente.</p>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <UsersManagementTab myRole={userRole} />
                     )}
 
                     {/* Billing Tab */}

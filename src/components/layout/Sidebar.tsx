@@ -51,6 +51,7 @@ import {
 import { useAuth } from '@/lib/firebase/auth';
 import { getCurrentUserWithPlan } from '@/lib/actions/auth';
 import { createSupportTicket, submitFeedback } from '@/lib/actions/support';
+import { puedeVerRuta } from '@/lib/permissions';
 import { toast } from 'sonner';
 
 const topNavigation = [
@@ -172,6 +173,12 @@ export function Sidebar() {
     // desarrollo: aunque no era un hueco de seguridad real (el layout ya bloquea el
     // acceso), sí mostraba el enlace de Superadministración a cualquier usuario sin rol.
     const isSuperAdmin = role === 'super_admin';
+
+    // Mientras el rol todavía no ha terminado de cargar (role === null) se muestra todo por
+    // defecto para no parpadear el menú — igual que con isSuperAdmin, esto es solo UI: la
+    // autorización real de cada módulo restringido se revalida server-side (API routes /
+    // páginas), nunca solo aquí.
+    const mostrarItem = (href: string) => (role ? puedeVerRuta(role, href) : true);
 
     const handleLogout = async () => {
         try {
@@ -344,21 +351,25 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                 <NavItem key={item.name} item={item} />
                             ))}
 
-                            {navigationGroups.map((group) => (
-                                <li key={group.label} className="pt-2">
-                                    <div className={cn(
-                                        "mb-1 px-3 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider",
-                                        isCollapsed && "hidden"
-                                    )}>
-                                        {group.label}
-                                    </div>
-                                    <ul className="space-y-1">
-                                        {group.items.map((item) => (
-                                            <NavItem key={item.name} item={item} />
-                                        ))}
-                                    </ul>
-                                </li>
-                            ))}
+                            {navigationGroups.map((group) => {
+                                const items = group.items.filter((item) => mostrarItem(item.href));
+                                if (items.length === 0) return null;
+                                return (
+                                    <li key={group.label} className="pt-2">
+                                        <div className={cn(
+                                            "mb-1 px-3 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider",
+                                            isCollapsed && "hidden"
+                                        )}>
+                                            {group.label}
+                                        </div>
+                                        <ul className="space-y-1">
+                                            {items.map((item) => (
+                                                <NavItem key={item.name} item={item} />
+                                            ))}
+                                        </ul>
+                                    </li>
+                                );
+                            })}
                         </ul>
                     </TooltipProvider>
                 </nav>

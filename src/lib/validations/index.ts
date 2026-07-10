@@ -11,6 +11,9 @@ export const ClientSchema = z.object({
     direccion: z.string().nullable().optional(),
     limiteCredito: z.string().nullable().optional(), // We'll parse to float
     diasCredito: z.string().nullable().optional(), // We'll parse to int
+    // Descuento especial (%) preaprobado para este cliente puntual — se sugiere solo,
+    // no se aplica sin que alguien lo seleccione en POS/Facturación.
+    descuentoEspecial: z.string().nullable().optional(), // We'll parse to float
 });
 
 export const ProductSchema = z.object({
@@ -36,6 +39,11 @@ export const ProductSchema = z.object({
     stockMinimo: z.string().optional(), // Parse to int
     activo: z.boolean().default(true),
     controlaLotes: z.boolean().optional(),
+    // Descuento individual (%) preaprobado por el dueño para este producto puntual.
+    descuentoPorcentaje: z.string().optional().refine(val => !val || (parseFloat(val) >= 0 && parseFloat(val) <= 100), {
+        message: "El descuento debe estar entre 0 y 100"
+    }),
+    categoriaId: z.string().optional().or(z.literal('')),
 });
 
 export const InvoiceItemSchema = z.object({

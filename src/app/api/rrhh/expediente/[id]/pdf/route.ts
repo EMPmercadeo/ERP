@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getTenantContext } from '@/lib/auth/context';
+import { puedeVerRuta } from '@/lib/permissions';
 import puppeteer from 'puppeteer';
 
 export async function GET(
@@ -11,10 +12,14 @@ export async function GET(
     // Sin esto, cualquiera con el ID de un colaborador (de cualquier empresa) podía descargar
     // su expediente disciplinario probatorio completo (cédula, sanciones, evidencia) sin sesión.
     let empresaId: string;
+    let role: string;
     try {
-      ({ empresaId } = await getTenantContext());
+      ({ empresaId, role } = await getTenantContext());
     } catch {
       return NextResponse.json({ error: 'Debes iniciar sesión para generar este reporte.' }, { status: 401 });
+    }
+    if (!puedeVerRuta(role, '/rrhh/empleados')) {
+      return NextResponse.json({ error: 'Tu rol no tiene acceso al módulo de RRHH.' }, { status: 403 });
     }
 
     const { id } = await params;

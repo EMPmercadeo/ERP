@@ -33,12 +33,17 @@ model Empresa {
   webhookUrl                String?
   whatsappPhone             String?
   whatsappToken             String?
+  // Tope de descuento manual (%) por defecto para toda la empresa: cualquier vendedor puede
+  // aplicar hasta este % en el POS sin autorización. Por encima, se requiere PIN de un
+  // admin/gerente. Editable en Configuración por el dueño de la empresa.
+  descuentoMaximoSinAutorizacion Decimal              @default(10)
   cajas                     Caja[]
   clientes                  Cliente[]
   cotizaciones              Cotizacion[]
   facturas                  Factura[]
   pagos                     Pago[]
   productos                 Producto[]
+  categorias                Categoria[]
   secuencias                Secuencia[]
   sucursales                Sucursal[]
   usuarios                  Usuario[]
@@ -139,6 +144,13 @@ model Usuario {
   activo                      Boolean                  @default(true)
   googleId                    String?                  @unique
   avatar                      String?
+  // Hash bcrypt de un PIN numérico corto (4-6 dígitos), independiente de la contraseña
+  // de Firebase. Solo lo usan roles con permiso de autorizar ('admin'/'gerente') para
+  // aprobar descuentos especiales en el POS sin tener que iniciar sesión con otra cuenta.
+  pinAutorizacion             String?
+  // Tope de descuento manual (%) que este usuario puede aplicar sin necesitar autorización
+  // de un admin/gerente. Si es null, se usa Empresa.descuentoMaximoSinAutorizacion.
+  descuentoMaximoPermitido    Decimal?
   createdAt                   DateTime                 @default(now())
   updatedAt                   DateTime                 @updatedAt
   lastLogin                   DateTime?
@@ -174,6 +186,9 @@ model Cliente {
   saldoAFavor     Decimal        @default(0)
   condicionPago   String         @default("Contado")
   estado          String         @default("activo")
+  // Descuento especial (%) preaprobado por el dueño para este cliente puntual — se sugiere
+  // automáticamente en POS/Facturación al venderle a este cliente, sin necesitar autorización.
+  descuentoEspecial Decimal      @default(0)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   empresa         Empresa        @relation(fields: [empresaId], references: [id])
@@ -203,6 +218,10 @@ model Producto {
   stockMinimo      Int                    @default(0)
   controlaLotes    Boolean                @default(false)
   esKit            Boolean                @default(false)
+  // Descuento individual (%) preaprobado por el dueño para este producto puntual — se
+  // sugiere automáticamente en POS/Facturación, sin necesitar autorización de admin.
+  descuentoPorcentaje Decimal             @default(0)
+  categoriaId      String?
   createdAt        DateTime               @default(now())
   updatedAt        DateTime               @updatedAt
   imagenUrl        String?
@@ -212,6 +231,7 @@ model Producto {
   pedidoItems      PedidoVentaItem[]
   albaranItems     AlbaranVentaItem[]
   empresa          Empresa                @relation(fields: [empresaId], references: [id])
+  categoria        Categoria?             @relation(fields: [categoriaId], references: [id])
   productImages    ProductImage[]
   movimientos      MovimientoInventario[]
   inventariosBodega InventarioBodega[]
@@ -220,6 +240,24 @@ model Producto {
   componenteDeKit  ProductoKitComponente[] @relation("ProductoComoComponente")
 
   @@unique([empresaId, codigoInterno])
+  @@index([empresaId])
+  @@index([categoriaId])
+}
+
+model Categoria {
+  id                  String     @id @default(cuid())
+  empresaId           String
+  nombre              String
+  // Descuento (%) aplicado a todos los productos de esta categoría que no tengan ya un
+  // descuento individual propio configurado (el descuento individual del producto manda).
+  descuentoPorcentaje Decimal    @default(0)
+  activo              Boolean    @default(true)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  empresa             Empresa    @relation(fields: [empresaId], references: [id])
+  productos           Producto[]
+
+  @@unique([empresaId, nombre])
   @@index([empresaId])
 }
 

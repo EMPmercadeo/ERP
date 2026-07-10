@@ -17,6 +17,7 @@ export async function createClient(prevState: unknown, formData: FormData) {
         direccion: formData.get('direccion') || null,
         limiteCredito: formData.get('limiteCredito'),
         diasCredito: formData.get('diasCredito'),
+        descuentoEspecial: formData.get('descuentoEspecial'),
     };
 
     const validatedFields = ClientSchema.safeParse(rawData);
@@ -44,6 +45,7 @@ export async function createClient(prevState: unknown, formData: FormData) {
                 direccion: data.direccion,
                 limiteCredito: data.limiteCredito ? parseFloat(data.limiteCredito) : 0,
                 condicionPago: data.diasCredito ? (data.diasCredito === '0' ? 'Contado' : `Crédito ${data.diasCredito}`) : 'Contado',
+                descuentoEspecial: data.descuentoEspecial ? parseFloat(data.descuentoEspecial) : 0,
                 estado: 'activo'
             },
         });
@@ -69,6 +71,7 @@ export async function updateClient(id: string, prevState: unknown, formData: For
         direccion: formData.get('direccion') || null,
         limiteCredito: formData.get('limiteCredito'),
         diasCredito: formData.get('diasCredito'),
+        descuentoEspecial: formData.get('descuentoEspecial'),
     };
 
     const validatedFields = ClientSchema.safeParse(rawData);
@@ -105,6 +108,7 @@ export async function updateClient(id: string, prevState: unknown, formData: For
                 direccion: data.direccion,
                 limiteCredito: data.limiteCredito ? parseFloat(data.limiteCredito) : 0,
                 condicionPago: data.diasCredito ? (data.diasCredito === '0' ? 'Contado' : `Crédito ${data.diasCredito}`) : 'Contado',
+                descuentoEspecial: data.descuentoEspecial ? parseFloat(data.descuentoEspecial) : 0,
             },
         });
     } catch (error) {

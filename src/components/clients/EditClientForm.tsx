@@ -33,6 +33,7 @@ interface EditClientFormProps {
         telefono: string;
         limiteCredito: number;
         condicionPago: string;
+        descuentoEspecial: number;
     };
 }
 
@@ -215,6 +216,23 @@ export function EditClientForm({ client }: EditClientFormProps) {
                                                 <SelectItem value="90">90 días</SelectItem>
                                             </SelectContent>
                                         </Select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                            Descuento Especial (%)
+                                        </label>
+                                        <Input
+                                            name="descuentoEspecial"
+                                            type="number"
+                                            defaultValue={client.descuentoEspecial}
+                                            min="0"
+                                            max="100"
+                                            step="0.01"
+                                        />
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Se sugiere automáticamente al vender a este cliente en POS/Facturación. Déjalo en 0 si no aplica.
+                                        </p>
                                     </div>
                                 </CardContent>
                             </Card>

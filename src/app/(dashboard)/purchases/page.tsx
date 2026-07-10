@@ -3,6 +3,8 @@ import { Prisma } from '@prisma/client';
 import { Topbar } from '@/components/layout/Topbar';
 import { PurchaseList } from '@/components/purchases/PurchaseList';
 import { getTenantContext } from '@/lib/auth/context';
+import { puedeVerRuta } from '@/lib/permissions';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +17,8 @@ interface PageProps {
 }
 
 export default async function PurchasesPage(props: PageProps) {
-    const { empresaId } = await getTenantContext();
+    const { empresaId, role } = await getTenantContext();
+    if (!puedeVerRuta(role, '/purchases')) redirect('/dashboard');
     const searchParams = await props.searchParams;
     const page = Number(searchParams.page) || 1;
     const search = searchParams.search || '';

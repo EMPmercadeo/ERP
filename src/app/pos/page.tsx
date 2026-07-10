@@ -32,6 +32,7 @@ interface ProductoPOS {
   codigoTasaItbms: string; // '01' (7%), '00' (Exento)
   stockActual: number;
   unidadMedida: string; // 'SRV' = servicio, no lleva inventario
+  descuentoSugerido: number; // % preaprobado por el dueño (producto o su categoría)
 }
 
 interface ItemCarrito {
@@ -40,6 +41,7 @@ interface ItemCarrito {
   cantidad: number;
   precioUnitario: number;
   itbmsPorcentaje: number;
+  descuentoPorcentaje: number; // % manual/sugerido aplicado a esta línea
 }
 
 export default function POSMultiDispositivoPage() {
@@ -64,8 +66,50 @@ export default function POSMultiDispositivoPage() {
   const [procesandoVenta, setProcesandoVenta] = useState(false);
   const [errorPago, setErrorPago] = useState('');
 
+  // Descuento especial del cliente encontrado por RUC (preaprobado por el dueño)
+  const [clienteEncontrado, setClienteEncontrado] = useState<{ razonSocial: string; descuentoEspecial: number } | null>(null);
+  const [topeDescuento, setTopeDescuento] = useState<number>(10);
+
+  // Modal de autorización de admin/gerente (PIN) para descuentos fuera del tope
+  const [showAutorizacionModal, setShowAutorizacionModal] = useState(false);
+  const [adminEmailAutorizacion, setAdminEmailAutorizacion] = useState('');
+  const [pinAutorizacion, setPinAutorizacion] = useState('');
+  const [errorAutorizacion, setErrorAutorizacion] = useState('');
+
   // Modal Recibo Térmico (80mm)
   const [reciboVenta, setReciboVenta] = useState<any>(null);
+
+  // Cargar el tope de descuento sin autorización del usuario actual (solo informativo
+  // para la UI; la validación real y obligatoria siempre ocurre en el servidor).
+  useEffect(() => {
+    fetch('/api/pos/tope-descuento')
+      .then(res => res.ok ? res.json() : { tope: 10 })
+      .then(data => setTopeDescuento(Number(data.tope ?? 10)))
+      .catch(() => setTopeDescuento(10));
+  }, []);
+
+  // Buscar cliente por RUC (con debounce simple) para sugerir su descuento especial
+  useEffect(() => {
+    if (!clienteRuc || clienteRuc.length < 3) {
+      setClienteEncontrado(null);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      fetch(`/api/pos/clientes?ruc=${encodeURIComponent(clienteRuc)}`)
+        .then(res => res.ok ? res.json() : { cliente: null })
+        .then(data => setClienteEncontrado(data.cliente || null))
+        .catch(() => setClienteEncontrado(null));
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [clienteRuc]);
+
+  const aplicarDescuentoCliente = () => {
+    if (!clienteEncontrado || clienteEncontrado.descuentoEspecial <= 0) return;
+    setCarrito(carrito.map(it => ({
+      ...it,
+      descuentoPorcentaje: Math.max(it.descuentoPorcentaje, clienteEncontrado.descuentoEspecial)
+    })));
+  };
 
   // Detectar conectividad e inicializar cola
   useEffect(() => {
@@ -106,7 +150,8 @@ export default function POSMultiDispositivoPage() {
           precioVenta: Number(p.precioVenta ?? 0),
           codigoTasaItbms: p.codigoTasaItbms || '00',
           stockActual: p.stockActual ?? 0,
-          unidadMedida: p.unidadMedida || 'UND'
+          unidadMedida: p.unidadMedida || 'UND',
+          descuentoSugerido: Number(p.descuentoSugerido ?? 0)
         }));
         setProductos(lista);
         if (lista.length === 0) {
@@ -147,9 +192,17 @@ export default function POSMultiDispositivoPage() {
         descripcion: p.descripcion,
         cantidad: 1,
         precioUnitario: p.precioVenta,
-        itbmsPorcentaje
+        itbmsPorcentaje,
+        // Se sugiere automáticamente el descuento preaprobado del producto/categoría;
+        // el vendedor puede cambiarlo manualmente en el carrito.
+        descuentoPorcentaje: p.descuentoSugerido || 0
       }]);
     }
+  };
+
+  const modificarDescuento = (productoId: string, valor: number) => {
+    const pct = Math.min(100, Math.max(0, isNaN(valor) ? 0 : valor));
+    setCarrito(carrito.map(it => it.productoId === productoId ? { ...it, descuentoPorcentaje: pct } : it));
   };
 
   const modificarCantidad = (productoId: string, delta: number) => {
@@ -169,13 +222,24 @@ export default function POSMultiDispositivoPage() {
     }).filter(Boolean) as ItemCarrito[]);
   };
 
-  // Cálculo de totales en tiempo real
-  const subtotal = carrito.reduce((acc, it) => acc + (it.cantidad * it.precioUnitario), 0);
-  const itbmsTotal = carrito.reduce((acc, it) => acc + (it.cantidad * it.precioUnitario * (it.itbmsPorcentaje / 100)), 0);
+  // Cálculo de totales en tiempo real (el descuento de cada línea se aplica antes del ITBMS)
+  const totalDescuento = carrito.reduce((acc, it) => acc + (it.cantidad * it.precioUnitario * (it.descuentoPorcentaje / 100)), 0);
+  const subtotal = carrito.reduce((acc, it) => {
+    const bruto = it.cantidad * it.precioUnitario;
+    const desc = bruto * (it.descuentoPorcentaje / 100);
+    return acc + (bruto - desc);
+  }, 0);
+  const itbmsTotal = carrito.reduce((acc, it) => {
+    const bruto = it.cantidad * it.precioUnitario;
+    const neto = bruto - (bruto * (it.descuentoPorcentaje / 100));
+    return acc + (neto * (it.itbmsPorcentaje / 100));
+  }, 0);
   const total = subtotal + itbmsTotal;
   const vuelto = metodoPago === 'EFECTIVO' && efectivoRecibido ? Number(efectivoRecibido) - total : 0;
+  const maxDescuentoCarrito = carrito.reduce((max, it) => Math.max(max, it.descuentoPorcentaje), 0);
+  const requiereAutorizacion = maxDescuentoCarrito > topeDescuento;
 
-  const handleProcesarVenta = async () => {
+  const handleProcesarVenta = async (autorizacion?: { adminEmail: string; pin: string }) => {
     if (carrito.length === 0) return;
     if (metodoPago === 'EFECTIVO' && Number(efectivoRecibido) < total && Number(efectivoRecibido) > 0) {
       setErrorPago('El monto en efectivo recibido no cubre el total de la venta.');
@@ -186,11 +250,20 @@ export default function POSMultiDispositivoPage() {
       return;
     }
 
+    // Si el descuento aplicado excede lo que este vendedor puede dar sin permiso, se
+    // requiere el PIN de un admin/gerente antes de continuar (o ya haberlo capturado
+    // desde el modal de autorización, en cuyo caso `autorizacion` viene informado).
+    const useOfflineCheck = !isOnline || contingenciaForzada;
+    if (requiereAutorizacion && !autorizacion && !useOfflineCheck) {
+      setShowAutorizacionModal(true);
+      return;
+    }
+
     setErrorPago('');
     setProcesandoVenta(true);
     const useOffline = !isOnline || contingenciaForzada;
 
-    const payload = {
+    const payload: any = {
       tipoDoc,
       clienteRuc: clienteRuc || (tipoDoc === '01' ? 'CF' : null),
       items: carrito,
@@ -200,6 +273,7 @@ export default function POSMultiDispositivoPage() {
       total: Number(total.toFixed(2)),
       offline: useOffline
     };
+    if (autorizacion) payload.autorizacion = autorizacion;
 
     try {
       if (useOffline) {
@@ -248,7 +322,14 @@ export default function POSMultiDispositivoPage() {
         const data = await res.json();
 
         if (!res.ok) {
-          setErrorPago(data.error || 'Error en la autorización PAC');
+          if (data.requiereAutorizacion) {
+            // El servidor es la fuente de verdad: si igual rechazó por falta/invalidez de
+            // autorización (tope cambió, PIN incorrecto, etc.), reabrir el modal.
+            setShowAutorizacionModal(true);
+            setErrorAutorizacion(data.error || 'Se requiere autorización de un admin/gerente para este descuento.');
+          } else {
+            setErrorPago(data.error || 'Error en la autorización PAC');
+          }
         } else {
           // Actualizar stock local con el resultado del backend
           cargarProductos();
@@ -475,12 +556,18 @@ export default function POSMultiDispositivoPage() {
                 <p className="text-[11px] text-muted-foreground mt-1">Selecciona productos del catálogo para comenzar el cobro</p>
               </div>
             ) : (
-              carrito.map((item) => (
+              carrito.map((item) => {
+                const bruto = item.cantidad * item.precioUnitario;
+                const neto = bruto - (bruto * (item.descuentoPorcentaje / 100));
+                return (
                 <div key={item.productoId} className="pt-2 flex flex-col gap-1.5 text-xs">
                   <div className="flex justify-between items-start font-bold text-foreground">
                     <span className="line-clamp-1">{item.descripcion}</span>
-                    <span className="font-mono text-primary flex-shrink-0 ml-2">
-                      ${(item.cantidad * item.precioUnitario).toFixed(2)}
+                    <span className="font-mono text-primary flex-shrink-0 ml-2 text-right">
+                      {item.descuentoPorcentaje > 0 && (
+                        <span className="block text-[10px] text-muted-foreground line-through font-normal">${bruto.toFixed(2)}</span>
+                      )}
+                      ${neto.toFixed(2)}
                     </span>
                   </div>
 
@@ -504,13 +591,40 @@ export default function POSMultiDispositivoPage() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Descuento por línea */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] text-muted-foreground">Descuento:</span>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={0.5}
+                        value={item.descuentoPorcentaje}
+                        onChange={(e) => modificarDescuento(item.productoId, parseFloat(e.target.value))}
+                        className="w-14 h-6 text-[11px] font-mono text-right bg-secondary border border-border rounded px-1"
+                      />
+                      <span className="text-[10px] text-muted-foreground">%</span>
+                      {item.descuentoPorcentaje > topeDescuento && (
+                        <span className="text-[9px] font-bold text-warning bg-warning-bg px-1.5 py-0.5 rounded">Requiere PIN</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
 
           {/* Subtotal, ITBMS y Total Exacto */}
           <div className="p-4 border-t border-border bg-secondary space-y-2">
+            {totalDescuento > 0 && (
+              <div className="flex justify-between text-xs text-warning font-semibold">
+                <span>Descuento aplicado:</span>
+                <span className="font-mono">-${totalDescuento.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Subtotal:</span>
               <span className="font-mono text-foreground">${subtotal.toFixed(2)}</span>
@@ -519,6 +633,11 @@ export default function POSMultiDispositivoPage() {
               <span>ITBMS 7% (Impuesto):</span>
               <span className="font-mono text-foreground">${itbmsTotal.toFixed(2)}</span>
             </div>
+            {requiereAutorizacion && (
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-warning bg-warning-bg border border-warning/40 rounded px-2 py-1.5">
+                <span>⚠ Este descuento supera tu límite ({topeDescuento}%). Necesitarás el PIN de un admin/gerente para cobrar.</span>
+              </div>
+            )}
             <div className="flex justify-between text-base font-bold text-foreground pt-2 border-t border-border">
               <span>TOTAL A COBRAR:</span>
               <span className="font-mono text-2xl text-primary">${total.toFixed(2)}</span>
@@ -595,6 +714,23 @@ export default function POSMultiDispositivoPage() {
                   onChange={(e) => setClienteRuc(e.target.value)}
                   className="font-mono"
                 />
+                {clienteEncontrado && (
+                  <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px] bg-info-bg border border-info/30 rounded px-2 py-1.5">
+                    <span className="text-info font-semibold">
+                      {clienteEncontrado.razonSocial}
+                      {clienteEncontrado.descuentoEspecial > 0 && ` — descuento especial: ${clienteEncontrado.descuentoEspecial}%`}
+                    </span>
+                    {clienteEncontrado.descuentoEspecial > 0 && (
+                      <button
+                        type="button"
+                        onClick={aplicarDescuentoCliente}
+                        className="text-info font-bold underline shrink-0"
+                      >
+                        Aplicar a todo el carrito
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Selector de Métodos de Pago Pluggable */}
@@ -700,11 +836,77 @@ export default function POSMultiDispositivoPage() {
               </Button>
               <Button
                 type="button"
-                onClick={handleProcesarVenta}
+                onClick={() => handleProcesarVenta()}
                 disabled={procesandoVenta}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs px-6 shadow-premium"
               >
                 {procesandoVenta ? 'Emitiendo PAC...' : `CONFIRMAR COBRO ($${total.toFixed(2)})`}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* MODAL DE AUTORIZACIÓN DE DESCUENTO (PIN de admin/gerente) */}
+      {showAutorizacionModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4">
+          <Card className="bg-card border-border w-full max-w-sm shadow-premium-hover">
+            <CardHeader className="border-b border-border pb-4">
+              <CardTitle className="text-base font-bold text-foreground">Autorización requerida</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
+                El descuento aplicado ({maxDescuentoCarrito}%) supera tu límite ({topeDescuento}%). Un administrador o gerente debe ingresar su correo y PIN para autorizarlo.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-4 text-xs">
+              {errorAutorizacion && (
+                <div className="text-destructive bg-danger-bg border border-destructive/30 rounded p-2 text-[11px] font-semibold">
+                  {errorAutorizacion}
+                </div>
+              )}
+              <div>
+                <label className="font-semibold text-foreground block mb-1">Correo del admin/gerente</label>
+                <Input
+                  type="email"
+                  placeholder="admin@empresa.com"
+                  value={adminEmailAutorizacion}
+                  onChange={(e) => setAdminEmailAutorizacion(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="font-semibold text-foreground block mb-1">PIN de autorización</label>
+                <Input
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="••••"
+                  value={pinAutorizacion}
+                  onChange={(e) => setPinAutorizacion(e.target.value)}
+                />
+              </div>
+            </CardContent>
+            <div className="p-4 border-t border-border flex justify-end gap-3 bg-secondary">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowAutorizacionModal(false);
+                  setErrorAutorizacion('');
+                  setPinAutorizacion('');
+                }}
+                className="text-xs"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                disabled={!adminEmailAutorizacion || !pinAutorizacion || procesandoVenta}
+                onClick={() => {
+                  setShowAutorizacionModal(false);
+                  setErrorAutorizacion('');
+                  handleProcesarVenta({ adminEmail: adminEmailAutorizacion, pin: pinAutorizacion });
+                }}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs px-6"
+              >
+                Autorizar y Cobrar
               </Button>
             </div>
           </Card>

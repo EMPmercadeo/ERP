@@ -25,7 +25,9 @@ export async function createProduct(prevState: unknown, formData: FormData) {
         stockActual: formData.get('stockActual'),
         stockMinimo: formData.get('stockMinimo'),
         activo: true,
-        controlaLotes: formData.get('controlaLotes') === 'true'
+        controlaLotes: formData.get('controlaLotes') === 'true',
+        descuentoPorcentaje: formData.get('descuentoPorcentaje'),
+        categoriaId: formData.get('categoriaId'),
     };
 
     const validatedFields = ProductSchema.safeParse(rawData);
@@ -51,6 +53,14 @@ export async function createProduct(prevState: unknown, formData: FormData) {
         };
     }
 
+    // La categoría (si se envía) debe pertenecer a la misma empresa — nunca se confía
+    // en un categoriaId arbitrario que venga del formulario.
+    let categoriaIdValido: string | null = null;
+    if (data.categoriaId && data.categoriaId !== 'none') {
+        const categoria = await prisma.categoria.findFirst({ where: { id: data.categoriaId, empresaId } });
+        categoriaIdValido = categoria?.id ?? null;
+    }
+
     try {
         await prisma.$transaction(async (tx) => {
             const prod = await tx.producto.create({
@@ -68,7 +78,9 @@ export async function createProduct(prevState: unknown, formData: FormData) {
                     stockActual: data.stockActual ? parseInt(data.stockActual) : 0,
                     stockMinimo: data.stockMinimo ? parseInt(data.stockMinimo) : 0,
                     activo: true,
-                    controlaLotes: data.controlaLotes ?? false
+                    controlaLotes: data.controlaLotes ?? false,
+                    descuentoPorcentaje: data.descuentoPorcentaje ? parseFloat(data.descuentoPorcentaje) : 0,
+                    categoriaId: categoriaIdValido,
                 },
             });
 
@@ -114,7 +126,9 @@ export async function updateProduct(id: string, prevState: unknown, formData: Fo
         stockActual: formData.get('stockActual'),
         stockMinimo: formData.get('stockMinimo'),
         activo: formData.get('activo') === 'true',
-        controlaLotes: formData.get('controlaLotes') === 'true'
+        controlaLotes: formData.get('controlaLotes') === 'true',
+        descuentoPorcentaje: formData.get('descuentoPorcentaje'),
+        categoriaId: formData.get('categoriaId'),
     };
 
     const validatedFields = ProductSchema.safeParse(rawData);
@@ -152,6 +166,13 @@ export async function updateProduct(id: string, prevState: unknown, formData: Fo
         }
     }
 
+    // La categoría (si se envía) debe pertenecer a la misma empresa.
+    let categoriaIdValido: string | null = null;
+    if (data.categoriaId && data.categoriaId !== 'none') {
+        const categoria = await prisma.categoria.findFirst({ where: { id: data.categoriaId, empresaId } });
+        categoriaIdValido = categoria?.id ?? null;
+    }
+
     try {
         await prisma.$transaction(async (tx) => {
             const updated = await tx.producto.update({
@@ -169,7 +190,9 @@ export async function updateProduct(id: string, prevState: unknown, formData: Fo
                     stockActual: data.stockActual ? parseInt(data.stockActual) : 0,
                     stockMinimo: data.stockMinimo ? parseInt(data.stockMinimo) : 0,
                     activo: rawData.activo,
-                    controlaLotes: data.controlaLotes ?? false
+                    controlaLotes: data.controlaLotes ?? false,
+                    descuentoPorcentaje: data.descuentoPorcentaje ? parseFloat(data.descuentoPorcentaje) : 0,
+                    categoriaId: categoriaIdValido,
                 },
             });
 
@@ -217,6 +240,9 @@ export async function getProduct(id: string) {
             include: {
                 productImages: {
                     orderBy: { sortOrder: 'asc' }
+                },
+                categoria: {
+                    select: { id: true, nombre: true, descuentoPorcentaje: true }
                 }
             }
         });
@@ -264,6 +290,11 @@ export async function getProduct(id: string) {
             ...product,
             costoUnitario: product.costoUnitario.toNumber(),
             precioVenta: product.precioVenta.toNumber(),
+            descuentoPorcentaje: product.descuentoPorcentaje.toNumber(),
+            categoria: product.categoria ? {
+                ...product.categoria,
+                descuentoPorcentaje: product.categoria.descuentoPorcentaje.toNumber()
+            } : null,
             createdAt: product.createdAt.toISOString(),
             updatedAt: product.updatedAt.toISOString(),
             productImages: product.productImages.map(img => ({

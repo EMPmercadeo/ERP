@@ -190,6 +190,23 @@ export default function NewClientPage() {
                                             </SelectContent>
                                         </Select>
                                     </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                            Descuento Especial (%)
+                                        </label>
+                                        <Input
+                                            name="descuentoEspecial"
+                                            type="number"
+                                            placeholder="0"
+                                            min="0"
+                                            max="100"
+                                            step="0.01"
+                                        />
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Se sugiere automáticamente al vender a este cliente en POS/Facturación. Déjalo en 0 si no aplica.
+                                        </p>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </div>

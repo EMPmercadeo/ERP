@@ -4,6 +4,7 @@ import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { emitirFacturaPAC } from '@/lib/pac/mock-pac-client';
 import { getTenantContext } from '@/lib/auth/context';
+import { verificarPinAutorizacion, obtenerTopeDescuentoSinAutorizacion } from '@/lib/services/discountAuth';
 import { z } from 'zod';
 
 // empresaId ya NO se acepta del cliente — siempre se deriva de getTenantContext() en el
@@ -19,10 +20,18 @@ const VentaSchema = z.object({
     descripcion: z.string(),
     cantidad: z.number().positive(),
     precioUnitario: z.number().positive(),
-    itbmsPorcentaje: z.number() // 0, 7, 10, 15
+    itbmsPorcentaje: z.number(), // 0, 7, 10, 15
+    descuentoPorcentaje: z.number().min(0).max(100).optional().default(0)
   })).min(1, 'La venta debe contener al menos 1 ítem'),
   metodoPago: z.enum(['EFECTIVO', 'TARJETA', 'YAPPY', 'TRANSFERENCIA', 'MIXTO']),
-  offline: z.boolean().optional() // si el POS ya detectó que está offline o el usuario forzó contingencia local
+  offline: z.boolean().optional(), // si el POS ya detectó que está offline o el usuario forzó contingencia local
+  // Si algún ítem trae un descuento por encima del tope permitido del vendedor, debe venir
+  // acompañado de estas credenciales de un admin/gerente de la MISMA empresa (verificadas
+  // server-side contra su PIN hasheado, nunca se confía en un "autorizado: true" del cliente).
+  autorizacion: z.object({
+    adminEmail: z.string().email(),
+    pin: z.string().min(4).max(8)
+  }).optional()
 });
 
 export async function GET(request: NextRequest) {
@@ -73,16 +82,51 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: parseResult.error.issues[0].message }, { status: 400 });
     }
 
-    const { cuentaId, tipoDoc, clienteRuc, items, metodoPago, offline } = parseResult.data;
+    const { cuentaId, tipoDoc, clienteRuc, items, metodoPago, offline, autorizacion } = parseResult.data;
 
-    // Calcular subtotal, itbms y total
+    // Si algún ítem trae un % de descuento manual por encima de lo que el vendedor puede
+    // aplicar por sí mismo, se exige que un admin/gerente de la MISMA empresa haya
+    // autorizado con su PIN. Los descuentos "sugeridos" (preaprobados en el producto,
+    // su categoría o el cliente) no cuentan para este tope porque ya los aprobó el dueño
+    // de antemano — pero como el cliente podría mandar cualquier número, igual se valida
+    // el % efectivamente recibido, sea cual sea su origen.
+    const maxDescuentoSolicitado = Math.max(0, ...items.map(it => it.descuentoPorcentaje || 0));
+    let autorizadoPor: { id: string; nombre: string; rol: string } | null = null;
+
+    if (maxDescuentoSolicitado > 0) {
+      const tope = await obtenerTopeDescuentoSinAutorizacion(empresaId, userId);
+      if (maxDescuentoSolicitado > tope) {
+        if (!autorizacion) {
+          return NextResponse.json({
+            error: `Este descuento (${maxDescuentoSolicitado}%) supera tu límite permitido (${tope}%). Solicita a un administrador o gerente que lo autorice con su PIN.`,
+            requiereAutorizacion: true,
+            topePermitido: tope
+          }, { status: 403 });
+        }
+        autorizadoPor = await verificarPinAutorizacion(empresaId, autorizacion.adminEmail, autorizacion.pin);
+        if (!autorizadoPor) {
+          return NextResponse.json({
+            error: 'PIN de autorización inválido o la cuenta no tiene permiso para autorizar descuentos.',
+            requiereAutorizacion: true,
+            topePermitido: tope
+          }, { status: 403 });
+        }
+      }
+    }
+
+    // Calcular subtotal, itbms y total (el descuento se aplica ANTES de calcular el ITBMS,
+    // sobre el importe ya rebajado de cada línea)
     let subtotal = 0;
     let itbmsTotal = 0;
+    let totalDescuento = 0;
     for (const item of items) {
-      const impLinea = item.cantidad * item.precioUnitario;
+      const impBruto = item.cantidad * item.precioUnitario;
+      const montoDescuento = impBruto * ((item.descuentoPorcentaje || 0) / 100);
+      const impLinea = impBruto - montoDescuento;
       const itbmsLinea = impLinea * (item.itbmsPorcentaje / 100);
       subtotal += impLinea;
       itbmsTotal += itbmsLinea;
+      totalDescuento += montoDescuento;
     }
     const total = subtotal + itbmsTotal;
 
@@ -122,6 +166,25 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Si un admin/gerente tuvo que autorizar el descuento con su PIN, dejarlo en auditoría:
+    // quién vendió, quién autorizó, y cuánto se descontó.
+    if (autorizadoPor) {
+      await registrarLogAuditoria({
+        adminId: autorizadoPor.id,
+        accion: 'AUTORIZAR_DESCUENTO_POS',
+        objetivo: 'Venta',
+        objetivoId: venta.id,
+        detalles: {
+          vendedorId: userId,
+          autorizadoPorNombre: autorizadoPor.nombre,
+          autorizadoPorRol: autorizadoPor.rol,
+          descuentoMaximoPorcentaje: maxDescuentoSolicitado,
+          totalDescuento: Number(totalDescuento.toFixed(2))
+        },
+        ip: request.headers.get('x-forwarded-for') || '127.0.0.1'
+      });
+    }
+
     // Si está offline o en contingencia local, se devuelve de inmediato como guardada en cola
     if (offline || !cuenta) {
       // Reducir stock local de inmediato en transacción para evitar quiebres
@@ -154,7 +217,9 @@ export async function POST(request: NextRequest) {
       items: items.map(i => ({
         descripcion: i.descripcion,
         cantidad: i.cantidad,
-        precioUnitario: i.precioUnitario,
+        // Precio unitario ya neto de descuento, para que el total declarado al PAC
+        // coincida con subtotal/itbms/total (calculados post-descuento arriba).
+        precioUnitario: Number((i.precioUnitario * (1 - (i.descuentoPorcentaje || 0) / 100)).toFixed(4)),
         tasaItbms: i.itbmsPorcentaje === 7 ? '01' : i.itbmsPorcentaje === 10 ? '02' : i.itbmsPorcentaje === 15 ? '03' : '00'
       })),
       totales: {

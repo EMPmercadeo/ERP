@@ -141,6 +141,16 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
     const [imagenUrl, setImagenUrl] = useState(product.imagenUrl || '');
     const [images, setImages] = useState(product.productImages || []);
     const [activePreviewUrl, setActivePreviewUrl] = useState(product.imagenUrl || '');
+    const [categoriaId, setCategoriaId] = useState(product.categoriaId || 'none');
+    const [descuentoPorcentaje, setDescuentoPorcentaje] = useState(product.descuentoPorcentaje?.toString() || '0');
+    const [categorias, setCategorias] = useState<{ id: string; nombre: string; descuentoPorcentaje: number }[]>([]);
+
+    useEffect(() => {
+        fetch('/api/categories')
+            .then(res => res.ok ? res.json() : { items: [] })
+            .then(data => setCategorias(data.items || []))
+            .catch(() => setCategorias([]));
+    }, []);
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -575,6 +585,43 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                 <span>Advertencia: El precio de venta es menor que el costo unitario (margen negativo).</span>
                                             </Alert>
                                         )}
+
+                                        {/* Categoría y Descuento */}
+                                        <div className="h-px bg-muted w-full my-1" />
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <div className="space-y-1">
+                                                <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Categoría</Label>
+                                                <Select name="categoriaId" value={categoriaId} onValueChange={setCategoriaId}>
+                                                    <SelectTrigger className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
+                                                        <SelectValue placeholder="Sin categoría" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="rounded-lg">
+                                                        <SelectItem value="none" className="text-xs sm:text-sm cursor-pointer">Sin categoría</SelectItem>
+                                                        {categorias.map((c) => (
+                                                            <SelectItem key={c.id} value={c.id} className="text-xs sm:text-sm cursor-pointer">
+                                                                {c.nombre} {c.descuentoPorcentaje > 0 ? `(desc. ${c.descuentoPorcentaje}%)` : ''}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label htmlFor="descuentoPorcentaje" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Descuento Individual (%)</Label>
+                                                <Input
+                                                    id="descuentoPorcentaje"
+                                                    name="descuentoPorcentaje"
+                                                    type="number"
+                                                    min="0"
+                                                    max="100"
+                                                    step="0.01"
+                                                    value={descuentoPorcentaje}
+                                                    onChange={(e) => setDescuentoPorcentaje(e.target.value)}
+                                                    className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full"
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground">Este descuento se sugiere automáticamente en POS/Facturación. El descuento individual del producto manda sobre el de su categoría.</p>
                                     </TabsContent>
 
                                     {/* TAB 3: INVENTARIO */}

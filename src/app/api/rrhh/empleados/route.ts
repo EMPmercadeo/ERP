@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { getTenantContext } from '@/lib/auth/context';
+import { puedeVerRuta } from '@/lib/permissions';
 import { z } from 'zod';
 
 // empresaId ya no se acepta del cliente: sin autenticación ni scoping alguno, este endpoint
@@ -21,10 +22,14 @@ const EmpleadoSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     let empresaId: string;
+    let role: string;
     try {
-      ({ empresaId } = await getTenantContext());
+      ({ empresaId, role } = await getTenantContext());
     } catch {
       return NextResponse.json({ error: 'Debes iniciar sesión para ver los colaboradores.' }, { status: 401 });
+    }
+    if (!puedeVerRuta(role, '/rrhh/empleados')) {
+      return NextResponse.json({ error: 'Tu rol no tiene acceso al módulo de RRHH.' }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -68,10 +73,14 @@ export async function POST(request: NextRequest) {
   try {
     let empresaId: string;
     let userId: string;
+    let role: string;
     try {
-      ({ empresaId, userId } = await getTenantContext());
+      ({ empresaId, userId, role } = await getTenantContext());
     } catch {
       return NextResponse.json({ error: 'Debes iniciar sesión para registrar un colaborador.' }, { status: 401 });
+    }
+    if (!puedeVerRuta(role, '/rrhh/empleados')) {
+      return NextResponse.json({ error: 'Tu rol no tiene acceso al módulo de RRHH.' }, { status: 403 });
     }
 
     const body = await request.json();

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { getTenantContext } from '@/lib/auth/context';
+import { puedeVerRuta } from '@/lib/permissions';
 
 export async function POST(
   request: NextRequest,
@@ -10,10 +11,14 @@ export async function POST(
   try {
     let empresaId: string;
     let userId: string;
+    let role: string;
     try {
-      ({ empresaId, userId } = await getTenantContext());
+      ({ empresaId, userId, role } = await getTenantContext());
     } catch {
       return NextResponse.json({ error: 'Debes iniciar sesión para resolver una ausencia.' }, { status: 401 });
+    }
+    if (!puedeVerRuta(role, '/rrhh/ausencias')) {
+      return NextResponse.json({ error: 'Tu rol no tiene acceso al módulo de RRHH.' }, { status: 403 });
     }
 
     const { id } = await params;

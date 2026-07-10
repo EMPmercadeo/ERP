@@ -30,6 +30,7 @@ export default async function EditClientPage(props: { params: Promise<{ id: stri
         telefono: client.telefono || '',
         limiteCredito: client.limiteCredito.toNumber(),
         condicionPago: client.condicionPago,
+        descuentoEspecial: client.descuentoEspecial.toNumber(),
     };
 
     return <EditClientForm client={formattedClient} />;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { getTenantContext } from '@/lib/auth/context';
+import { puedeVerRuta } from '@/lib/permissions';
 import { z } from 'zod';
 
 // Estos tres handlers no tenían NINGUNA autenticación: exponían nombre, cédula y salario de
@@ -15,10 +16,14 @@ export async function GET(
 ) {
   try {
     let empresaId: string;
+    let role: string;
     try {
-      ({ empresaId } = await getTenantContext());
+      ({ empresaId, role } = await getTenantContext());
     } catch {
       return NextResponse.json({ error: 'Debes iniciar sesión para ver esta ficha.' }, { status: 401 });
+    }
+    if (!puedeVerRuta(role, '/rrhh/empleados')) {
+      return NextResponse.json({ error: 'Tu rol no tiene acceso al módulo de RRHH.' }, { status: 403 });
     }
 
     const { id } = await params;
@@ -66,10 +71,14 @@ export async function PATCH(
   try {
     let empresaId: string;
     let userId: string;
+    let role: string;
     try {
-      ({ empresaId, userId } = await getTenantContext());
+      ({ empresaId, userId, role } = await getTenantContext());
     } catch {
       return NextResponse.json({ error: 'Debes iniciar sesión para editar esta ficha.' }, { status: 401 });
+    }
+    if (!puedeVerRuta(role, '/rrhh/empleados')) {
+      return NextResponse.json({ error: 'Tu rol no tiene acceso al módulo de RRHH.' }, { status: 403 });
     }
 
     const { id } = await params;
@@ -114,10 +123,14 @@ export async function DELETE(
   try {
     let empresaId: string;
     let userId: string;
+    let role: string;
     try {
-      ({ empresaId, userId } = await getTenantContext());
+      ({ empresaId, userId, role } = await getTenantContext());
     } catch {
       return NextResponse.json({ error: 'Debes iniciar sesión para dar de baja a este colaborador.' }, { status: 401 });
+    }
+    if (!puedeVerRuta(role, '/rrhh/empleados')) {
+      return NextResponse.json({ error: 'Tu rol no tiene acceso al módulo de RRHH.' }, { status: 403 });
     }
 
     const { id } = await params;

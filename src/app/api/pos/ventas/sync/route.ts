@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { emitirFacturaPAC } from '@/lib/pac/mock-pac-client';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { getTenantContext } from '@/lib/auth/context';
+import { obtenerTopeDescuentoSinAutorizacion } from '@/lib/services/discountAuth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -79,6 +80,14 @@ export async function POST(request: NextRequest) {
     let fallidas = 0;
     const resultados = [];
 
+    // El lote offline llega con subtotal/itbms/total calculados en el navegador — nunca se
+    // confían tal cual (un cliente podría fabricar cualquier total). Se recalculan aquí a
+    // partir de los ítems, y si algún ítem trae un descuento manual por encima de lo que el
+    // vendedor puede aplicar sin autorización, se recorta automáticamente a ese tope: no hay
+    // forma práctica de pedir el PIN de un admin en medio de una retransmisión en lote, así
+    // que en vez de confiar ciegamente en el descuento declarado, se limita al máximo seguro.
+    const topeDescuento = await obtenerTopeDescuentoSinAutorizacion(empresaId, userId);
+
     for (const v of ventasParaSync) {
       // Verificar saldo por cada iteración
       const cuentaActual = await prisma.cuenta.findUnique({ where: { id: cuenta.id } });
@@ -89,6 +98,32 @@ export async function POST(request: NextRequest) {
       }
 
       const items: any = Array.isArray(v.items) ? v.items : [];
+      let recorteAplicado = false;
+      let subtotalReal = 0;
+      let itbmsReal = 0;
+      const itemsCorregidos = items.map((i: any) => {
+        const descuentoSolicitado = Math.min(100, Math.max(0, Number(i.descuentoPorcentaje) || 0));
+        const descuentoAplicado = descuentoSolicitado > topeDescuento ? topeDescuento : descuentoSolicitado;
+        if (descuentoAplicado !== descuentoSolicitado) recorteAplicado = true;
+        const bruto = (i.cantidad || 1) * (i.precioUnitario || 1);
+        const neto = bruto - (bruto * (descuentoAplicado / 100));
+        subtotalReal += neto;
+        itbmsReal += neto * ((i.itbmsPorcentaje || 0) / 100);
+        return { ...i, descuentoPorcentaje: descuentoAplicado };
+      });
+      const totalReal = subtotalReal + itbmsReal;
+
+      // Corregir la venta guardada con los totales recalculados server-side.
+      await prisma.venta.update({
+        where: { id: v.id },
+        data: {
+          items: itemsCorregidos,
+          subtotal: Number(subtotalReal.toFixed(2)),
+          itbms: Number(itbmsReal.toFixed(2)),
+          total: Number(totalReal.toFixed(2))
+        }
+      });
+
       const payloadFE = {
         empresaRuc: cuenta.ruc,
         sucursal: 'POS-SYNC-OFFLINE',
@@ -98,18 +133,22 @@ export async function POST(request: NextRequest) {
           razonSocial: `Contingencia POS - ${v.clienteRuc || 'CF'}`,
           direccion: 'Panamá'
         },
-        items: items.map((i: any) => ({
+        items: itemsCorregidos.map((i: any) => ({
           descripcion: i.descripcion || 'Producto POS',
           cantidad: i.cantidad || 1,
-          precioUnitario: i.precioUnitario || 1,
+          precioUnitario: Number(((i.precioUnitario || 1) * (1 - (i.descuentoPorcentaje || 0) / 100)).toFixed(4)),
           tasaItbms: i.itbmsPorcentaje === 7 ? '01' : '00'
         })),
         totales: {
-          subtotal: Number(v.subtotal),
-          itbms: Number(v.itbms),
-          total: Number(v.total)
+          subtotal: Number(subtotalReal.toFixed(2)),
+          itbms: Number(itbmsReal.toFixed(2)),
+          total: Number(totalReal.toFixed(2))
         }
       };
+
+      if (recorteAplicado) {
+        resultados.push({ id: v.id, status: 'DESCUENTO_RECORTADO', message: `Un descuento superaba el ${topeDescuento}% permitido sin autorización y fue recortado a ese límite.` });
+      }
 
       const resPAC = await emitirFacturaPAC(payloadFE);
 
@@ -144,8 +183,8 @@ export async function POST(request: NextRequest) {
               cuentaId: cuenta.id,
               cufe: resPAC.cufe,
               cliente: v.clienteRuc || 'Consumidor Final POS Sync',
-              total: v.total,
-              itbms: v.itbms,
+              total: Number(totalReal.toFixed(2)),
+              itbms: Number(itbmsReal.toFixed(2)),
               estado: 'ACEPTADA'
             }
           })

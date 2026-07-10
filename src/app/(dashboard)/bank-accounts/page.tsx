@@ -2,13 +2,16 @@ import { prisma } from '@/lib/db';
 import { Topbar } from '@/components/layout/Topbar';
 import { BankAccountList } from '@/components/bank-accounts/BankAccountList';
 import { getTenantContext } from '@/lib/auth/context';
+import { puedeVerRuta } from '@/lib/permissions';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 export default async function BankAccountsPage() {
-    const { empresaId } = await getTenantContext();
+    const { empresaId, role } = await getTenantContext();
+    if (!puedeVerRuta(role, '/bank-accounts')) redirect('/dashboard');
 
     const cuentas = await prisma.cuentaBancaria.findMany({
         where: { empresaId },

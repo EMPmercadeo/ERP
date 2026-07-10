@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
     const productos = await prisma.producto.findMany({
       where: { empresaId, activo: true },
       orderBy: { descripcion: 'asc' },
-      take: 200
+      take: 200,
+      include: { categoria: { select: { descuentoPorcentaje: true } } }
     });
 
     return NextResponse.json({
@@ -33,7 +34,12 @@ export async function GET(request: NextRequest) {
         precioVenta: Number(p.precioVenta),
         codigoTasaItbms: p.codigoTasaItbms,
         stockActual: p.stockActual,
-        unidadMedida: p.unidadMedida
+        unidadMedida: p.unidadMedida,
+        // Descuento sugerido preaprobado por el dueño: el individual del producto manda
+        // sobre el de su categoría si ambos están configurados.
+        descuentoSugerido: Number(p.descuentoPorcentaje) > 0
+          ? Number(p.descuentoPorcentaje)
+          : Number(p.categoria?.descuentoPorcentaje || 0)
       }))
     });
   } catch (error: any) {

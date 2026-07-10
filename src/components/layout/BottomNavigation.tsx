@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/firebase/auth';
 import { getCurrentUserWithPlan } from '@/lib/actions/auth';
+import { puedeVerRuta } from '@/lib/permissions';
 
 export function BottomNavigation() {
     const pathname = usePathname();
@@ -97,12 +98,16 @@ export function BottomNavigation() {
     // real vive en admin/layout.tsx vía getTenantContext(). No aflojar con fallbacks.
     const isSuperAdmin = role === 'super_admin';
 
+    // Igual que en Sidebar.tsx: mientras el rol no ha cargado se muestra todo por
+    // defecto (solo UI, la autorización real vive server-side).
+    const mostrarItem = (href: string) => (role ? puedeVerRuta(role, href) : true);
+
     const mainItems = [
         { name: 'Inicio', href: '/dashboard', icon: LayoutDashboard },
         { name: 'Facturas', href: '/invoices', icon: FileText },
         { name: 'POS', href: '/pos', icon: ShoppingCart },
         { name: 'Clientes', href: '/clients', icon: Users },
-    ];
+    ].filter((item) => mostrarItem(item.href));
 
     // Menú "Más": una sola lista vertical dividida en secciones (en vez de una
     // grilla de íconos), para aprovechar mejor el ancho y que quepa todo sin
@@ -243,18 +248,22 @@ export function BottomNavigation() {
 
                     {/* Lista vertical, con scroll si no cabe todo */}
                     <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4 pb-safe">
-                        {moreSections.map((section) => (
-                            <div key={section.titulo}>
-                                <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-3 mb-1">
-                                    {section.titulo}
-                                </h5>
-                                <div className="bg-muted/60 rounded-xl overflow-hidden divide-y divide-white">
-                                    {section.items.map((item) => (
-                                        <MenuRow key={item.name} {...item} />
-                                    ))}
+                        {moreSections.map((section) => {
+                            const items = section.items.filter((item) => mostrarItem(item.href));
+                            if (items.length === 0) return null;
+                            return (
+                                <div key={section.titulo}>
+                                    <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-3 mb-1">
+                                        {section.titulo}
+                                    </h5>
+                                    <div className="bg-muted/60 rounded-xl overflow-hidden divide-y divide-white">
+                                        {items.map((item) => (
+                                            <MenuRow key={item.name} {...item} />
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
 
                         {isSuperAdmin && (
                             <div>
