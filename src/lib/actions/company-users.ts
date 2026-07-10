@@ -152,4 +152,17 @@ export async function updateCompanyDiscountThreshold(porcentaje: number): Promis
         });
 
         revalidatePath('/settings');
-       
+        return { success: true, message: `Tope de descuento sin autorización actualizado a ${pct}%.` };
+    } catch (e: any) {
+        return { success: false, error: e?.message || 'Error al guardar el tope.' };
+    }
+}
+
+export async function getCompanyDiscountThreshold() {
+    const { empresaId } = await getTenantContext();
+    const empresa = await prisma.empresa.findUnique({
+        where: { id: empresaId },
+        select: { descuentoMaximoSinAutorizacion: true }
+    });
+    return Number(empresa?.descuentoMaximoSinAutorizacion ?? 10);
+}

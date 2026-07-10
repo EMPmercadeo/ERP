@@ -506,4 +506,29 @@ export async function invoiceGroupedDeliveryNotes(albaranIds: string[]) {
                                     tipo: 'salida',
                                     cantidad: Math.round(item.cantidad.toNumber()),
                                     concepto: 'albaran_entrega',
-               
+                                    referenciaId: alb.id
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Increment client balance (Accounts Receivable only changes upon invoice issuance!)
+            await tx.cliente.update({
+                where: { id: clienteId },
+                data: {
+                    saldoPendiente: { increment: totalNeto }
+                }
+            });
+        });
+
+        revalidatePath('/delivery-notes');
+        revalidatePath('/invoices');
+        revalidatePath('/clients');
+        return { success: true, message: `Factura ${numeroCompleto} generada exitosamente agrupando ${albaranes.length} documento(s) de entrega.` };
+    } catch (error: unknown) {
+        console.error('Error grouping delivery notes into invoice:', error);
+        return { success: false, message: error instanceof Error ? error.message : 'Error al facturar documentos de entrega.' };
+    }
+}

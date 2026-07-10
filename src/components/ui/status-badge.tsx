@@ -171,4 +171,22 @@ function StatusBadge({
 }: StatusBadgeProps) {
     const config = statusConfig[status] || fallbackConfig
     const Icon = config.icon
-    const colorClass = statusClassMap[status] || "bg-secondary text-muted-foreground border-border hover:bg-secondary/
+    const colorClass = statusClassMap[status] || "bg-secondary text-muted-foreground border-border hover:bg-secondary/90"
+
+    return (
+        <Badge
+            variant={config.variant}
+            className={cn("min-w-[118px] justify-center font-semibold gap-1.5 py-1 px-3 rounded-full text-xs transition-colors", colorClass, className)}
+            {...props}
+        >
+            {showIcon && (
+                <Icon className={cn("h-3.5 w-3.5 shrink-0", status === "procesando" && "animate-spin")} />
+            )}
+            {config.label}
+        </Badge>
+    )
+}
+
+export { StatusBadge, statusConfig }
+export type { Status, DgiStatus, PaymentStatus }
+

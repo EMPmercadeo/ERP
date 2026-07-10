@@ -105,4 +105,25 @@ export async function importQuotes(quotes: Record<string, string>[]) {
 }
 
 // Antes esta función no validaba empresaId en absoluto: cualquier usuario autenticado podía
-// cambiar el estado de la cotización de OTRA empresa con solo adivinar/observar su id
+// cambiar el estado de la cotización de OTRA empresa con solo adivinar/observar su id
+// (IDOR). Ahora el update solo afecta filas que además coincidan con empresaId de la sesión.
+export async function updateQuoteStatus(id: string, status: string) {
+    try {
+        const { empresaId } = await getTenantContext();
+
+        const { count } = await prisma.cotizacion.updateMany({
+            where: { id, empresaId },
+            data: { estado: status }
+        });
+
+        if (count === 0) {
+            return { success: false, error: 'Cotización no encontrada o no pertenece a tu empresa.' };
+        }
+
+        revalidatePath('/quotes');
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating quote status:', error);
+        return { success: false, error: 'Failed to update quote status' };
+    }
+}

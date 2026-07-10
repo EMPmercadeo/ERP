@@ -47,4 +47,10 @@ export async function importClients(clients: Record<string, string>[]) {
         }
 
         revalidatePath('/clients');
-        return { success: 
+        return { success: true, count: createdCount, errors };
+
+    } catch (error) {
+        console.error('Import failed', error);
+        return { success: false, error: 'Failed to process import' };
+    }
+}

@@ -108,4 +108,7 @@ export async function importInvoices(invoices: Record<string, string>[]) {
         return { success: true, count: createdCount, errors };
 
     } catch (error) {
-   
+        console.error('Import failed', error);
+        return { success: false, error: 'Failed to process import' };
+    }
+}
