@@ -73,6 +73,7 @@ model Empresa {
   facturasPACLog            FacturaPACLog[]
   empleados                 Empleado[]
   ventas                    Venta[]
+  transferenciasBodega      TransferenciaBodega[]
 
   @@index([createdAt])
 }
@@ -166,6 +167,8 @@ model Usuario {
   historialEstadosModificados AlbaranEstadoHistorial[]
   empresa                     Empresa                  @relation(fields: [empresaId], references: [id])
   asientoContables            AsientoContable[]
+  transferenciasBodegaCreadas   TransferenciaBodega[]  @relation("TransferenciaBodegaCreador")
+  transferenciasBodegaRecibidas TransferenciaBodega[]  @relation("TransferenciaBodegaReceptor")
 
   @@index([empresaId])
 }
@@ -238,6 +241,7 @@ model Producto {
   lotes            LoteProducto[]
   kitInfo          ProductoKit?
   componenteDeKit  ProductoKitComponente[] @relation("ProductoComoComponente")
+  transferenciaBodegaItems TransferenciaBodegaItem[]
 
   @@unique([empresaId, codigoInterno])
   @@index([empresaId])
@@ -914,6 +918,8 @@ model Bodega {
   sucursal    Sucursal @relation(fields: [sucursalId], references: [id])
   inventarios InventarioBodega[]
   lotes       LoteProducto[]
+  transferenciasOrigen  TransferenciaBodega[] @relation("TransferenciasOrigen")
+  transferenciasDestino TransferenciaBodega[] @relation("TransferenciasDestino")
   @@unique([sucursalId, codigo])
   @@index([empresaId])
 }
@@ -984,6 +990,52 @@ model ProductoKitComponente {
   @@unique([productoKitId, productoComponenteId])
   @@index([empresaId])
   @@index([productoComponenteId])
+}
+
+// Transferencia de stock entre dos bodegas de la misma empresa. Al crearse (estado
+// en_transito) se descuenta el stock de InventarioBodega en la bodega origen de inmediato
+// (el producto ya salió físicamente); al recibirse se incrementa en la bodega destino. Si se
+// cancela mientras está en_transito, se revierte el descuento en origen. Nunca queda el mismo
+// stock "disponible" simultáneamente en dos bodegas mientras el traslado está en curso.
+model TransferenciaBodega {
+  id              String    @id @default(cuid())
+  empresaId       String
+  numero          String
+  bodegaOrigenId  String
+  bodegaDestinoId String
+  estado          String    @default("en_transito") // en_transito | recibido | cancelado
+  notas           String?
+  fechaEnvio      DateTime  @default(now())
+  fechaRecepcion  DateTime?
+  creadorId       String
+  receptorId      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id])
+  bodegaOrigen    Bodega    @relation("TransferenciasOrigen", fields: [bodegaOrigenId], references: [id])
+  bodegaDestino   Bodega    @relation("TransferenciasDestino", fields: [bodegaDestinoId], references: [id])
+  creador         Usuario   @relation("TransferenciaBodegaCreador", fields: [creadorId], references: [id])
+  receptor        Usuario?  @relation("TransferenciaBodegaReceptor", fields: [receptorId], references: [id])
+  items           TransferenciaBodegaItem[]
+
+  @@unique([empresaId, numero])
+  @@index([empresaId])
+  @@index([bodegaOrigenId])
+  @@index([bodegaDestinoId])
+}
+
+model TransferenciaBodegaItem {
+  id              String              @id @default(cuid())
+  transferenciaId String
+  productoId      String
+  cantidad        Int
+
+  transferencia   TransferenciaBodega @relation(fields: [transferenciaId], references: [id], onDelete: Cascade)
+  producto        Producto            @relation(fields: [productoId], references: [id])
+
+  @@index([transferenciaId])
+  @@index([productoId])
 }
 
 model ConfiguracionFacturacionElectronica {
@@ -1296,4 +1348,3 @@ model ConfiguracionWoo {
   activo       Boolean   @default(true)
   ultimaSync   DateTime?
 }
-

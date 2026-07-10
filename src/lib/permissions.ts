@@ -47,6 +47,7 @@ export const RUTA_ROLES: Record<string, AppRole[]> = {
   '/purchases': ['admin', 'gerente'],
   '/products': ['admin', 'gerente', 'vendedor'],
   '/warehouses': ['admin', 'gerente'],
+  '/warehouses/transfers': ['admin', 'gerente'],
   '/bank-accounts': ['admin', 'gerente', 'contador'],
   '/reports': ['admin', 'gerente', 'contador'],
   '/rrhh/empleados': ['admin', 'gerente', 'contador'],

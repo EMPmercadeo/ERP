@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
     Warehouse,
     Trash2,
     Search,
+    ArrowRightLeft,
 } from 'lucide-react';
 import { deleteBodega } from '@/lib/actions/bodegas';
 import { ContentContainer } from '@/components/layout/Content';
@@ -84,6 +86,12 @@ export function WarehouseList({
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
+                        <Button variant="outline" asChild>
+                            <Link href="/warehouses/transfers">
+                                <ArrowRightLeft className="mr-2 h-4 w-4" />
+                                Transferencias
+                            </Link>
+                        </Button>
                         <NewWarehouseModal sucursales={sucursales} />
                     </div>
                 </div>

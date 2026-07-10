@@ -153,3 +153,17 @@ export const WarehouseSchema = z.object({
     activa: z.boolean().default(true).optional(),
 });
 
+export const TransferenciaBodegaItemSchema = z.object({
+    productoId: z.string().min(1),
+    cantidad: z.coerce.number().positive({ message: "La cantidad debe ser mayor a 0" }),
+});
+
+export const TransferenciaBodegaSchema = z.object({
+    bodegaOrigenId: z.string().min(1, { message: "Selecciona la bodega de origen" }),
+    bodegaDestinoId: z.string().min(1, { message: "Selecciona la bodega de destino" }),
+    notas: z.string().optional().or(z.literal('')),
+    items: z.array(TransferenciaBodegaItemSchema).min(1, { message: "Agrega al menos un producto a transferir" }),
+}).refine((data) => data.bodegaOrigenId !== data.bodegaDestinoId, {
+    message: "La bodega de origen y destino no pueden ser la misma",
+    path: ["bodegaDestinoId"],
+});
