@@ -47,54 +47,52 @@ export function PaginationBar({
     const to = Math.min(currentPage * pageSize, totalCount);
 
     return (
-        <div className="flex flex-col gap-3 px-4 py-3 bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] sm:text-xs text-muted-foreground">
-                <span>
-                    {from}–{to} de {totalCount} {entityLabel}
+        <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 bg-muted/30">
+            <div className="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-xs text-muted-foreground whitespace-nowrap overflow-hidden">
+                <span className="shrink-0">
+                    {from}–{to} de {totalCount}
+                    <span className="hidden sm:inline"> {entityLabel}</span>
                 </span>
                 <span className="hidden sm:inline text-muted-foreground">|</span>
-                <span className="font-semibold text-foreground">
+                <span className="hidden sm:inline font-semibold text-foreground shrink-0">
                     Página {currentPage} de {pageCount || 1}
                 </span>
             </div>
 
-            <div className="flex items-center justify-between gap-3 sm:justify-end sm:gap-4">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                 {onPageSizeChange && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="hidden sm:inline">Filas por página:</span>
-                        <Select value={String(pageSize)} onValueChange={onPageSizeChange}>
-                            <SelectTrigger className="h-8 w-[65px] text-xs rounded-lg">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-lg">
-                                {pageSizeOptions.map((opt) => (
-                                    <SelectItem key={opt} value={opt} className="text-xs cursor-pointer">
-                                        {opt}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                    <Select value={String(pageSize)} onValueChange={onPageSizeChange}>
+                        <SelectTrigger className="h-8 w-[58px] sm:w-[65px] text-xs rounded-lg px-2">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-lg">
+                            {pageSizeOptions.map((opt) => (
+                                <SelectItem key={opt} value={opt} className="text-xs cursor-pointer">
+                                    {opt}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 )}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                     <Button
                         variant="outline"
-                        size="sm"
+                        size="icon-sm"
                         onClick={() => onPageChange(currentPage - 1)}
                         disabled={currentPage <= 1}
-                        className="h-8 text-xs font-semibold px-2.5 sm:px-3 border-border rounded-lg"
+                        className="border-border rounded-lg sm:w-auto sm:h-8 sm:px-3"
                     >
                         <ChevronLeft className="h-3.5 w-3.5 sm:mr-1 text-muted-foreground" />
-                        <span className="hidden sm:inline">Anterior</span>
+                        <span className="hidden sm:inline text-xs font-semibold">Anterior</span>
                     </Button>
                     <Button
                         variant="outline"
-                        size="sm"
+                        size="icon-sm"
                         onClick={() => onPageChange(currentPage + 1)}
                         disabled={currentPage >= pageCount}
-                        className="h-8 text-xs font-semibold px-2.5 sm:px-3 border-border rounded-lg"
+                        className="border-border rounded-lg sm:w-auto sm:h-8 sm:px-3"
                     >
-                        <span className="hidden sm:inline">Siguiente</span>
+                        <span className="hidden sm:inline text-xs font-semibold">Siguiente</span>
                         <ChevronRight className="h-3.5 w-3.5 sm:ml-1 text-muted-foreground" />
                     </Button>
                 </div>

@@ -498,7 +498,7 @@ export function InvoiceList({
                 {/* Filters */}
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
                             {/* Search */}
                             <div className="relative flex-1">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -526,16 +526,28 @@ export function InvoiceList({
                             </Select>
 
                             {/* Date range - placeholder */}
-                            <Input
-                                type="date"
-                                className="w-full sm:w-40"
-                                placeholder="Desde"
-                            />
-                            <Input
-                                type="date"
-                                className="w-full sm:w-40"
-                                placeholder="Hasta"
-                            />
+                            <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
+                                <div className="flex flex-col gap-1">
+                                    <label htmlFor="invoice-date-from" className="text-xs font-medium text-muted-foreground">
+                                        Desde
+                                    </label>
+                                    <Input
+                                        id="invoice-date-from"
+                                        type="date"
+                                        className="w-full sm:w-40"
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <label htmlFor="invoice-date-to" className="text-xs font-medium text-muted-foreground">
+                                        Hasta
+                                    </label>
+                                    <Input
+                                        id="invoice-date-to"
+                                        type="date"
+                                        className="w-full sm:w-40"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
