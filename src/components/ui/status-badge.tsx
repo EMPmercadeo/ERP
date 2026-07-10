@@ -189,4 +189,3 @@ function StatusBadge({
 
 export { StatusBadge, statusConfig }
 export type { Status, DgiStatus, PaymentStatus }
-

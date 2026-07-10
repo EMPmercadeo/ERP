@@ -52,6 +52,7 @@ export default async function InvoiceDetailPage(props: PageProps) {
         },
         include: {
             cliente: true,
+            empresa: true,
             items: {
                 include: {
                     producto: true
@@ -126,10 +127,10 @@ export default async function InvoiceDetailPage(props: PageProps) {
                             </Link>
                         </Button>
                         <Button variant="outline" size="sm" asChild>
-                            <Link href="?print=true">
+                            <a href={`/api/invoices/${invoice.id}/pdf`} target="_blank" rel="noopener noreferrer">
                                 <Download className="mr-2 h-4 w-4" />
                                 PDF
-                            </Link>
+                            </a>
                         </Button>
                         <Button variant="outline" size="sm" asChild>
                             <Link href="?sent=true">
@@ -156,10 +157,10 @@ export default async function InvoiceDetailPage(props: PageProps) {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div>
                                         <h3 className="text-sm font-medium text-muted-foreground mb-2">De</h3>
-                                        <div className="font-semibold text-lg">Tu Empresa S.A.</div>
+                                        <div className="font-semibold text-lg">{invoice.empresa.nombreComercial || invoice.empresa.razonSocial}</div>
                                         <div className="text-sm text-muted-foreground">
-                                            {invoice.sucursal?.direccion || '--'}<br />
-                                            {invoice.sucursal?.nombre || '--'}
+                                            RUC: {invoice.empresa.ruc}-{invoice.empresa.dv}<br />
+                                            {invoice.sucursal?.direccion || invoice.empresa.direccion || '--'}
                                         </div>
                                     </div>
                                     <div>

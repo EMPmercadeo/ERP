@@ -359,7 +359,7 @@ export function InvoiceList({
                                 <Printer className="mr-2 h-4 w-4" />
                                 Imprimir
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => window.open(`/invoices/${invoice.id}?print=true`, '_blank')}>
+                            <DropdownMenuItem onClick={() => window.open(`/api/invoices/${invoice.id}/pdf`, '_blank')}>
                                 <FileText className="mr-2 h-4 w-4" />
                                 Descargar PDF
                             </DropdownMenuItem>

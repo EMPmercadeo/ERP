@@ -37,7 +37,17 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  serverExternalPackages: ['firebase-admin'],
+  // puppeteer-core y @sparticuz/chromium generan/leen un binario de Chromium en tiempo de
+  // ejecución (no es JS puro) — si webpack intenta empaquetarlos como al resto del código,
+  // rompe. serverExternalPackages los deja fuera del bundle (se resuelven vía node_modules
+  // normal en runtime) y outputFileTracingIncludes asegura que ese binario SÍ viaje dentro
+  // de la función serverless de Vercel (con output: 'standalone' el tracing automático no
+  // siempre detecta archivos binarios cargados por ruta de archivo en vez de por require()).
+  serverExternalPackages: ['firebase-admin', 'puppeteer', 'puppeteer-core', '@sparticuz/chromium'],
+  outputFileTracingIncludes: {
+    '/api/invoices/[id]/pdf': ['./node_modules/@sparticuz/chromium/**/*'],
+    '/api/rrhh/expediente/[id]/pdf': ['./node_modules/@sparticuz/chromium/**/*'],
+  },
   turbopack: {
     root: __dirname,
   },

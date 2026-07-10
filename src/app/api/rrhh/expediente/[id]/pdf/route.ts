@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getTenantContext } from '@/lib/auth/context';
 import { puedeVerRuta } from '@/lib/permissions';
-import puppeteer from 'puppeteer';
+import { renderHtmlToPdf } from '@/lib/pdf/browser';
 
 export async function GET(
   request: NextRequest,
@@ -99,26 +99,13 @@ export async function GET(
       </html>
     `;
 
-    // Renderizamos el HTML a un PDF real en servidor (el endpoint promete un PDF, no HTML crudo)
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    // Renderizamos el HTML a un PDF real en servidor (el endpoint promete un PDF, no HTML crudo).
+    // Antes esto llamaba a `puppeteer` completo directamente — funciona en local, pero su
+    // Chromium sin optimizar casi seguro excede los límites de una función serverless en
+    // Vercel. renderHtmlToPdf() usa puppeteer-core + @sparticuz/chromium en producción.
+    const pdfBuffer = await renderHtmlToPdf(htmlReporte, {
+      margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
     });
-
-    let pdfBuffer: Buffer;
-    try {
-      const page = await browser.newPage();
-      await page.setContent(htmlReporte, { waitUntil: 'domcontentloaded' });
-      pdfBuffer = Buffer.from(
-        await page.pdf({
-          format: 'letter',
-          printBackground: true,
-          margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
-        })
-      );
-    } finally {
-      await browser.close();
-    }
 
     return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
