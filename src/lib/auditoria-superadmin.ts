@@ -1,11 +1,12 @@
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 
 export interface RegistrarAuditoriaParams {
   adminId: string;
   accion: string;
   objetivo: string;
   objetivoId?: string | null;
-  detalles?: Record<string, unknown>;
+  detalles?: Prisma.InputJsonValue;
   ip?: string | null;
 }
 
@@ -24,7 +25,7 @@ export async function registrarLogAuditoria({
         accion,
         objetivo,
         objetivoId: objetivoId || null,
-        detalles: detalles || {},
+        detalles: detalles ?? {},
         ip: ip || null
       }
     });
