@@ -126,7 +126,7 @@ if (isTest || isMigrate) {
         const isPageTsx = filePath.endsWith('page.tsx') && filePath.includes('app');
         let inBrand3Section = false;
 
-        const newLines = lines.map((line, idx) => {
+        const newLines = lines.map((line, _idx) => {
             if (isPageTsx) {
                 if (line.includes('<section') && line.includes('bg-brand-3')) {
                     inBrand3Section = true;

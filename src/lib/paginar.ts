@@ -1,7 +1,11 @@
 // Helper de paginación cursor para ERP Panamá Superadmin
-type PaginarWhere = Record<string, unknown>;
-type PaginarOrderBy = Record<string, unknown> | Record<string, unknown>[];
-type PaginarInclude = Record<string, unknown>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PaginarWhere = Record<string, any>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PaginarOrderBy = Record<string, any> | Record<string, any>[];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PaginarInclude = Record<string, any>;
 
 interface PaginarFindManyArgs {
   take?: number;
@@ -12,12 +16,13 @@ interface PaginarFindManyArgs {
   include?: PaginarInclude;
 }
 
-interface PaginableDelegate<T> {
-  findMany(args: PaginarFindManyArgs): Promise<T[]>;
-}
+// Usamos `any` para que sea compatible con todos los delegates de Prisma
+// sin importar si el modelo tiene relaciones o no.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PaginableDelegate = { findMany: (args: any) => Promise<any[]> };
 
 export async function paginar<T extends { id: string }>(
-  model: PaginableDelegate<T>,
+  model: PaginableDelegate,
   { cursor, take = 20, where = {}, orderBy = { createdAt: "desc" }, include }:
   { cursor?: string | null; take?: number; where?: PaginarWhere; orderBy?: PaginarOrderBy; include?: PaginarInclude }
 ) {
