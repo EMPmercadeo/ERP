@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
         descuentoPorcentaje: Number(categoria.descuentoPorcentaje)
       }
     });
-  } catch (error: any) {
-    if (error?.code === 'P2002') {
+  } catch (error) {
+    if (error instanceof Error && (error as Error & { code?: string }).code === 'P2002') {
       return NextResponse.json({ error: 'Ya existe una categoría con ese nombre.' }, { status: 409 });
     }
     console.error('Error POST /api/categories:', error);
