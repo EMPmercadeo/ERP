@@ -56,6 +56,7 @@ export interface ProductOption {
     descripcion: string;
     precio: number;
     itbms: string;
+    codigoBarras?: string | null;
 }
 
 export interface BodegaOption {
@@ -95,14 +96,14 @@ const initialState = {
     errors: {},
 };
 
-export function InvoiceForm({ 
-    clients, 
+export function InvoiceForm({
+    clients,
     products,
     companyId,
     remainingDocuments = 10,
     bodegas = []
-}: { 
-    clients: ClientOption[]; 
+}: {
+    clients: ClientOption[];
     products: ProductOption[];
     companyId: string;
     remainingDocuments: number;
@@ -133,9 +134,11 @@ export function InvoiceForm({
 
     const filteredProducts = useMemo(() => {
         if (!productSearch) return products; // Show all if no search
+        const q = productSearch.toLowerCase();
         return products.filter(p =>
-            p.descripcion.toLowerCase().includes(productSearch.toLowerCase()) ||
-            p.codigo.toLowerCase().includes(productSearch.toLowerCase())
+            p.descripcion.toLowerCase().includes(q) ||
+            p.codigo.toLowerCase().includes(q) ||
+            (p.codigoBarras && p.codigoBarras.toLowerCase().includes(q))
         );
     }, [productSearch, products]);
 
@@ -354,10 +357,10 @@ export function InvoiceForm({
                                                         <p className="text-xs text-muted-foreground">RUC: {selectedClient.ruc}</p>
                                                     </div>
                                                 </div>
-                                                <Button 
-                                                    type="button" 
-                                                    variant="ghost" 
-                                                    size="sm" 
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
                                                     onClick={() => setClienteId('')}
                                                     className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 h-11 md:h-9"
                                                 >
@@ -477,23 +480,23 @@ export function InvoiceForm({
                                             {/* Mobile Items Cards */}
                                             <div className="block md:hidden space-y-3 font-sans">
                                                 {items.map(item => (
-                                                    <div 
+                                                    <div
                                                         key={item.id}
                                                         className="border border-border rounded-xl p-3 bg-muted/50 space-y-2 flex flex-col justify-between"
                                                     >
                                                         <div className="flex justify-between items-start gap-2">
                                                             <span className="font-semibold text-foreground text-xs sm:text-sm">{item.descripcion}</span>
-                                                            <Button 
-                                                                type="button" 
-                                                                variant="ghost" 
-                                                                size="icon" 
-                                                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0 rounded-lg" 
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0 rounded-lg"
                                                                 onClick={() => removeItem(item.id)}
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
                                                             </Button>
                                                         </div>
-                                                        
+
                                                         <div className="flex items-center justify-between border-t border-border/60 pt-2">
                                                             <div className="flex flex-col">
                                                                 <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider leading-none">P. Unitario</span>
@@ -501,13 +504,13 @@ export function InvoiceForm({
                                                             </div>
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-xs text-muted-foreground">Cant:</span>
-                                                                <Input 
-                                                                    type="number" 
-                                                                    min="0.01" 
-                                                                    step="0.01" 
-                                                                    value={item.cantidad} 
-                                                                    onChange={(e) => updateItemQuantity(item.id, parseFloat(e.target.value) || 0)} 
-                                                                    className="w-20 h-10 text-xs text-center rounded-lg bg-white" 
+                                                                <Input
+                                                                    type="number"
+                                                                    min="0.01"
+                                                                    step="0.01"
+                                                                    value={item.cantidad}
+                                                                    onChange={(e) => updateItemQuantity(item.id, parseFloat(e.target.value) || 0)}
+                                                                    className="w-20 h-10 text-xs text-center rounded-lg bg-white"
                                                                 />
                                                             </div>
                                                         </div>

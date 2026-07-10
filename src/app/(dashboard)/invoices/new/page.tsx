@@ -17,7 +17,7 @@ export default async function NewInvoicePage() {
         }),
         prisma.producto.findMany({
             where: { empresaId, activo: true },
-            select: { id: true, codigoInterno: true, descripcion: true, precioVenta: true, codigoTasaItbms: true }
+            select: { id: true, codigoInterno: true, descripcion: true, precioVenta: true, codigoTasaItbms: true, codigoBarras: true }
         }),
         getDocumentUsage(empresaId),
         getBodegas()
@@ -34,7 +34,8 @@ export default async function NewInvoicePage() {
         codigo: p.codigoInterno,
         descripcion: p.descripcion,
         precio: p.precioVenta.toNumber(),
-        itbms: p.codigoTasaItbms
+        itbms: p.codigoTasaItbms,
+        codigoBarras: p.codigoBarras
     }));
 
     return (
