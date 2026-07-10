@@ -130,17 +130,21 @@ export async function setMyDiscountPin(pin: string) {
     return { success: true, message: 'PIN de autorización guardado. Úsalo en el POS para aprobar descuentos especiales.' };
 }
 
-export async function updateCompanyDiscountThreshold(porcentaje: number) {
-    const { empresaId } = await requireAdmin();
-    const pct = Math.min(100, Math.max(0, porcentaje));
+export async function updateCompanyDiscountThreshold(porcentaje: number): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+        const { empresaId } = await requireAdmin();
+        const pct = Math.min(100, Math.max(0, porcentaje));
 
-    await prisma.empresa.update({
-        where: { id: empresaId },
-        data: { descuentoMaximoSinAutorizacion: pct }
-    });
+        await prisma.empresa.update({
+            where: { id: empresaId },
+            data: { descuentoMaximoSinAutorizacion: pct }
+        });
 
-    revalidatePath('/settings');
-    return { success: true, message: `Tope de descuento sin autorización actualizado a ${pct}%.` };
+        revalidatePath('/settings');
+        return { success: true, message: `Tope de descuento sin autorización actualizado a ${pct}%.` };
+    } catch (e: any) {
+        return { success: false, error: e?.message || 'Error al guardar el tope.' };
+    }
 }
 
 export async function getCompanyDiscountThreshold() {
