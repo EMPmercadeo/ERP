@@ -7,8 +7,6 @@ import {
     ChevronRight,
     CreditCard,
     Eye,
-    FileText,
-    Pencil,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -205,48 +203,16 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                                                     </Tooltip>
                                                 </TooltipProvider>
 
+                                                {/* "Ver PDF" y "Editar factura" enlazaban a rutas que nunca existieron
+                                                    (/api/invoices/[id]/pdf y /invoices/[id]/edit no están implementadas
+                                                    en ningún lado del proyecto — siempre daban 404). "Registrar cobro"
+                                                    apuntaba a /invoices/[id]/payment, que tampoco existe; el registro de
+                                                    pagos real vive en /receivables (recordInvoicePayment), así que ahora
+                                                    enlaza ahí con el número de factura precargado en el buscador. */}
                                                 <TooltipProvider>
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
-                                                            <a
-                                                                href={`/api/invoices/${invoice.id}/pdf`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                            >
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-7 w-7 text-muted-foreground hover:text-brand-1 rounded-lg"
-                                                                >
-                                                                    <FileText className="h-4 w-4" />
-                                                                </Button>
-                                                            </a>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>Ver PDF</TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Link href={`/invoices/${invoice.id}/edit`}>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-7 w-7 text-muted-foreground hover:text-brand-1 rounded-lg"
-                                                                >
-                                                                    <Pencil className="h-4 w-4" />
-                                                                </Button>
-                                                            </Link>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>Editar factura</TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Link href={`/invoices/${invoice.id}/payment`}>
+                                                            <Link href={`/receivables?search=${encodeURIComponent(invoice.id)}`}>
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="icon"
@@ -314,13 +280,8 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                                             Detalles
                                         </Button>
                                     </Link>
-                                    <a href={`/api/invoices/${invoice.id}/pdf`} target="_blank" rel="noopener noreferrer" className="flex-1">
-                                        <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-muted-foreground rounded-lg">
-                                            Ver PDF
-                                        </Button>
-                                    </a>
                                     {invoice.balance > 0 && (
-                                        <Link href={`/invoices/${invoice.id}/payment`} className="flex-1">
+                                        <Link href={`/receivables?search=${encodeURIComponent(invoice.id)}`} className="flex-1">
                                             <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-emerald-600 border-emerald-100 hover:bg-emerald-50 rounded-lg">
                                                 Cobrar
                                             </Button>
@@ -367,3 +328,4 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
         </Card>
     );
 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              

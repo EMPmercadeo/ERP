@@ -5,7 +5,11 @@ import { cn } from "@/lib/utils"
 import { type VariantProps } from "class-variance-authority"
 
 // DGI Invoice statuses
-type DgiStatus = "aceptada" | "pendiente" | "rechazada" | "procesando" | "anulada" | "borrador"
+// "local" = empresa sin facturación electrónica activa (fiscalEnabled=false): la factura es
+// válida localmente pero nunca se envía a la DGI. crearFacturaCompleta() (invoiceCreation.ts)
+// ya escribía este valor para ese caso, pero no estaba en este tipo — el badge caía siempre
+// en "Desconocido" para cualquier empresa sin PAC configurado.
+type DgiStatus = "aceptada" | "pendiente" | "rechazada" | "procesando" | "anulada" | "borrador" | "local"
 
 // Payment statuses
 type PaymentStatus = "pagada" | "pendiente" | "parcial" | "vencida"
@@ -46,6 +50,11 @@ const statusConfig: Record<string, {
     },
     borrador: {
         label: "Borrador",
+        variant: "neutral",
+        icon: FileEdit,
+    },
+    local: {
+        label: "Local (sin DGI)",
         variant: "neutral",
         icon: FileEdit,
     },
@@ -123,6 +132,7 @@ const statusClassMap: Record<string, string> = {
     procesando: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
     anulada: "bg-secondary text-muted-foreground border-border hover:bg-secondary/90",
     borrador: "bg-secondary text-muted-foreground border-border hover:bg-secondary/90",
+    local: "bg-secondary text-muted-foreground border-border hover:bg-secondary/90",
     // Payment statuses
     pagada: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
     parcial: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
@@ -161,22 +171,4 @@ function StatusBadge({
 }: StatusBadgeProps) {
     const config = statusConfig[status] || fallbackConfig
     const Icon = config.icon
-    const colorClass = statusClassMap[status] || "bg-secondary text-muted-foreground border-border hover:bg-secondary/90"
-
-    return (
-        <Badge
-            variant={config.variant}
-            className={cn("min-w-[118px] justify-center font-semibold gap-1.5 py-1 px-3 rounded-full text-xs transition-colors", colorClass, className)}
-            {...props}
-        >
-            {showIcon && (
-                <Icon className={cn("h-3.5 w-3.5 shrink-0", status === "procesando" && "animate-spin")} />
-            )}
-            {config.label}
-        </Badge>
-    )
-}
-
-export { StatusBadge, statusConfig }
-export type { Status, DgiStatus, PaymentStatus }
-
+    const colorClass = statusClassMap[status] || "bg-secondary text-muted-foreground border-border hover:bg-secondary/

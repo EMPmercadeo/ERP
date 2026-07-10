@@ -2,14 +2,14 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { getTenantContext } from '@/lib/auth/context';
 
+// Antes esta función resolvía la empresa con prisma.empresa.findFirst() en vez de leer la
+// sesión — cualquier importación (de cualquier usuario, de cualquier empresa) se pegaba
+// siempre a la primera fila de la tabla Empresa, mezclando clientes entre tenants distintos.
 export async function importClients(clients: Record<string, string>[]) {
     try {
-        const empresa = await prisma.empresa.findFirst();
-
-        if (!empresa) {
-            return { success: false, error: 'No configuration found (Company)' };
-        }
+        const { empresaId } = await getTenantContext();
 
         let createdCount = 0;
         const errors: string[] = [];
@@ -21,13 +21,13 @@ export async function importClients(clients: Record<string, string>[]) {
                 if (!ruc) continue;
 
                 const exists = await prisma.cliente.findFirst({
-                    where: { empresaId: empresa.id, ruc: ruc }
+                    where: { empresaId, ruc: ruc }
                 });
 
                 if (!exists) {
                     await prisma.cliente.create({
                         data: {
-                            empresaId: empresa.id,
+                            empresaId,
                             ruc: ruc,
                             razonSocial: row.razonSocial || 'Sin Nombre',
                             tipoRuc: ruc.includes('-') ? '01' : '02',
@@ -47,10 +47,4 @@ export async function importClients(clients: Record<string, string>[]) {
         }
 
         revalidatePath('/clients');
-        return { success: true, count: createdCount, errors };
-
-    } catch (error) {
-        console.error('Import failed', error);
-        return { success: false, error: 'Failed to process import' };
-    }
-}
+        return { success: 

@@ -2,15 +2,19 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { getTenantContext } from '@/lib/auth/context';
 
+// Antes esta función resolvía la empresa con prisma.empresa.findFirst() en vez de leer la
+// sesión — cualquier importación se pegaba siempre a la primera fila de la tabla Empresa,
+// mezclando cotizaciones entre tenants distintos. Ahora empresaId sale de getTenantContext().
 export async function importQuotes(quotes: Record<string, string>[]) {
     try {
-        const empresa = await prisma.empresa.findFirst();
-        const sucursal = await prisma.sucursal.findFirst({ where: { empresaId: empresa?.id } });
+        const { empresaId, userId } = await getTenantContext();
+        const sucursal = await prisma.sucursal.findFirst({ where: { empresaId } });
         const caja = await prisma.caja.findFirst({ where: { sucursalId: sucursal?.id } }); // Quotes linked to box/branch? Yes per schema
-        const usuario = await prisma.usuario.findFirst({ where: { empresaId: empresa?.id } });
+        const usuario = await prisma.usuario.findFirst({ where: { id: userId, empresaId } });
 
-        if (!empresa || !sucursal || !usuario || !caja) {
+        if (!sucursal || !usuario || !caja) {
             return { success: false, error: 'No configuration found (Company/Branch/User/Box)' };
         }
 
@@ -27,13 +31,13 @@ export async function importQuotes(quotes: Record<string, string>[]) {
                 const clienteNombre = row.cliente || 'Desconocido';
 
                 let cliente = await prisma.cliente.findFirst({
-                    where: { empresaId: empresa.id, razonSocial: clienteNombre }
+                    where: { empresaId, razonSocial: clienteNombre }
                 });
 
                 if (!cliente) {
                     cliente = await prisma.cliente.create({
                         data: {
-                            empresaId: empresa.id,
+                            empresaId,
                             ruc: '9999-9999-imp',
                             razonSocial: clienteNombre,
                             tipoRuc: '02'
@@ -42,11 +46,11 @@ export async function importQuotes(quotes: Record<string, string>[]) {
                 }
 
                 // Dummy product
-                let producto = await prisma.producto.findFirst({ where: { empresaId: empresa.id } });
+                let producto = await prisma.producto.findFirst({ where: { empresaId } });
                 if (!producto) {
                     producto = await prisma.producto.create({
                         data: {
-                            empresaId: empresa.id,
+                            empresaId,
                             codigoInterno: 'SERV-IMP',
                             descripcion: 'Servicio Generico',
                             costoUnitario: 0,
@@ -58,7 +62,7 @@ export async function importQuotes(quotes: Record<string, string>[]) {
 
                 await prisma.cotizacion.create({
                     data: {
-                        empresaId: empresa.id,
+                        empresaId,
                         sucursalId: sucursal.id,
                         cajaId: caja.id,
                         clienteId: cliente.id,
@@ -100,16 +104,5 @@ export async function importQuotes(quotes: Record<string, string>[]) {
     }
 }
 
-export async function updateQuoteStatus(id: string, status: string) {
-    try {
-        await prisma.cotizacion.update({
-            where: { id },
-            data: { estado: status }
-        });
-        revalidatePath('/quotes');
-        return { success: true };
-    } catch (error) {
-        console.error('Error updating quote status:', error);
-        return { success: false, error: 'Failed to update quote status' };
-    }
-}
+// Antes esta función no validaba empresaId en absoluto: cualquier usuario autenticado podía
+// cambiar el estado de la cotización de OTRA empresa con solo adivinar/observar su id

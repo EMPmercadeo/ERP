@@ -230,11 +230,14 @@ export async function createDeliveryNote(prevState: unknown, formData: FormData)
                 }
             }
 
-            // If linked to a sale order, update its state
+            // If linked to a sale order, update its state.
+            // Antes escribía 'procesando' (un valor de estadoDgi de Factura, dominio equivocado)
+            // pero OrderList.tsx y el schema esperan 'en_proceso' para PedidoVenta — el pedido
+            // quedaba con un badge "Desconocido" y ninguno de los botones de acción coincidía.
             if (data.pedidoId) {
                 await tx.pedidoVenta.updateMany({
                     where: { id: data.pedidoId, empresaId },
-                    data: { estado: finalEstado === 'entregado' ? 'entregado' : 'procesando' }
+                    data: { estado: finalEstado === 'entregado' ? 'entregado' : 'en_proceso' }
                 });
             }
         });
@@ -475,8 +478,15 @@ export async function invoiceGroupedDeliveryNotes(albaranIds: string[]) {
                     }
                 });
 
-                // Inventory Logic: If it wasn't delivered yet, deduct stock now
-                if (alb.estado !== 'entregado') {
+                // Inventory Logic: deduct stock now only if it wasn't already deducted earlier.
+                // Antes esto solo comprobaba alb.estado !== 'entregado', pero el stock también se
+                // descuenta al CREAR el albarán o al cambiar su estado a 'parcialmente_entregado'/
+                // 'despachado' (ver createDeliveryNote e updateDeliveryNoteStatus más arriba). Una
+                // nota que llegaba aquí en cualquiera de esos estados sufría un doble descuento de
+                // inventario al facturarla — se corrige comparando contra la misma lista de estados
+                // "ya descontados" que usan las otras dos funciones.
+                const stockYaDescontado = ['entregado', 'parcialmente_entregado', 'parcialmente entregado', 'despachado'].includes(alb.estado);
+                if (!stockYaDescontado) {
                     for (const item of alb.items) {
                         if (item.productoId && item.cantidad.toNumber() > 0) {
                             const prod = await tx.producto.findFirst({ where: { id: item.productoId }, select: { unidadMedida: true } });
@@ -496,29 +506,4 @@ export async function invoiceGroupedDeliveryNotes(albaranIds: string[]) {
                                     tipo: 'salida',
                                     cantidad: Math.round(item.cantidad.toNumber()),
                                     concepto: 'albaran_entrega',
-                                    referenciaId: alb.id
-                                }
-                            });
-                        }
-                    }
-                }
-            }
-
-            // Increment client balance (Accounts Receivable only changes upon invoice issuance!)
-            await tx.cliente.update({
-                where: { id: clienteId },
-                data: {
-                    saldoPendiente: { increment: totalNeto }
-                }
-            });
-        });
-
-        revalidatePath('/delivery-notes');
-        revalidatePath('/invoices');
-        revalidatePath('/clients');
-        return { success: true, message: `Factura ${numeroCompleto} generada exitosamente agrupando ${albaranes.length} documento(s) de entrega.` };
-    } catch (error: unknown) {
-        console.error('Error grouping delivery notes into invoice:', error);
-        return { success: false, message: error instanceof Error ? error.message : 'Error al facturar documentos de entrega.' };
-    }
-}
+               

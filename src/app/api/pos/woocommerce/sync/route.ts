@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { getTenantContext } from '@/lib/auth/context';
+import { decrypt } from '@/lib/utils/crypto';
 
 /**
  * Igual que /api/pos/woocommerce: no tenía autenticación y cuentaId venía del cliente.
@@ -9,7 +10,38 @@ import { getTenantContext } from '@/lib/auth/context';
  * SIN filtro de empresaId — traía hasta 100 productos de TODAS las empresas del sistema
  * (fuga de datos entre tenants). Ahora la cuenta y la empresa se resuelven desde la sesión
  * y el catálogo se filtra siempre por empresaId del llamante.
+ *
+ * Además, SYNC_STOCK_CATALOGO e IMPORTAR_PEDIDOS_WOO nunca llamaban a la API real de
+ * WooCommerce: el primero solo tocaba la fecha de última sincronización y decía "stock
+ * alineado" sin haber contactado la tienda; el segundo devolvía dos pedidos de ejemplo
+ * hardcodeados ("María Rodríguez", "Roberto Gómez") sin importar qué tienda estuviera
+ * configurada. Ahora ambos usan la REST API v3 de WooCommerce (wp-json/wc/v3) autenticada
+ * con Basic Auth (Consumer Key/Secret, ya guardados cifrados en ConfiguracionWoo).
  */
+
+const WOO_TIMEOUT_MS = 15000;
+
+async function wooRequest(
+  urlTienda: string,
+  consumerKey: string,
+  consumerSecret: string,
+  path: string,
+  init: RequestInit = {}
+): Promise<Response> {
+  const base = urlTienda.replace(/\/+$/, '');
+  const url = `${base}/wp-json/wc/v3${path}`;
+  const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
+  return fetch(url, {
+    ...init,
+    headers: {
+      Authorization: `Basic ${auth}`,
+      'Content-Type': 'application/json',
+      ...(init.headers || {})
+    },
+    signal: AbortSignal.timeout(WOO_TIMEOUT_MS)
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     let empresaId: string;
@@ -37,71 +69,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Integración con WooCommerce inactiva o no configurada para esta cuenta' }, { status: 400 });
     }
 
+    const consumerKey = decrypt(config.consumerKey);
+    const consumerSec = decrypt(config.consumerSec);
+
     // Si la acción es sincronizar catálogo y niveles de inventario bidireccionalmente
     if (accion === 'SYNC_STOCK_CATALOGO') {
       const productos = await prisma.producto.findMany({
-        where: { activo: true, empresaId },
+        where: { activo: true, empresaId, codigoInterno: { not: '' } },
         take: 100
       });
 
-      // Actualizamos fecha de última sincronización
-      await prisma.configuracionWoo.update({
-        where: { cuentaId: cuenta.id },
-        data: { ultimaSync: new Date() }
-      });
-
-      await registrarLogAuditoria({
-        adminId: userId,
-        accion: 'SYNC_WOOCOMMERCE_STOCK',
-        objetivo: 'ConfiguracionWoo',
-        detalles: { productosProcesados: productos.length, urlTienda: config.urlTienda },
-        ip: request.headers.get('x-forwarded-for') || '127.0.0.1'
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: `Sincronización bidireccional completada exitosamente para ${productos.length} productos en el catálogo. Stock alineado por SKU.`,
-        ultimaSync: new Date().toISOString()
-      });
-    }
-
-    // Si la acción es importar pedidos de la tienda online para emitir boletas/facturas electrónicas en Panamá
-    if (accion === 'IMPORTAR_PEDIDOS_WOO') {
-      const pedidosSimulados = [
-        {
-          idWoo: 'woo-8921',
-          cliente: 'María Rodríguez',
-          ruc: '8-800-1234',
-          total: 45.50,
-          metodoPago: 'Yappy',
-          items: [
-            { descripcion: 'Kit Escolar Premium', cantidad: 1, precioUnitario: 42.52, itbmsPorcentaje: 7 }
-          ],
-          fecha: new Date().toISOString()
-        },
-        {
-          idWoo: 'woo-8922',
-          cliente: 'Roberto Gómez (Consumidor Final)',
-          ruc: 'CF',
-          total: 15.00,
-          metodoPago: 'Tarjeta de Crédito online',
-          items: [
-            { descripcion: 'Cuaderno Universitario x3', cantidad: 1, precioUnitario: 15.00, itbmsPorcentaje: 0 }
-          ],
-          fecha: new Date().toISOString()
-        }
-      ];
-
-      return NextResponse.json({
-        success: true,
-        pedidos: pedidosSimulados,
-        message: `Se detectaron ${pedidosSimulados.length} pedidos en WooCommerce pendientes de facturación DGI.`
-      });
-    }
-
-    return NextResponse.json({ error: 'Acción no reconocida' }, { status: 400 });
-  } catch (error: any) {
-    console.error('Error POST /api/pos/woocommerce/sync:', error);
-    return NextResponse.json({ error: 'Error durante la sincronización con WooCommerce' }, { status: 500 });
-  }
-}
+      // Llamada de prueba para detectar credenciales inválidas o tienda inalcanzable ANTES
+      // de recorrer todo el catálogo (evita 100 requests fallidos si algo básico está mal).
+      let testRes: Response;
+      try {
+        testRes = await wooRequest(config.urlTienda, consumerKey, consumerSec, '/products?per_page=1');
+      } catch {
+        return NextResponse.json({
+          error: 'No se pudo conectar con la URL de la tienda WooCommerce configurada. Verifica que sea correcta, use HTTPS y esté accesible públicamente.'
+        }, { status: 502 });
+      }
+      if (testRes.status === 401 || testRes.status === 403) {
+        return NextResponse.json({
+          error: 'WooCommerce rechazó las credenciales configuradas (Consumer Key/Secret inválidas o sin permiso de Lectura/Escritura). Revísalas en Configuración → Integraciones.'
+        }, { status: 400 });
+      }
+      if (!testRes.

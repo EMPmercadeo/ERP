@@ -5,6 +5,7 @@ import { getTenantContext } from '@/lib/auth/context';
 import { revalidatePath } from 'next/cache';
 import { hash } from 'bcryptjs';
 import { ASSIGNABLE_ROLES, ROLES_AUTORIZAN_DESCUENTOS, type AppRole } from '@/lib/permissions';
+import { canAddUser } from '@/lib/actions/billing';
 
 /**
  * Gestión de usuarios DENTRO de la propia empresa (el dueño invitando a su equipo y
@@ -62,6 +63,16 @@ export async function inviteCompanyUser(nombre: string, email: string, rol: stri
     const existente = await prisma.usuario.findUnique({ where: { email: emailNorm } });
     if (existente) {
         return { success: false, error: 'Ya existe un usuario registrado con ese correo (en esta u otra empresa).' };
+    }
+
+    // canAddUser() existía en billing.ts pero nunca se llamaba desde aquí — el límite de
+    // usuarios por plan (1 en free/emprendedor, 2 en negocio, etc.) no se aplicaba nunca.
+    const puedeAgregar = await canAddUser(empresaId);
+    if (!puedeAgregar) {
+        return {
+            success: false,
+            error: 'Alcanzaste el límite de usuarios de tu plan actual. Mejora tu plan en Configuración → Facturación para agregar más miembros al equipo.'
+        };
     }
 
     // Se crea el registro "invitado" ya vinculado a esta empresa. Cuando esa persona inicie
@@ -141,17 +152,4 @@ export async function updateCompanyDiscountThreshold(porcentaje: number): Promis
         });
 
         revalidatePath('/settings');
-        return { success: true, message: `Tope de descuento sin autorización actualizado a ${pct}%.` };
-    } catch (e: any) {
-        return { success: false, error: e?.message || 'Error al guardar el tope.' };
-    }
-}
-
-export async function getCompanyDiscountThreshold() {
-    const { empresaId } = await getTenantContext();
-    const empresa = await prisma.empresa.findUnique({
-        where: { id: empresaId },
-        select: { descuentoMaximoSinAutorizacion: true }
-    });
-    return Number(empresa?.descuentoMaximoSinAutorizacion ?? 10);
-}
+       

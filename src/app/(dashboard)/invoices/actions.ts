@@ -2,17 +2,19 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { getTenantContext } from '@/lib/auth/context';
 
+// Antes esta función resolvía la empresa con prisma.empresa.findFirst() en vez de leer la
+// sesión — cualquier importación se pegaba siempre a la primera fila de la tabla Empresa,
+// mezclando facturas entre tenants distintos. Ahora empresaId sale de getTenantContext().
 export async function importInvoices(invoices: Record<string, string>[]) {
     try {
-        // 1. Get default context (Empresa, Sucursal, Caja, Usuario)
-        // In a real app, this should come from session/auth
-        const empresa = await prisma.empresa.findFirst();
-        const sucursal = await prisma.sucursal.findFirst({ where: { empresaId: empresa?.id } });
+        const { empresaId, userId } = await getTenantContext();
+        const sucursal = await prisma.sucursal.findFirst({ where: { empresaId } });
         const caja = await prisma.caja.findFirst({ where: { sucursalId: sucursal?.id } });
-        const usuario = await prisma.usuario.findFirst({ where: { empresaId: empresa?.id } });
+        const usuario = await prisma.usuario.findFirst({ where: { id: userId, empresaId } });
 
-        if (!empresa || !sucursal || !caja || !usuario) {
+        if (!sucursal || !caja || !usuario) {
             return { success: false, error: 'No configuration found (Company/Branch/Box)' };
         }
 
@@ -29,13 +31,13 @@ export async function importInvoices(invoices: Record<string, string>[]) {
 
                 // 2. Find or Create Client
                 let cliente = await prisma.cliente.findFirst({
-                    where: { empresaId: empresa.id, ruc: ruc }
+                    where: { empresaId, ruc: ruc }
                 });
 
                 if (!cliente) {
                     cliente = await prisma.cliente.create({
                         data: {
-                            empresaId: empresa.id,
+                            empresaId,
                             ruc: ruc,
                             razonSocial: nombreCliente,
                             tipoRuc: ruc.includes('-') ? '01' : '02', // Simple heuristic
@@ -46,11 +48,11 @@ export async function importInvoices(invoices: Record<string, string>[]) {
 
                 // 3. Create Invoice
                 // We need a dummy product for the line item
-                let producto = await prisma.producto.findFirst({ where: { empresaId: empresa.id } });
+                let producto = await prisma.producto.findFirst({ where: { empresaId } });
                 if (!producto) {
                     producto = await prisma.producto.create({
                         data: {
-                            empresaId: empresa.id,
+                            empresaId,
                             codigoInterno: 'SERV-01',
                             descripcion: 'Servicios Generales',
                             costoUnitario: 0,
@@ -66,7 +68,7 @@ export async function importInvoices(invoices: Record<string, string>[]) {
 
                 await prisma.factura.create({
                     data: {
-                        empresaId: empresa.id,
+                        empresaId,
                         sucursalId: sucursal.id,
                         cajaId: caja.id,
                         clienteId: cliente.id,
@@ -106,7 +108,4 @@ export async function importInvoices(invoices: Record<string, string>[]) {
         return { success: true, count: createdCount, errors };
 
     } catch (error) {
-        console.error('Import failed', error);
-        return { success: false, error: 'Failed to process import' };
-    }
-}
+   
