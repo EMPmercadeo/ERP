@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         descuentoPorcentaje: Number(categoria.descuentoPorcentaje)
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     if (error?.code === 'P2002') {
       return NextResponse.json({ error: 'Ya existe una categoría con ese nombre.' }, { status: 409 });
     }
