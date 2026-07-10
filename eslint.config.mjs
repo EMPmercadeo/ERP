@@ -24,6 +24,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Frozen UI snapshot — never edit (see CLAUDE.md), also excluded from tsconfig.
+    "design-review-package/**",
   ]),
 ]);
 
