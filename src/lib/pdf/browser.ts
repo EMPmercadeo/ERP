@@ -17,6 +17,13 @@ import type { Browser } from 'puppeteer-core';
  * este helper en vez de importar puppeteer directamente, para que el comportamiento en
  * producción sea consistente y no se repita este problema por cada ruta nueva.
  */
+// Viewport fijo para que el layout del PDF sea idéntico en local y en producción. Antes se
+// usaba `chromium.defaultViewport` de @sparticuz/chromium, pero esa propiedad se eliminó del
+// paquete en versiones recientes (>=140), rompiendo el build de TypeScript en Vercel. La
+// plantilla de factura no usa CSS @media print, así que este ancho fijo mantiene el diseño
+// estable sin depender de un valor que el paquete ya no expone.
+const PDF_VIEWPORT = { width: 816, height: 1056, deviceScaleFactor: 1 };
+
 export async function launchPdfBrowser(): Promise<Browser> {
   const isServerless = !!process.env.VERCEL || process.env.NODE_ENV === 'production';
 
@@ -26,7 +33,7 @@ export async function launchPdfBrowser(): Promise<Browser> {
     const executablePath = await chromium.executablePath();
     return puppeteerCore.launch({
       args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
+      defaultViewport: PDF_VIEWPORT,
       executablePath,
       headless: true,
     }) as unknown as Promise<Browser>;
@@ -35,6 +42,7 @@ export async function launchPdfBrowser(): Promise<Browser> {
   const puppeteer = (await import('puppeteer')).default;
   return puppeteer.launch({
     headless: true,
+    defaultViewport: PDF_VIEWPORT,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   }) as unknown as Promise<Browser>;
 }
