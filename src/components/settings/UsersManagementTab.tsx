@@ -61,8 +61,8 @@ export function UsersManagementTab({ myRole }: { myRole: string }) {
             ]);
             setUsuarios(data as CompanyUser[]);
             setTope(String(topeActual));
-        } catch (e: any) {
-            toast.error(e?.message || 'Error al cargar usuarios.');
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Error al cargar usuarios.');
         } finally {
             setLoading(false);
         }
@@ -70,7 +70,7 @@ export function UsersManagementTab({ myRole }: { myRole: string }) {
 
     useEffect(() => {
         cargar();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, []);
 
     const handleInvitar = async (e: React.FormEvent) => {
@@ -88,8 +88,8 @@ export function UsersManagementTab({ myRole }: { myRole: string }) {
             } else {
                 toast.error(res.error || 'No se pudo agregar el usuario.');
             }
-        } catch (e: any) {
-            toast.error(e?.message || 'Error al agregar el usuario.');
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Error al agregar el usuario.');
         } finally {
             setInvitando(false);
         }
@@ -106,8 +106,8 @@ export function UsersManagementTab({ myRole }: { myRole: string }) {
             } else {
                 toast.error(res.error || 'No se pudo actualizar el rol.');
             }
-        } catch (e: any) {
-            toast.error(e?.message || 'Error al actualizar el rol.');
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Error al actualizar el rol.');
         }
     };
 
@@ -122,8 +122,8 @@ export function UsersManagementTab({ myRole }: { myRole: string }) {
             } else {
                 toast.error(res.error || 'No se pudo actualizar el usuario.');
             }
-        } catch (e: any) {
-            toast.error(e?.message || 'Error al actualizar el usuario.');
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Error al actualizar el usuario.');
         }
     };
 
@@ -139,8 +139,8 @@ export function UsersManagementTab({ myRole }: { myRole: string }) {
             } else {
                 toast.error(res.error || 'No se pudo guardar el PIN.');
             }
-        } catch (e: any) {
-            toast.error(e?.message || 'Error al guardar el PIN.');
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Error al guardar el PIN.');
         } finally {
             setGuardandoPin(false);
         }
@@ -155,8 +155,8 @@ export function UsersManagementTab({ myRole }: { myRole: string }) {
             } else {
                 toast.error(res.error || 'No se pudo guardar el tope.');
             }
-        } catch (e: any) {
-            toast.error(e?.message || 'Error al guardar el tope.');
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Error al guardar el tope.');
         } finally {
             setGuardandoTope(false);
         }

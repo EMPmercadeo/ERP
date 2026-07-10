@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { getTenantContext } from '@/lib/auth/context';
 import { puedeVerRuta } from '@/lib/permissions';
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const where: any = { activo: true, empresaId };
+    const where: Prisma.EmpleadoWhereInput = { activo: true, empresaId };
     if (empleadoId) where.id = empleadoId;
 
     const empleados = await prisma.empleado.findMany({
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
       movimientos,
       omitidos
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/rrhh/vacaciones/devengo:', error);
     return NextResponse.json({ error: 'Error al procesar devengo de vacaciones' }, { status: 500 });
   }

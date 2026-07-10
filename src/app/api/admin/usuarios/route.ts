@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { enviarCorreoSuperadmin } from '@/lib/correo';
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
     const estado = searchParams.get('estado');
     const incluirEliminados = searchParams.get('incluirEliminados') === 'true';
 
-    const where: any = {};
+    const where: Prisma.CuentaWhereInput = {};
     if (!incluirEliminados) {
       where.eliminadoEn = null;
     }
@@ -64,9 +65,9 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(resultado);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/usuarios:', error);
-    return NextResponse.json({ error: error.message || 'Error interno del servidor' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error interno del servidor' }, { status: 500 });
   }
 }
 
@@ -145,8 +146,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(nuevaCuenta, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/admin/usuarios:', error);
-    return NextResponse.json({ error: error.message || 'Error interno del servidor' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error interno del servidor' }, { status: 500 });
   }
 }

@@ -183,8 +183,8 @@ export async function POST(
     }
 
     return NextResponse.json({ error: `Acción no reconocida: ${action}` }, { status: 404 });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/admin/usuarios/[id]/[action]:', error);
-    return NextResponse.json({ error: error.message || 'Error en acción de usuario' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error en acción de usuario' }, { status: 500 });
   }
 }

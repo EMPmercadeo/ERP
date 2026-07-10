@@ -11,7 +11,7 @@ const PlantillaSchema = z.object({
   activa: z.boolean().default(true)
 });
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const auth = await requireSuperAdminApi();
   if ('error' in auth) return auth.error;
   try {
@@ -19,9 +19,9 @@ export async function GET(request: NextRequest) {
       orderBy: { clave: 'asc' }
     });
     return NextResponse.json(plantillas);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/correos/plantillas:', error);
-    return NextResponse.json({ error: error.message || 'Error al obtener plantillas de correo' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al obtener plantillas de correo' }, { status: 500 });
   }
 }
 
@@ -57,8 +57,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(nuevaPlantilla, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/admin/correos/plantillas:', error);
-    return NextResponse.json({ error: error.message || 'Error al crear plantilla de correo' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al crear plantilla de correo' }, { status: 500 });
   }
 }

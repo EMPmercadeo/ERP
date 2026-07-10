@@ -3,7 +3,6 @@ import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { getTenantContext } from '@/lib/auth/context';
 import { puedeVerRuta } from '@/lib/permissions';
-import { z } from 'zod';
 
 // Estos tres handlers no tenían NINGUNA autenticación: exponían nombre, cédula y salario de
 // cualquier colaborador de cualquier empresa a quien conociera/adivinara el id, y permitían
@@ -58,7 +57,7 @@ export async function GET(
       empleado,
       saldoVacaciones: Number(saldoVacaciones.toFixed(2))
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/rrhh/empleados/[id]:', error);
     return NextResponse.json({ error: 'Error al obtener ficha de colaborador' }, { status: 500 });
   }
@@ -110,7 +109,7 @@ export async function PATCH(
     });
 
     return NextResponse.json({ success: true, empleado });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error PATCH /api/rrhh/empleados/[id]:', error);
     return NextResponse.json({ error: 'Error al actualizar colaborador' }, { status: 500 });
   }
@@ -158,7 +157,7 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true, message: 'Colaborador dado de baja (soft-delete aplicado)', empleado: actualizado });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error DELETE /api/rrhh/empleados/[id]:', error);
     return NextResponse.json({ error: 'Error al dar de baja al colaborador' }, { status: 500 });
   }

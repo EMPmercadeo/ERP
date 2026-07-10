@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { emitirFacturaPAC } from '@/lib/pac/mock-pac-client';
@@ -7,27 +8,20 @@ import { getTenantContext } from '@/lib/auth/context';
 import { verificarPinAutorizacion, obtenerTopeDescuentoSinAutorizacion } from '@/lib/services/discountAuth';
 import { z } from 'zod';
 
-// empresaId ya NO se acepta del cliente — siempre se deriva de getTenantContext() en el
-// servidor. Antes este endpoint confiaba en el empresaId que mandaba el body del POST,
-// lo que permitía spoofear ventas contra cualquier empresa y además dejó de funcionar en
-// cuanto pos/page.tsx dejó de mandar empresaId (se quitó el fallback roto de localStorage).
 const VentaSchema = z.object({
   cuentaId: z.string().optional(),
-  tipoDoc: z.enum(['01', '02']), // 01 factura | 02 boleta
+  tipoDoc: z.enum(['01', '02']),
   clienteRuc: z.string().optional(),
   items: z.array(z.object({
     productoId: z.string(),
     descripcion: z.string(),
     cantidad: z.number().positive(),
     precioUnitario: z.number().positive(),
-    itbmsPorcentaje: z.number(), // 0, 7, 10, 15
+    itbmsPorcentaje: z.number(),
     descuentoPorcentaje: z.number().min(0).max(100).optional().default(0)
-  })).min(1, 'La venta debe contener al menos 1 ítem'),
+  })).min(1, 'La venta debe contener al menos 1 item'),
   metodoPago: z.enum(['EFECTIVO', 'TARJETA', 'YAPPY', 'TRANSFERENCIA', 'MIXTO']),
-  offline: z.boolean().optional(), // si el POS ya detectó que está offline o el usuario forzó contingencia local
-  // Si algún ítem trae un descuento por encima del tope permitido del vendedor, debe venir
-  // acompañado de estas credenciales de un admin/gerente de la MISMA empresa (verificadas
-  // server-side contra su PIN hasheado, nunca se confía en un "autorizado: true" del cliente).
+  offline: z.boolean().optional(),
   autorizacion: z.object({
     adminEmail: z.string().email(),
     pin: z.string().min(4).max(8)
@@ -40,16 +34,15 @@ export async function GET(request: NextRequest) {
     try {
       ({ empresaId } = await getTenantContext());
     } catch {
-      return NextResponse.json({ error: 'Debes iniciar sesión para ver las ventas del POS.' }, { status: 401 });
+      return NextResponse.json({ error: 'Debes iniciar sesion para ver las ventas del POS.' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const cursor = searchParams.get('cursor');
     const take = parseInt(searchParams.get('take') || '20', 10);
-    const estado = searchParams.get('estado'); // 'LOCAL' | 'EN_COLA' | 'AUTORIZADA' | 'RECHAZADA' | 'all'
+    const estado = searchParams.get('estado');
 
-    // empresaId siempre viene de la sesión, nunca del query string — evita fugas cross-tenant.
-    const where: any = { empresaId };
+    const where: Prisma.VentaWhereInput = { empresaId };
     if (estado && estado !== 'all') where.estado = estado;
 
     const resultado = await paginar(prisma.venta, {
@@ -60,7 +53,7 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(resultado);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/pos/ventas:', error);
     return NextResponse.json({ error: 'Error al listar ventas del POS' }, { status: 500 });
   }
@@ -73,7 +66,7 @@ export async function POST(request: NextRequest) {
     try {
       ({ empresaId, userId } = await getTenantContext());
     } catch {
-      return NextResponse.json({ error: 'Debes iniciar sesión para registrar ventas en el POS.' }, { status: 401 });
+      return NextResponse.json({ error: 'Debes iniciar sesion para registrar ventas en el POS.' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -84,12 +77,6 @@ export async function POST(request: NextRequest) {
 
     const { cuentaId, tipoDoc, clienteRuc, items, metodoPago, offline, autorizacion } = parseResult.data;
 
-    // Si algún ítem trae un % de descuento manual por encima de lo que el vendedor puede
-    // aplicar por sí mismo, se exige que un admin/gerente de la MISMA empresa haya
-    // autorizado con su PIN. Los descuentos "sugeridos" (preaprobados en el producto,
-    // su categoría o el cliente) no cuentan para este tope porque ya los aprobó el dueño
-    // de antemano — pero como el cliente podría mandar cualquier número, igual se valida
-    // el % efectivamente recibido, sea cual sea su origen.
     const maxDescuentoSolicitado = Math.max(0, ...items.map(it => it.descuentoPorcentaje || 0));
     let autorizadoPor: { id: string; nombre: string; rol: string } | null = null;
 
@@ -98,7 +85,7 @@ export async function POST(request: NextRequest) {
       if (maxDescuentoSolicitado > tope) {
         if (!autorizacion) {
           return NextResponse.json({
-            error: `Este descuento (${maxDescuentoSolicitado}%) supera tu límite permitido (${tope}%). Solicita a un administrador o gerente que lo autorice con su PIN.`,
+            error: `Este descuento (${maxDescuentoSolicitado}%) supera tu limite permitido (${tope}%). Solicita a un administrador o gerente que lo autorice con su PIN.`,
             requiereAutorizacion: true,
             topePermitido: tope
           }, { status: 403 });
@@ -106,7 +93,7 @@ export async function POST(request: NextRequest) {
         autorizadoPor = await verificarPinAutorizacion(empresaId, autorizacion.adminEmail, autorizacion.pin);
         if (!autorizadoPor) {
           return NextResponse.json({
-            error: 'PIN de autorización inválido o la cuenta no tiene permiso para autorizar descuentos.',
+            error: 'PIN de autorizacion invalido o la cuenta no tiene permiso para autorizar descuentos.',
             requiereAutorizacion: true,
             topePermitido: tope
           }, { status: 403 });
@@ -114,8 +101,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Calcular subtotal, itbms y total (el descuento se aplica ANTES de calcular el ITBMS,
-    // sobre el importe ya rebajado de cada línea)
     let subtotal = 0;
     let itbmsTotal = 0;
     let totalDescuento = 0;
@@ -130,33 +115,27 @@ export async function POST(request: NextRequest) {
     }
     const total = subtotal + itbmsTotal;
 
-    // Obtener cuenta/empresa para verificar saldo de emisiones ante el PAC (sólo si se intenta emitir en línea).
-    // Siempre se resuelve vía el RUC de la empresa de la sesión — nunca se confía en un
-    // cuentaId que mande el cliente directamente, porque eso permitiría a cualquier usuario
-    // autenticado apuntar a la cuenta (y cuota prepago) de otra empresa.
     const empresa = await prisma.empresa.findUnique({ where: { id: empresaId } });
-    let cuenta = empresa ? await prisma.cuenta.findFirst({ where: { ruc: empresa.ruc } }) : null;
+    const cuenta = empresa ? await prisma.cuenta.findFirst({ where: { ruc: empresa.ruc } }) : null;
     if (cuentaId && cuenta && cuentaId !== cuenta.id) {
       return NextResponse.json({ error: 'La cuenta indicada no pertenece a tu empresa.' }, { status: 403 });
     }
 
-    // Regla 0: Si está en línea, consumir 1 cuota del saldo de facturas y verificar bloqueo a saldo 0
     if (!offline && cuenta) {
       if (cuenta.saldoFacturas <= 0) {
         return NextResponse.json({
-          error: 'Su saldo de facturas electrónicas de la DGI ha llegado a 0. No es posible emitir en línea. Adquiera un paquete prepago o contacte a soporte para desbloquear.'
+          error: 'Su saldo de facturas electronicas de la DGI ha llegado a 0. No es posible emitir en linea. Adquiera un paquete prepago o contacte a soporte para desbloquear.'
         }, { status: 403 });
       }
     }
 
-    // Guardar venta inicial
     const venta = await prisma.venta.create({
       data: {
         empresaId,
         cuentaId: cuenta?.id || null,
         tipoDoc,
         clienteRuc: clienteRuc || (tipoDoc === '01' ? 'CF' : null),
-        items: items as any,
+        items: items as Prisma.InputJsonValue,
         subtotal: Number(subtotal.toFixed(2)),
         itbms: Number(itbmsTotal.toFixed(2)),
         total: Number(total.toFixed(2)),
@@ -166,8 +145,6 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Si un admin/gerente tuvo que autorizar el descuento con su PIN, dejarlo en auditoría:
-    // quién vendió, quién autorizó, y cuánto se descontó.
     if (autorizadoPor) {
       await registrarLogAuditoria({
         adminId: autorizadoPor.id,
@@ -185,9 +162,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Si está offline o en contingencia local, se devuelve de inmediato como guardada en cola
     if (offline || !cuenta) {
-      // Reducir stock local de inmediato en transacción para evitar quiebres
       for (const it of items) {
         try {
           await prisma.producto.updateMany({
@@ -200,11 +175,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         venta,
-        message: 'Venta guardada en modo Contingencia Local / Offline. Será retransmitida automáticamente en cuanto se restablezca la conectividad (72h DGI).'
+        message: 'Venta guardada en modo Contingencia Local / Offline. Sera retransmitida automaticamente en cuanto se restablezca la conectividad (72h DGI).'
       });
     }
 
-    // Transacción en línea al PAC
     const payloadFE = {
       empresaRuc: cuenta.ruc,
       sucursal: 'POS-MOVIL',
@@ -212,13 +186,11 @@ export async function POST(request: NextRequest) {
       cliente: {
         ruc: clienteRuc || '999999999',
         razonSocial: clienteRuc ? `Cliente RUC ${clienteRuc}` : 'Consumidor Final POS',
-        direccion: 'Panamá'
+        direccion: 'Panama'
       },
       items: items.map(i => ({
         descripcion: i.descripcion,
         cantidad: i.cantidad,
-        // Precio unitario ya neto de descuento, para que el total declarado al PAC
-        // coincida con subtotal/itbms/total (calculados post-descuento arriba).
         precioUnitario: Number((i.precioUnitario * (1 - (i.descuentoPorcentaje || 0) / 100)).toFixed(4)),
         tasaItbms: i.itbmsPorcentaje === 7 ? '01' : i.itbmsPorcentaje === 10 ? '02' : i.itbmsPorcentaje === 15 ? '03' : '00'
       })),
@@ -232,7 +204,6 @@ export async function POST(request: NextRequest) {
     const resPAC = await emitirFacturaPAC(payloadFE);
 
     if (resPAC.success && resPAC.cufe) {
-      // 1. Actualizar venta
       const ventaAutorizada = await prisma.venta.update({
         where: { id: venta.id },
         data: {
@@ -242,7 +213,6 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      // 2. Débito de 1 cuota en el saldo de facturas (Ledger prepago)
       await prisma.$transaction([
         prisma.cuenta.update({
           where: { id: cuenta.id },
@@ -255,11 +225,10 @@ export async function POST(request: NextRequest) {
             cantidad: -1,
             saldoAnte: cuenta.saldoFacturas,
             saldoPost: cuenta.saldoFacturas - 1,
-            nota: `Emisión electrónica POS (${tipoDoc === '01' ? 'Factura' : 'Boleta'}) - CUFE: ${resPAC.cufe.substring(0, 15)}...`,
+            nota: `Emision electronica POS (${tipoDoc === '01' ? 'Factura' : 'Boleta'}) - CUFE: ${resPAC.cufe.substring(0, 15)}...`,
             referencia: `POS-${venta.id}`
           }
         }),
-        // 3. Registrar en FacturaEmitida para auditoría general del Superadmin
         prisma.facturaEmitida.create({
           data: {
             cuentaId: cuenta.id,
@@ -272,7 +241,6 @@ export async function POST(request: NextRequest) {
         })
       ]);
 
-      // 4. Descontar stock del producto de forma transaccional
       for (const it of items) {
         try {
           await prisma.producto.updateMany({
@@ -298,7 +266,6 @@ export async function POST(request: NextRequest) {
         cufe: resPAC.cufe
       });
     } else {
-      // Si el PAC rechaza o falla temporalmente, dejamos en cola para reintento
       const ventaRechazada = await prisma.venta.update({
         where: { id: venta.id },
         data: { estado: 'RECHAZADA', contingencia: true }
@@ -307,11 +274,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         venta: ventaRechazada,
-        warning: 'El PAC no respondió o rechazó en línea. La venta se almacenó en cola de reintento/contingencia sin consumir cuota aún.'
+        warning: 'El PAC no respondio o rechazo en linea. La venta se almaceno en cola de reintento/contingencia sin consumir cuota aun.'
       });
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/pos/ventas:', error);
-    return NextResponse.json({ error: error.message || 'Error al procesar la venta en el POS' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al procesar la venta en el POS' }, { status: 500 });
   }
 }

@@ -14,7 +14,7 @@ const PlanSchema = z.object({
   featuresJson: z.any().optional().default({})
 });
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const auth = await requireSuperAdminApi();
   if ('error' in auth) return auth.error;
   try {
@@ -28,9 +28,9 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(planes);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/planes:', error);
-    return NextResponse.json({ error: error.message || 'Error al obtener planes' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al obtener planes' }, { status: 500 });
   }
 }
 
@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(nuevoPlan, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/admin/planes:', error);
-    return NextResponse.json({ error: error.message || 'Error al crear plan' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al crear plan' }, { status: 500 });
   }
 }

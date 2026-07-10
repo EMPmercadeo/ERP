@@ -26,6 +26,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Frozen UI snapshot — never edit (see CLAUDE.md), also excluded from tsconfig.
     "design-review-package/**",
+    // Basura reintroducida por otra sesion y relocalizada aqui (ver .gitignore); no forma
+    // parte del codigo de la app.
+    ".trash_bin/**",
   ]),
 ]);
 

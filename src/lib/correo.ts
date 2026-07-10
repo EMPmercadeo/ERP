@@ -14,7 +14,7 @@ export interface OpcionesEnvioCorreo {
 }
 
 export async function enviarCorreoSuperadmin(opciones: OpcionesEnvioCorreo) {
-  let asuntoFinal = opciones.asunto || 'Notificación ERP Panamá';
+  let asuntoFinal = opciones.asunto || 'Notificacion ERP Panama';
   let cuerpoHtml = opciones.cuerpoLibre || '';
   let idPlantilla = opciones.plantillaId || null;
 
@@ -47,7 +47,7 @@ export async function enviarCorreoSuperadmin(opciones: OpcionesEnvioCorreo) {
     }
   }
 
-  // 3. Verificar si hay configuración SMTP en la BD (ConfiguracionSMTP), si no usar fallback de environment
+  // 3. Verificar si hay configuracion SMTP en la BD (ConfiguracionSMTP), si no usar fallback de environment
   let exito = false;
   let mensajeError = '';
 
@@ -58,7 +58,7 @@ export async function enviarCorreoSuperadmin(opciones: OpcionesEnvioCorreo) {
     });
 
     if (configSmtpDb) {
-      // La contraseña se guarda cifrada (AES-256-GCM); debe descifrarse antes de usarla en la autenticación SMTP.
+      // La contrasena se guarda cifrada (AES-256-GCM); debe descifrarse antes de usarla en la autenticacion SMTP.
       const transport = nodemailer.createTransport({
         host: configSmtpDb.servidor,
         port: configSmtpDb.puerto,
@@ -76,7 +76,7 @@ export async function enviarCorreoSuperadmin(opciones: OpcionesEnvioCorreo) {
       });
       exito = true;
     } else {
-      // Usar mailer por defecto en variables de entorno (O si no hay env, simulamos éxito en entorno de pruebas)
+      // Usar mailer por defecto en variables de entorno (o si no hay env, simulamos exito en entorno de pruebas)
       const resultado = await sendEmail({
         to: opciones.destinatario,
         subject: asuntoFinal,
@@ -88,9 +88,9 @@ export async function enviarCorreoSuperadmin(opciones: OpcionesEnvioCorreo) {
         mensajeError = resultado.message;
       }
     }
-  } catch (err: any) {
+  } catch (err) {
     exito = false;
-    mensajeError = err.message || 'Error de envío SMTP';
+    mensajeError = err instanceof Error ? err.message : 'Error de envio SMTP';
     // En desarrollo/test, no interrumpir si no hay servidor SMTP en local
     if (process.env.NODE_ENV !== 'production') {
       exito = true;

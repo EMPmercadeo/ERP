@@ -28,9 +28,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     return NextResponse.json(ticket);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/soporte/[id]:', error);
-    return NextResponse.json({ error: error.message || 'Error al obtener detalle del ticket' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al obtener detalle del ticket' }, { status: 500 });
   }
 }
 
@@ -67,8 +67,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     });
 
     return NextResponse.json(modificado);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error PATCH /api/admin/soporte/[id]:', error);
-    return NextResponse.json({ error: error.message || 'Error al actualizar ticket' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al actualizar ticket' }, { status: 500 });
   }
 }

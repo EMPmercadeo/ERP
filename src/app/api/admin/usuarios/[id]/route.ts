@@ -39,9 +39,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     return NextResponse.json(cuenta);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/usuarios/[id]:', error);
-    return NextResponse.json({ error: error.message || 'Error interno' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error interno' }, { status: 500 });
   }
 }
 
@@ -77,9 +77,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     });
 
     return NextResponse.json(modificada);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error PATCH /api/admin/usuarios/[id]:', error);
-    return NextResponse.json({ error: error.message || 'Error interno al actualizar cuenta' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error interno al actualizar cuenta' }, { status: 500 });
   }
 }
 
@@ -116,8 +116,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       message: 'Cuenta eliminada mediante soft-delete. Los registros fiscales se conservan por retención legal.',
       cuenta: softDeleted
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error DELETE /api/admin/usuarios/[id]:', error);
-    return NextResponse.json({ error: error.message || 'Error al eliminar cuenta' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al eliminar cuenta' }, { status: 500 });
   }
 }

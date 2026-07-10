@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { requireSuperAdminApi } from '@/lib/auth/admin';
@@ -45,9 +46,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       plan,
       suscriptores
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/planes/[id]:', error);
-    return NextResponse.json({ error: error.message || 'Error al obtener detalle del plan' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al obtener detalle del plan' }, { status: 500 });
   }
 }
 
@@ -68,7 +69,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ error: 'Plan no encontrado' }, { status: 404 });
     }
 
-    const data: any = {};
+    const data: Prisma.PlanUpdateInput = {};
     if (validacion.data.nombre !== undefined) {
       data.nombre = validacion.data.nombre;
       data.name = validacion.data.nombre;
@@ -106,9 +107,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     });
 
     return NextResponse.json(modificado);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error PATCH /api/admin/planes/[id]:', error);
-    return NextResponse.json({ error: error.message || 'Error al actualizar plan' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al actualizar plan' }, { status: 500 });
   }
 }
 
@@ -159,8 +160,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     });
 
     return NextResponse.json({ success: true, message: 'Plan eliminado correctamente' });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error DELETE /api/admin/planes/[id]:', error);
-    return NextResponse.json({ error: error.message || 'Error al eliminar plan' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al eliminar plan' }, { status: 500 });
   }
 }

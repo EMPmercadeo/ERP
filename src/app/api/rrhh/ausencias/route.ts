@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { getTenantContext } from '@/lib/auth/context';
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
     const estado = searchParams.get('estado');
     const tipo = searchParams.get('tipo');
 
-    const where: any = { empleado: { empresaId } };
+    const where: Prisma.AusenciaWhereInput = { empleado: { empresaId } };
     if (empleadoId) where.empleadoId = empleadoId;
     if (estado && estado !== 'all') where.estado = estado;
     if (tipo && tipo !== 'all') where.tipo = tipo;
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(resultado);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/rrhh/ausencias:', error);
     return NextResponse.json({ error: 'Error al listar ausencias' }, { status: 500 });
   }
@@ -148,7 +149,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true, ausencia });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/rrhh/ausencias:', error);
     return NextResponse.json({ error: 'Error al registrar solicitud de ausencia' }, { status: 500 });
   }

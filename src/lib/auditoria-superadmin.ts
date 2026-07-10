@@ -5,7 +5,7 @@ export interface RegistrarAuditoriaParams {
   accion: string;
   objetivo: string;
   objetivoId?: string | null;
-  detalles?: any;
+  detalles?: Record<string, unknown>;
   ip?: string | null;
 }
 
@@ -30,7 +30,7 @@ export async function registrarLogAuditoria({
     });
     return log;
   } catch (error) {
-    console.error('Error al registrar auditoría de superadmin:', error);
+    console.error('Error al registrar auditoria de superadmin:', error);
     return null;
   }
 }

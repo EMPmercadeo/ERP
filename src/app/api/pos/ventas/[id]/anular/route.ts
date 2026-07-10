@@ -3,6 +3,11 @@ import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { getTenantContext } from '@/lib/auth/context';
 
+interface VentaItemJson {
+  productoId?: string;
+  cantidad?: number;
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -80,7 +85,7 @@ export async function POST(
     }
 
     // Devolver inventario a bodega
-    const items: any = Array.isArray(venta.items) ? venta.items : [];
+    const items: VentaItemJson[] = Array.isArray(venta.items) ? (venta.items as VentaItemJson[]) : [];
     for (const item of items) {
       if (item.productoId && item.cantidad) {
         try {
@@ -112,7 +117,7 @@ export async function POST(
       message: 'Venta anulada correctamente. El inventario ha sido restituido y el evento reportado.',
       venta: ventaAnulada
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/pos/ventas/[id]/anular:', error);
     return NextResponse.json({ error: 'Error al anular la venta' }, { status: 500 });
   }

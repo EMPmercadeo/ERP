@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,12 +23,57 @@ import {
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 
+interface MovVacacion {
+  id: string;
+  createdAt: string;
+  tipo: string;
+  dias: number | string;
+  saldoPosterior: number | string;
+  referencia?: string | null;
+}
+
+interface AusenciaFicha {
+  id: string;
+  tipo: string;
+  justificada: boolean;
+  desde: string;
+  hasta: string;
+  dias: number | string;
+  documentoUrl?: string | null;
+  estado: string;
+  aprobadaPor?: string | null;
+}
+
+interface ActaDisciplinaria {
+  id: string;
+  tipo: string;
+  fechaHecho: string;
+  acuseEmpleado: boolean;
+  fechaAcuse?: string | null;
+  falta: string;
+  descripcion: string;
+  emitidaPor: string;
+  evidenciaUrl?: string | null;
+}
+
+interface FichaColaborador {
+  nombre: string;
+  activo: boolean;
+  cedula: string;
+  cargo: string;
+  tipoContrato: string;
+  salarioBase: number | string;
+  ausencias?: AusenciaFicha[];
+  actas?: ActaDisciplinaria[];
+  movVacaciones?: MovVacacion[];
+}
+
 export default function FichaColaboradorPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
 
-  const [ficha, setFicha] = useState<any>(null);
+  const [ficha, setFicha] = useState<FichaColaborador | null>(null);
   const [saldoVacaciones, setSaldoVacaciones] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'vacaciones' | 'ausencias' | 'expediente'>('vacaciones');
@@ -43,7 +88,7 @@ export default function FichaColaboradorPage() {
   const [guardandoActa, setGuardandoActa] = useState(false);
 
   // Cargar ficha
-  const cargarFicha = async () => {
+  const cargarFicha = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/rrhh/empleados/${id}`);
@@ -60,11 +105,11 @@ export default function FichaColaboradorPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, router]);
 
   useEffect(() => {
     if (id) cargarFicha();
-  }, [id]);
+  }, [id, cargarFicha]);
 
   const handleCrearActa = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -294,7 +339,7 @@ export default function FichaColaboradorPage() {
                           </td>
                         </tr>
                       ) : (
-                        ficha.movVacaciones?.map((mov: any) => (
+                        ficha.movVacaciones?.map((mov) => (
                           <tr key={mov.id} className="hover:bg-muted/50">
                             <td className="py-3 px-4 font-mono text-foreground">
                               {new Date(mov.createdAt).toLocaleDateString('es-PA')}
@@ -360,7 +405,7 @@ export default function FichaColaboradorPage() {
                           </td>
                         </tr>
                       ) : (
-                        ficha.ausencias?.map((aus: any) => (
+                        ficha.ausencias?.map((aus) => (
                           <tr key={aus.id} className="hover:bg-muted/50">
                             <td className="py-3 px-4 font-bold text-foreground">
                               {aus.tipo}
@@ -428,7 +473,7 @@ export default function FichaColaboradorPage() {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {ficha.actas?.map((acta: any) => (
+                  {ficha.actas?.map((acta) => (
                     <Card key={acta.id} className="border-border border-l-4 border-l-red-500 hover:border-l-red-600 transition-all shadow-sm">
                       <CardHeader className="pb-2">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -444,7 +489,7 @@ export default function FichaColaboradorPage() {
                             {acta.acuseEmpleado ? (
                               <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-200 text-[11px] flex items-center gap-1">
                                 <CheckCircle2 className="h-3 w-3" />
-                                Acuse Firmado el {new Date(acta.fechaAcuse).toLocaleDateString('es-PA')}
+                                Acuse Firmado el {acta.fechaAcuse ? new Date(acta.fechaAcuse).toLocaleDateString('es-PA') : ''}
                               </Badge>
                             ) : (
                               <Button

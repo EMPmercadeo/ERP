@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, CheckCircle, Filter, Send, User, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { ContentContainer } from '@/components/layout/Content';
@@ -11,20 +11,38 @@ import { cn } from '@/lib/utils';
 
 const selectClass = 'h-8 rounded-md border border-input bg-transparent px-2.5 text-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none';
 
+interface TicketRespuesta {
+  id: string;
+  autor: string;
+  mensaje: string;
+  createdAt: string;
+}
+
+interface TicketSoporte {
+  id: string;
+  asunto: string;
+  mensaje: string;
+  estado: string;
+  prioridad: string;
+  createdAt: string;
+  cuenta?: { nombre?: string; empresa?: string; correo?: string } | null;
+  respuestas?: TicketRespuesta[];
+}
+
 export default function SuperadminSoportePage() {
-  const [tickets, setTickets] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<TicketSoporte[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState('all');
   const [filtroPrioridad, setFiltroPrioridad] = useState('all');
 
   // Modal / Detalle de ticket seleccionado
-  const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<TicketSoporte | null>(null);
   const [loadingDetalle, setLoadingDetalle] = useState(false);
   const [mensajeRespuesta, setMensajeRespuesta] = useState('');
   const [nuevoEstado, setNuevoEstado] = useState('');
   const [enviandoRespuesta, setEnviandoRespuesta] = useState(false);
 
-  const cargarTickets = async () => {
+  const cargarTickets = useCallback(async () => {
     setLoading(true);
     try {
       const url = new URL('/api/admin/soporte', window.location.origin);
@@ -34,16 +52,16 @@ export default function SuperadminSoportePage() {
       const res = await fetch(url.toString());
       const data = await res.json();
       setTickets(data?.items || []);
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar tickets de soporte');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtroEstado, filtroPrioridad]);
 
   useEffect(() => {
     cargarTickets();
-  }, [filtroEstado, filtroPrioridad]);
+  }, [cargarTickets]);
 
   const abrirDetalle = async (id: string) => {
     setLoadingDetalle(true);
@@ -52,7 +70,7 @@ export default function SuperadminSoportePage() {
       const data = await res.json();
       setSelectedTicket(data);
       setNuevoEstado(data.estado);
-    } catch (error) {
+    } catch {
       toast.error('No se pudo abrir el detalle del ticket');
     } finally {
       setLoadingDetalle(false);
@@ -81,7 +99,7 @@ export default function SuperadminSoportePage() {
       } else {
         toast.error(data.error || 'Error al enviar respuesta');
       }
-    } catch (error) {
+    } catch {
       toast.error('Fallo al conectar con el servidor');
     } finally {
       setEnviandoRespuesta(false);
@@ -234,7 +252,7 @@ export default function SuperadminSoportePage() {
                   </div>
 
                   {/* Respuestas registradas */}
-                  {selectedTicket.respuestas?.map((r: any) => (
+                  {selectedTicket.respuestas?.map((r) => (
                     <div
                       key={r.id}
                       className={cn(

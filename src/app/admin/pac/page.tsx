@@ -10,8 +10,17 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
+interface PacConfig {
+  id: string;
+  proveedor: string;
+  ambiente: 'TEST' | 'PRODUCCION';
+  esRespaldo: boolean;
+  activo: boolean;
+  credencialesMasked: string;
+}
+
 export default function SuperadminPACPage() {
-  const [pacs, setPacs] = useState<any[]>([]);
+  const [pacs, setPacs] = useState<PacConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [testingId, setTestingId] = useState<string | null>(null);
 
@@ -28,7 +37,7 @@ export default function SuperadminPACPage() {
       const res = await fetch('/api/admin/pac');
       const data = await res.json();
       setPacs(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar configuración PAC');
     } finally {
       setLoading(false);
@@ -49,7 +58,7 @@ export default function SuperadminPACPage() {
       } else {
         toast.error(`Fallo (${data.latenciaMs || 0}ms): ${data.mensaje || 'Error de PAC'}`);
       }
-    } catch (error) {
+    } catch {
       toast.error('Error de red al probar conexión PAC');
     } finally {
       setTestingId(null);
@@ -69,7 +78,7 @@ export default function SuperadminPACPage() {
       } else {
         toast.error('No se pudo conmutar el PAC primario');
       }
-    } catch (error) {
+    } catch {
       toast.error('Error en conmutación');
     }
   };
@@ -84,7 +93,7 @@ export default function SuperadminPACPage() {
       } else {
         toast.error('No se pudo eliminar el proveedor');
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al eliminar PAC');
     }
   };
@@ -118,7 +127,7 @@ export default function SuperadminPACPage() {
         const err = await res.json();
         toast.error(err.error || 'Fallo al guardar PAC');
       }
-    } catch (error) {
+    } catch {
       toast.error('Error guardando configuración');
     } finally {
       setGuardando(false);
@@ -255,7 +264,7 @@ export default function SuperadminPACPage() {
                 <label className="block text-xs text-muted-foreground">Ambiente de Operación</label>
                 <select
                   value={ambiente}
-                  onChange={(e: any) => setAmbiente(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setAmbiente(e.target.value as 'TEST' | 'PRODUCCION')}
                   className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none"
                 >
                   <option value="TEST">Pruebas / Simulación (TEST)</option>

@@ -4,18 +4,34 @@ import React, { useState, useEffect } from 'react';
 import { Settings, Server, Mail, ShieldAlert, RefreshCw, Save, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ContentContainer } from '@/components/layout/Content';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+interface PlataformaConfig {
+  nombre: string;
+  correoContacto: string;
+  telefonoSoporte: string;
+  modoMantenimiento: boolean;
+}
+
+interface SmtpConfig {
+  servidor: string;
+  puerto: number;
+  usuario: string;
+  passwordCifrado: string;
+  remitente: string;
+  activo: boolean;
+}
+
 export default function SuperadminConfiguracionPage() {
-  const [plataforma, setPlataforma] = useState<any>({
+  const [plataforma, setPlataforma] = useState<PlataformaConfig>({
     nombre: 'ERP Panamá',
     correoContacto: 'soporte@erppanama.com',
     telefonoSoporte: '+507 800-0000',
     modoMantenimiento: false
   });
-  const [smtp, setSmtp] = useState<any>({
+  const [smtp, setSmtp] = useState<SmtpConfig>({
     servidor: 'smtp.sendgrid.net',
     puerto: 587,
     usuario: 'apikey',
@@ -41,7 +57,7 @@ export default function SuperadminConfiguracionPage() {
           passwordCifrado: '••••••••••••••••'
         });
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar configuración');
     } finally {
       setLoading(false);
@@ -68,7 +84,7 @@ export default function SuperadminConfiguracionPage() {
       } else {
         toast.error(data.error || 'Error al guardar SMTP');
       }
-    } catch (error) {
+    } catch {
       toast.error('Fallo en la comunicación al guardar SMTP');
     } finally {
       setGuardando(false);
@@ -93,7 +109,7 @@ export default function SuperadminConfiguracionPage() {
       } else {
         toast.error(data.error || 'Fallo en la prueba de servidor saliente SMTP');
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al conectar para prueba SMTP');
     } finally {
       setProbandoSmtp(false);
@@ -113,7 +129,7 @@ export default function SuperadminConfiguracionPage() {
       } else {
         toast.error(data.error || 'No se ejecutó el kill-switch');
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al ejecutar conmutación de emergencia');
     } finally {
       setEjecutandoKillSwitch(false);

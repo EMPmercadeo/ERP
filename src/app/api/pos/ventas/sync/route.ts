@@ -5,15 +5,24 @@ import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { getTenantContext } from '@/lib/auth/context';
 import { obtenerTopeDescuentoSinAutorizacion } from '@/lib/services/discountAuth';
 
+interface VentaItemJson {
+  productoId?: string;
+  descripcion?: string;
+  cantidad?: number;
+  precioUnitario?: number;
+  itbmsPorcentaje?: number;
+  descuentoPorcentaje?: number;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // empresaId ya no se lee del body — se deriva de la sesión, igual que en /api/pos/ventas.
+    // empresaId ya no se lee del body -- se deriva de la sesion, igual que en /api/pos/ventas.
     let empresaId: string;
     let userId: string;
     try {
       ({ empresaId, userId } = await getTenantContext());
     } catch {
-      return NextResponse.json({ error: 'Debes iniciar sesión para sincronizar la cola del POS.' }, { status: 401 });
+      return NextResponse.json({ error: 'Debes iniciar sesion para sincronizar la cola del POS.' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -32,12 +41,12 @@ export async function POST(request: NextRequest) {
     // Buscar ventas en estado LOCAL o EN_COLA (o si el frontend manda un array para re-insertar desde IndexedDB)
     let ventasParaSync = [];
     if (ventasQueue && Array.isArray(ventasQueue) && ventasQueue.length > 0) {
-      // Si vienen de IndexedDB y aún no existían en postgres, crearlas
+      // Si vienen de IndexedDB y aun no existian en postgres, crearlas
       for (const itemLocal of ventasQueue) {
         if (!itemLocal.id?.startsWith('sync-')) {
           const vDB = await prisma.venta.findFirst({ where: { id: itemLocal.id } });
           // Si la venta ya existe pero pertenece a otra empresa, la ignoramos por completo:
-          // nunca se debe poder tocar (ni re-encolar) una venta ajena vía este endpoint.
+          // nunca se debe poder tocar (ni re-encolar) una venta ajena via este endpoint.
           if (vDB && vDB.empresaId !== empresaId) continue;
           if (vDB && vDB.estado === 'AUTORIZADA') continue;
         }
@@ -73,35 +82,35 @@ export async function POST(request: NextRequest) {
     }
 
     if (ventasParaSync.length === 0) {
-      return NextResponse.json({ success: true, message: 'La cola de sincronización está limpia. 0 ventas pendientes.' });
+      return NextResponse.json({ success: true, message: 'La cola de sincronizacion esta limpia. 0 ventas pendientes.' });
     }
 
     let autorizadas = 0;
     let fallidas = 0;
     const resultados = [];
 
-    // El lote offline llega con subtotal/itbms/total calculados en el navegador — nunca se
-    // confían tal cual (un cliente podría fabricar cualquier total). Se recalculan aquí a
-    // partir de los ítems, y si algún ítem trae un descuento manual por encima de lo que el
-    // vendedor puede aplicar sin autorización, se recorta automáticamente a ese tope: no hay
-    // forma práctica de pedir el PIN de un admin en medio de una retransmisión en lote, así
-    // que en vez de confiar ciegamente en el descuento declarado, se limita al máximo seguro.
+    // El lote offline llega con subtotal/itbms/total calculados en el navegador -- nunca se
+    // confian tal cual (un cliente podria fabricar cualquier total). Se recalculan aqui a
+    // partir de los items, y si algun item trae un descuento manual por encima de lo que el
+    // vendedor puede aplicar sin autorizacion, se recorta automaticamente a ese tope: no hay
+    // forma practica de pedir el PIN de un admin en medio de una retransmision en lote, asi
+    // que en vez de confiar ciegamente en el descuento declarado, se limita al maximo seguro.
     const topeDescuento = await obtenerTopeDescuentoSinAutorizacion(empresaId, userId);
 
     for (const v of ventasParaSync) {
-      // Verificar saldo por cada iteración
+      // Verificar saldo por cada iteracion
       const cuentaActual = await prisma.cuenta.findUnique({ where: { id: cuenta.id } });
       if (!cuentaActual || cuentaActual.saldoFacturas <= 0) {
-        resultados.push({ id: v.id, status: 'ERROR_SALDO_AGOTADO', message: 'Se detuvo la sincronización por saldo 0 de facturas.' });
+        resultados.push({ id: v.id, status: 'ERROR_SALDO_AGOTADO', message: 'Se detuvo la sincronizacion por saldo 0 de facturas.' });
         fallidas++;
         break;
       }
 
-      const items: any = Array.isArray(v.items) ? v.items : [];
+      const items: VentaItemJson[] = Array.isArray(v.items) ? (v.items as VentaItemJson[]) : [];
       let recorteAplicado = false;
       let subtotalReal = 0;
       let itbmsReal = 0;
-      const itemsCorregidos = items.map((i: any) => {
+      const itemsCorregidos = items.map((i: VentaItemJson) => {
         const descuentoSolicitado = Math.min(100, Math.max(0, Number(i.descuentoPorcentaje) || 0));
         const descuentoAplicado = descuentoSolicitado > topeDescuento ? topeDescuento : descuentoSolicitado;
         if (descuentoAplicado !== descuentoSolicitado) recorteAplicado = true;
@@ -131,9 +140,9 @@ export async function POST(request: NextRequest) {
         cliente: {
           ruc: v.clienteRuc || '999999999',
           razonSocial: `Contingencia POS - ${v.clienteRuc || 'CF'}`,
-          direccion: 'Panamá'
+          direccion: 'Panama'
         },
-        items: itemsCorregidos.map((i: any) => ({
+        items: itemsCorregidos.map((i: VentaItemJson & { descuentoPorcentaje: number }) => ({
           descripcion: i.descripcion || 'Producto POS',
           cantidad: i.cantidad || 1,
           precioUnitario: Number(((i.precioUnitario || 1) * (1 - (i.descuentoPorcentaje || 0) / 100)).toFixed(4)),
@@ -147,7 +156,7 @@ export async function POST(request: NextRequest) {
       };
 
       if (recorteAplicado) {
-        resultados.push({ id: v.id, status: 'DESCUENTO_RECORTADO', message: `Un descuento superaba el ${topeDescuento}% permitido sin autorización y fue recortado a ese límite.` });
+        resultados.push({ id: v.id, status: 'DESCUENTO_RECORTADO', message: `Un descuento superaba el ${topeDescuento}% permitido sin autorizacion y fue recortado a ese limite.` });
       }
 
       const resPAC = await emitirFacturaPAC(payloadFE);
@@ -174,7 +183,7 @@ export async function POST(request: NextRequest) {
               cantidad: -1,
               saldoAnte: cuentaActual.saldoFacturas,
               saldoPost: cuentaActual.saldoFacturas - 1,
-              nota: `Sincronización Contingencia POS (72h) - CUFE: ${resPAC.cufe.substring(0, 15)}...`,
+              nota: `Sincronizacion Contingencia POS (72h) - CUFE: ${resPAC.cufe.substring(0, 15)}...`,
               referencia: `SYNC-${v.id}`
             }
           }),
@@ -208,11 +217,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Retransmisión finalizada. Autorizadas: ${autorizadas}, Fallidas o en espera: ${fallidas}`,
+      message: `Retransmision finalizada. Autorizadas: ${autorizadas}, Fallidas o en espera: ${fallidas}`,
       resultados
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/pos/ventas/sync:', error);
-    return NextResponse.json({ error: 'Error durante la sincronización de cola offline con el PAC' }, { status: 500 });
+    return NextResponse.json({ error: 'Error durante la sincronizacion de cola offline con el PAC' }, { status: 500 });
   }
 }

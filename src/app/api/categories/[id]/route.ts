@@ -50,7 +50,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         activo: categoria.activo
       }
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error?.code === 'P2002') {
       return NextResponse.json({ error: 'Ya existe una categoría con ese nombre.' }, { status: 409 });
     }
@@ -85,7 +85,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     await prisma.categoria.update({ where: { id }, data: { activo: false } });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error DELETE /api/categories/[id]:', error);
     return NextResponse.json({ error: 'Error al eliminar la categoría' }, { status: 500 });
   }

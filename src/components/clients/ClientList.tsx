@@ -299,6 +299,10 @@ export function ClientList({
         setIsMounted(true);
     }, []);
 
+    // TanStack Table's useReactTable() devuelve funciones nuevas en cada render que el compilador
+    // de React no puede memoizar de forma segura; es una limitacion inherente a la API de la
+    // libreria, no un problema del codigo de este componente.
+    // eslint-disable-next-line react-hooks/incompatible-library
     const table = useReactTable({
         data: initialData,
         columns,

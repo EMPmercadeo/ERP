@@ -14,7 +14,7 @@ const ConfigSMTPSchema = z.object({
   activo: z.boolean().default(true)
 });
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const auth = await requireSuperAdminApi();
   if ('error' in auth) return auth.error;
   try {
@@ -41,9 +41,9 @@ export async function GET(request: NextRequest) {
         passwordMasked: '••••••••••••••••'
       } : null
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/configuracion:', error);
-    return NextResponse.json({ error: error.message || 'Error al obtener configuración global' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al obtener configuración global' }, { status: 500 });
   }
 }
 
@@ -98,8 +98,8 @@ export async function PATCH(request: NextRequest) {
         hasPassword: true
       } : null
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error PATCH /api/admin/configuracion:', error);
-    return NextResponse.json({ error: error.message || 'Error al actualizar configuración' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al actualizar configuración' }, { status: 500 });
   }
 }

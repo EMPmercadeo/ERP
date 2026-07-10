@@ -113,7 +113,7 @@ export async function GET(
         'Content-Disposition': `inline; filename="Expediente_Laboral_${empleado.cedula.replace(/\s+/g, '_')}.pdf"`
       }
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/rrhh/expediente/[id]/pdf:', error);
     return NextResponse.json({ error: 'Error al generar reporte probatorio' }, { status: 500 });
   }

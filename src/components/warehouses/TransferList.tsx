@@ -70,6 +70,7 @@ export function TransferList({
             const res = await recibirTransferencia(id);
             if (res.success) {
                 toast.success(res.message);
+                setTransferencias((prev) => prev.map((t) => t.id === id ? { ...t, estado: 'recibido' } : t));
                 router.refresh();
             } else {
                 toast.error(res.message);
@@ -88,6 +89,7 @@ export function TransferList({
             const res = await cancelarTransferencia(id);
             if (res.success) {
                 toast.success(res.message);
+                setTransferencias((prev) => prev.map((t) => t.id === id ? { ...t, estado: 'cancelado' } : t));
                 router.refresh();
             } else {
                 toast.error(res.message);

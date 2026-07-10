@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Listo — tu cuenta ahora es super_admin. Recarga la página para ver el panel de Superadministración en el menú.'
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/claim-superadmin:', error);
-    return NextResponse.json({ error: error.message || 'Error al procesar el reclamo de super_admin.' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al procesar el reclamo de super_admin.' }, { status: 500 });
   }
 }

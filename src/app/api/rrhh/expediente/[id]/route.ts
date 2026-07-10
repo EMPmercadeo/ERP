@@ -43,7 +43,7 @@ export async function GET(
     });
 
     return NextResponse.json({ actas });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/rrhh/expediente/[id]:', error);
     return NextResponse.json({ error: 'Error al obtener expediente disciplinario' }, { status: 500 });
   }
@@ -135,7 +135,7 @@ export async function POST(
     });
 
     return NextResponse.json({ success: true, acta });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/rrhh/expediente/[id]:', error);
     return NextResponse.json({ error: 'Error en la gestión del expediente disciplinario' }, { status: 500 });
   }

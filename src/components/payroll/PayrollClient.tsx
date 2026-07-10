@@ -33,7 +33,6 @@ import {
   Gift,
   Scale,
   HelpCircle,
-  TrendingUp,
   ShieldAlert,
   Search,
   CheckCircle2

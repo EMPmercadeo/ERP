@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { requireSuperAdminApi } from '@/lib/auth/admin';
 
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     const fechaDesde = searchParams.get('fechaDesde');
     const fechaHasta = searchParams.get('fechaHasta');
 
-    const where: any = {};
+    const where: Prisma.LogAuditoriaWhereInput = {};
     if (adminId && adminId !== 'all') where.adminId = adminId;
     if (accion && accion !== 'all') where.accion = accion;
     if (objetivo && objetivo !== 'all') where.objetivo = objetivo;
@@ -59,8 +60,8 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': `attachment; filename="auditoria-superadmin-erppanama-${new Date().toISOString().split('T')[0]}.csv"`
       }
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/auditoria/export:', error);
-    return NextResponse.json({ error: error.message || 'Error al exportar log de auditoría' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al exportar log de auditoría' }, { status: 500 });
   }
 }

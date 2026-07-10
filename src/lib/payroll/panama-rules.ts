@@ -264,11 +264,9 @@ export function calcularLiquidacion(salarioMensualPromedio: number, mesesLaborad
   const anios = aniosLaborados !== undefined ? Math.max(0, aniosLaborados) : meses / 12;
 
   const salarioSemanal = sal / (52 / 12);
-  const salarioDiario = sal / 30;
 
   const devengadoTotalEnPeriodo = sal * meses;
   const vacacionesBrutas = devengadoTotalEnPeriodo * REGLAS_PANAMA.liquidacion.vacaciones;
-  const dedVac = calcularDeduccionesObrero(vacacionesBrutas, "mensual");
   const vacacionesProporcionales = redondear(vacacionesBrutas);
 
   const mesesEnCuatrimestreActual = meses % 4;

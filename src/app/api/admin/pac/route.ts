@@ -13,7 +13,7 @@ const PACSchema = z.object({
   activo: z.boolean().default(true)
 });
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const auth = await requireSuperAdminApi();
   if ('error' in auth) return auth.error;
   try {
@@ -34,9 +34,9 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json(seguras);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/pac:', error);
-    return NextResponse.json({ error: error.message || 'Error al obtener configuraciones PAC' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al obtener configuraciones PAC' }, { status: 500 });
   }
 }
 
@@ -85,8 +85,8 @@ export async function POST(request: NextRequest) {
       credenciales: '••••••••••••••••',
       hasCredentials: true
     }, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/admin/pac:', error);
-    return NextResponse.json({ error: error.message || 'Error al crear PAC' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al crear PAC' }, { status: 500 });
   }
 }

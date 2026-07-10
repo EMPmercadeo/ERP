@@ -44,6 +44,63 @@ interface ItemCarrito {
   descuentoPorcentaje: number; // % manual/sugerido aplicado a esta línea
 }
 
+interface VentaOfflineQueueItem {
+  id: string;
+  tipoDoc: '01' | '02';
+  clienteRuc: string | null;
+  items: ItemCarrito[];
+  metodoPago: 'EFECTIVO' | 'TARJETA' | 'YAPPY' | 'MIXTO';
+  subtotal: number;
+  itbms: number;
+  total: number;
+  offline: boolean;
+  autorizacion?: { adminEmail: string; pin: string };
+  estado: string;
+  createdAt: string;
+}
+
+interface ReciboVenta {
+  numero: string;
+  fecha: string;
+  tipo: string;
+  cliente: string;
+  items: ItemCarrito[];
+  subtotal: number;
+  itbms: number;
+  total: number;
+  metodoPago: string;
+  efectivoRecibido: number;
+  vuelto: number;
+  cufe?: string;
+  cafUrl?: string;
+  contingencia: boolean;
+  mensajeLegal: string;
+}
+
+interface ProductoPOSRaw {
+  id: string;
+  codigoInterno?: string;
+  codigoBarras?: string;
+  descripcion?: string;
+  precioVenta?: number | string;
+  codigoTasaItbms?: string;
+  stockActual?: number;
+  unidadMedida?: string;
+  descuentoSugerido?: number | string;
+}
+
+interface VentaPayload {
+  tipoDoc: '01' | '02';
+  clienteRuc: string | null;
+  items: ItemCarrito[];
+  metodoPago: 'EFECTIVO' | 'TARJETA' | 'YAPPY' | 'MIXTO';
+  subtotal: number;
+  itbms: number;
+  total: number;
+  offline: boolean;
+  autorizacion?: { adminEmail: string; pin: string };
+}
+
 export default function POSMultiDispositivoPage() {
   const [productos, setProductos] = useState<ProductoPOS[]>([]);
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
@@ -54,7 +111,7 @@ export default function POSMultiDispositivoPage() {
   // Estado de Red y Cola Offline IndexedDB / LocalStorage
   const [isOnline, setIsOnline] = useState(true);
   const [contingenciaForzada, setContingenciaForzada] = useState(false);
-  const [colaLocal, setColaLocal] = useState<any[]>([]);
+  const [colaLocal, setColaLocal] = useState<VentaOfflineQueueItem[]>([]);
   const [sincronizando, setSincronizando] = useState(false);
 
   // Modal Pago
@@ -77,7 +134,7 @@ export default function POSMultiDispositivoPage() {
   const [errorAutorizacion, setErrorAutorizacion] = useState('');
 
   // Modal Recibo Térmico (80mm)
-  const [reciboVenta, setReciboVenta] = useState<any>(null);
+  const [reciboVenta, setReciboVenta] = useState<ReciboVenta | null>(null);
 
   // Cargar el tope de descuento sin autorización del usuario actual (solo informativo
   // para la UI; la validación real y obligatoria siempre ocurre en el servidor).
@@ -142,7 +199,7 @@ export default function POSMultiDispositivoPage() {
       const res = await fetch('/api/pos/productos');
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        const lista = (data.items || []).map((p: any) => ({
+        const lista = (data.items || []).map((p: ProductoPOSRaw) => ({
           id: p.id,
           codigoInterno: p.codigoInterno || 'SKU-01',
           codigoBarras: p.codigoBarras,
@@ -263,7 +320,7 @@ export default function POSMultiDispositivoPage() {
     setProcesandoVenta(true);
     const useOffline = !isOnline || contingenciaForzada;
 
-    const payload: any = {
+    const payload: VentaPayload = {
       tipoDoc,
       clienteRuc: clienteRuc || (tipoDoc === '01' ? 'CF' : null),
       items: carrito,
@@ -935,7 +992,7 @@ export default function POSMultiDispositivoPage() {
                 <span>DESCRIPCIÓN</span>
                 <span>TOTAL</span>
               </div>
-              {reciboVenta.items.map((it: any, i: number) => (
+              {reciboVenta.items.map((it, i: number) => (
                 <div key={i} className="flex justify-between py-0.5">
                   <span>{it.cantidad}x {it.descripcion}</span>
                   <span>${(it.cantidad * it.precioUnitario).toFixed(2)}</span>

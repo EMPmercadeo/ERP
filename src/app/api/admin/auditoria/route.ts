@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { paginar } from '@/lib/paginar';
 import { requireSuperAdminApi } from '@/lib/auth/admin';
 
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
     const fechaDesde = searchParams.get('fechaDesde');
     const fechaHasta = searchParams.get('fechaHasta');
 
-    const where: any = {};
+    const where: Prisma.LogAuditoriaWhereInput = {};
     if (adminId && adminId !== 'all') where.adminId = adminId;
     if (accion && accion !== 'all') where.accion = accion;
     if (objetivo && objetivo !== 'all') where.objetivo = objetivo;
@@ -35,8 +36,8 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(resultado);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/auditoria:', error);
-    return NextResponse.json({ error: error.message || 'Error al obtener log de auditoría' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al obtener log de auditoría' }, { status: 500 });
   }
 }

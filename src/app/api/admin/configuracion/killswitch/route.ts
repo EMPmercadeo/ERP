@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { requireSuperAdminApi } from '@/lib/auth/admin';
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   const auth = await requireSuperAdminApi();
   if ('error' in auth) return auth.error;
   try {
@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
         ambiente: pacRespaldo.ambiente
       }
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/admin/configuracion/killswitch:', error);
-    return NextResponse.json({ error: error.message || 'Error al ejecutar kill switch de PAC' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al ejecutar kill switch de PAC' }, { status: 500 });
   }
 }

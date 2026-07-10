@@ -30,7 +30,7 @@ export async function GET() {
         descuentoPorcentaje: Number(c.descuentoPorcentaje)
       }))
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/categories:', error);
     return NextResponse.json({ error: 'Error al obtener categorías' }, { status: 500 });
   }
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         descuentoPorcentaje: Number(categoria.descuentoPorcentaje)
       }
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error?.code === 'P2002') {
       return NextResponse.json({ error: 'Ya existe una categoría con ese nombre.' }, { status: 409 });
     }

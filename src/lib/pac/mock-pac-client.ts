@@ -70,10 +70,10 @@ export async function emitirFacturaPAC(payload: PACEmisionPayload): Promise<PACE
       numeroFiscal: `${payload.tipoDocumento === '01' ? 'FE' : 'BE'}-${Date.now().toString().slice(-8)}`,
       fechaEmision: new Date().toISOString()
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: error.message || 'Error en comunicación con PAC DGI',
+      error: error instanceof Error ? error.message : 'Error en comunicación con PAC DGI',
       fechaEmision: new Date().toISOString()
     };
   }

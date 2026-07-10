@@ -19,7 +19,7 @@ async function resolverCuentaDeSesion() {
   return prisma.cuenta.findFirst({ where: { ruc: empresa.ruc } });
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     let cuenta;
     try {
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         ultimaSync: config.ultimaSync
       }
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/pos/woocommerce:', error);
     return NextResponse.json({ error: 'Error al obtener configuración de WooCommerce' }, { status: 500 });
   }
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     if (!empresa) {
       return NextResponse.json({ error: 'Empresa no encontrada' }, { status: 404 });
     }
-    let cuenta = await prisma.cuenta.findFirst({ where: { ruc: empresa.ruc } });
+    const cuenta = await prisma.cuenta.findFirst({ where: { ruc: empresa.ruc } });
     if (!cuenta) {
       return NextResponse.json({ error: 'No hay cuenta fiscal vinculada a tu empresa. Contacta a soporte.' }, { status: 404 });
     }
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Conexión con WooCommerce guardada con cifrado AES-256-GCM.'
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/pos/woocommerce:', error);
     return NextResponse.json({ error: 'Error al guardar credenciales de WooCommerce' }, { status: 500 });
   }

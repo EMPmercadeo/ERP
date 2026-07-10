@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { paginar } from '@/lib/paginar';
 import { enviarCorreoSuperadmin } from '@/lib/correo';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     const estado = searchParams.get('estado'); // ENVIADO | FALLIDO
     const q = searchParams.get('q');
 
-    const where: any = {};
+    const where: Prisma.CorreoEnviadoWhereInput = {};
     if (estado && estado !== 'all') {
       where.estado = estado;
     }
@@ -43,9 +44,9 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(resultado);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/correos:', error);
-    return NextResponse.json({ error: error.message || 'Error al obtener historial de correos enviados' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al obtener historial de correos enviados' }, { status: 500 });
   }
 }
 
@@ -125,8 +126,8 @@ export async function POST(request: NextRequest) {
       fallidos,
       total: cuentasDestino.length
     }, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/admin/correos:', error);
-    return NextResponse.json({ error: error.message || 'Error al procesar envío masivo de correos' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al procesar envío masivo de correos' }, { status: 500 });
   }
 }

@@ -9,7 +9,7 @@ import { getTenantContext } from '@/lib/auth/context';
  * siempre caía al catálogo de demostración hardcodeado en vez de mostrar el inventario
  * real que se administra en /productos.
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     let empresaId: string;
     try {
@@ -42,8 +42,8 @@ export async function GET(request: NextRequest) {
           : Number(p.categoria?.descuentoPorcentaje || 0)
       }))
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/pos/productos:', error);
-    return NextResponse.json({ error: error.message || 'Error al obtener el catálogo del POS' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al obtener el catálogo del POS' }, { status: 500 });
   }
 }

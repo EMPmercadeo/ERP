@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,9 +19,28 @@ import {
   AlertTriangle
 } from 'lucide-react';
 
+interface AusenciaItem {
+  id: string;
+  tipo: string;
+  desde: string;
+  hasta: string;
+  dias: number | string;
+  nota?: string | null;
+  documentoUrl?: string | null;
+  estado: string;
+  empleado?: { nombre: string; cedula: string };
+}
+
+interface EmpleadoOpcion {
+  id: string;
+  nombre: string;
+  cedula: string;
+  cargo: string;
+}
+
 export default function AusenciasPage() {
-  const [ausencias, setAusencias] = useState<any[]>([]);
-  const [empleados, setEmpleados] = useState<any[]>([]);
+  const [ausencias, setAusencias] = useState<AusenciaItem[]>([]);
+  const [empleados, setEmpleados] = useState<EmpleadoOpcion[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState('PENDIENTE');
 
@@ -36,7 +55,7 @@ export default function AusenciasPage() {
   const [guardando, setGuardando] = useState(false);
   const [errorModal, setErrorModal] = useState('');
 
-  const cargarDatos = async () => {
+  const cargarDatos = useCallback(async () => {
     setLoading(true);
     try {
       const [resAus, resEmp] = await Promise.all([
@@ -51,8 +70,8 @@ export default function AusenciasPage() {
       if (resEmp.ok) {
         const dataEmp = await resEmp.json();
         setEmpleados(dataEmp.items || []);
-        if (dataEmp.items?.length > 0 && !empleadoId) {
-          setEmpleadoId(dataEmp.items[0].id);
+        if (dataEmp.items?.length > 0) {
+          setEmpleadoId((prev) => prev || dataEmp.items[0].id);
         }
       }
     } catch (err) {
@@ -60,11 +79,11 @@ export default function AusenciasPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtroEstado]);
 
   useEffect(() => {
     cargarDatos();
-  }, [filtroEstado]);
+  }, [cargarDatos]);
 
   const handleCrearAusencia = async (e: React.FormEvent) => {
     e.preventDefault();

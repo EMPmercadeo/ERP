@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { requireSuperAdminApi } from '@/lib/auth/admin';
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Cuenta no encontrada' }, { status: 404 });
     }
 
-    const where: any = { cuentaId };
+    const where: Prisma.MovimientoCuotaWhereInput = { cuentaId };
     if (tipo && tipo !== 'all') {
       where.tipo = tipo;
     }
@@ -46,9 +47,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       cuenta,
       movimientos
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/cuotas/[cuentaId]:', error);
-    return NextResponse.json({ error: error.message || 'Error al obtener movimientos de cuota' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al obtener movimientos de cuota' }, { status: 500 });
   }
 }
 
@@ -153,8 +154,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     return NextResponse.json({ error: 'Acción inválida' }, { status: 400 });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/admin/cuotas/[cuentaId]:', error);
-    return NextResponse.json({ error: error.message || 'Error procesando acción sobre cuotas' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error procesando acción sobre cuotas' }, { status: 500 });
   }
 }

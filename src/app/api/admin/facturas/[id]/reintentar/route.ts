@@ -51,8 +51,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       message: 'Reintento de transmisión ejecutado correctamente ante el PAC/DGI. Factura ahora en estado ACEPTADA.',
       factura: modificada
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/admin/facturas/[id]/reintentar:', error);
-    return NextResponse.json({ error: error.message || 'Error al reintentar envío de factura' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al reintentar envío de factura' }, { status: 500 });
   }
 }

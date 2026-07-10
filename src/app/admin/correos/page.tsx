@@ -10,9 +10,25 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
+interface CorreoLog {
+  id: string;
+  destinatario: string;
+  asunto: string;
+  estado: string;
+  abierto: boolean;
+  createdAt: string;
+}
+
+interface PlantillaCorreo {
+  id: string;
+  clave: string;
+  asunto: string;
+  cuerpo: string;
+}
+
 export default function SuperadminCorreosPage() {
-  const [correos, setCorreos] = useState<any[]>([]);
-  const [plantillas, setPlantillas] = useState<any[]>([]);
+  const [correos, setCorreos] = useState<CorreoLog[]>([]);
+  const [plantillas, setPlantillas] = useState<PlantillaCorreo[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'historial' | 'enviar' | 'plantillas'>('historial');
 
@@ -80,7 +96,7 @@ export default function SuperadminCorreosPage() {
       } else {
         toast.error(data.error || 'Fallo en el envío masivo');
       }
-    } catch (error) {
+    } catch {
       toast.error('Error de conexión con el servidor de correo');
     } finally {
       setEnviando(false);
@@ -114,7 +130,7 @@ export default function SuperadminCorreosPage() {
       } else {
         toast.error(data.error || 'No se pudo guardar la plantilla');
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al guardar plantilla.');
     }
   };
@@ -227,7 +243,7 @@ export default function SuperadminCorreosPage() {
                   </label>
                   <select
                     value={tipoDestino}
-                    onChange={(e: any) => setTipoDestino(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTipoDestino(e.target.value as 'todos' | 'plan' | 'individual')}
                     className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none"
                   >
                     <option value="individual">Individual (Una cuenta o correo)</option>

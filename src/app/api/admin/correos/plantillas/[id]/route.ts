@@ -20,9 +20,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Plantilla no encontrada' }, { status: 404 });
     }
     return NextResponse.json(plantilla);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/correos/plantillas/[id]:', error);
-    return NextResponse.json({ error: error.message || 'Error al obtener plantilla' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al obtener plantilla' }, { status: 500 });
   }
 }
 
@@ -58,9 +58,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     });
 
     return NextResponse.json(modificado);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error PATCH /api/admin/correos/plantillas/[id]:', error);
-    return NextResponse.json({ error: error.message || 'Error al actualizar plantilla de correo' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al actualizar plantilla de correo' }, { status: 500 });
   }
 }
 
@@ -87,8 +87,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     });
 
     return NextResponse.json({ success: true, message: 'Plantilla de correo eliminada con éxito' });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error DELETE /api/admin/correos/plantillas/[id]:', error);
-    return NextResponse.json({ error: error.message || 'Error al eliminar plantilla' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al eliminar plantilla' }, { status: 500 });
   }
 }

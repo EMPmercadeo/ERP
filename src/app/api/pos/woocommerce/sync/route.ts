@@ -5,21 +5,44 @@ import { getTenantContext } from '@/lib/auth/context';
 import { decrypt } from '@/lib/utils/crypto';
 
 /**
- * Igual que /api/pos/woocommerce: no tenía autenticación y cuentaId venía del cliente.
- * Además SYNC_STOCK_CATALOGO consultaba prisma.producto.findMany({ where: { activo: true } })
- * SIN filtro de empresaId — traía hasta 100 productos de TODAS las empresas del sistema
- * (fuga de datos entre tenants). Ahora la cuenta y la empresa se resuelven desde la sesión
- * y el catálogo se filtra siempre por empresaId del llamante.
+ * Igual que /api/pos/woocommerce: no tenia autenticacion y cuentaId venia del cliente.
+ * Ademas SYNC_STOCK_CATALOGO consultaba prisma.producto.findMany({ where: { activo: true } })
+ * SIN filtro de empresaId -- traia hasta 100 productos de TODAS las empresas del sistema
+ * (fuga de datos entre tenants). Ahora la cuenta y la empresa se resuelven desde la sesion
+ * y el catalogo se filtra siempre por empresaId del llamante.
  *
- * Además, SYNC_STOCK_CATALOGO e IMPORTAR_PEDIDOS_WOO nunca llamaban a la API real de
- * WooCommerce: el primero solo tocaba la fecha de última sincronización y decía "stock
- * alineado" sin haber contactado la tienda; el segundo devolvía dos pedidos de ejemplo
- * hardcodeados ("María Rodríguez", "Roberto Gómez") sin importar qué tienda estuviera
- * configurada. Ahora ambos usan la REST API v3 de WooCommerce (wp-json/wc/v3) autenticada
- * con Basic Auth (Consumer Key/Secret, ya guardados cifrados en ConfiguracionWoo).
+ * Ademas, SYNC_STOCK_CATALOGO e IMPORTAR_PEDIDOS_WOO nunca llamaban a la API real de
+ * WooCommerce: el primero solo tocaba la fecha de ultima sincronizacion y decia "stock
+ * alineado" sin haber contactado la tienda; el segundo devolvia dos pedidos de ejemplo
+ * hardcodeados sin importar que tienda estuviera configurada. Ahora ambos usan la REST API
+ * v3 de WooCommerce (wp-json/wc/v3) autenticada con Basic Auth (Consumer Key/Secret, ya
+ * guardados cifrados en ConfiguracionWoo).
  */
 
 const WOO_TIMEOUT_MS = 15000;
+
+interface WooMetaData {
+  key?: string;
+  value?: string | number;
+}
+
+interface WooLineItem {
+  name: string;
+  quantity: number;
+  total?: string | number;
+}
+
+interface WooOrder {
+  number?: string | number;
+  id: string | number;
+  meta_data?: WooMetaData[];
+  billing?: { first_name?: string; last_name?: string; company?: string };
+  total_tax?: string | number;
+  total?: string | number;
+  payment_method_title?: string;
+  line_items?: WooLineItem[];
+  date_created?: string;
+}
 
 async function wooRequest(
   urlTienda: string,
@@ -49,7 +72,7 @@ export async function POST(request: NextRequest) {
     try {
       ({ empresaId, userId } = await getTenantContext());
     } catch {
-      return NextResponse.json({ error: 'Debes iniciar sesión para sincronizar con WooCommerce.' }, { status: 401 });
+      return NextResponse.json({ error: 'Debes iniciar sesion para sincronizar con WooCommerce.' }, { status: 401 });
     }
 
     const empresa = await prisma.empresa.findUnique({ where: { id: empresaId } });
@@ -66,32 +89,32 @@ export async function POST(request: NextRequest) {
 
     const config = await prisma.configuracionWoo.findUnique({ where: { cuentaId: cuenta.id } });
     if (!config || !config.activo) {
-      return NextResponse.json({ error: 'Integración con WooCommerce inactiva o no configurada para esta cuenta' }, { status: 400 });
+      return NextResponse.json({ error: 'Integracion con WooCommerce inactiva o no configurada para esta cuenta' }, { status: 400 });
     }
 
     const consumerKey = decrypt(config.consumerKey);
     const consumerSec = decrypt(config.consumerSec);
 
-    // Si la acción es sincronizar catálogo y niveles de inventario bidireccionalmente
+    // Si la accion es sincronizar catalogo y niveles de inventario bidireccionalmente
     if (accion === 'SYNC_STOCK_CATALOGO') {
       const productos = await prisma.producto.findMany({
         where: { activo: true, empresaId, codigoInterno: { not: '' } },
         take: 100
       });
 
-      // Llamada de prueba para detectar credenciales inválidas o tienda inalcanzable ANTES
-      // de recorrer todo el catálogo (evita 100 requests fallidos si algo básico está mal).
+      // Llamada de prueba para detectar credenciales invalidas o tienda inalcanzable ANTES
+      // de recorrer todo el catalogo (evita 100 requests fallidos si algo basico esta mal).
       let testRes: Response;
       try {
         testRes = await wooRequest(config.urlTienda, consumerKey, consumerSec, '/products?per_page=1');
       } catch {
         return NextResponse.json({
-          error: 'No se pudo conectar con la URL de la tienda WooCommerce configurada. Verifica que sea correcta, use HTTPS y esté accesible públicamente.'
+          error: 'No se pudo conectar con la URL de la tienda WooCommerce configurada. Verifica que sea correcta, use HTTPS y este accesible publicamente.'
         }, { status: 502 });
       }
       if (testRes.status === 401 || testRes.status === 403) {
         return NextResponse.json({
-          error: 'WooCommerce rechazó las credenciales configuradas (Consumer Key/Secret inválidas o sin permiso de Lectura/Escritura). Revísalas en Configuración → Integraciones.'
+          error: 'WooCommerce rechazo las credenciales configuradas (Consumer Key/Secret invalidas o sin permiso de Lectura/Escritura). Revisalas en Configuracion -> Integraciones.'
         }, { status: 400 });
       }
       if (!testRes.ok) {
@@ -131,8 +154,8 @@ export async function POST(request: NextRequest) {
           } else {
             errores.push(`${producto.codigoInterno}: HTTP ${actualizar.status} al actualizar`);
           }
-        } catch (e: any) {
-          errores.push(`${producto.codigoInterno}: ${e?.message || 'error de red'}`);
+        } catch (e) {
+          errores.push(`${producto.codigoInterno}: ${e instanceof Error ? e.message : 'error de red'}`);
         }
       }
 
@@ -151,7 +174,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: `Sincronización completada: ${actualizados} de ${productos.length} productos actualizados en WooCommerce por SKU` +
+        message: `Sincronizacion completada: ${actualizados} de ${productos.length} productos actualizados en WooCommerce por SKU` +
           (sinCoincidencia ? `, ${sinCoincidencia} sin SKU coincidente en la tienda` : '') +
           (errores.length ? `, ${errores.length} con error` : '') + '.',
         detalles: { actualizados, sinCoincidencia, errores: errores.slice(0, 10) },
@@ -159,7 +182,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Si la acción es importar pedidos de la tienda online para emitir boletas/facturas electrónicas en Panamá
+    // Si la accion es importar pedidos de la tienda online para emitir boletas/facturas electronicas en Panama
     if (accion === 'IMPORTAR_PEDIDOS_WOO') {
       let ordersRes: Response;
       try {
@@ -171,13 +194,13 @@ export async function POST(request: NextRequest) {
         );
       } catch {
         return NextResponse.json({
-          error: 'No se pudo conectar con la URL de la tienda WooCommerce configurada. Verifica que sea correcta, use HTTPS y esté accesible públicamente.'
+          error: 'No se pudo conectar con la URL de la tienda WooCommerce configurada. Verifica que sea correcta, use HTTPS y este accesible publicamente.'
         }, { status: 502 });
       }
 
       if (ordersRes.status === 401 || ordersRes.status === 403) {
         return NextResponse.json({
-          error: 'WooCommerce rechazó las credenciales configuradas (Consumer Key/Secret inválidas o sin permiso de lectura). Revísalas en Configuración → Integraciones.'
+          error: 'WooCommerce rechazo las credenciales configuradas (Consumer Key/Secret invalidas o sin permiso de lectura). Revisalas en Configuracion -> Integraciones.'
         }, { status: 400 });
       }
       if (!ordersRes.ok) {
@@ -189,8 +212,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Respuesta inesperada de WooCommerce al listar pedidos.' }, { status: 502 });
       }
 
-      const pedidos = ordenesWoo.map((o: any) => {
-        const metaRuc = (o.meta_data || []).find((m: any) => /ruc|cedula|c[ée]dula/i.test(m?.key || ''));
+      const pedidos = (ordenesWoo as WooOrder[]).map((o) => {
+        const metaRuc = (o.meta_data || []).find((m) => /ruc|cedula|c[ée]dula/i.test(m?.key || ''));
         const nombreCliente =
           [o.billing?.first_name, o.billing?.last_name].filter(Boolean).join(' ').trim() ||
           o.billing?.company ||
@@ -203,7 +226,7 @@ export async function POST(request: NextRequest) {
           ruc: metaRuc?.value ? String(metaRuc.value) : 'CF',
           total: Number(o.total || 0),
           metodoPago: o.payment_method_title || 'No especificado',
-          items: (o.line_items || []).map((li: any) => ({
+          items: (o.line_items || []).map((li) => ({
             descripcion: li.name,
             cantidad: li.quantity,
             precioUnitario: li.quantity > 0 ? Number(li.total || 0) / li.quantity : Number(li.total || 0),
@@ -225,14 +248,14 @@ export async function POST(request: NextRequest) {
         success: true,
         pedidos,
         message: pedidos.length > 0
-          ? `Se encontraron ${pedidos.length} pedido(s) en WooCommerce pendientes de facturación DGI.`
+          ? `Se encontraron ${pedidos.length} pedido(s) en WooCommerce pendientes de facturacion DGI.`
           : 'No hay pedidos nuevos ("processing"/"on-hold") en tu tienda WooCommerce en este momento.'
       });
     }
 
-    return NextResponse.json({ error: 'Acción no reconocida' }, { status: 400 });
-  } catch (error: any) {
+    return NextResponse.json({ error: 'Accion no reconocida' }, { status: 400 });
+  } catch (error) {
     console.error('Error POST /api/pos/woocommerce/sync:', error);
-    return NextResponse.json({ error: 'Error durante la sincronización con WooCommerce' }, { status: 500 });
+    return NextResponse.json({ error: 'Error durante la sincronizacion con WooCommerce' }, { status: 500 });
   }
 }

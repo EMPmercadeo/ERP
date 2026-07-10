@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,8 +19,20 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+interface Empleado {
+  id: string;
+  nombre: string;
+  cedula: string;
+  activo: boolean;
+  cargo: string;
+  salarioBase: number | string;
+  tipoContrato: string;
+  fechaIngreso: string;
+  _count?: { ausencias?: number; actas?: number };
+}
+
 export default function EmpleadosRRHHPage() {
-  const [empleados, setEmpleados] = useState<any[]>([]);
+  const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [loading, setLoading] = useState(true);
   const [buscar, setBuscar] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('activo');
@@ -36,12 +48,20 @@ export default function EmpleadosRRHHPage() {
   const [errorModal, setErrorModal] = useState('');
   const [guardando, setGuardando] = useState(false);
 
+  // Mantiene el valor más reciente de "buscar" disponible sin forzar que el efecto de abajo
+  // se dispare en cada tecleo (la búsqueda solo debe re-consultar al cambiar filtroEstado o
+  // al pulsar el botón/Enter, nunca en vivo mientras se escribe).
+  const buscarRef = useRef(buscar);
+  useEffect(() => {
+    buscarRef.current = buscar;
+  }, [buscar]);
+
   // Cargar lista de colaboradores — el servidor deriva la empresa de la sesión, nunca del cliente
-  const cargarEmpleados = async () => {
+  const cargarEmpleados = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (buscar) params.append('buscar', buscar);
+      if (buscarRef.current) params.append('buscar', buscarRef.current);
       if (filtroEstado !== 'all') params.append('estado', filtroEstado);
 
       const res = await fetch(`/api/rrhh/empleados?${params.toString()}`);
@@ -54,11 +74,11 @@ export default function EmpleadosRRHHPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtroEstado]);
 
   useEffect(() => {
     cargarEmpleados();
-  }, [filtroEstado]);
+  }, [cargarEmpleados]);
 
   const handleCrearEmpleado = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +108,7 @@ export default function EmpleadosRRHHPage() {
         setCargo('');
         cargarEmpleados();
       }
-    } catch (err: any) {
+    } catch {
       setErrorModal('Error de conexión con el servidor');
     } finally {
       setGuardando(false);

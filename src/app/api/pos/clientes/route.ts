@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         descuentoEspecial: Number(cliente.descuentoEspecial)
       }
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/pos/clientes:', error);
     return NextResponse.json({ error: 'Error al buscar el cliente' }, { status: 500 });
   }

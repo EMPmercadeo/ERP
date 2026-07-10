@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { paginar } from '@/lib/paginar';
 import { requireSuperAdminApi } from '@/lib/auth/admin';
 
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     const cuentaId = searchParams.get('cuentaId');
     const soloRechazadas = searchParams.get('soloRechazadas') === 'true';
 
-    const where: any = {};
+    const where: Prisma.FacturaEmitidaWhereInput = {};
     if (soloRechazadas) {
       where.estado = 'RECHAZADA';
     } else if (estado && estado !== 'all') {
@@ -36,8 +37,8 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(resultado);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/facturas:', error);
-    return NextResponse.json({ error: error.message || 'Error al obtener facturas electrónicas' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al obtener facturas electrónicas' }, { status: 500 });
   }
 }

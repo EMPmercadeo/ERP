@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireSuperAdminApi } from '@/lib/auth/admin';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const auth = await requireSuperAdminApi();
   if ('error' in auth) return auth.error;
   try {
@@ -82,8 +82,8 @@ export async function GET(request: NextRequest) {
       rankingCuentas: ranking,
       consumoPorPlan
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/facturas/metrica:', error);
-    return NextResponse.json({ error: error.message || 'Error al obtener métricas de facturación' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al obtener métricas de facturación' }, { status: 500 });
   }
 }

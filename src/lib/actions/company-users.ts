@@ -153,8 +153,8 @@ export async function updateCompanyDiscountThreshold(porcentaje: number): Promis
 
         revalidatePath('/settings');
         return { success: true, message: `Tope de descuento sin autorización actualizado a ${pct}%.` };
-    } catch (e: any) {
-        return { success: false, error: e?.message || 'Error al guardar el tope.' };
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : 'Error al guardar el tope.' };
     }
 }
 

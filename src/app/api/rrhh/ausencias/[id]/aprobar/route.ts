@@ -94,7 +94,7 @@ export async function POST(
     });
 
     return NextResponse.json({ success: true, ausencia: actualizada });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/rrhh/ausencias/[id]/aprobar:', error);
     return NextResponse.json({ error: 'Error al procesar resolución de ausencia' }, { status: 500 });
   }

@@ -76,8 +76,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       respuesta,
       ticket: ticketActualizado
     }, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/admin/soporte/[id]/responder:', error);
-    return NextResponse.json({ error: error.message || 'Error al responder ticket de soporte' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al responder ticket de soporte' }, { status: 500 });
   }
 }

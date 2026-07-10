@@ -102,7 +102,7 @@ export async function GET(
         'Content-Disposition': `inline; filename="${factura.numeroCompleto.replace(/[^\w.-]+/g, '_')}.pdf"`
       }
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/invoices/[id]/pdf:', error);
     return NextResponse.json({ error: 'Error al generar el PDF de la factura.' }, { status: 500 });
   }

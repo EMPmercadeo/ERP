@@ -1,10 +1,27 @@
 // Helper de paginación cursor para ERP Panamá Superadmin
+type PaginarWhere = Record<string, unknown>;
+type PaginarOrderBy = Record<string, unknown> | Record<string, unknown>[];
+type PaginarInclude = Record<string, unknown>;
+
+interface PaginarFindManyArgs {
+  take?: number;
+  skip?: number;
+  cursor?: { id: string };
+  where?: PaginarWhere;
+  orderBy?: PaginarOrderBy;
+  include?: PaginarInclude;
+}
+
+interface PaginableDelegate<T> {
+  findMany(args: PaginarFindManyArgs): Promise<T[]>;
+}
+
 export async function paginar<T extends { id: string }>(
-  model: any,
+  model: PaginableDelegate<T>,
   { cursor, take = 20, where = {}, orderBy = { createdAt: "desc" }, include }:
-  { cursor?: string | null; take?: number; where?: any; orderBy?: any; include?: any }
+  { cursor?: string | null; take?: number; where?: PaginarWhere; orderBy?: PaginarOrderBy; include?: PaginarInclude }
 ) {
-  const queryArgs: any = {
+  const queryArgs: PaginarFindManyArgs = {
     take: take + 1,
     where,
     orderBy,

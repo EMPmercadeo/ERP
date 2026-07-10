@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { getTenantContext } from '@/lib/auth/context';
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     const cargo = searchParams.get('cargo');
     const buscar = searchParams.get('buscar');
 
-    const where: any = { empresaId };
+    const where: Prisma.EmpleadoWhereInput = { empresaId };
     if (estado === 'activo') where.activo = true;
     if (estado === 'inactivo') where.activo = false;
     if (cargo && cargo !== 'all') where.cargo = cargo;
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(resultado);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/rrhh/empleados:', error);
     return NextResponse.json({ error: 'Error al listar empleados' }, { status: 500 });
   }
@@ -125,8 +126,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true, empleado });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/rrhh/empleados:', error);
-    return NextResponse.json({ error: error.message || 'Error al registrar colaborador' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al registrar colaborador' }, { status: 500 });
   }
 }

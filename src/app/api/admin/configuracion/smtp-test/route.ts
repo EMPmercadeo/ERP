@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Correo de prueba enviado con éxito a ${destinatario}. Registro guardado en CorreoEnviado.`
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/admin/configuracion/smtp-test:', error);
-    return NextResponse.json({ error: error.message || 'Error en prueba SMTP' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error en prueba SMTP' }, { status: 500 });
   }
 }

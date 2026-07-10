@@ -33,9 +33,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         mensaje = `Fallo en el PAC '${pac.proveedor}': Credenciales ausentes o servicio inactivo.`;
         statusHttp = 503;
       }
-    } catch (err: any) {
+    } catch (err) {
       ok = false;
-      mensaje = err.message || 'Error de conexión HTTP al servidor del PAC.';
+      mensaje = err instanceof Error ? err.message : 'Error de conexión HTTP al servidor del PAC.';
       statusHttp = 500;
     }
 
@@ -57,8 +57,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       latenciaMs,
       mensaje
     }, { status: statusHttp });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error POST /api/admin/pac/[id]/test:', error);
-    return NextResponse.json({ error: error.message || 'Error de verificación del PAC' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error de verificación del PAC' }, { status: 500 });
   }
 }

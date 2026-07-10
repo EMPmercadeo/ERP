@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { requireSuperAdminApi } from '@/lib/auth/admin';
 import { encrypt as cifrar } from '@/lib/utils/crypto';
@@ -32,7 +33,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ error: 'Configuración PAC no encontrada' }, { status: 404 });
     }
 
-    const data: any = {};
+    const data: Prisma.ConfiguracionPACUpdateInput = {};
     if (validacion.data.proveedor !== undefined) data.proveedor = validacion.data.proveedor;
     if (validacion.data.ambiente !== undefined) data.ambiente = validacion.data.ambiente;
     if (validacion.data.credenciales) data.credenciales = cifrar(validacion.data.credenciales);
@@ -66,9 +67,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       credenciales: '••••••••••••••••',
       hasCredentials: true
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error PATCH /api/admin/pac/[id]:', error);
-    return NextResponse.json({ error: error.message || 'Error al actualizar PAC' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al actualizar PAC' }, { status: 500 });
   }
 }
 
@@ -95,8 +96,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     });
 
     return NextResponse.json({ success: true, message: 'Proveedor PAC eliminado correctamente' });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error DELETE /api/admin/pac/[id]:', error);
-    return NextResponse.json({ error: error.message || 'Error al eliminar PAC' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al eliminar PAC' }, { status: 500 });
   }
 }

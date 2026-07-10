@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { paginar } from '@/lib/paginar';
 import { requireSuperAdminApi } from '@/lib/auth/admin';
 
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
     const cuentaId = searchParams.get('cuentaId');
     const asignadoA = searchParams.get('asignadoA');
 
-    const where: any = {};
+    const where: Prisma.TicketSoporteWhereInput = {};
     if (estado && estado !== 'all') where.estado = estado;
     if (prioridad && prioridad !== 'all') where.prioridad = prioridad;
     if (cuentaId && cuentaId !== 'all') where.cuentaId = cuentaId;
@@ -33,8 +34,8 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(resultado);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error GET /api/admin/soporte:', error);
-    return NextResponse.json({ error: error.message || 'Error al obtener tickets de soporte' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error al obtener tickets de soporte' }, { status: 500 });
   }
 }
