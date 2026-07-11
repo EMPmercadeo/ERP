@@ -21,12 +21,20 @@ const VentaSchema = z.object({
     descuentoPorcentaje: z.number().min(0).max(100).optional().default(0)
   })).min(1, 'La venta debe contener al menos 1 item'),
   metodoPago: z.enum(['EFECTIVO', 'TARJETA', 'YAPPY', 'TRANSFERENCIA', 'MIXTO']),
+  // Numero de referencia/autorizacion del datafono o de Yappy -- no hay integracion real con
+  // un procesador de pagos (requiere credenciales reales que hoy no existen), asi que esto es
+  // un flujo manual mejorado: el cajero cobra fisicamente por fuera y anota la referencia aqui
+  // para poder conciliar despues. Se exige (mas abajo) para TARJETA y YAPPY.
+  referenciaPago: z.string().trim().max(60).optional(),
   offline: z.boolean().optional(),
   autorizacion: z.object({
     adminEmail: z.string().email(),
     pin: z.string().min(4).max(8)
   }).optional()
-});
+}).refine(
+  (data) => !(['TARJETA', 'YAPPY'] as string[]).includes(data.metodoPago) || !!data.referenciaPago,
+  { message: 'Ingresa el numero de referencia/autorizacion del pago para conciliarlo despues.', path: ['referenciaPago'] }
+);
 
 export async function GET(request: NextRequest) {
   try {
@@ -69,13 +77,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Debes iniciar sesion para registrar ventas en el POS.' }, { status: 401 });
     }
 
+    // Bloqueo real de "no vender sin turno abierto": se verifica siempre en el servidor,
+    // nunca se confia en que la UI ya mostro la pantalla de apertura. Un turno cerrado o
+    // inexistente para este (empresaId, usuarioId) rechaza la venta de una vez, incluso si
+    // el payload luce valido en todo lo demas.
+    const turnoActivo = await prisma.turnoCaja.findFirst({
+      where: { empresaId, usuarioId: userId, estado: 'abierto' }
+    });
+    if (!turnoActivo) {
+      return NextResponse.json({
+        error: 'No tienes un turno de caja abierto. Abre tu turno (declarando el efectivo inicial) antes de registrar ventas.',
+        requiereTurno: true
+      }, { status: 403 });
+    }
+
     const body = await request.json();
     const parseResult = VentaSchema.safeParse(body);
     if (!parseResult.success) {
       return NextResponse.json({ error: parseResult.error.issues[0].message }, { status: 400 });
     }
 
-    const { cuentaId, tipoDoc, clienteRuc, items, metodoPago, offline, autorizacion } = parseResult.data;
+    const { cuentaId, tipoDoc, clienteRuc, items, metodoPago, referenciaPago, offline, autorizacion } = parseResult.data;
 
     const maxDescuentoSolicitado = Math.max(0, ...items.map(it => it.descuentoPorcentaje || 0));
     let autorizadoPor: { id: string; nombre: string; rol: string } | null = null;
@@ -133,6 +155,7 @@ export async function POST(request: NextRequest) {
       data: {
         empresaId,
         cuentaId: cuenta?.id || null,
+        turnoCajaId: turnoActivo.id,
         tipoDoc,
         clienteRuc: clienteRuc || (tipoDoc === '01' ? 'CF' : null),
         items: items as Prisma.InputJsonValue,
@@ -140,6 +163,7 @@ export async function POST(request: NextRequest) {
         itbms: Number(itbmsTotal.toFixed(2)),
         total: Number(total.toFixed(2)),
         metodoPago,
+        referenciaPago: referenciaPago || null,
         estado: offline ? 'LOCAL' : 'EN_COLA',
         contingencia: !!offline
       }

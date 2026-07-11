@@ -37,6 +37,17 @@ model Empresa {
   // aplicar hasta este % en el POS sin autorización. Por encima, se requiere PIN de un
   // admin/gerente. Editable en Configuración por el dueño de la empresa.
   descuentoMaximoSinAutorizacion Decimal              @default(10)
+  // Credenciales de Yappy Comercial (Banco General) para cobrar de verdad con el Botón de
+  // Pago Yappy V2, propias de cada empresa (multi-tenant, igual que certificadoDgi/usuarioPac/
+  // passwordPac). yappySecretKey se guarda cifrada con AES-256-GCM (src/lib/utils/crypto.ts),
+  // nunca en texto plano. yappyEnabled es el interruptor por empresa; ademas existe un
+  // interruptor global YAPPY_INTEGRATION_ENABLED (env) que debe estar en 'true' para que se
+  // hagan llamadas reales -- ver src/lib/pos/yappyClient.ts.
+  yappyEnabled              Boolean                  @default(false)
+  yappyMerchantId           String?
+  yappySecretKey            String?
+  yappyAmbiente             String                   @default("pruebas") // pruebas | produccion
+  yappyDomain               String?
   cajas                     Caja[]
   clientes                  Cliente[]
   cotizaciones              Cotizacion[]
@@ -74,6 +85,8 @@ model Empresa {
   empleados                 Empleado[]
   ventas                    Venta[]
   transferenciasBodega      TransferenciaBodega[]
+  turnosCaja                TurnoCaja[]
+  yappyOrdenes              YappyOrden[]
 
   @@index([createdAt])
 }
@@ -169,6 +182,7 @@ model Usuario {
   asientoContables            AsientoContable[]
   transferenciasBodegaCreadas   TransferenciaBodega[]  @relation("TransferenciaBodegaCreador")
   transferenciasBodegaRecibidas TransferenciaBodega[]  @relation("TransferenciaBodegaReceptor")
+  turnosCaja                  TurnoCaja[]
 
   @@index([empresaId])
 }
@@ -1320,13 +1334,42 @@ model BaseConocimientoLaboral {
   createdAt DateTime @default(now())
 }
 
+// Turno de caja del POS: cada cajero debe abrir un turno (declarando el efectivo inicial)
+// antes de poder vender, y cerrarlo al final contando el efectivo real en caja. El cierre
+// calcula lo esperado (monto inicial + ventas en efectivo del turno) contra lo contado y
+// registra la diferencia (faltante/sobrante) para arqueo de caja.
+model TurnoCaja {
+  id                  String    @id @default(cuid())
+  empresaId           String
+  usuarioId           String
+  fechaApertura       DateTime  @default(now())
+  montoInicial        Decimal
+  fechaCierre         DateTime?
+  montoContadoCierre  Decimal?
+  montoEsperadoCierre Decimal?
+  // montoContadoCierre - montoEsperadoCierre (positivo = sobrante, negativo = faltante)
+  diferencia          Decimal?
+  estado              String    @default("abierto") // abierto | cerrado
+  observaciones       String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  empresa             Empresa   @relation(fields: [empresaId], references: [id])
+  usuario             Usuario   @relation(fields: [usuarioId], references: [id])
+  ventas              Venta[]
+
+  @@index([empresaId, estado])
+  @@index([usuarioId, estado])
+}
+
 model Venta {
-  id            String   @id @default(cuid())
+  id            String     @id @default(cuid())
   empresaId     String
-  empresa       Empresa  @relation(fields: [empresaId], references: [id])
+  empresa       Empresa    @relation(fields: [empresaId], references: [id])
   cuentaId      String?
-  cuenta        Cuenta?  @relation(fields: [cuentaId], references: [id])
-  cufe          String?  @unique
+  cuenta        Cuenta?    @relation(fields: [cuentaId], references: [id])
+  turnoCajaId   String?
+  turnoCaja     TurnoCaja? @relation(fields: [turnoCajaId], references: [id])
+  cufe          String?    @unique
   tipoDoc       String   // 01 factura | 02 boleta
   clienteRuc    String?
   items         Json     // líneas: producto, cantidad, precio, itbms
@@ -1334,13 +1377,19 @@ model Venta {
   itbms         Decimal
   total         Decimal
   metodoPago    String   // EFECTIVO | TARJETA | YAPPY | TRANSFERENCIA | MIXTO
-  estado        String   @default("LOCAL") // LOCAL | EN_COLA | AUTORIZADA | RECHAZADA | ANULADA
-  contingencia  Boolean  @default(false)
-  createdAt     DateTime @default(now())
+  // Numero de referencia/autorizacion del datafono o de la app de Yappy, capturado
+  // manualmente por el cajero para poder conciliar despues contra el estado de cuenta del
+  // procesador. No hay integracion real con un procesador de pagos (requiere credenciales
+  // reales del usuario que hoy no existen) -- ver src/lib/pos/hardwareEscPos.ts.
+  referenciaPago String?
+  estado        String     @default("LOCAL") // LOCAL | EN_COLA | AUTORIZADA | RECHAZADA | ANULADA
+  contingencia  Boolean    @default(false)
+  createdAt     DateTime   @default(now())
 
   @@index([empresaId, createdAt])
   @@index([cuentaId, createdAt])
   @@index([estado, createdAt])
+  @@index([turnoCajaId])
 }
 
 model ConfiguracionWoo {
@@ -1352,4 +1401,23 @@ model ConfiguracionWoo {
   consumerSec  String    @db.Text // cifrada
   activo       Boolean   @default(true)
   ultimaSync   DateTime?
+}
+
+// Rastrea cada orden creada contra el Botón de Pago Yappy V2, desde que se pide hasta que
+// llega la notificación IPN (o expira). Es indispensable para el webhook: la notificación de
+// Yappy solo trae orderId/status/hash/domain (nunca el merchantId), así que sin esta tabla no
+// habria forma de saber a que empresa (y con que clave secreta validar el hash) pertenece cada
+// notificacion entrante.
+model YappyOrden {
+  id            String    @id // mismo valor que el orderId enviado a Yappy (max 15 alfanumerico)
+  empresaId     String
+  empresa       Empresa   @relation(fields: [empresaId], references: [id])
+  ventaId       String?
+  monto         Decimal
+  estado        String    @default("PENDIENTE") // PENDIENTE | EJECUTADO | RECHAZADO | CANCELADO | EXPIRADO
+  transactionId String?
+  createdAt     DateTime  @default(now())
+  confirmadoAt  DateTime?
+
+  @@index([empresaId, estado])
 }

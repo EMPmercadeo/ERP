@@ -167,3 +167,18 @@ export const TransferenciaBodegaSchema = z.object({
     message: "La bodega de origen y destino no pueden ser la misma",
     path: ["bodegaDestinoId"],
 });
+
+// Apertura de un turno de caja del POS: el cajero declara cuánto efectivo tiene en caja
+// antes de empezar a vender. montoInicial puede ser 0 (caja arranca vacía) pero no negativo.
+export const TurnoCajaAperturaSchema = z.object({
+    montoInicial: z.coerce.number().min(0, { message: "El monto inicial no puede ser negativo" }),
+    observaciones: z.string().max(500).optional().or(z.literal('')),
+});
+
+// Cierre de turno: el cajero cuenta el efectivo real en caja al final. El monto esperado y
+// la diferencia se calculan siempre en el servidor a partir de las ventas reales del turno,
+// nunca se confía en un valor que mande el cliente.
+export const TurnoCajaCierreSchema = z.object({
+    montoContadoCierre: z.coerce.number().min(0, { message: "El monto contado no puede ser negativo" }),
+    observaciones: z.string().max(500).optional().or(z.literal('')),
+});

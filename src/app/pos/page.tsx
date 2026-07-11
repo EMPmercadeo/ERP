@@ -1,10 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import EscanerCodigoBarras from './components/EscanerCodigoBarras';
+import YappyBotonPago from './components/YappyBotonPago';
+import { haySoporteSerial, conectarImpresoraSerial, desconectarImpresoraSerial, imprimirReciboEscPos, abrirCajonDinero } from '@/lib/pos/hardwareEscPos';
 import {
   ShoppingCart,
   Search,
@@ -20,7 +24,12 @@ import {
   Smartphone,
   Layers,
   RefreshCw,
-  Store
+  Store,
+  ScanLine,
+  Lock,
+  Wallet,
+  LogOut,
+  Usb
 } from 'lucide-react';
 
 interface ProductoPOS {
@@ -57,6 +66,20 @@ interface VentaOfflineQueueItem {
   autorizacion?: { adminEmail: string; pin: string };
   estado: string;
   createdAt: string;
+  turnoCajaId?: string;
+  referenciaPago?: string;
+}
+
+interface TurnoCajaActivo {
+  id: string;
+  fechaApertura: string;
+  montoInicial: number;
+  observaciones?: string | null;
+}
+
+interface TurnoCajaResumen {
+  totalEfectivoVentas: number;
+  montoEsperado: number;
 }
 
 interface ReciboVenta {
@@ -69,6 +92,7 @@ interface ReciboVenta {
   itbms: number;
   total: number;
   metodoPago: string;
+  referenciaPago?: string;
   efectivoRecibido: number;
   vuelto: number;
   cufe?: string;
@@ -99,6 +123,7 @@ interface VentaPayload {
   total: number;
   offline: boolean;
   autorizacion?: { adminEmail: string; pin: string };
+  referenciaPago?: string;
 }
 
 export default function POSMultiDispositivoPage() {
@@ -118,6 +143,11 @@ export default function POSMultiDispositivoPage() {
   const [showPagoModal, setShowPagoModal] = useState(false);
   const [metodoPago, setMetodoPago] = useState<'EFECTIVO' | 'TARJETA' | 'YAPPY' | 'MIXTO'>('EFECTIVO');
   const [efectivoRecibido, setEfectivoRecibido] = useState<string>('');
+  // Numero de referencia/autorizacion del datafono o de Yappy: no hay integracion real con un
+  // procesador de pagos (requiere credenciales reales del usuario), asi que Tarjeta/Yappy son
+  // un flujo manual mejorado -- se cobra fisicamente por fuera y se anota la referencia aqui
+  // para conciliar despues.
+  const [referenciaPago, setReferenciaPago] = useState('');
   const [tipoDoc, setTipoDoc] = useState<'02' | '01'>('02'); // 02 Boleta, 01 Factura
   const [clienteRuc, setClienteRuc] = useState<string>('');
   const [procesandoVenta, setProcesandoVenta] = useState(false);
@@ -135,6 +165,40 @@ export default function POSMultiDispositivoPage() {
 
   // Modal Recibo Térmico (80mm)
   const [reciboVenta, setReciboVenta] = useState<ReciboVenta | null>(null);
+  // QR real (librería `qrcode`) que codifica el CUFE / link de verificación DGI del recibo
+  const [qrReciboDataUrl, setQrReciboDataUrl] = useState<string>('');
+
+  // Turno de Caja: no se puede vender sin uno abierto (el bloqueo real ocurre en el
+  // servidor en /api/pos/ventas; esto es solo para guiar al cajero en la UI).
+  const [turnoActivo, setTurnoActivo] = useState<TurnoCajaActivo | null>(null);
+  const [cargandoTurno, setCargandoTurno] = useState(true);
+  const [montoInicialTurno, setMontoInicialTurno] = useState('');
+  const [abriendoTurno, setAbriendoTurno] = useState(false);
+  const [errorTurno, setErrorTurno] = useState('');
+
+  const [showCierreTurnoModal, setShowCierreTurnoModal] = useState(false);
+  const [resumenCierreTurno, setResumenCierreTurno] = useState<TurnoCajaResumen | null>(null);
+  const [montoContadoCierre, setMontoContadoCierre] = useState('');
+  const [cerrandoTurno, setCerrandoTurno] = useState(false);
+  const [turnoRecienCerrado, setTurnoRecienCerrado] = useState<{ montoEsperadoCierre: number; montoContadoCierre: number; diferencia: number } | null>(null);
+
+  // Escaneo de código de barras por cámara
+  const [showEscanerModal, setShowEscanerModal] = useState(false);
+  const [avisoEscaneo, setAvisoEscaneo] = useState('');
+
+  // Hardware físico opcional (impresora térmica ESC/POS + cajón de dinero) vía Web Serial.
+  // Nada de esto se puede probar en este entorno de desarrollo (no hay hardware real
+  // conectado) -- se degrada a no-op si el navegador no soporta Web Serial o el usuario no
+  // conecta nada; `window.print()` (imprimirTicket) sigue funcionando siempre como opción.
+  const [soportaSerial, setSoportaSerial] = useState(false);
+  const [impresoraPort, setImpresoraPort] = useState<SerialPort | null>(null);
+  const [conectandoImpresora, setConectandoImpresora] = useState(false);
+  const [errorHardware, setErrorHardware] = useState('');
+
+  // Cobro real con Yappy Comercial (si la empresa lo configuró y habilitó en Configuración);
+  // si no, el panel de YAPPY sigue usando el flujo manual de referencia ya existente.
+  const [yappyDisponible, setYappyDisponible] = useState(false);
+  const [yappyAmbiente, setYappyAmbiente] = useState<'produccion' | 'pruebas'>('pruebas');
 
   // Cargar el tope de descuento sin autorización del usuario actual (solo informativo
   // para la UI; la validación real y obligatoria siempre ocurre en el servidor).
@@ -184,12 +248,139 @@ export default function POSMultiDispositivoPage() {
     }
 
     cargarProductos();
+    cargarTurno();
+    setSoportaSerial(haySoporteSerial());
+    fetch('/api/pos/yappy/estado')
+      .then(res => res.ok ? res.json() : { disponible: false })
+      .then(data => {
+        setYappyDisponible(!!data.disponible);
+        if (data.ambiente === 'produccion') setYappyAmbiente('produccion');
+      })
+      .catch(() => setYappyDisponible(false));
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  const handleConectarImpresora = async () => {
+    setErrorHardware('');
+    setConectandoImpresora(true);
+    try {
+      const port = await conectarImpresoraSerial();
+      setImpresoraPort(port);
+    } catch (err) {
+      setErrorHardware(err instanceof Error ? err.message : 'No se pudo conectar la impresora térmica.');
+    } finally {
+      setConectandoImpresora(false);
+    }
+  };
+
+  const handleDesconectarImpresora = async () => {
+    await desconectarImpresoraSerial(impresoraPort);
+    setImpresoraPort(null);
+  };
+
+  // Best-effort: si hay una impresora/cajón conectado, se intenta abrir el cajón después de
+  // un cobro en efectivo (comportamiento estándar de POS). Nunca bloquea ni rompe el flujo de
+  // venta si falla o si no hay hardware conectado.
+  const intentarAbrirCajon = async () => {
+    if (!impresoraPort) return;
+    try {
+      await abrirCajonDinero(impresoraPort);
+    } catch {
+      // Sin hardware real para probar en este entorno; si el comando falla (cajón
+      // desconectado, impresora sin puerto de cajón, etc.) simplemente se ignora.
+    }
+  };
+
+  const cargarTurno = async () => {
+    setCargandoTurno(true);
+    try {
+      const res = await fetch('/api/pos/turno');
+      const data = await res.json().catch(() => ({ turno: null }));
+      setTurnoActivo(res.ok ? (data.turno || null) : null);
+    } catch {
+      setTurnoActivo(null);
+    } finally {
+      setCargandoTurno(false);
+    }
+  };
+
+  const handleAbrirTurno = async () => {
+    setErrorTurno('');
+    const monto = Number(montoInicialTurno);
+    if (montoInicialTurno === '' || isNaN(monto) || monto < 0) {
+      setErrorTurno('Ingresa el monto inicial de efectivo en caja (puede ser 0).');
+      return;
+    }
+    setAbriendoTurno(true);
+    try {
+      const res = await fetch('/api/pos/turno/abrir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ montoInicial: monto })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErrorTurno(data.error || 'No se pudo abrir el turno de caja.');
+        // Si el servidor dice que ya hay uno abierto, sincronizamos el estado con ese turno.
+        if (data.turno) setTurnoActivo(data.turno);
+      } else {
+        setTurnoActivo(data.turno);
+        setMontoInicialTurno('');
+      }
+    } catch {
+      setErrorTurno('Error de conexión al abrir el turno de caja.');
+    } finally {
+      setAbriendoTurno(false);
+    }
+  };
+
+  const abrirModalCierreTurno = async () => {
+    setShowCierreTurnoModal(true);
+    setMontoContadoCierre('');
+    try {
+      const res = await fetch('/api/pos/turno');
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.resumen) setResumenCierreTurno(data.resumen);
+    } catch {
+      setResumenCierreTurno(null);
+    }
+  };
+
+  const handleCerrarTurno = async () => {
+    if (montoContadoCierre === '' || isNaN(Number(montoContadoCierre)) || Number(montoContadoCierre) < 0) {
+      setErrorTurno('Ingresa el monto de efectivo contado en caja.');
+      return;
+    }
+    setCerrandoTurno(true);
+    setErrorTurno('');
+    try {
+      const res = await fetch('/api/pos/turno/cerrar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ montoContadoCierre: Number(montoContadoCierre) })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErrorTurno(data.error || 'No se pudo cerrar el turno de caja.');
+      } else {
+        setTurnoRecienCerrado({
+          montoEsperadoCierre: data.turno.montoEsperadoCierre,
+          montoContadoCierre: data.turno.montoContadoCierre,
+          diferencia: data.turno.diferencia
+        });
+        setShowCierreTurnoModal(false);
+        setTurnoActivo(null);
+      }
+    } catch {
+      setErrorTurno('Error de conexión al cerrar el turno de caja.');
+    } finally {
+      setCerrandoTurno(false);
+    }
+  };
 
   const cargarProductos = async () => {
     setLoading(true);
@@ -298,8 +489,17 @@ export default function POSMultiDispositivoPage() {
 
   const handleProcesarVenta = async (autorizacion?: { adminEmail: string; pin: string }) => {
     if (carrito.length === 0) return;
+    if (!turnoActivo) {
+      setErrorPago('No tienes un turno de caja abierto. Ábrelo antes de cobrar.');
+      setShowPagoModal(false);
+      return;
+    }
     if (metodoPago === 'EFECTIVO' && Number(efectivoRecibido) < total && Number(efectivoRecibido) > 0) {
       setErrorPago('El monto en efectivo recibido no cubre el total de la venta.');
+      return;
+    }
+    if ((metodoPago === 'TARJETA' || metodoPago === 'YAPPY') && !referenciaPago.trim()) {
+      setErrorPago('Ingresa el número de referencia/autorización del pago para poder conciliarlo después.');
       return;
     }
     if (tipoDoc === '01' && (!clienteRuc || clienteRuc.length < 5)) {
@@ -331,6 +531,7 @@ export default function POSMultiDispositivoPage() {
       offline: useOffline
     };
     if (autorizacion) payload.autorizacion = autorizacion;
+    if (referenciaPago.trim()) payload.referenciaPago = referenciaPago.trim();
 
     try {
       if (useOffline) {
@@ -338,6 +539,7 @@ export default function POSMultiDispositivoPage() {
         const ventaOffline = {
           id: 'sync-' + Date.now(),
           ...payload,
+          turnoCajaId: turnoActivo.id,
           estado: 'LOCAL',
           createdAt: new Date().toISOString()
         };
@@ -361,13 +563,16 @@ export default function POSMultiDispositivoPage() {
           itbms: itbmsTotal,
           total,
           metodoPago,
+          referenciaPago: referenciaPago.trim() || undefined,
           efectivoRecibido: Number(efectivoRecibido) || total,
           vuelto: Math.max(0, vuelto),
           contingencia: true,
           mensajeLegal: 'Emitido en Modo Contingencia DGI (Ley 462). Su comprobante será retransmitido al PAC para autorización definitiva dentro de las 72h reglamentarias.'
         });
 
+        if (metodoPago === 'EFECTIVO') intentarAbrirCajon();
         setCarrito([]);
+        setReferenciaPago('');
         setShowPagoModal(false);
       } else {
         // Transacción en línea ante PAC (Consume 1 del saldo prepago de facturas)
@@ -379,7 +584,13 @@ export default function POSMultiDispositivoPage() {
         const data = await res.json();
 
         if (!res.ok) {
-          if (data.requiereAutorizacion) {
+          if (data.requiereTurno) {
+            // El servidor es la fuente de verdad: si de todos modos rechazó por no tener un
+            // turno abierto (se cerró en otra pestaña, expiró, etc.), sincronizamos el estado.
+            setTurnoActivo(null);
+            setShowPagoModal(false);
+            setErrorPago(data.error || 'No tienes un turno de caja abierto. Ábrelo antes de cobrar.');
+          } else if (data.requiereAutorizacion) {
             // El servidor es la fuente de verdad: si igual rechazó por falta/invalidez de
             // autorización (tope cambió, PIN incorrecto, etc.), reabrir el modal.
             setShowAutorizacionModal(true);
@@ -390,6 +601,7 @@ export default function POSMultiDispositivoPage() {
         } else {
           // Actualizar stock local con el resultado del backend
           cargarProductos();
+          cargarTurno();
 
           setReciboVenta({
             numero: data.venta?.id ? `DGI-${data.venta.id.slice(-8).toUpperCase()}` : 'DGI-POS-001',
@@ -401,6 +613,7 @@ export default function POSMultiDispositivoPage() {
             itbms: itbmsTotal,
             total,
             metodoPago,
+            referenciaPago: referenciaPago.trim() || undefined,
             efectivoRecibido: Number(efectivoRecibido) || total,
             vuelto: Math.max(0, vuelto),
             cufe: data.cufe || data.venta?.cufe || 'FE019999999000000000000000001000010001111111111',
@@ -409,7 +622,9 @@ export default function POSMultiDispositivoPage() {
             mensajeLegal: 'Autorizado y certificado por PAC DGI. Consulte su factura electrónica por CUFE o código QR en el portal tributario.'
           });
 
+          if (metodoPago === 'EFECTIVO') intentarAbrirCajon();
           setCarrito([]);
+          setReferenciaPago('');
           setShowPagoModal(false);
         }
       }
@@ -457,6 +672,43 @@ export default function POSMultiDispositivoPage() {
     (p.codigoBarras && p.codigoBarras.includes(buscar))
   );
 
+  // Genera el QR real del recibo: codifica el link de verificación DGI (cafUrl, que ya trae
+  // el CUFE embebido) o, si no hay link, el CUFE crudo. En contingencia no hay CUFE todavía
+  // (se retransmitirá dentro de 72h), así que no se genera QR y se explica en su lugar.
+  useEffect(() => {
+    if (!reciboVenta) {
+      setQrReciboDataUrl('');
+      return;
+    }
+    const contenidoQr = reciboVenta.cafUrl || (reciboVenta.cufe ? `CUFE:${reciboVenta.cufe}` : null);
+    if (!contenidoQr) {
+      setQrReciboDataUrl('');
+      return;
+    }
+    let cancelado = false;
+    QRCode.toDataURL(contenidoQr, { margin: 1, width: 220 })
+      .then((url) => { if (!cancelado) setQrReciboDataUrl(url); })
+      .catch(() => { if (!cancelado) setQrReciboDataUrl(''); });
+    return () => { cancelado = true; };
+  }, [reciboVenta]);
+
+  // Buscar por código de barras exacto tras un escaneo con la cámara: si hay match en el
+  // catálogo cargado, se agrega directo al carrito (misma ruta que un click manual); si no,
+  // se deja el código en el buscador para que el cajero vea por qué no encontró nada.
+  const handleCodigoBarrasDetectado = (codigo: string) => {
+    setShowEscanerModal(false);
+    const encontrado = productos.find(p => p.codigoBarras === codigo);
+    if (encontrado) {
+      agregarAlCarrito(encontrado);
+      setAvisoEscaneo(`Agregado: ${encontrado.descripcion}`);
+      setBuscar('');
+    } else {
+      setBuscar(codigo);
+      setAvisoEscaneo(`Código "${codigo}" no coincide con ningún producto del catálogo.`);
+    }
+    setTimeout(() => setAvisoEscaneo(''), 4000);
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans select-none overflow-x-hidden">
       {/* Topbar POS Pantalla Completa */}
@@ -471,6 +723,19 @@ export default function POSMultiDispositivoPage() {
 
         {/* Indicadores en Tiempo Real y Acciones Rápidas */}
         <div className="flex items-center gap-3">
+          {/* Turno de Caja Activo */}
+          {turnoActivo && (
+            <button
+              onClick={abrirModalCierreTurno}
+              title="Cerrar turno de caja"
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border bg-secondary text-foreground border-border hover:border-primary"
+            >
+              <Wallet className="h-4 w-4 text-primary" />
+              Turno abierto (${turnoActivo.montoInicial.toFixed(2)} inicial)
+              <LogOut className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          )}
+
           {/* Botón de Estado y Contingencia */}
           <button
             onClick={() => setContingenciaForzada(!contingenciaForzada)}
@@ -483,6 +748,22 @@ export default function POSMultiDispositivoPage() {
             {!isOnline || contingenciaForzada ? <WifiOff className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
             {!isOnline ? 'OFFLINE (Contingencia DGI)' : contingenciaForzada ? 'MODO CONTINGENCIA FORZADA' : 'EN LÍNEA (PAC DGI)'}
           </button>
+
+          {/* Impresora térmica / cajón de dinero (Web Serial, solo Chrome/Edge desktop y Android;
+              no-op si el navegador no lo soporta o no hay hardware conectado) */}
+          {soportaSerial && (
+            <button
+              onClick={impresoraPort ? handleDesconectarImpresora : handleConectarImpresora}
+              disabled={conectandoImpresora}
+              title={impresoraPort ? 'Impresora térmica conectada (click para desconectar)' : 'Conectar impresora térmica / cajón de dinero (USB-Serial)'}
+              className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                impresoraPort ? 'bg-success-bg text-success border-success/40' : 'bg-secondary text-muted-foreground border-border hover:border-primary'
+              }`}
+            >
+              <Usb className="h-4 w-4" />
+              {conectandoImpresora ? 'Conectando...' : impresoraPort ? 'Impresora conectada' : 'Conectar impresora'}
+            </button>
+          )}
 
           {/* Cola Offline Sincronización */}
           {colaLocal.length > 0 && (
@@ -497,6 +778,12 @@ export default function POSMultiDispositivoPage() {
           )}
         </div>
       </header>
+
+      {errorHardware && (
+        <div className="px-4 pt-2 text-[11px] font-semibold text-warning bg-warning-bg border-b border-warning/30 py-1.5 text-center">
+          {errorHardware}
+        </div>
+      )}
 
       {/* Grid Principal Responsive (Touch-First PWA) */}
       <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 overflow-hidden">
@@ -516,7 +803,22 @@ export default function POSMultiDispositivoPage() {
                 Limpiar
               </Button>
             )}
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setShowEscanerModal(true)}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs h-9 px-3 shrink-0"
+            >
+              <ScanLine className="h-4 w-4 mr-1.5" />
+              Escanear
+            </Button>
           </div>
+
+          {avisoEscaneo && (
+            <div className="text-[11px] font-semibold text-info bg-info-bg border border-info/30 rounded px-3 py-2">
+              {avisoEscaneo}
+            </div>
+          )}
 
           {/* Grid de Productos (Botones Grandes Touch-First) */}
           {loading ? (
@@ -703,15 +1005,15 @@ export default function POSMultiDispositivoPage() {
             {/* Botón COBRAR Touch */}
             <Button
               onClick={() => {
-                if (carrito.length === 0) return;
+                if (carrito.length === 0 || !turnoActivo) return;
                 setEfectivoRecibido(total.toFixed(2));
                 setShowPagoModal(true);
               }}
-              disabled={carrito.length === 0}
+              disabled={carrito.length === 0 || !turnoActivo}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base h-12 shadow-premium mt-3 tracking-wider active:scale-[0.98] transition-all"
             >
               <DollarSign className="h-5 w-5 mr-1" />
-              COBRAR ${total.toFixed(2)}
+              {turnoActivo ? `COBRAR $${total.toFixed(2)}` : 'Abre tu turno de caja para cobrar'}
             </Button>
           </div>
         </div>
@@ -871,13 +1173,87 @@ export default function POSMultiDispositivoPage() {
                 </div>
               )}
 
-              {metodoPago === 'YAPPY' && (
-                <div className="bg-secondary p-4 rounded-lg border border-primary/30 text-center space-y-2">
+              {metodoPago === 'YAPPY' && yappyDisponible && (
+                <div className="bg-secondary p-4 rounded-lg border border-primary/30 text-center space-y-3">
+                  <p className="text-xs font-bold text-primary">Cobro real con Yappy — ${total.toFixed(2)}</p>
+                  <YappyBotonPago
+                    ambiente={yappyAmbiente}
+                    subtotal={subtotal}
+                    itbms={itbmsTotal}
+                    total={total}
+                    onPagoConfirmado={(orderId) => {
+                      setReferenciaPago(orderId);
+                      setErrorPago('');
+                      // El pago ya fue confirmado server-side (polling contra la notificación
+                      // IPN validada); se finaliza la venta con la misma ruta de siempre.
+                      handleProcesarVenta();
+                    }}
+                    onError={(msg) => setErrorPago(msg)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    El cliente confirma el pago desde su app de Yappy. La venta se registra automáticamente al confirmarse.
+                  </p>
+                </div>
+              )}
+
+              {metodoPago === 'YAPPY' && !yappyDisponible && (
+                <div className="bg-secondary p-4 rounded-lg border border-primary/30 text-center space-y-3">
                   <div className="inline-block bg-white p-3 rounded-lg border border-border">
                     <QrCode className="h-24 w-24 text-ink mx-auto" />
                   </div>
                   <p className="text-xs font-bold text-primary">Escanee con la App de Yappy para pagar ${total.toFixed(2)}</p>
                   <p className="text-[11px] text-muted-foreground">Directorio comercial: @ERPPANAMA_POS (o confirmación por webhook)</p>
+                  <div className="text-left pt-2 border-t border-border">
+                    <label className="font-semibold text-foreground block mb-1">
+                      Nº de referencia/autorización de Yappy (*obligatorio):
+                    </label>
+                    <Input
+                      placeholder="Ej. 123456789"
+                      value={referenciaPago}
+                      onChange={(e) => setReferenciaPago(e.target.value)}
+                      className="font-mono"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Cobro manual: cobra en la app de Yappy y anota aquí el número de la transacción para conciliar después. Configura tus credenciales de Yappy Comercial en Configuración para activar el cobro automático.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {metodoPago === 'TARJETA' && (
+                <div className="bg-secondary p-4 rounded-lg border border-primary/30 space-y-3">
+                  <p className="text-xs font-bold text-primary text-center">Cobre ${total.toFixed(2)} en el datáfono del banco</p>
+                  <div>
+                    <label className="font-semibold text-foreground block mb-1">
+                      Nº de referencia/autorización del datáfono (*obligatorio):
+                    </label>
+                    <Input
+                      placeholder="Ej. AUTH-004821"
+                      value={referenciaPago}
+                      onChange={(e) => setReferenciaPago(e.target.value)}
+                      className="font-mono"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      No hay integración real con un procesador de pagos todavía: cobra con el datáfono físico y anota aquí el número de autorización del voucher para conciliar después.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {metodoPago === 'MIXTO' && (
+                <div className="bg-secondary p-4 rounded-lg border border-primary/30 space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Combine efectivo con tarjeta/Yappy por fuera del sistema y registre aquí, si aplica, la referencia de la porción no efectiva para conciliarla después.
+                  </p>
+                  <div>
+                    <label className="font-semibold text-foreground block mb-1">Nº de referencia/autorización (opcional):</label>
+                    <Input
+                      placeholder="Ej. AUTH-004821"
+                      value={referenciaPago}
+                      onChange={(e) => setReferenciaPago(e.target.value)}
+                      className="font-mono"
+                    />
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -886,7 +1262,7 @@ export default function POSMultiDispositivoPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setShowPagoModal(false)}
+                onClick={() => { setShowPagoModal(false); setReferenciaPago(''); }}
                 className="text-xs"
               >
                 Cancelar
@@ -985,6 +1361,9 @@ export default function POSMultiDispositivoPage() {
             <div className="mb-3 text-[11px]">
               <p><strong>Cliente:</strong> {reciboVenta.cliente}</p>
               <p><strong>Método de Pago:</strong> {reciboVenta.metodoPago}</p>
+              {reciboVenta.referenciaPago && (
+                <p><strong>Referencia/Autorización:</strong> {reciboVenta.referenciaPago}</p>
+              )}
             </div>
 
             <div className="border-b border-ink pb-2 mb-2">
@@ -1015,10 +1394,19 @@ export default function POSMultiDispositivoPage() {
               )}
             </div>
 
-            {/* Código QR del CUFE o Contingencia */}
+            {/* Código QR real del CUFE (o del link de verificación DGI) generado con `qrcode` */}
             <div className="text-center space-y-2 my-4">
               <div className="inline-block border border-border p-1 bg-white">
-                <QrCode className="h-28 w-28 text-ink mx-auto" />
+                {qrReciboDataUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={qrReciboDataUrl} alt="Código QR de verificación DGI" className="h-28 w-28 mx-auto" width={112} height={112} />
+                ) : (
+                  <div className="h-28 w-28 mx-auto flex items-center justify-center text-center px-2">
+                    <span className="text-[9px] text-muted-foreground leading-tight">
+                      QR pendiente: se generará cuando esta venta se retransmita y sea autorizada por el PAC DGI.
+                    </span>
+                  </div>
+                )}
               </div>
               {reciboVenta.cufe && (
                 <p className="text-[9px] break-all font-mono text-ink-secondary">CUFE: {reciboVenta.cufe}</p>
@@ -1034,11 +1422,182 @@ export default function POSMultiDispositivoPage() {
                 <Printer className="h-4 w-4 mr-2" />
                 Imprimir Recibo Térmico (80mm)
               </Button>
+              {impresoraPort && (
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      await imprimirReciboEscPos(impresoraPort, reciboVenta);
+                    } catch (err) {
+                      setErrorHardware(err instanceof Error ? err.message : 'No se pudo imprimir en la impresora térmica conectada.');
+                    }
+                  }}
+                  className="w-full text-xs h-9"
+                >
+                  <Usb className="h-4 w-4 mr-2" />
+                  Imprimir directo (impresora USB/Serial conectada)
+                </Button>
+              )}
               <Button variant="outline" onClick={() => setReciboVenta(null)} className="w-full text-xs h-9">
                 Cerrar / Nueva Venta
               </Button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ESCÁNER DE CÓDIGO DE BARRAS (cámara) */}
+      {showEscanerModal && (
+        <EscanerCodigoBarras
+          onDetectado={handleCodigoBarrasDetectado}
+          onCerrar={() => setShowEscanerModal(false)}
+        />
+      )}
+
+      {/* MODAL BLOQUEANTE: APERTURA DE TURNO DE CAJA (no se puede vender sin esto) */}
+      {!cargandoTurno && !turnoActivo && !turnoRecienCerrado && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-ink/80 backdrop-blur-sm p-4">
+          <Card className="bg-card border-border w-full max-w-sm shadow-premium-hover">
+            <CardHeader className="border-b border-border pb-4">
+              <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                <Lock className="h-5 w-5 text-primary" />
+                Apertura de turno de caja
+              </CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
+                Declara cuánto efectivo tienes en caja antes de empezar a vender. Este monto se usará para calcular lo esperado al cerrar el turno.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-4 text-xs">
+              {errorTurno && (
+                <div className="text-destructive bg-danger-bg border border-destructive/30 rounded p-2 text-[11px] font-semibold">
+                  {errorTurno}
+                </div>
+              )}
+              <div>
+                <label className="font-semibold text-foreground block mb-1">Efectivo inicial en caja ($)</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={montoInicialTurno}
+                  onChange={(e) => setMontoInicialTurno(e.target.value)}
+                  className="text-lg font-mono font-bold text-primary"
+                  autoFocus
+                />
+              </div>
+            </CardContent>
+            <div className="p-4 border-t border-border bg-secondary">
+              <Button
+                type="button"
+                onClick={handleAbrirTurno}
+                disabled={abriendoTurno}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs h-11"
+              >
+                {abriendoTurno ? 'Abriendo turno...' : 'Abrir turno y empezar a vender'}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* MODAL DE CIERRE DE TURNO DE CAJA (conteo de efectivo y diferencia) */}
+      {showCierreTurnoModal && turnoActivo && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/70 backdrop-blur-sm p-4">
+          <Card className="bg-card border-border w-full max-w-sm shadow-premium-hover">
+            <CardHeader className="border-b border-border pb-4">
+              <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-primary" />
+                Cierre de turno de caja
+              </CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
+                Cuenta el efectivo real en caja. Lo esperado se calcula con el efectivo inicial más las ventas en efectivo de este turno.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-4 text-xs">
+              {errorTurno && (
+                <div className="text-destructive bg-danger-bg border border-destructive/30 rounded p-2 text-[11px] font-semibold">
+                  {errorTurno}
+                </div>
+              )}
+              <div className="bg-secondary rounded-lg border border-border p-3 space-y-1.5">
+                <div className="flex justify-between"><span className="text-muted-foreground">Efectivo inicial:</span><span className="font-mono font-bold">${turnoActivo.montoInicial.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Ventas en efectivo:</span><span className="font-mono font-bold">${(resumenCierreTurno?.totalEfectivoVentas ?? 0).toFixed(2)}</span></div>
+                <div className="flex justify-between border-t border-border pt-1.5"><span className="font-semibold text-foreground">Esperado en caja:</span><span className="font-mono font-black text-primary">${(resumenCierreTurno?.montoEsperado ?? turnoActivo.montoInicial).toFixed(2)}</span></div>
+              </div>
+              <div>
+                <label className="font-semibold text-foreground block mb-1">Efectivo contado ($)</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={montoContadoCierre}
+                  onChange={(e) => setMontoContadoCierre(e.target.value)}
+                  className="text-lg font-mono font-bold text-primary"
+                  autoFocus
+                />
+              </div>
+              {montoContadoCierre !== '' && !isNaN(Number(montoContadoCierre)) && (
+                (() => {
+                  const esperado = resumenCierreTurno?.montoEsperado ?? turnoActivo.montoInicial;
+                  const diferenciaPreview = Number(montoContadoCierre) - esperado;
+                  return (
+                    <div className={`flex justify-between items-center px-2 py-1.5 rounded text-[11px] font-bold ${
+                      diferenciaPreview === 0 ? 'bg-success-bg text-success' : diferenciaPreview > 0 ? 'bg-info-bg text-info' : 'bg-warning-bg text-warning'
+                    }`}>
+                      <span>{diferenciaPreview === 0 ? 'Cuadra exacto' : diferenciaPreview > 0 ? 'Sobrante:' : 'Faltante:'}</span>
+                      <span className="font-mono">${Math.abs(diferenciaPreview).toFixed(2)}</span>
+                    </div>
+                  );
+                })()
+              )}
+            </CardContent>
+            <div className="p-4 border-t border-border flex justify-end gap-3 bg-secondary">
+              <Button type="button" variant="outline" onClick={() => setShowCierreTurnoModal(false)} className="text-xs">
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={handleCerrarTurno}
+                disabled={cerrandoTurno}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs px-6"
+              >
+                {cerrandoTurno ? 'Cerrando...' : 'Confirmar cierre'}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* CONFIRMACIÓN DE ARQUEO TRAS CERRAR TURNO */}
+      {turnoRecienCerrado && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-ink/80 backdrop-blur-sm p-4">
+          <Card className="bg-card border-border w-full max-w-sm shadow-premium-hover">
+            <CardHeader className="border-b border-border pb-4">
+              <CardTitle className="text-base font-bold text-foreground">Turno cerrado</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">Resultado del arqueo de caja de este turno.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 pt-4 text-xs">
+              <div className="flex justify-between"><span className="text-muted-foreground">Esperado:</span><span className="font-mono font-bold">${turnoRecienCerrado.montoEsperadoCierre.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Contado:</span><span className="font-mono font-bold">${turnoRecienCerrado.montoContadoCierre.toFixed(2)}</span></div>
+              <div className={`flex justify-between font-black pt-2 border-t border-border ${
+                turnoRecienCerrado.diferencia === 0 ? 'text-success' : turnoRecienCerrado.diferencia > 0 ? 'text-info' : 'text-warning'
+              }`}>
+                <span>{turnoRecienCerrado.diferencia === 0 ? 'Cuadró exacto' : turnoRecienCerrado.diferencia > 0 ? 'Sobrante' : 'Faltante'}:</span>
+                <span className="font-mono">${Math.abs(turnoRecienCerrado.diferencia).toFixed(2)}</span>
+              </div>
+            </CardContent>
+            <div className="p-4 border-t border-border bg-secondary">
+              <Button
+                type="button"
+                onClick={() => { setTurnoRecienCerrado(null); cargarTurno(); }}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs h-10"
+              >
+                Continuar
+              </Button>
+            </div>
+          </Card>
         </div>
       )}
     </div>

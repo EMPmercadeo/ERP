@@ -30,7 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { updateDgiSettings, updateCompanyPlan, updateIntegrationSettings } from '@/lib/actions/settings';
+import { updateDgiSettings, updateCompanyPlan, updateIntegrationSettings, updateYappySettings } from '@/lib/actions/settings';
 import { purchaseDocumentBlock } from '@/lib/actions/billing';
 import { getPOSIntegrations, connectPOS, disconnectPOS, syncPOSProducts, syncPOSSales, syncPOSInventory } from '@/lib/actions/pos';
 import { UsersManagementTab } from '@/components/settings/UsersManagementTab';
@@ -72,6 +72,11 @@ interface SettingsClientProps {
         usuarioPac: string;
         passwordPac: string;
         hasPacPassword?: boolean;
+        yappyEnabled?: boolean;
+        yappyMerchantId?: string;
+        yappyDomain?: string;
+        yappyAmbiente?: string;
+        hasYappySecretKey?: boolean;
         planType: string;
         fiscalEnabled: boolean;
         subscriptionStatus: string;
@@ -122,6 +127,17 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
     const [whatsappToken, setWhatsappToken] = useState(company.whatsappToken || '');
     const [webhookUrl, setWebhookUrl] = useState(company.webhookUrl || '');
     const [webhookToken, setWebhookToken] = useState(company.webhookToken || '');
+
+    // Yappy Comercial (Botón de Pago V2) — credenciales propias de esta empresa. La clave
+    // secreta nunca llega del servidor en texto plano (solo hasYappySecretKey); si el usuario
+    // no escribe una nueva en yappySecretKey, se conserva la guardada.
+    const [yappyEnabled, setYappyEnabled] = useState(company.yappyEnabled || false);
+    const [yappyMerchantId, setYappyMerchantId] = useState(company.yappyMerchantId || '');
+    const [yappySecretKey, setYappySecretKey] = useState('');
+    const [yappyDomain, setYappyDomain] = useState(company.yappyDomain || '');
+    const [yappyAmbiente, setYappyAmbiente] = useState(company.yappyAmbiente || 'pruebas');
+    const [hasYappySecretKey, setHasYappySecretKey] = useState(company.hasYappySecretKey || false);
+    const [yappyGuardando, setYappyGuardando] = useState(false);
 
     // Loading states
     const [estadoConexion, setEstadoConexion] = useState<'conectado' | 'desconectado' | 'probando'>('desconectado');
@@ -370,6 +386,33 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
             toast.error('Error al guardar las integraciones.');
         } finally {
             setIsSavingIntegrations(false);
+        }
+    };
+
+    const handleGuardarYappy = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setYappyGuardando(true);
+        try {
+            const result = await updateYappySettings(company.id, {
+                yappyMerchantId,
+                yappySecretKey: yappySecretKey || undefined,
+                yappyDomain,
+                yappyAmbiente,
+                yappyEnabled
+            });
+            if (result.success) {
+                toast.success(result.message);
+                if (yappySecretKey) setHasYappySecretKey(true);
+                setYappySecretKey('');
+                setCompany(prev => ({ ...prev, yappyEnabled, yappyMerchantId, yappyDomain, yappyAmbiente }));
+                router.refresh();
+            } else {
+                toast.error(result.message);
+            }
+        } catch {
+            toast.error('Error de conexión al guardar la configuración de Yappy.');
+        } finally {
+            setYappyGuardando(false);
         }
     };
 
@@ -1780,6 +1823,92 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             </div>
                                         </div>
                                     </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Yappy Comercial (Botón de Pago V2) */}
+                            <Card className="mt-8">
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <div>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Zap className="h-5 w-5 text-brand-1" />
+                                            Yappy Comercial
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Cobra de verdad con Yappy desde el POS usando tus propias credenciales de Yappy Comercial (Banco General). Sin esto configurado y habilitado, el POS sigue usando el flujo manual (número de referencia).
+                                        </CardDescription>
+                                    </div>
+                                    <Badge className={yappyEnabled ? 'bg-success-bg text-success border border-success/30' : 'bg-muted text-muted-foreground'}>
+                                        {yappyEnabled ? 'Cobro real activo' : 'Flujo manual'}
+                                    </Badge>
+                                </CardHeader>
+                                <CardContent>
+                                    <form onSubmit={handleGuardarYappy} className="grid gap-4 lg:grid-cols-2 max-w-3xl">
+                                        <p className="lg:col-span-2 text-xs text-muted-foreground">
+                                            Genera estas credenciales en{' '}
+                                            <a href="https://comercial.yappy.com.pa/auth/login" target="_blank" rel="noopener noreferrer" className="text-brand-1 underline font-semibold">
+                                                Yappy Comercial → Métodos de cobro → Botón de Pago Yappy
+                                            </a>
+                                            , eligiendo plataforma de desarrollo propio (Node.js). El dominio debe ser exactamente el de este ERP.
+                                        </p>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">ID de Comercio (merchantId)</label>
+                                            <Input
+                                                placeholder="Ej. 123456"
+                                                value={yappyMerchantId}
+                                                onChange={(e) => setYappyMerchantId(e.target.value)}
+                                                className="text-xs font-mono"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                                                Clave Secreta {hasYappySecretKey && <span className="text-success font-normal">(ya guardada — deja en blanco para conservarla)</span>}
+                                            </label>
+                                            <Input
+                                                type="password"
+                                                placeholder={hasYappySecretKey ? '••••••••••••' : 'Clave secreta generada en Yappy Comercial'}
+                                                value={yappySecretKey}
+                                                onChange={(e) => setYappySecretKey(e.target.value)}
+                                                className="text-xs font-mono"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Dominio registrado en Yappy Comercial</label>
+                                            <Input
+                                                placeholder="erp-drab-psi.vercel.app"
+                                                value={yappyDomain}
+                                                onChange={(e) => setYappyDomain(e.target.value)}
+                                                className="text-xs font-mono"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Ambiente</label>
+                                            <select
+                                                value={yappyAmbiente}
+                                                onChange={(e) => setYappyAmbiente(e.target.value)}
+                                                className="w-full h-9 rounded-md border border-border bg-background px-3 text-xs"
+                                            >
+                                                <option value="pruebas">Pruebas (UAT)</option>
+                                                <option value="produccion">Producción</option>
+                                            </select>
+                                        </div>
+                                        <label className="lg:col-span-2 flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={yappyEnabled}
+                                                onChange={(e) => setYappyEnabled(e.target.checked)}
+                                                className="rounded border-border text-brand-1 focus:ring-brand-1"
+                                            />
+                                            Habilitar cobro real con Yappy en el POS (recomendado: probar primero en ambiente de Pruebas)
+                                        </label>
+                                        <Button
+                                            type="submit"
+                                            disabled={yappyGuardando}
+                                            className="lg:col-span-2 bg-brand-1 hover:bg-brand-2 text-white font-semibold text-xs"
+                                        >
+                                            {yappyGuardando ? 'Guardando...' : 'Guardar Credenciales de Yappy'}
+                                        </Button>
+                                    </form>
                                 </CardContent>
                             </Card>
                         </div>

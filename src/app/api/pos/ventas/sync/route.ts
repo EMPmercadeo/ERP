@@ -14,6 +14,24 @@ interface VentaItemJson {
   descuentoPorcentaje?: number;
 }
 
+interface VentaOfflineQueueItem {
+  id?: string;
+  tipoDoc?: string;
+  clienteRuc?: string;
+  items?: VentaItemJson[];
+  subtotal?: number;
+  itbms?: number;
+  total?: number;
+  metodoPago?: string;
+  // Turno de caja bajo el cual se originó esta venta offline (capturado por el cliente desde
+  // el turno activo antes de perder conectividad). Sin esto no queda ligada a ningún arqueo
+  // de caja, así que se valida que pertenezca a la misma empresa antes de aceptarla.
+  turnoCajaId?: string;
+  // Referencia/autorización de Tarjeta/Yappy capturada por el cajero (flujo manual, sin
+  // procesador de pagos real conectado).
+  referenciaPago?: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
     // empresaId ya no se lee del body -- se deriva de la sesion, igual que en /api/pos/ventas.
@@ -42,7 +60,7 @@ export async function POST(request: NextRequest) {
     let ventasParaSync = [];
     if (ventasQueue && Array.isArray(ventasQueue) && ventasQueue.length > 0) {
       // Si vienen de IndexedDB y aun no existian en postgres, crearlas
-      for (const itemLocal of ventasQueue) {
+      for (const itemLocal of ventasQueue as VentaOfflineQueueItem[]) {
         if (!itemLocal.id?.startsWith('sync-')) {
           const vDB = await prisma.venta.findFirst({ where: { id: itemLocal.id } });
           // Si la venta ya existe pero pertenece a otra empresa, la ignoramos por completo:
@@ -51,12 +69,24 @@ export async function POST(request: NextRequest) {
           if (vDB && vDB.estado === 'AUTORIZADA') continue;
         }
 
+        // El turno de caja declarado por el cliente solo se acepta si de verdad pertenece a
+        // esta empresa; si no, la venta se retransmite igual (no se pierde una venta ya
+        // cobrada por un problema de turno) pero queda sin ligar a ningún arqueo de caja.
+        let turnoCajaId: string | null = null;
+        if (itemLocal.turnoCajaId) {
+          const turno = await prisma.turnoCaja.findFirst({
+            where: { id: itemLocal.turnoCajaId, empresaId }
+          });
+          if (turno) turnoCajaId = turno.id;
+        }
+
         const v = await prisma.venta.upsert({
           where: { id: itemLocal.id || 'new-' + Math.random() },
           update: { estado: 'EN_COLA', empresaId },
           create: {
             empresaId,
             cuentaId: cuenta.id,
+            turnoCajaId,
             tipoDoc: itemLocal.tipoDoc || '02',
             clienteRuc: itemLocal.clienteRuc || 'CF',
             items: itemLocal.items || [],
@@ -64,6 +94,7 @@ export async function POST(request: NextRequest) {
             itbms: itemLocal.itbms || 0,
             total: itemLocal.total || 0,
             metodoPago: itemLocal.metodoPago || 'EFECTIVO',
+            referenciaPago: itemLocal.referenciaPago || null,
             estado: 'EN_COLA',
             contingencia: true
           }

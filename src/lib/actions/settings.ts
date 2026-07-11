@@ -195,3 +195,60 @@ export async function updateIntegrationSettings(empresaId: string, data: {
         return { success: false, message: 'Error al guardar la configuración de integraciones.' };
     }
 }
+
+/**
+ * Guarda las credenciales de Yappy Comercial (Botón de Pago V2) de esta empresa. La clave
+ * secreta se cifra con AES-256-GCM (mismo esquema que passwordPac/consumerKey/consumerSec) y,
+ * si el usuario no manda una nueva, se conserva la que ya estaba guardada — igual que
+ * updateDgiSettings hace con passwordPac. `yappyEnabled` solo puede activarse si ya hay
+ * merchantId + secretKey + dominio configurados (de lo contrario /api/pos/ventas/... nunca
+ * hará una llamada real de todos modos, pero es mejor no dejar "encendido" algo a medias).
+ */
+export async function updateYappySettings(empresaId: string, data: {
+    yappyMerchantId?: string;
+    yappySecretKey?: string;
+    yappyDomain?: string;
+    yappyAmbiente?: string;
+    yappyEnabled: boolean;
+}) {
+    try {
+        const { empresaId: authEmpresaId } = await getTenantContext();
+        if (authEmpresaId !== empresaId) {
+            return { success: false, message: 'Acceso denegado. No está autorizado para modificar esta empresa.' };
+        }
+
+        const empresa = await prisma.empresa.findUnique({ where: { id: empresaId } });
+        if (!empresa) {
+            return { success: false, message: 'Empresa no encontrada' };
+        }
+
+        const merchantId = data.yappyMerchantId?.trim() || null;
+        const domain = data.yappyDomain?.trim() || null;
+        const secretCifrada = data.yappySecretKey ? encrypt(data.yappySecretKey) : undefined;
+        const tieneSecretGuardada = secretCifrada !== undefined || !!empresa.yappySecretKey;
+
+        if (data.yappyEnabled && (!merchantId || !domain || !tieneSecretGuardada)) {
+            return {
+                success: false,
+                message: 'Completa el ID de comercio, el dominio y la clave secreta antes de habilitar el cobro real con Yappy.'
+            };
+        }
+
+        await prisma.empresa.update({
+            where: { id: empresaId },
+            data: {
+                yappyMerchantId: merchantId,
+                yappyDomain: domain,
+                yappyAmbiente: data.yappyAmbiente === 'produccion' ? 'produccion' : 'pruebas',
+                yappyEnabled: data.yappyEnabled,
+                ...(secretCifrada !== undefined ? { yappySecretKey: secretCifrada } : {})
+            }
+        });
+
+        revalidatePath('/settings');
+        return { success: true, message: 'Configuración de Yappy guardada correctamente.' };
+    } catch (error) {
+        console.error('Error updating Yappy settings:', error);
+        return { success: false, message: 'Error al guardar la configuración de Yappy.' };
+    }
+}
