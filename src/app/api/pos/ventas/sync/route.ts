@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { emitirFacturaPAC } from '@/lib/pac/mock-pac-client';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
             turnoCajaId,
             tipoDoc: itemLocal.tipoDoc || '02',
             clienteRuc: itemLocal.clienteRuc || 'CF',
-            items: itemLocal.items || [],
+            items: (itemLocal.items || []) as Prisma.InputJsonValue,
             subtotal: itemLocal.subtotal || 0,
             itbms: itemLocal.itbms || 0,
             total: itemLocal.total || 0,
@@ -157,7 +158,7 @@ export async function POST(request: NextRequest) {
       await prisma.venta.update({
         where: { id: v.id },
         data: {
-          items: itemsCorregidos,
+          items: itemsCorregidos as Prisma.InputJsonValue,
           subtotal: Number(subtotalReal.toFixed(2)),
           itbms: Number(itbmsReal.toFixed(2)),
           total: Number(totalReal.toFixed(2))
