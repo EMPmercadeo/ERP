@@ -158,3 +158,76 @@ export async function deleteClient(id: string) {
     }
 }
 
+// Alta rápida de cliente para usarse en línea (p.ej. desde la pantalla de nueva cotización)
+// SIN redirigir: crea el cliente con la misma validación (ClientSchema) y scope por empresa
+// que createClient, revalida /clients para que aparezca en el módulo de Clientes y en las
+// búsquedas, y DEVUELVE el cliente creado para poder seleccionarlo al instante donde se llamó.
+export async function createClientQuick(input: {
+    tipoRuc: string;
+    ruc: string;
+    dv?: string | null;
+    razonSocial: string;
+    email?: string | null;
+    telefono?: string | null;
+    direccion?: string | null;
+}) {
+    const validated = ClientSchema.safeParse({
+        tipoRuc: input.tipoRuc,
+        ruc: input.ruc,
+        dv: input.dv || null,
+        razonSocial: input.razonSocial,
+        email: input.email || null,
+        telefono: input.telefono || null,
+        direccion: input.direccion || null,
+    });
+
+    if (!validated.success) {
+        return {
+            success: false as const,
+            message: validated.error.issues[0]?.message || 'Datos inválidos. Revisa los campos.',
+        };
+    }
+
+    const { data } = validated;
+    const { empresaId } = await getTenantContext();
+
+    try {
+        const cliente = await prisma.cliente.create({
+            data: {
+                empresaId,
+                tipoRuc: data.tipoRuc,
+                ruc: data.ruc,
+                dv: data.dv || '',
+                razonSocial: data.razonSocial,
+                email: data.email,
+                telefono: data.telefono,
+                direccion: data.direccion,
+                limiteCredito: 0,
+                condicionPago: 'Contado',
+                descuentoEspecial: 0,
+                estado: 'activo',
+            },
+            select: {
+                id: true,
+                razonSocial: true,
+                ruc: true,
+                dv: true,
+                email: true,
+                telefono: true,
+                direccion: true,
+            },
+        });
+
+        // Refleja el nuevo cliente en el módulo de Clientes (y cualquier vista revalidada).
+        revalidatePath('/clients');
+
+        return { success: true as const, cliente };
+    } catch (error) {
+        console.error('createClientQuick error:', error);
+        return {
+            success: false as const,
+            message: 'No se pudo crear el cliente. El RUC podría estar duplicado.',
+        };
+    }
+}
+

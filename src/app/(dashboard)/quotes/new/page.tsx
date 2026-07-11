@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { ClientSearch } from '@/components/quotes/ClientSearch';
+import { NewClientModal } from '@/components/clients/NewClientModal';
 import { QuoteItemsTable, type QuoteItem } from '@/components/quotes/QuoteItemsTable';
 import { QuoteSummarySidebar } from '@/components/quotes/QuoteSummarySidebar';
 
@@ -106,7 +107,10 @@ export default function NewQuotePage() {
                                     {/* Client Selection */}
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <Label>Cliente</Label>
+                                            <div className="flex items-center justify-between">
+                                                <Label>Cliente</Label>
+                                                <NewClientModal onCreated={(c) => setSelectedClient(c)} />
+                                            </div>
                                             <ClientSearch onSelect={(c) => setSelectedClient(c)} />
                                         </div>
 
