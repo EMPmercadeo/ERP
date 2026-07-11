@@ -27,6 +27,7 @@ export const metadata: Metadata = {
 
 import { AuthProvider } from '@/lib/firebase/auth';
 import { PwaManager } from '@/components/pwa/PwaManager';
+import { Toaster } from 'sonner';
 
 export default function RootLayout({
   children,
@@ -46,6 +47,10 @@ export default function RootLayout({
             <ImpersonationWrapper />
           </Suspense>
           {children}
+          {/* Sin este componente, toast.success()/toast.error() (usados en decenas de
+              formularios y acciones en toda la app) no muestran nada visible: la llamada
+              se ejecuta pero no hay dónde renderizarla. */}
+          <Toaster richColors position="top-right" />
         </AuthProvider>
       </body>
     </html>
