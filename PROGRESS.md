@@ -1053,3 +1053,30 @@ Se corrió `eslint --fix` sobre todo lo no-congelado: solo 1 problema era realme
 **Notificaciones reales**: el ícono de la campana en el Topbar mostraba un "3" fijo sin ninguna función real (hallazgo del usuario, no capturado en la auditoría original del Item 2). Se implementó `src/lib/actions/notifications.ts` — calcula notificaciones al vuelo desde datos existentes (sin tabla nueva, sin migración) para: facturas vencidas por cobrar, facturas rechazadas por la DGI, stock bajo/agotado, y consumo del plan mensual ≥80%. `Topbar.tsx` ahora usa un `DropdownMenu` real (mismo patrón que el menú de usuario) con el conteo real y enlaces a la sección correspondiente de cada alerta.
 
 **Nota sobre verificación**: en esta sesión, el mount remoto de la carpeta del proyecto empezó a mostrar decenas de archivos con el mismo patrón de truncamiento/bytes NUL visto antes (confirmado como falso positivo la vez anterior, verificado en vivo por Antigravity sobre el disco real). Dado ese patrón, no se pudo correr `tsc`/`lint` de forma confiable desde este entorno en este momento — los 5 archivos nuevos/editados de esta tarea se verificaron manualmente byte a byte (sin NULs, cierres de llave correctos). Pendiente que Antigravity confirme con `tsc`/`lint`/build reales sobre el disco.
+
+
+---
+
+## [2026-07-10] Cierre de los 535/536 problemas de ESLint + fix de build de Vercel (sesion Cowork)
+
+Se retomo el punto pendiente de la entrada `[2026-07-06] Revision de los 536 problemas de lint` (535 problemas: 160 errores `no-explicit-any`, 375 warnings, deuda tecnica preexistente confirmada como no relacionada con cambios previos).
+
+**Resultado**: `npx eslint .` paso de 535 problemas a **0**. Trabajo hecho archivo por archivo (no automatizado a ciegas, como se advertia en la entrada del 07-06 que seria necesario):
+- ~50 rutas API y componentes: `catch (error: any)` -> `catch (error)` + `error instanceof Error` para el mensaje.
+- Rutas con `where`/`data: any` (filtros dinamicos de Prisma): tipadas con `Prisma.XxxWhereInput`/`Prisma.XxxUpdateInput`.
+- `useState<any>` en componentes de POS, RRHH y Settings: reemplazado por interfaces locales que reflejan la forma real de los datos.
+- `src/lib/paginar.ts` (helper de paginacion generico usado por ~15 modelos distintos de Prisma con formas de `include` incompatibles entre si): se mantiene `any` internamente con `eslint-disable` puntual y comentario -- es la unica forma practica de que un helper generico funcione con todos los delegates de Prisma sin tipos condicionales complejos.
+- `react-hooks/exhaustive-deps` corregido en 4 componentes (RRHH principalmente) con `useCallback`.
+- `react-hooks/incompatible-library` (1 warning en `ClientList.tsx`, inherente a la API de TanStack Table): documentado con comentario + `eslint-disable` puntual.
+
+**Fix de build de Vercel** (deploy `92e9908` fallo en `tsc`): el primer intento de quitar `any` en `catch` de `src/app/api/categories/route.ts` y `.../[id]/route.ts` no considero que el codigo accedia a `error?.code` (chequeo de error `P2002` de Prisma) -- con `error` tipado como `unknown` eso rompe TypeScript en un build real (el sandbox de esta sesion no lo detecto porque el cliente de Prisma ahi es un stub sin tipos completos, por bloqueo de red a `binaries.prisma.sh`, limitacion de entorno ya documentada en entradas anteriores). Corregido con el patron ya usado en `src/lib/actions/purchases.ts`: `error instanceof Error && (error as Error & { code?: string }).code === 'P2002'`.
+
+**Verificacion real de build pendiente**: igual que las limitaciones de sandbox ya documentadas arriba (Prisma stub + `next build`/`EPERM`), esta sesion tampoco pudo correr `npm run build` completo. La unica prueba real fue el propio log de deploy de Vercel que el usuario compartio. Recomendado confirmar el siguiente deploy tras el push de estos commits.
+
+**Hallazgos NO corregidos (fuera de alcance de lint, requieren decision/credenciales del usuario -- reafirman lo ya documentado en Fase 4/5 del roadmap)**:
+- `src/app/api/v1/providers/webhooks/paypal/route.ts`: sigue usando IDs de plan mock (`P-MOCK-BASIC-PLAN`, `P-MOCK-PRO-PLAN`) si no hay `NEXT_PUBLIC_PAYPAL_PLAN_BASIC_ID`/`_PRO_ID` en variables de entorno. Sin esas variables reales, los webhooks de suscripcion de PayPal no van a coincidir con planes reales.
+- `PAC_INTEGRATION_ENABLED` (facturacion electronica DGI): sigue sin existir en ningun `.env`, a proposito -- mientras este asi, toda emision de comprobantes fiscales (factura/boleta) es simulada (CUFE fabricado localmente, no validado por la DGI). Fase 5 del roadmap sigue "DIFERIDA" pendiente de contrato/credenciales de sandbox con un PAC real (ej. efacturapty). Este es el punto mas importante para que la app pueda facturar de verdad ante la DGI.
+- WhatsApp Business API y Webhooks salientes: codigo ya implementado y con kill-switch (no hacen nada sin `whatsappToken`/`webhookUrl` configurados), pendiente que el usuario cree las cuentas/credenciales reales.
+- No se encontraron TODOs/FIXMEs de codigo a medias fuera de estos puntos ya conocidos.
+
+Commits generados: `92e9908` (fix de lint), `df3fc10` (fix del error de build de Vercel). Ambos en `main`, pendientes de `git push` por parte del usuario (sandbox de Cowork sin credenciales de GitHub).
