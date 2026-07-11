@@ -193,7 +193,9 @@ export async function POST(request: NextRequest) {
             where: { id: it.productoId, unidadMedida: { not: 'SRV' } },
             data: { stockActual: { decrement: it.cantidad } }
           });
-        } catch {}
+        } catch (stockErr) {
+          console.error(`Error descontando stock (offline) producto ${it.productoId} venta ${venta.id}:`, stockErr);
+        }
       }
 
       return NextResponse.json({
@@ -228,42 +230,56 @@ export async function POST(request: NextRequest) {
     const resPAC = await emitirFacturaPAC(payloadFE);
 
     if (resPAC.success && resPAC.cufe) {
+      const cufe = resPAC.cufe;
       const ventaAutorizada = await prisma.venta.update({
         where: { id: venta.id },
         data: {
-          cufe: resPAC.cufe,
+          cufe,
           estado: 'AUTORIZADA',
           contingencia: false
         }
       });
 
-      await prisma.$transaction([
-        prisma.cuenta.update({
+      await prisma.$transaction(async (tx) => {
+        // Débito atómico del saldo de cuota DGI.
+        await tx.cuenta.update({
           where: { id: cuenta.id },
           data: { saldoFacturas: { decrement: 1 } }
-        }),
-        prisma.movimientoCuota.create({
+        });
+        // Leemos el saldo YA decrementado dentro de la misma transaccion para registrar
+        // saldoAnte/saldoPost reales en el ledger. Antes estos valores se tomaban de una
+        // lectura obsoleta de `cuenta` (hecha fuera de toda transaccion, lineas arriba):
+        // bajo emisiones concurrentes dos ventas capturaban el mismo saldo previo y el
+        // ledger quedaba con movimientos que reportaban el mismo salto (p.ej. 5->4 dos
+        // veces) aunque el saldo real bajara 5->4->3. Ahora el rastro es consistente.
+        const cuentaFresca = await tx.cuenta.findUnique({
+          where: { id: cuenta.id },
+          select: { saldoFacturas: true }
+        });
+        const saldoPost = cuentaFresca?.saldoFacturas ?? 0;
+        const saldoAnte = saldoPost + 1;
+        await tx.movimientoCuota.create({
           data: {
             cuentaId: cuenta.id,
             tipo: 'DEBITO_EMISION',
             cantidad: -1,
-            saldoAnte: cuenta.saldoFacturas,
-            saldoPost: cuenta.saldoFacturas - 1,
-            nota: `Emision electronica POS (${tipoDoc === '01' ? 'Factura' : 'Boleta'}) - CUFE: ${resPAC.cufe.substring(0, 15)}...`,
+            saldoAnte,
+            saldoPost,
+            nota: `Emision electronica POS (${tipoDoc === '01' ? 'Factura' : 'Boleta'}) - CUFE: ${cufe.substring(0, 15)}...`,
             referencia: `POS-${venta.id}`
           }
-        }),
-        prisma.facturaEmitida.create({
+        });
+        await tx.facturaEmitida.create({
           data: {
             cuentaId: cuenta.id,
-            cufe: resPAC.cufe,
+            cufe,
             cliente: clienteRuc || (tipoDoc === '01' ? 'CF' : 'Consumidor Final POS'),
             total: venta.total,
             itbms: venta.itbms,
             estado: 'ACEPTADA'
           }
-        })
-      ]);
+        });
+      });
 
       for (const it of items) {
         try {
@@ -271,7 +287,9 @@ export async function POST(request: NextRequest) {
             where: { id: it.productoId, unidadMedida: { not: 'SRV' } },
             data: { stockActual: { decrement: it.cantidad } }
           });
-        } catch {}
+        } catch (stockErr) {
+          console.error(`Error descontando stock (online) producto ${it.productoId} venta ${venta.id}:`, stockErr);
+        }
       }
 
       await registrarLogAuditoria({

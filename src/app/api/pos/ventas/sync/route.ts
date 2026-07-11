@@ -194,45 +194,55 @@ export async function POST(request: NextRequest) {
       const resPAC = await emitirFacturaPAC(payloadFE);
 
       if (resPAC.success && resPAC.cufe) {
+        const cufe = resPAC.cufe;
         await prisma.venta.update({
           where: { id: v.id },
           data: {
-            cufe: resPAC.cufe,
+            cufe,
             estado: 'AUTORIZADA',
             contingencia: false
           }
         });
 
-        await prisma.$transaction([
-          prisma.cuenta.update({
+        await prisma.$transaction(async (tx) => {
+          await tx.cuenta.update({
             where: { id: cuenta.id },
             data: { saldoFacturas: { decrement: 1 } }
-          }),
-          prisma.movimientoCuota.create({
+          });
+          // saldoAnte/saldoPost desde el saldo YA decrementado dentro de la transaccion,
+          // no desde la lectura previa `cuentaActual` (que bajo sincronizaciones
+          // concurrentes del mismo comercio dejaba el ledger inconsistente).
+          const cuentaFresca = await tx.cuenta.findUnique({
+            where: { id: cuenta.id },
+            select: { saldoFacturas: true }
+          });
+          const saldoPost = cuentaFresca?.saldoFacturas ?? 0;
+          const saldoAnte = saldoPost + 1;
+          await tx.movimientoCuota.create({
             data: {
               cuentaId: cuenta.id,
               tipo: 'DEBITO_EMISION',
               cantidad: -1,
-              saldoAnte: cuentaActual.saldoFacturas,
-              saldoPost: cuentaActual.saldoFacturas - 1,
-              nota: `Sincronizacion Contingencia POS (72h) - CUFE: ${resPAC.cufe.substring(0, 15)}...`,
+              saldoAnte,
+              saldoPost,
+              nota: `Sincronizacion Contingencia POS (72h) - CUFE: ${cufe.substring(0, 15)}...`,
               referencia: `SYNC-${v.id}`
             }
-          }),
-          prisma.facturaEmitida.create({
+          });
+          await tx.facturaEmitida.create({
             data: {
               cuentaId: cuenta.id,
-              cufe: resPAC.cufe,
+              cufe,
               cliente: v.clienteRuc || 'Consumidor Final POS Sync',
               total: Number(totalReal.toFixed(2)),
               itbms: Number(itbmsReal.toFixed(2)),
               estado: 'ACEPTADA'
             }
-          })
-        ]);
+          });
+        });
 
         autorizadas++;
-        resultados.push({ id: v.id, status: 'AUTORIZADA', cufe: resPAC.cufe });
+        resultados.push({ id: v.id, status: 'AUTORIZADA', cufe });
       } else {
         fallidas++;
         resultados.push({ id: v.id, status: 'ERROR_PAC' });

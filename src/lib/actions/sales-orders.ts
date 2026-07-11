@@ -7,39 +7,29 @@ import { getTenantContext } from '@/lib/auth/context';
 const DOC_TYPE_PEDIDO = 'PED';
 
 async function getNextSequence(empresaId: string, sucursalId: string, cajaId: string) {
-    return await prisma.$transaction(async (tx) => {
-        const sequence = await tx.secuencia.findUnique({
-            where: {
-                empresaId_sucursalId_cajaId_tipoDocumento: {
-                    empresaId,
-                    sucursalId,
-                    cajaId,
-                    tipoDocumento: DOC_TYPE_PEDIDO
-                }
+    // Numeración atómica (upsert + increment) para evitar folios duplicados bajo concurrencia.
+    const sequence = await prisma.secuencia.upsert({
+        where: {
+            empresaId_sucursalId_cajaId_tipoDocumento: {
+                empresaId,
+                sucursalId,
+                cajaId,
+                tipoDocumento: DOC_TYPE_PEDIDO
             }
-        });
-
-        let nextNumber = 1;
-        if (sequence) {
-            nextNumber = sequence.ultimoNumero + 1;
-            await tx.secuencia.update({
-                where: { id: sequence.id },
-                data: { ultimoNumero: nextNumber }
-            });
-        } else {
-            await tx.secuencia.create({
-                data: {
-                    empresaId,
-                    sucursalId,
-                    cajaId,
-                    tipoDocumento: DOC_TYPE_PEDIDO,
-                    ultimoNumero: nextNumber
-                }
-            });
+        },
+        create: {
+            empresaId,
+            sucursalId,
+            cajaId,
+            tipoDocumento: DOC_TYPE_PEDIDO,
+            ultimoNumero: 1
+        },
+        update: {
+            ultimoNumero: { increment: 1 }
         }
-
-        return nextNumber;
     });
+
+    return sequence.ultimoNumero;
 }
 
 async function getDefaults(empresaId: string) {

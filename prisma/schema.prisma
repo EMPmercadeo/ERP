@@ -1096,6 +1096,10 @@ model Cuenta {
   plan             Plan?             @relation(fields: [planId], references: [id])
   saldoFacturas    Int               @default(0) // Cuotas de facturas electrónicas disponibles
   ultimoAcceso     DateTime?
+  // Última vez que se notificó al cliente que tiene saldo de facturas sin usar (inactividad
+  // de 3+ meses). Sirve de anti-spam: no se le vuelve a escribir dentro de la ventana de
+  // recordatorio. NULL = nunca notificado. El saldo NUNCA se elimina solo; la baja es manual.
+  notificadoInactividadEn DateTime?
   eliminadoEn      DateTime?         // soft-delete
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt

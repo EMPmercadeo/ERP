@@ -71,39 +71,32 @@ export async function getEmpresaDefaults(empresaId: string) {
 }
 
 export async function getNextSequence(empresaId: string, sucursalId: string, cajaId: string) {
-    return await prisma.$transaction(async (tx) => {
-        const sequence = await tx.secuencia.findUnique({
-            where: {
-                empresaId_sucursalId_cajaId_tipoDocumento: {
-                    empresaId,
-                    sucursalId,
-                    cajaId,
-                    tipoDocumento: DOC_TYPE_FE
-                }
+    // Numeración atómica: `upsert` + `increment` se compila a un UPDATE ... SET
+    // ultimoNumero = ultimoNumero + 1 (a nivel de fila en Postgres), eliminando la
+    // condición de carrera del patrón previo lee-en-JS-luego-escribe, que bajo carga
+    // concurrente (dos cajas emitiendo al mismo tiempo) generaba folios DUPLICADOS.
+    const sequence = await prisma.secuencia.upsert({
+        where: {
+            empresaId_sucursalId_cajaId_tipoDocumento: {
+                empresaId,
+                sucursalId,
+                cajaId,
+                tipoDocumento: DOC_TYPE_FE
             }
-        });
-
-        let nextNumber = 1;
-        if (sequence) {
-            nextNumber = sequence.ultimoNumero + 1;
-            await tx.secuencia.update({
-                where: { id: sequence.id },
-                data: { ultimoNumero: nextNumber }
-            });
-        } else {
-            await tx.secuencia.create({
-                data: {
-                    empresaId,
-                    sucursalId,
-                    cajaId,
-                    tipoDocumento: DOC_TYPE_FE,
-                    ultimoNumero: nextNumber
-                }
-            });
+        },
+        create: {
+            empresaId,
+            sucursalId,
+            cajaId,
+            tipoDocumento: DOC_TYPE_FE,
+            ultimoNumero: 1
+        },
+        update: {
+            ultimoNumero: { increment: 1 }
         }
-
-        return nextNumber;
     });
+
+    return sequence.ultimoNumero;
 }
 
 function calcularTasaItbms(codigoTasaItbms: string): number {

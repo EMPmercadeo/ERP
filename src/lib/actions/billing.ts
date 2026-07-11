@@ -133,16 +133,21 @@ export async function canUploadProductImage(): Promise<boolean> {
 }
 
 export async function incrementDocumentUsage(companyId: string) {
+    // Asegura que exista el registro del mes (crea con used=0 si no existe).
     const usage = await getOrInitializeUsage(companyId);
 
-    const nextUsed = usage.usedDocuments + 1;
-    const nextRemaining = Math.max(0, (usage.includedLimit + usage.extraDocumentsPurchased) - nextUsed);
-
+    // Consumo ATÓMICO de cuota: `increment`/`decrement` se compilan a
+    // SET usedDocuments = usedDocuments + 1 a nivel de fila en Postgres. El patrón
+    // previo (leer usedDocuments en JS, sumar 1, y escribir el valor calculado) tenía
+    // una condición de carrera: dos facturas concurrentes leían el mismo valor y
+    // ambas escribían N+1, de modo que se emitían 2 documentos pero el contador solo
+    // subía 1 → la empresa consumía cuota de más sin que se registrara (bypass del
+    // ledger de cuotas). Con increment el conteo es exacto bajo cualquier concurrencia.
     await prisma.documentUsage.update({
         where: { id: usage.id },
         data: {
-            usedDocuments: nextUsed,
-            remainingDocuments: nextRemaining
+            usedDocuments: { increment: 1 },
+            remainingDocuments: { decrement: 1 }
         }
     });
 }

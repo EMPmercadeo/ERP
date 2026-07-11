@@ -10,39 +10,29 @@ const DOC_TYPE_ALBARAN = 'ALB';
 const DOC_TYPE_FE = 'FE';
 
 async function getNextSequence(empresaId: string, sucursalId: string, cajaId: string, tipo: string) {
-    return await prisma.$transaction(async (tx) => {
-        const sequence = await tx.secuencia.findUnique({
-            where: {
-                empresaId_sucursalId_cajaId_tipoDocumento: {
-                    empresaId,
-                    sucursalId,
-                    cajaId,
-                    tipoDocumento: tipo
-                }
+    // Numeración atómica (upsert + increment) para evitar folios duplicados bajo concurrencia.
+    const sequence = await prisma.secuencia.upsert({
+        where: {
+            empresaId_sucursalId_cajaId_tipoDocumento: {
+                empresaId,
+                sucursalId,
+                cajaId,
+                tipoDocumento: tipo
             }
-        });
-
-        let nextNumber = 1;
-        if (sequence) {
-            nextNumber = sequence.ultimoNumero + 1;
-            await tx.secuencia.update({
-                where: { id: sequence.id },
-                data: { ultimoNumero: nextNumber }
-            });
-        } else {
-            await tx.secuencia.create({
-                data: {
-                    empresaId,
-                    sucursalId,
-                    cajaId,
-                    tipoDocumento: tipo,
-                    ultimoNumero: nextNumber
-                }
-            });
+        },
+        create: {
+            empresaId,
+            sucursalId,
+            cajaId,
+            tipoDocumento: tipo,
+            ultimoNumero: 1
+        },
+        update: {
+            ultimoNumero: { increment: 1 }
         }
-
-        return nextNumber;
     });
+
+    return sequence.ultimoNumero;
 }
 
 async function getDefaults(empresaId: string) {

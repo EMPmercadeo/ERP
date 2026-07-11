@@ -28,6 +28,9 @@ export default async function AdminDashboardPage() {
                     <p className="text-muted-foreground">Monitoreo global y gestión multi-tenant de ERP Panamá</p>
                 </div>
                 <div className="flex gap-2">
+                    <Link href="/admin/cuotas-inactivas">
+                        <Button variant="outline">Saldo Inactivo</Button>
+                    </Link>
                     <Link href="/admin/empresas">
                         <Button variant="outline">Ver Todas las Empresas</Button>
                     </Link>

@@ -7,7 +7,7 @@ import { requireSuperAdminApi } from '@/lib/auth/admin';
 import { z } from 'zod';
 
 const AjusteCuotaSchema = z.object({
-  accion: z.enum(['ajustar', 'reconciliar']),
+  accion: z.enum(['ajustar', 'reconciliar', 'eliminar_saldo']),
   cantidad: z.number().int().optional(),
   nota: z.string().optional()
 });
@@ -148,6 +148,55 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({
         success: true,
         message: 'Movimiento de ajuste registrado y saldo actualizado.',
+        movimiento,
+        cuenta: modificada
+      });
+    }
+
+    // 3. ELIMINAR SALDO (baja manual del saldo inactivo — SOLO superadmin, nunca automática)
+    // Deja el saldo en 0 registrando un movimiento AJUSTE_MANUAL en el ledger, para que la
+    // baja quede auditada y el ledger siga cuadrando con el saldo. Requiere nota obligatoria.
+    if (validacion.data.accion === 'eliminar_saldo') {
+      const nota = validacion.data.nota;
+      if (!nota || nota.trim().length < 3) {
+        return NextResponse.json({ error: 'La nota explicativa es obligatoria para eliminar el saldo.' }, { status: 400 });
+      }
+
+      const saldoAnte = cuenta.saldoFacturas;
+      if (saldoAnte <= 0) {
+        return NextResponse.json({ error: 'La cuenta no tiene saldo de facturas para eliminar.' }, { status: 400 });
+      }
+      const cantidad = -saldoAnte;
+      const saldoPost = 0;
+
+      const [movimiento, modificada] = await prisma.$transaction([
+        prisma.movimientoCuota.create({
+          data: {
+            cuentaId,
+            tipo: 'AJUSTE_MANUAL',
+            cantidad,
+            saldoAnte,
+            saldoPost,
+            nota: `[Superadmin Baja de saldo inactivo] ${nota}`
+          }
+        }),
+        prisma.cuenta.update({
+          where: { id: cuentaId },
+          data: { saldoFacturas: saldoPost }
+        })
+      ]);
+
+      await registrarLogAuditoria({
+        adminId,
+        accion: 'ELIMINAR_SALDO_INACTIVO',
+        objetivo: 'Cuenta',
+        objetivoId: cuentaId,
+        detalles: { saldoEliminado: saldoAnte, nota }
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `Saldo de ${saldoAnte} factura(s) eliminado y registrado en el ledger.`,
         movimiento,
         cuenta: modificada
       });
