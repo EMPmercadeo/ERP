@@ -5,6 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell
+} from '@/components/ui/table';
 import { Topbar } from '@/components/layout/Topbar';
 import { ContentContainer } from '@/components/layout/Content';
 import {
@@ -15,7 +23,9 @@ import {
   Calendar,
   AlertTriangle,
   Eye,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -25,17 +35,27 @@ interface Empleado {
   cedula: string;
   activo: boolean;
   cargo: string;
+  departamento?: string;
   salarioBase: number | string;
   tipoContrato: string;
   fechaIngreso: string;
   _count?: { ausencias?: number; actas?: number };
 }
 
+const PAGE_SIZE = 10;
+
 export default function EmpleadosRRHHPage() {
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [loading, setLoading] = useState(true);
   const [buscar, setBuscar] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('activo');
+
+  // Paginación cursor-based (misma técnica que ya usa /api/rrhh/empleados vía paginar()).
+  // cursorsRef[i] guarda el cursor necesario para pedir la página i; la página 0 siempre
+  // usa cursor null. Se guarda en un ref (no en estado) para no disparar refetch por sí solo.
+  const [pageIndex, setPageIndex] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const cursorsRef = useRef<(string | null)[]>([null]);
 
   // Estado para Modal de Nuevo Colaborador
   const [showModal, setShowModal] = useState(false);
@@ -61,18 +81,30 @@ export default function EmpleadosRRHHPage() {
     buscarRef.current = buscar;
   }, [buscar]);
 
-  // Cargar lista de colaboradores — el servidor deriva la empresa de la sesión, nunca del cliente
-  const cargarEmpleados = useCallback(async () => {
+  // Cargar una página específica de colaboradores — el servidor deriva la empresa de la
+  // sesión, nunca del cliente. targetPageIndex referencia cursorsRef, que va creciendo a
+  // medida que se navega hacia adelante.
+  const cargarPagina = useCallback(async (targetPageIndex: number) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (buscarRef.current) params.append('buscar', buscarRef.current);
       if (filtroEstado !== 'all') params.append('estado', filtroEstado);
+      params.append('take', String(PAGE_SIZE));
+      const cursor = cursorsRef.current[targetPageIndex];
+      if (cursor) params.append('cursor', cursor);
 
       const res = await fetch(`/api/rrhh/empleados?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setEmpleados(data.items || []);
+        setHasNextPage(!!data.nextCursor);
+        if (data.nextCursor && !cursorsRef.current[targetPageIndex + 1]) {
+          const next = [...cursorsRef.current];
+          next[targetPageIndex + 1] = data.nextCursor;
+          cursorsRef.current = next;
+        }
+        setPageIndex(targetPageIndex);
       }
     } catch (err) {
       console.error('Error al cargar empleados:', err);
@@ -81,9 +113,15 @@ export default function EmpleadosRRHHPage() {
     }
   }, [filtroEstado]);
 
+  // Reinicia la paginación (nueva búsqueda o cambio de filtro de estado)
+  const buscarDesdeInicio = useCallback(() => {
+    cursorsRef.current = [null];
+    cargarPagina(0);
+  }, [cargarPagina]);
+
   useEffect(() => {
-    cargarEmpleados();
-  }, [cargarEmpleados]);
+    buscarDesdeInicio();
+  }, [buscarDesdeInicio]);
 
   const handleCrearEmpleado = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,7 +152,7 @@ export default function EmpleadosRRHHPage() {
         setNombre('');
         setCedula('');
         setCargo('');
-        cargarEmpleados();
+        buscarDesdeInicio();
       }
     } catch {
       setErrorModal('Error de conexión con el servidor');
@@ -133,7 +171,7 @@ export default function EmpleadosRRHHPage() {
       const data = await res.json();
       if (res.ok) {
         alert(data.message);
-        cargarEmpleados();
+        cargarPagina(pageIndex);
       } else {
         alert('Error: ' + data.error);
       }
@@ -186,10 +224,10 @@ export default function EmpleadosRRHHPage() {
                   placeholder="Buscar por cédula o nombre..."
                   value={buscar}
                   onChange={(e) => setBuscar(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && cargarEmpleados()}
+                  onKeyDown={(e) => e.key === 'Enter' && buscarDesdeInicio()}
                   className="bg-muted/50 border-border text-sm"
                 />
-                <Button variant="secondary" size="sm" onClick={cargarEmpleados} className="shrink-0">
+                <Button variant="secondary" size="sm" onClick={buscarDesdeInicio} className="shrink-0">
                   Buscar
                 </Button>
               </div>
@@ -221,7 +259,7 @@ export default function EmpleadosRRHHPage() {
             </CardContent>
           </Card>
 
-          {/* Grid de Colaboradores */}
+          {/* Lista de Colaboradores */}
           {loading ? (
             <div className="text-center py-16 text-muted-foreground animate-pulse text-sm">Cargando directorio de personal...</div>
           ) : empleados.length === 0 ? (
@@ -235,64 +273,95 @@ export default function EmpleadosRRHHPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {empleados.map((emp) => (
-                <Card key={emp.id} className="border-border hover:border-brand-1/40 transition-all flex flex-col justify-between group shadow-sm">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <CardTitle className="text-base font-bold text-foreground group-hover:text-brand-1 transition-colors truncate">
-                          {emp.nombre}
-                        </CardTitle>
-                        <CardDescription className="text-xs text-muted-foreground mt-0.5">
-                          Cédula: <span className="text-foreground font-mono font-medium">{emp.cedula}</span>
-                        </CardDescription>
-                      </div>
-                      <Badge className={emp.activo ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 shrink-0' : 'bg-red-50 text-red-600 border border-red-200 shrink-0'}>
-                        {emp.activo ? 'Activo' : 'Baja'}
-                      </Badge>
-                    </div>
-                  </CardHeader>
+            <Card className="border-border shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Colaborador</TableHead>
+                      <TableHead>Cargo</TableHead>
+                      <TableHead>Departamento</TableHead>
+                      <TableHead>Salario Base</TableHead>
+                      <TableHead>Contrato</TableHead>
+                      <TableHead>Ingreso</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="text-center">Ausencias</TableHead>
+                      <TableHead className="text-center">Actas</TableHead>
+                      <TableHead className="text-right">Acción</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {empleados.map((emp) => (
+                      <TableRow key={emp.id} className="hover:bg-muted/50">
+                        <TableCell>
+                          <div className="font-semibold text-foreground">{emp.nombre}</div>
+                          <div className="text-xs text-muted-foreground font-mono">{emp.cedula}</div>
+                        </TableCell>
+                        <TableCell className="text-sm">{emp.cargo}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{emp.departamento || '—'}</TableCell>
+                        <TableCell className="font-mono font-semibold text-brand-1">${Number(emp.salarioBase).toFixed(2)}</TableCell>
+                        <TableCell className="text-xs">{emp.tipoContrato}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{new Date(emp.fechaIngreso).toLocaleDateString('es-PA')}</TableCell>
+                        <TableCell>
+                          <Badge className={emp.activo ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}>
+                            {emp.activo ? 'Activo' : 'Baja'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center text-xs">
+                          <span className="inline-flex items-center gap-1">
+                            <Calendar className="h-3.5 w-3.5 text-amber-500" />
+                            {emp._count?.ausencias || 0}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-center text-xs">
+                          <span className="inline-flex items-center gap-1">
+                            <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
+                            {emp._count?.actas || 0}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Link href={`/rrhh/empleados/${emp.id}`}>
+                            <Button variant="outline" size="sm" className="text-muted-foreground hover:bg-brand-1/5 hover:text-brand-1 hover:border-brand-1/30 text-xs font-bold">
+                              <Eye className="h-3.5 w-3.5 mr-1.5" />
+                              Ver Expediente
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
 
-                  <CardContent className="space-y-3 pb-4">
-                    <div className="grid grid-cols-2 gap-2 bg-muted/50 p-2.5 rounded border border-border text-xs">
-                      <div>
-                        <span className="text-muted-foreground block">Cargo:</span>
-                        <span className="text-foreground font-semibold">{emp.cargo}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground block">Salario Base:</span>
-                        <span className="text-brand-1 font-mono font-bold">${Number(emp.salarioBase).toFixed(2)}</span>
-                      </div>
-                      <div className="col-span-2 pt-1 border-t border-border mt-1 flex justify-between items-center text-[11px]">
-                        <span className="text-muted-foreground">Tipo: <strong className="text-foreground">{emp.tipoContrato}</strong></span>
-                        <span className="text-muted-foreground">Ingreso: {new Date(emp.fechaIngreso).toLocaleDateString('es-PA')}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3.5 w-3.5 text-amber-500" />
-                        Ausencias: <strong className="text-foreground">{emp._count?.ausencias || 0}</strong>
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
-                        Actas: <strong className="text-foreground">{emp._count?.actas || 0}</strong>
-                      </span>
-                    </div>
-                  </CardContent>
-
-                  <div className="p-4 pt-0">
-                    <Link href={`/rrhh/empleados/${emp.id}`} className="w-full">
-                      <Button variant="outline" className="w-full text-muted-foreground hover:bg-brand-1/5 hover:text-brand-1 hover:border-brand-1/30 text-xs font-bold transition-all">
-                        <Eye className="h-4 w-4 mr-2" />
-                        Ver Expediente y Ledger
-                      </Button>
-                    </Link>
-                  </div>
-                </Card>
-              ))}
-            </div>
+              {/* Paginación */}
+              <div className="flex items-center justify-between border-t border-border p-3">
+                <span className="text-xs text-muted-foreground">
+                  Página {pageIndex + 1} · {empleados.length} colaborador{empleados.length === 1 ? '' : 'es'} en esta página
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pageIndex === 0}
+                    onClick={() => cargarPagina(pageIndex - 1)}
+                    className="text-xs"
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!hasNextPage}
+                    onClick={() => cargarPagina(pageIndex + 1)}
+                    className="text-xs"
+                  >
+                    Siguiente
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
           )}
         </div>
       </ContentContainer>
