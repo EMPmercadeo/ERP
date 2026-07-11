@@ -403,7 +403,7 @@ export function PayrollClient() {
         <TooltipProvider>
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">🧮 Calculadora de Planilla Panamá en Tiempo Real</h2>
+              <h2 className="text-2xl font-bold tracking-tight">Calculadora de Planilla Panamá en Tiempo Real</h2>
               <p className="text-sm text-muted-foreground">
                 Simulación instantánea con desglose centesimal de cuotas obreras, retenciones progresivas de ISR y aportes del empleador.
               </p>
@@ -501,7 +501,7 @@ export function PayrollClient() {
               {/* Desglose Obrero */}
               <Card className="border-t-4 border-t-cyan-500">
                 <CardHeader>
-                  <CardTitle className="text-lg text-cyan-600 dark:text-cyan-400">👤 Deducciones del Trabajador (Obrero)</CardTitle>
+                  <CardTitle className="text-lg text-cyan-600 dark:text-cyan-400">Deducciones del Trabajador (Obrero)</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   <div className="flex justify-between py-1 border-b border-border/50">
@@ -538,7 +538,7 @@ export function PayrollClient() {
                     <span className="text-emerald-600 dark:text-emerald-400 text-xl">{formatMoney(dedObrero.salarioNeto)}</span>
                   </div>
                   <div className="text-xs text-muted-foreground pt-2">
-                    💡 Base gravable anual proyectada para cálculo de ISR: <span className="font-semibold text-foreground">{formatMoney(dedObrero.baseGravableAnualProyectada)}</span>
+                    Base gravable anual proyectada para cálculo de ISR: <span className="font-semibold text-foreground">{formatMoney(dedObrero.baseGravableAnualProyectada)}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -546,7 +546,7 @@ export function PayrollClient() {
               {/* Desglose Patronal */}
               <Card className="border-t-4 border-t-amber-500">
                 <CardHeader>
-                  <CardTitle className="text-lg text-amber-600 dark:text-amber-400">🏢 Cargas del Empleador (Patronal)</CardTitle>
+                  <CardTitle className="text-lg text-amber-600 dark:text-amber-400">Cargas del Empleador (Patronal)</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   <div className="flex justify-between py-1 border-b border-border/50">
@@ -583,7 +583,7 @@ export function PayrollClient() {
                     <span className="text-foreground text-xl">{formatMoney(aportesPatronal.costoTotalEmpresa)}</span>
                   </div>
                   <div className="text-xs text-muted-foreground pt-2">
-                    💡 Factor de carga prestacional directa: <span className="font-semibold text-foreground">{((aportesPatronal.totalPatronal / (aportesPatronal.salarioBruto || 1)) * 100).toFixed(2)}%</span> sobre el salario bruto.
+                    Factor de carga prestacional directa: <span className="font-semibold text-foreground">{((aportesPatronal.totalPatronal / (aportesPatronal.salarioBruto || 1)) * 100).toFixed(2)}%</span> sobre el salario bruto.
                   </div>
                 </CardContent>
               </Card>
@@ -597,7 +597,7 @@ export function PayrollClient() {
         <div className="space-y-6 animate-in fade-in duration-300">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">👥 Directorio de Colaboradores Activos</h2>
+              <h2 className="text-2xl font-bold tracking-tight">Directorio de Colaboradores Activos</h2>
               <p className="text-sm text-muted-foreground">
                 Consulta salarios base y posiciones fiscales en todos los tramos del sistema.
               </p>
@@ -676,7 +676,7 @@ export function PayrollClient() {
                           onClick={() => simularColaborador(col)}
                           className="text-xs"
                         >
-                          🧮 Simular Planilla
+                          Simular Planilla
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -699,7 +699,7 @@ export function PayrollClient() {
       {activeTab === 'decimo' && (
         <div className="space-y-6 animate-in fade-in duration-300">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">🎁 Proyección de Décimo Tercer Mes (XIII Mes)</h2>
+            <h2 className="text-2xl font-bold tracking-tight">Proyección de Décimo Tercer Mes (XIII Mes)</h2>
             <p className="text-sm text-muted-foreground">
               Cálculo de las 3 partidas obligatorias (15 de abril, 15 de agosto, 15 de diciembre) según Código de Trabajo.
             </p>
@@ -789,7 +789,7 @@ export function PayrollClient() {
       {activeTab === 'liquidaciones' && (
         <div className="space-y-6 animate-in fade-in duration-300">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">⚖️ Simulador de Liquidación Laboral (Finiquito)</h2>
+            <h2 className="text-2xl font-bold tracking-tight">Simulador de Liquidación Laboral (Finiquito)</h2>
             <p className="text-sm text-muted-foreground">
               Cálculo preciso de derechos adquiridos y estimación de indemnización según el Código de Trabajo de Panamá.
             </p>
@@ -843,7 +843,7 @@ export function PayrollClient() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="border-t-4 border-t-emerald-500">
               <CardHeader>
-                <CardTitle className="text-lg text-emerald-600 dark:text-emerald-400">✅ Derechos Adquiridos (Renuncia o Despido Justificado)</CardTitle>
+                <CardTitle className="text-lg text-emerald-600 dark:text-emerald-400">Derechos Adquiridos (Renuncia o Despido Justificado)</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between py-1 border-b border-border/50">
@@ -867,7 +867,7 @@ export function PayrollClient() {
 
             <Card className="border-t-4 border-t-amber-500">
               <CardHeader>
-                <CardTitle className="text-lg text-amber-600 dark:text-amber-400">⚠️ Escenario por Despido Injustificado</CardTitle>
+                <CardTitle className="text-lg text-amber-600 dark:text-amber-400">Escenario por Despido Injustificado</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between py-1 border-b border-border/50">
