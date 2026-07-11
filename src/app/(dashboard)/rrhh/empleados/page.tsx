@@ -45,6 +45,11 @@ export default function EmpleadosRRHHPage() {
   const [salarioBase, setSalarioBase] = useState('850');
   const [tipoContrato, setTipoContrato] = useState('INDEFINIDO');
   const [fechaIngreso, setFechaIngreso] = useState(new Date().toISOString().split('T')[0]);
+  // Estos 3 alimentan la calculadora de Planilla (módulo Payroll) — antes esa calculadora
+  // usaba colaboradores inventados porque no existía forma de capturar estos datos.
+  const [departamento, setDepartamento] = useState('General');
+  const [frecuenciaPago, setFrecuenciaPago] = useState('mensual');
+  const [tasaRiesgo, setTasaRiesgo] = useState('0.0105');
   const [errorModal, setErrorModal] = useState('');
   const [guardando, setGuardando] = useState(false);
 
@@ -94,7 +99,10 @@ export default function EmpleadosRRHHPage() {
           cargo,
           salarioBase: Number(salarioBase),
           tipoContrato,
-          fechaIngreso
+          fechaIngreso,
+          departamento,
+          frecuenciaPago,
+          tasaRiesgo: Number(tasaRiesgo)
         })
       });
 
@@ -375,6 +383,47 @@ export default function EmpleadosRRHHPage() {
                     onChange={(e) => setFechaIngreso(e.target.value)}
                     className="bg-muted/50 border-border"
                   />
+                </div>
+                <div className="pt-2 border-t border-border">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    Datos para Planilla (Ley 462 de 2025)
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground block mb-1">Departamento:</label>
+                      <Input
+                        placeholder="Ej. Ventas, Administración"
+                        value={departamento}
+                        onChange={(e) => setDepartamento(e.target.value)}
+                        className="bg-muted/50 border-border"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground block mb-1">Frecuencia de Pago:</label>
+                      <select
+                        value={frecuenciaPago}
+                        onChange={(e) => setFrecuenciaPago(e.target.value)}
+                        className="w-full bg-muted/50 border border-border rounded-md text-sm text-foreground px-3 py-2 h-10 focus:outline-none focus:ring-1 focus:ring-brand-1 focus:border-brand-1"
+                      >
+                        <option value="mensual">Mensual (12 pagos/año)</option>
+                        <option value="quincenal">Quincenal (24 pagos/año)</option>
+                        <option value="bisemanal">Bisemanal (26 pagos/año)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <label className="text-xs font-semibold text-muted-foreground block mb-1">Tasa de Riesgos Profesionales:</label>
+                    <select
+                      value={tasaRiesgo}
+                      onChange={(e) => setTasaRiesgo(e.target.value)}
+                      className="w-full bg-muted/50 border border-border rounded-md text-sm text-foreground px-3 py-2 h-10 focus:outline-none focus:ring-1 focus:ring-brand-1 focus:border-brand-1"
+                    >
+                      <option value="0.0105">1.05% - Oficina / Bajo Riesgo</option>
+                      <option value="0.0210">2.10% - Almacén / Comercial</option>
+                      <option value="0.0350">3.50% - Operaciones / Industrial</option>
+                      <option value="0.0560">5.60% - Construcción / Alto Riesgo</option>
+                    </select>
+                  </div>
                 </div>
               </CardContent>
               <div className="p-4 border-t border-border flex flex-col-reverse sm:flex-row justify-end gap-3 bg-muted/30">

@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   calcularDeduccionesObrero,
   calcularAportesPatronales,
   calcularXIIIMes,
   calcularLiquidacion
 } from '@/lib/payroll/panama-rules';
-import { COLABORADORES_MOCK, ColaboradorMock } from '@/lib/payroll/mock-data';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,15 +34,61 @@ import {
   HelpCircle,
   ShieldAlert,
   Search,
-  CheckCircle2
+  CheckCircle2,
+  UserPlus
 } from 'lucide-react';
+import Link from 'next/link';
 
 function formatMoney(num: number): string {
   return `$${Number(num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+// Colaborador real, tal como lo devuelve /api/rrhh/empleados (scoping por empresa vía
+// getTenantContext() en el servidor). Antes esta pantalla usaba una lista de 5 colaboradores
+// inventados que no tenían relación con el directorio real de RRHH.
+interface ColaboradorReal {
+  id: string;
+  nombre: string;
+  cedula: string;
+  cargo: string;
+  departamento: string;
+  salarioBase: number | string;
+  tipoContrato: string;
+  fechaIngreso: string;
+  frecuenciaPago: string;
+  tasaRiesgo: number;
+  activo: boolean;
+}
+
 export function PayrollClient() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'calculadora' | 'colaboradores' | 'decimo' | 'liquidaciones'>('dashboard');
+
+  // Colaboradores reales cargados desde RRHH
+  const [colaboradores, setColaboradores] = useState<ColaboradorReal[]>([]);
+  const [cargandoColaboradores, setCargandoColaboradores] = useState(true);
+  const [errorColaboradores, setErrorColaboradores] = useState('');
+
+  const cargarColaboradores = useCallback(async () => {
+    setCargandoColaboradores(true);
+    setErrorColaboradores('');
+    try {
+      const res = await fetch('/api/rrhh/empleados?estado=activo&take=100');
+      if (res.ok) {
+        const data = await res.json();
+        setColaboradores(data.items || []);
+      } else {
+        setErrorColaboradores('No se pudo cargar el directorio de colaboradores.');
+      }
+    } catch {
+      setErrorColaboradores('Error de conexión al cargar colaboradores.');
+    } finally {
+      setCargandoColaboradores(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    cargarColaboradores();
+  }, [cargarColaboradores]);
 
   // Parámetros Calculadora en Tiempo Real
   const [calcSalario, setCalcSalario] = useState<number>(1200);
@@ -72,18 +117,18 @@ export function PayrollClient() {
   // Cálculos reactivos Liquidación
   const liqCalc = useMemo(() => calcularLiquidacion(liqSalario, liqMeses, liqAnios), [liqSalario, liqMeses, liqAnios]);
 
-  // Consolidado para el Dashboard
+  // Consolidado para el Dashboard — sobre colaboradores reales y activos
   const dashMetrics = useMemo(() => {
     let totalBruto = 0;
     let totalRetenciones = 0;
     let totalPatronal = 0;
 
-    COLABORADORES_MOCK.forEach(c => {
-      if (c.estado !== 'Activo') return;
-      totalBruto += c.salarioBaseMensual;
-      const d = calcularDeduccionesObrero(c.salarioBaseMensual, 'mensual');
+    colaboradores.forEach(c => {
+      const salario = Number(c.salarioBase) || 0;
+      totalBruto += salario;
+      const d = calcularDeduccionesObrero(salario, 'mensual');
       totalRetenciones += d.totalDeducciones;
-      const p = calcularAportesPatronales(c.salarioBaseMensual, calcFecha, c.tasaRiesgo);
+      const p = calcularAportesPatronales(salario, calcFecha, c.tasaRiesgo);
       totalPatronal += p.totalPatronal;
     });
 
@@ -91,25 +136,27 @@ export function PayrollClient() {
     const netoTotal = totalBruto - totalRetenciones;
 
     return { totalBruto, totalRetenciones, totalPatronal, costoTotal, netoTotal };
-  }, [calcFecha]);
+  }, [colaboradores, calcFecha]);
 
   const colaboradoresFiltrados = useMemo(() => {
     const q = filterQuery.trim().toLowerCase();
-    if (!q) return COLABORADORES_MOCK;
-    return COLABORADORES_MOCK.filter(c => 
-      c.nombre.toLowerCase().includes(q) || 
+    if (!q) return colaboradores;
+    return colaboradores.filter(c =>
+      c.nombre.toLowerCase().includes(q) ||
       c.cargo.toLowerCase().includes(q) ||
       c.departamento.toLowerCase().includes(q) ||
       c.cedula.toLowerCase().includes(q)
     );
-  }, [filterQuery]);
+  }, [colaboradores, filterQuery]);
 
-  const simularColaborador = (col: ColaboradorMock) => {
-    setCalcSalario(col.salarioBaseMensual);
+  const simularColaborador = (col: ColaboradorReal) => {
+    setCalcSalario(Number(col.salarioBase) || 0);
     setCalcFrecuencia(col.frecuenciaPago);
     setCalcRiesgo(col.tasaRiesgo);
     setActiveTab('calculadora');
   };
+
+  const hayColaboradores = colaboradores.length > 0;
 
   return (
     <div className="space-y-6">
@@ -163,93 +210,115 @@ export function PayrollClient() {
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Resumen Ejecutivo de Nómina (2026)</h2>
             <p className="text-sm text-muted-foreground">
-              Métricas consolidadas de costos obrero-patronales bajo la Ley 462 de 2025.
+              Métricas consolidadas de costos obrero-patronales bajo la Ley 462 de 2025, calculadas sobre tus colaboradores activos reales.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="border-l-4 border-l-cyan-500 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Total Nómina Bruta (Mensual)</CardTitle>
-              </CardHeader>
+          {!cargandoColaboradores && !hayColaboradores ? (
+            <Card className="border-dashed border-2 text-center py-12">
               <CardContent>
-                <div className="text-3xl font-extrabold text-cyan-600 dark:text-cyan-400">{formatMoney(dashMetrics.totalBruto)}</div>
-                <p className="text-xs text-muted-foreground mt-1">5 colaboradores activos</p>
+                <Users className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
+                <h3 className="text-lg font-bold text-foreground mb-1">Aún no tienes colaboradores registrados</h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
+                  Registra tu personal en el directorio de Colaboradores para que estas métricas de planilla se calculen automáticamente.
+                </p>
+                <Link href="/rrhh/empleados">
+                  <Button className="bg-brand-1 hover:bg-brand-2 text-white font-bold">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Ir a Colaboradores
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="border-l-4 border-l-cyan-500 shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Total Nómina Bruta (Mensual)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-extrabold text-cyan-600 dark:text-cyan-400">{formatMoney(dashMetrics.totalBruto)}</div>
+                    <p className="text-xs text-muted-foreground mt-1">{colaboradores.length} colaborador{colaboradores.length === 1 ? '' : 'es'} activo{colaboradores.length === 1 ? '' : 's'}</p>
+                  </CardContent>
+                </Card>
 
-            <Card className="border-l-4 border-l-amber-500 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Cargas Patronales (CSS+SE+RP)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">{formatMoney(dashMetrics.totalPatronal)}</div>
-                <p className="text-xs text-muted-foreground mt-1">Tasa CSS Patronal vigente: 13.25%</p>
-              </CardContent>
-            </Card>
+                <Card className="border-l-4 border-l-amber-500 shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Cargas Patronales (CSS+SE+RP)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">{formatMoney(dashMetrics.totalPatronal)}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Tasa CSS Patronal vigente: 13.25%</p>
+                  </CardContent>
+                </Card>
 
-            <Card className="border-l-4 border-l-blue-500 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Retenciones DGI / CSS Obrero</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-extrabold text-blue-600 dark:text-blue-400">{formatMoney(dashMetrics.totalRetenciones)}</div>
-                <p className="text-xs text-muted-foreground mt-1">CSS (9.75%) + SE (1.25%) + ISR Progresivo</p>
-              </CardContent>
-            </Card>
+                <Card className="border-l-4 border-l-blue-500 shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Retenciones DGI / CSS Obrero</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-extrabold text-blue-600 dark:text-blue-400">{formatMoney(dashMetrics.totalRetenciones)}</div>
+                    <p className="text-xs text-muted-foreground mt-1">CSS (9.75%) + SE (1.25%) + ISR Progresivo</p>
+                  </CardContent>
+                </Card>
 
-            <Card className="border-l-4 border-l-emerald-500 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Costo Total Empresa</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">{formatMoney(dashMetrics.costoTotal)}</div>
-                <p className="text-xs text-muted-foreground mt-1">Bruto + Total Cargas Patronales</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Distribución del Presupuesto de Nómina vs. Salario Neto</CardTitle>
-              <CardDescription>Proporciones relativas entre sueldo recibido y aportes de seguridad social.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex h-10 w-full rounded-lg overflow-hidden bg-muted font-bold text-xs">
-                <div
-                  style={{ width: `${Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100)}%` }}
-                  className="bg-emerald-500 text-black flex items-center justify-center px-2 transition-all"
-                >
-                  Neto ({Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100)}%)
-                </div>
-                <div
-                  style={{ width: `${Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100)}%` }}
-                  className="bg-cyan-500 text-black flex items-center justify-center px-2 transition-all"
-                >
-                  Obrero ({Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100)}%)
-                </div>
-                <div
-                  style={{ width: `${Math.max(1, 100 - Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100) - Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100))}%` }}
-                  className="bg-amber-500 text-black flex items-center justify-center px-2 transition-all"
-                >
-                  Patronal ({Math.max(1, 100 - Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100) - Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100))}%)
-                </div>
+                <Card className="border-l-4 border-l-emerald-500 shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Costo Total Empresa</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">{formatMoney(dashMetrics.costoTotal)}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Bruto + Total Cargas Patronales</p>
+                  </CardContent>
+                </Card>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground gap-2">
-                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-500"></span> Salario Neto Recibido</span>
-                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-cyan-500"></span> Retenciones Obreras (CSS + SE + ISR)</span>
-                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-amber-500"></span> Cargas Patronales (CSS + SE + RP)</span>
-              </div>
-            </CardContent>
-          </Card>
+              {dashMetrics.costoTotal > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Distribución del Presupuesto de Nómina vs. Salario Neto</CardTitle>
+                    <CardDescription>Proporciones relativas entre sueldo recibido y aportes de seguridad social.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex h-10 w-full rounded-lg overflow-hidden bg-muted font-bold text-xs">
+                      <div
+                        style={{ width: `${Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100)}%` }}
+                        className="bg-emerald-500 text-black flex items-center justify-center px-2 transition-all"
+                      >
+                        Neto ({Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100)}%)
+                      </div>
+                      <div
+                        style={{ width: `${Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100)}%` }}
+                        className="bg-cyan-500 text-black flex items-center justify-center px-2 transition-all"
+                      >
+                        Obrero ({Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100)}%)
+                      </div>
+                      <div
+                        style={{ width: `${Math.max(1, 100 - Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100) - Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100))}%` }}
+                        className="bg-amber-500 text-black flex items-center justify-center px-2 transition-all"
+                      >
+                        Patronal ({Math.max(1, 100 - Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100) - Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100))}%)
+                      </div>
+                    </div>
 
-          <div className="bg-cyan-500/10 border-l-4 border-cyan-500 p-4 rounded-r-lg flex items-start gap-3">
-            <CheckCircle2 className="h-5 w-5 text-cyan-500 shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <strong className="font-semibold text-foreground">Cumplimiento Legal y Reforma CSS (Ley 462 de 2025):</strong> El motor de cálculo detecta la fecha del periodo de nómina. Para el tramo actual (hasta febrero de 2027), se aplica exactamente la cuota del <strong>13.25%</strong> en Seguro Social Patronal.
-            </div>
-          </div>
+                    <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground gap-2">
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-500"></span> Salario Neto Recibido</span>
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-cyan-500"></span> Retenciones Obreras (CSS + SE + ISR)</span>
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-amber-500"></span> Cargas Patronales (CSS + SE + RP)</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <div className="bg-cyan-500/10 border-l-4 border-cyan-500 p-4 rounded-r-lg flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-cyan-500 shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <strong className="font-semibold text-foreground">Cumplimiento Legal y Reforma CSS (Ley 462 de 2025):</strong> El motor de cálculo detecta la fecha del periodo de nómina. Para el tramo actual (hasta febrero de 2027), se aplica exactamente la cuota del <strong>13.25%</strong> en Seguro Social Patronal.
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -471,56 +540,80 @@ export function PayrollClient() {
             </div>
           </div>
 
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cédula</TableHead>
-                  <TableHead>Colaborador / Cargo</TableHead>
-                  <TableHead>Departamento</TableHead>
-                  <TableHead>Contrato</TableHead>
-                  <TableHead>Salario Base</TableHead>
-                  <TableHead>Tasa Riesgo</TableHead>
-                  <TableHead className="text-right">Acción</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {colaboradoresFiltrados.map(col => (
-                  <TableRow key={col.id} className="hover:bg-muted/50">
-                    <TableCell className="font-mono text-xs">{col.cedula}</TableCell>
-                    <TableCell>
-                      <div className="font-semibold text-foreground">{col.nombre}</div>
-                      <div className="text-xs text-muted-foreground">{col.cargo}</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{col.departamento}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-xs">{col.tipoContrato}</div>
-                      <div className="text-xs text-muted-foreground">{col.fechaIngreso}</div>
-                    </TableCell>
-                    <TableCell className="font-bold text-base">{formatMoney(col.salarioBaseMensual)}</TableCell>
-                    <TableCell className="text-xs font-medium">{(col.tasaRiesgo * 100).toFixed(2)}%</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => simularColaborador(col)}
-                        className="text-xs"
-                      >
-                        🧮 Simular Planilla
-                      </Button>
-                    </TableCell>
+          {cargandoColaboradores ? (
+            <div className="text-center py-16 text-muted-foreground animate-pulse text-sm">Cargando colaboradores...</div>
+          ) : errorColaboradores ? (
+            <Card className="border-red-200 bg-red-50 text-center py-8">
+              <CardContent className="text-sm text-red-600">{errorColaboradores}</CardContent>
+            </Card>
+          ) : !hayColaboradores ? (
+            <Card className="border-dashed border-2 text-center py-12">
+              <CardContent>
+                <Users className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
+                <h3 className="text-lg font-bold text-foreground mb-1">Aún no tienes colaboradores registrados</h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
+                  Registra tu personal desde el directorio de Colaboradores (RRHH) para verlos aquí.
+                </p>
+                <Link href="/rrhh/empleados">
+                  <Button className="bg-brand-1 hover:bg-brand-2 text-white font-bold">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Ir a Colaboradores
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cédula</TableHead>
+                    <TableHead>Colaborador / Cargo</TableHead>
+                    <TableHead>Departamento</TableHead>
+                    <TableHead>Contrato</TableHead>
+                    <TableHead>Salario Base</TableHead>
+                    <TableHead>Tasa Riesgo</TableHead>
+                    <TableHead className="text-right">Acción</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
+                </TableHeader>
+                <TableBody>
+                  {colaboradoresFiltrados.map(col => (
+                    <TableRow key={col.id} className="hover:bg-muted/50">
+                      <TableCell className="font-mono text-xs">{col.cedula}</TableCell>
+                      <TableCell>
+                        <div className="font-semibold text-foreground">{col.nombre}</div>
+                        <div className="text-xs text-muted-foreground">{col.cargo}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{col.departamento}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-xs">{col.tipoContrato}</div>
+                        <div className="text-xs text-muted-foreground">{new Date(col.fechaIngreso).toLocaleDateString('es-PA')}</div>
+                      </TableCell>
+                      <TableCell className="font-bold text-base">{formatMoney(Number(col.salarioBase))}</TableCell>
+                      <TableCell className="text-xs font-medium">{(col.tasaRiesgo * 100).toFixed(2)}%</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => simularColaborador(col)}
+                          className="text-xs"
+                        >
+                          🧮 Simular Planilla
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          )}
 
           <div className="bg-amber-500/10 border-l-4 border-amber-500 p-4 rounded-r-lg flex items-start gap-3">
             <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
             <div className="text-sm">
-              <strong className="font-semibold text-foreground">Cumplimiento Ley 81 de 2019 de Protección de Datos Personales:</strong> En producción, esta información no se almacena en el cliente o navegador (Cero PII en LocalStorage). Se integra nativamente al backend Prisma + Supabase/Postgres con seguridad de filas (RLS) habilitada para roles de RRHH.
+              <strong className="font-semibold text-foreground">Cumplimiento Ley 81 de 2019 de Protección de Datos Personales:</strong> Esta información se consulta en vivo desde el backend Prisma + Postgres, con seguridad de filas (RLS) habilitada y aislamiento por empresa. No se almacena en el navegador.
             </div>
           </div>
         </div>
