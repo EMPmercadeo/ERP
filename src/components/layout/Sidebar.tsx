@@ -36,6 +36,8 @@ import {
     Store,
     UserCheck,
     CalendarDays,
+    ChevronDown,
+    Wallet,
     type LucideIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -102,6 +104,7 @@ const adminNavigation = [
     { name: 'Empresas y Cuentas', href: '/admin/empresas', icon: Users },
     { name: 'Usuarios', href: '/admin/users', icon: UserCog },
     { name: 'Planes y Pagos', href: '/admin/billing', icon: CreditCard },
+    { name: 'Saldo Inactivo', href: '/admin/cuotas-inactivas', icon: Wallet },
     { name: 'Soporte y Tickets', href: '/admin/support', icon: MessageSquare },
     { name: 'Correos y Plantillas', href: '/admin/correos', icon: Send },
     { name: 'PAC (Facturación DGI)', href: '/admin/pac', icon: Building2 },
@@ -117,6 +120,9 @@ export function Sidebar() {
     const { isCollapsed: storedCollapsed, toggleCollapsed, setMobileOpen } = useSidebarStore();
     const { user, signOut, role } = useAuth();
     const [isMounted, setIsMounted] = useState(false);
+    // Consola de admin colapsable: por defecto cerrada para no saturar la barra; se abre
+    // sola cuando el superadmin está navegando dentro de /admin.
+    const [adminOpen, setAdminOpen] = useState(false);
 
     // Profile menu states
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -141,6 +147,11 @@ export function Sidebar() {
     useEffect(() => {
         setIsMounted(true);
     }, []);
+
+    // Abrir la consola de admin automáticamente si ya estamos en una ruta /admin.
+    useEffect(() => {
+        if (pathname.startsWith('/admin')) setAdminOpen(true);
+    }, [pathname]);
 
     // Fetch user details including planType
     useEffect(() => {
@@ -334,12 +345,37 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                         <ul className="space-y-1">
                             {isSuperAdmin && (
                                 <>
-                                    <div className={cn("mb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider", isCollapsed && "hidden")}>
-                                        Admin Console
-                                    </div>
-                                    {adminNavigation.map((item) => (
-                                        <NavItem key={item.name} item={item} />
-                                    ))}
+                                    {isCollapsed ? (
+                                        // Barra colapsada (solo iconos): mostramos los accesos admin
+                                        // directos con su tooltip, igual que antes.
+                                        adminNavigation.map((item) => (
+                                            <NavItem key={item.name} item={item} />
+                                        ))
+                                    ) : (
+                                        // Barra expandida: una sola sección "Admin Console" que se
+                                        // despliega, para no saturar la barra con 9 enlaces sueltos.
+                                        <li>
+                                            <button
+                                                type="button"
+                                                onClick={() => setAdminOpen((o) => !o)}
+                                                aria-expanded={adminOpen}
+                                                className="w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+                                            >
+                                                <span className="flex items-center gap-3">
+                                                    <Shield className="h-5 w-5 shrink-0 text-sidebar-foreground/60" />
+                                                    <span>Admin Console</span>
+                                                </span>
+                                                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", adminOpen && "rotate-180")} />
+                                            </button>
+                                            {adminOpen && (
+                                                <ul className="mt-1 space-y-1 border-l border-sidebar-border/40 ml-4 pl-1">
+                                                    {adminNavigation.map((item) => (
+                                                        <NavItem key={item.name} item={item} />
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </li>
+                                    )}
                                     <div className="my-2 border-t border-sidebar-border" />
                                     <div className={cn("mb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider", isCollapsed && "hidden")}>
                                         App
