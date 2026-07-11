@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
             turnoCajaId,
             tipoDoc: itemLocal.tipoDoc || '02',
             clienteRuc: itemLocal.clienteRuc || 'CF',
-            items: (itemLocal.items || []) as Prisma.InputJsonValue,
+            items: (itemLocal.items || []) as unknown as Prisma.InputJsonValue,
             subtotal: itemLocal.subtotal || 0,
             itbms: itemLocal.itbms || 0,
             total: itemLocal.total || 0,
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
       await prisma.venta.update({
         where: { id: v.id },
         data: {
-          items: itemsCorregidos as Prisma.InputJsonValue,
+          items: itemsCorregidos as unknown as Prisma.InputJsonValue,
           subtotal: Number(subtotalReal.toFixed(2)),
           itbms: Number(itbmsReal.toFixed(2)),
           total: Number(totalReal.toFixed(2))
