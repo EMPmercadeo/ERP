@@ -301,3 +301,58 @@ export function calcularLiquidacion(salarioMensualPromedio: number, mesesLaborad
     totalConDespidoInjustificado
   };
 }
+
+// --- Helpers de antigüedad real, usados para que las calculadoras puedan "consultar" a un
+// colaborador real (fecha de ingreso) en vez de que el usuario tenga que teclear manualmente
+// meses/años laborados o el monto devengado del cuatrimestre.
+
+/** Meses completos transcurridos entre dos fechas (nunca negativo). */
+export function calcularMesesEntre(desde: Date, hasta: Date): number {
+  let meses = (hasta.getFullYear() - desde.getFullYear()) * 12 + (hasta.getMonth() - desde.getMonth());
+  if (hasta.getDate() < desde.getDate()) meses -= 1;
+  return Math.max(0, meses);
+}
+
+/** Antigüedad en meses completos de un colaborador a la fecha de referencia (hoy por defecto). */
+export function calcularAntiguedadMeses(fechaIngresoStr: string, fechaReferenciaStr?: string): number {
+  const ingreso = new Date(fechaIngresoStr);
+  const ref = fechaReferenciaStr ? new Date(fechaReferenciaStr) : new Date();
+  if (isNaN(ingreso.getTime())) return 0;
+  return calcularMesesEntre(ingreso, ref);
+}
+
+/**
+ * Determina el cuatrimestre legal vigente del XIII Mes (Código de Trabajo de Panamá):
+ * 15-dic a 15-abr, 15-abr a 15-ago, 15-ago a 15-dic.
+ */
+export function obtenerPartidaXIIIActual(fechaReferenciaStr?: string): { inicio: Date; fin: Date } {
+  const ref = fechaReferenciaStr ? new Date(fechaReferenciaStr) : new Date();
+  const year = ref.getFullYear();
+  const abr15 = new Date(year, 3, 15);
+  const ago15 = new Date(year, 7, 15);
+  const dic15 = new Date(year, 11, 15);
+  const dic15Prev = new Date(year - 1, 11, 15);
+
+  if (ref < abr15) return { inicio: dic15Prev, fin: abr15 };
+  if (ref < ago15) return { inicio: abr15, fin: ago15 };
+  if (ref < dic15) return { inicio: ago15, fin: dic15 };
+  return { inicio: dic15, fin: new Date(year + 1, 3, 15) };
+}
+
+/**
+ * Monto devengado real del colaborador en el cuatrimestre legal vigente, prorrateado si
+ * ingresó a mitad de cuatrimestre (capado a 4 meses).
+ */
+export function calcularMontoDevengadoPartidaXIII(
+  salarioMensual: number,
+  fechaIngresoStr: string,
+  fechaReferenciaStr?: string
+): number {
+  const partida = obtenerPartidaXIIIActual(fechaReferenciaStr);
+  const ingreso = new Date(fechaIngresoStr);
+  const ref = fechaReferenciaStr ? new Date(fechaReferenciaStr) : new Date();
+  const inicioEfectivo = !isNaN(ingreso.getTime()) && ingreso > partida.inicio ? ingreso : partida.inicio;
+  const finEfectivo = ref < partida.fin ? ref : partida.fin;
+  const meses = Math.min(4, calcularMesesEntre(inicioEfectivo, finEfectivo));
+  return redondear(Math.max(0, salarioMensual) * meses);
+}

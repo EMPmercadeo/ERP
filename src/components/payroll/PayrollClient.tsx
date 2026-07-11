@@ -5,7 +5,9 @@ import {
   calcularDeduccionesObrero,
   calcularAportesPatronales,
   calcularXIIIMes,
-  calcularLiquidacion
+  calcularLiquidacion,
+  calcularAntiguedadMeses,
+  calcularMontoDevengadoPartidaXIII
 } from '@/lib/payroll/panama-rules';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -149,12 +151,49 @@ export function PayrollClient() {
     );
   }, [colaboradores, filterQuery]);
 
-  const simularColaborador = (col: ColaboradorReal) => {
-    setCalcSalario(Number(col.salarioBase) || 0);
+  // Colaborador "consultado" — cuando se selecciona uno (desde el directorio o desde el
+  // selector de las pestañas de cálculo), se usan sus datos reales (salario, frecuencia,
+  // tasa de riesgo y sobre todo su fecha de ingreso real) para alimentar automáticamente
+  // la Calculadora, el XIII Mes y la Liquidación, en vez de que el usuario tenga que
+  // teclear manualmente meses/años laborados o el monto devengado del cuatrimestre.
+  const [colaboradorActivoId, setColaboradorActivoId] = useState<string>('');
+
+  const colaboradorActivo = useMemo(
+    () => colaboradores.find(c => c.id === colaboradorActivoId) || null,
+    [colaboradores, colaboradorActivoId]
+  );
+
+  const antiguedadMesesActivo = useMemo(
+    () => (colaboradorActivo ? calcularAntiguedadMeses(colaboradorActivo.fechaIngreso) : 0),
+    [colaboradorActivo]
+  );
+
+  const aplicarColaborador = useCallback((col: ColaboradorReal) => {
+    const salario = Number(col.salarioBase) || 0;
+    const meses = calcularAntiguedadMeses(col.fechaIngreso);
+
+    setColaboradorActivoId(col.id);
+
+    // Calculadora en tiempo real
+    setCalcSalario(salario);
     setCalcFrecuencia(col.frecuenciaPago);
     setCalcRiesgo(col.tasaRiesgo);
+
+    // XIII Mes: monto realmente devengado en el cuatrimestre legal vigente
+    setDecAcumulado(calcularMontoDevengadoPartidaXIII(salario, col.fechaIngreso));
+
+    // Liquidación: antigüedad real desde su fecha de ingreso
+    setLiqSalario(salario);
+    setLiqMeses(meses);
+    setLiqAnios(parseFloat((meses / 12).toFixed(2)));
+  }, []);
+
+  const simularColaborador = (col: ColaboradorReal) => {
+    aplicarColaborador(col);
     setActiveTab('calculadora');
   };
+
+  const limpiarColaboradorActivo = () => setColaboradorActivoId('');
 
   const hayColaboradores = colaboradores.length > 0;
 
@@ -203,6 +242,43 @@ export function PayrollClient() {
           Liquidaciones
         </Button>
       </div>
+
+      {/* Selector de colaborador real — consulta sus datos y calcula usando su antigüedad
+          real (fecha de ingreso), visible en las 3 pestañas de cálculo individual. */}
+      {(activeTab === 'calculadora' || activeTab === 'decimo' || activeTab === 'liquidaciones') && hayColaboradores && (
+        <Card className="border-brand-1/30 bg-brand-1/5">
+          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <Search className="h-4 w-4 text-brand-1 shrink-0" />
+              <label className="text-xs font-semibold text-foreground shrink-0">Consultar Colaborador:</label>
+              <select
+                value={colaboradorActivoId}
+                onChange={e => {
+                  const col = colaboradores.find(c => c.id === e.target.value);
+                  if (col) aplicarColaborador(col);
+                  else limpiarColaboradorActivo();
+                }}
+                className="flex-1 min-w-0 h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">— Modo manual (sin colaborador) —</option>
+                {colaboradores.map(col => (
+                  <option key={col.id} value={col.id}>{col.nombre} — {col.cargo}</option>
+                ))}
+              </select>
+            </div>
+            {colaboradorActivo && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className="text-xs">
+                  Antigüedad: {Math.floor(antiguedadMesesActivo / 12)}a {antiguedadMesesActivo % 12}m
+                </Badge>
+                <Button size="sm" variant="ghost" onClick={limpiarColaboradorActivo} className="text-xs h-8">
+                  Limpiar
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* VISTA 1: DASHBOARD DE NÓMINA */}
       {activeTab === 'dashboard' && (
