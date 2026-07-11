@@ -1248,6 +1248,11 @@ model Empleado {
   fechaIngreso  DateTime
   fechaSalida   DateTime?              // soft-delete / baja
   activo        Boolean                @default(true)
+  // Campos usados por la calculadora de Planilla (módulo Payroll) para que deje de simular
+  // con datos inventados y calcule sobre los colaboradores reales de esta empresa.
+  departamento  String                 @default("General")
+  frecuenciaPago String                @default("mensual") // mensual | quincenal | bisemanal
+  tasaRiesgo    Float                  @default(0.0105)    // tasa de Riesgos Profesionales CSS (0.0105 a 0.0560)
   ausencias     Ausencia[]
   movVacaciones MovimientoVacaciones[]
   actas         ActaDisciplinaria[]

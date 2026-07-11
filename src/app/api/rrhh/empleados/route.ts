@@ -17,7 +17,13 @@ const EmpleadoSchema = z.object({
   cargo: z.string().min(2, 'Cargo requerido'),
   salarioBase: z.number().positive('Salario debe ser mayor a 0'),
   tipoContrato: z.enum(['INDEFINIDO', 'DEFINIDO', 'OBRA']),
-  fechaIngreso: z.string().or(z.date())
+  fechaIngreso: z.string().or(z.date()),
+  // Usados por la calculadora de Planilla (módulo Payroll) para calcular sobre colaboradores
+  // reales en vez de datos de muestra — opcionales porque la ficha básica no debe bloquearse
+  // por esto; si no se envían, Prisma aplica los defaults del schema.
+  departamento: z.string().min(1).optional(),
+  frecuenciaPago: z.enum(['mensual', 'quincenal', 'bisemanal']).optional(),
+  tasaRiesgo: z.number().min(0).max(1).optional()
 });
 
 export async function GET(request: NextRequest) {
@@ -111,7 +117,10 @@ export async function POST(request: NextRequest) {
         salarioBase: data.salarioBase,
         tipoContrato: data.tipoContrato,
         fechaIngreso: new Date(data.fechaIngreso),
-        activo: true
+        activo: true,
+        ...(data.departamento ? { departamento: data.departamento } : {}),
+        ...(data.frecuenciaPago ? { frecuenciaPago: data.frecuenciaPago } : {}),
+        ...(data.tasaRiesgo !== undefined ? { tasaRiesgo: data.tasaRiesgo } : {})
       }
     });
 
