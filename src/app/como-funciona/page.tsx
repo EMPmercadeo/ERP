@@ -6,7 +6,7 @@ import { HeaderInicio } from '@/components/inicio/HeaderInicio';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-    title: 'Cómo funciona — De cero a tu primera factura | ERP Panamá',
+    title: 'Cómo funciona: De cero a tu primera factura | ERP Panamá',
     description:
         'De cero a tu primera factura electrónica en cuatro pasos: crea tu cuenta, configura tu sucursal y caja, carga tus productos y emite tu primera factura con contabilidad e inventario ya conectados.',
     alternates: { canonical: '/como-funciona' },
@@ -82,16 +82,16 @@ export default function ComoFuncionaPage() {
                         {PASOS.map((paso, index) => (
                             <div key={paso.title} className="flex gap-6">
                                 <div className="flex flex-col items-center">
-                                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-1 text-white">
+                                    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-1 text-white">
                                         <paso.icon className="h-6 w-6" />
+                                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand-3 text-[10px] font-bold text-white ring-2 ring-white">
+                                            {index + 1}
+                                        </span>
                                     </div>
                                     {index < PASOS.length - 1 && <div className="mt-2 h-full w-px flex-1 bg-border" />}
                                 </div>
                                 <div className="pb-2">
-                                    <span className="block text-xs font-bold uppercase tracking-wider text-brand-1">
-                                        Paso {index + 1}
-                                    </span>
-                                    <h2 className="mt-1 text-lg font-bold text-brand-3">{paso.title}</h2>
+                                    <h2 className="text-lg font-bold text-brand-3">{paso.title}</h2>
                                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{paso.description}</p>
                                     <ul className="mt-4 space-y-2">
                                         {paso.detalles.map((detalle) => (

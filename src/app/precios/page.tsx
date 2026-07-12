@@ -7,7 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { FaqAccordion } from '@/components/inicio/FaqAccordion';
 
 export const metadata: Metadata = {
-    title: 'Precios — Planes desde $19.99/mes | ERP Panamá',
+    title: 'Precios: Planes desde $19.99/mes | ERP Panamá',
     description:
         'Planes de ERP Panamá en dólares (USD): Emprendedor, Negocio, Pro y Empresa. Contabilidad automática, facturación electrónica DGI e inventario según el tamaño de tu negocio.',
     alternates: { canonical: '/precios' },
@@ -116,7 +116,7 @@ const FAQS_PRECIOS = [
     {
         question: '¿Qué pasa si todavía no tengo un PAC contratado?',
         answer:
-            'Puedes crear tu cuenta y empezar a configurar tu contabilidad, productos e inventario sin problema. La emisión de facturas fiscales ante la DGI requiere tener un PAC habilitado — nuestro equipo te acompaña en ese proceso apenas esté disponible.',
+            'Puedes crear tu cuenta y empezar a configurar tu contabilidad, productos e inventario sin problema. La emisión de facturas fiscales ante la DGI requiere tener un PAC habilitado. Nuestro equipo te acompaña en ese proceso apenas esté disponible.',
     },
     {
         question: '¿Hay contrato de permanencia?',

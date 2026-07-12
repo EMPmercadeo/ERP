@@ -14,7 +14,7 @@ import { HeaderInicio } from '@/components/inicio/HeaderInicio';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-    title: 'Funcionalidades — Contabilidad, Facturación DGI e Inventario | ERP Panamá',
+    title: 'Funcionalidades: Contabilidad, Facturación DGI e Inventario | ERP Panamá',
     description:
         'Conoce en detalle el motor contable automático, la facturación electrónica DGI, la conciliación bancaria, el inventario multi-almacén con FEFO y los reportes financieros de ERP Panamá.',
     alternates: { canonical: '/funcionalidades' },
@@ -33,7 +33,7 @@ const FUNCIONALIDADES = [
         icon: Calculator,
         title: 'Motor contable automático',
         description:
-            'Cada factura, cobro, compra y pago genera su asiento de partida doble automáticamente en tu Plan de Cuentas — sin capturar nada dos veces.',
+            'Cada factura, cobro, compra y pago genera su asiento de partida doble automáticamente en tu Plan de Cuentas, sin capturar nada dos veces.',
         detalles: [
             'Plan de Cuentas configurable según la estructura de tu empresa.',
             'Asientos disparados automáticamente por cada documento: facturas, cobros, compras, pagos, notas de crédito y débito.',
@@ -51,7 +51,7 @@ const FUNCIONALIDADES = [
             'Estado del documento visible en todo momento: pendiente, autorizado o rechazado.',
             'Notas de crédito y débito enlazadas directamente a la factura original que las origina.',
             'Descarga del CAFE (Comprobante Auxiliar de Factura Electrónica) en PDF y XML.',
-            'La integración con el PAC (Proveedor Autorizado de Calificación) está en preparación — te avisaremos apenas esté disponible en producción.',
+            'La integración con el PAC (Proveedor Autorizado de Calificación) está en preparación. Te avisaremos apenas esté disponible en producción.',
         ],
     },
     {
@@ -82,13 +82,13 @@ const FUNCIONALIDADES = [
         icon: BarChart3,
         title: 'Reportes financieros',
         description:
-            'Libro diario, libro mayor, balance de comprobación, estado de resultados y balance general — generados en tiempo real desde tus propios asientos.',
+            'Libro diario, libro mayor, balance de comprobación, estado de resultados y balance general, generados en tiempo real desde tus propios asientos.',
         detalles: [
             'Dashboard de KPIs de ventas, cobros y cuentas por cobrar.',
             'Tendencia de ventas, ventas por estado, productos y clientes principales.',
             'Antigüedad de saldos (aging) de cuentas por cobrar para priorizar cobranza.',
             'Reportes de ventas por vendedor y detalle de cada factura individual.',
-            'Todo calculado desde tus asientos reales — no desde una hoja de cálculo aparte.',
+            'Todo calculado desde tus asientos reales, no desde una hoja de cálculo aparte.',
         ],
     },
 ];

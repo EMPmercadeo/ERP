@@ -6,7 +6,7 @@ import { HeaderInicio } from '@/components/inicio/HeaderInicio';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-    title: 'Rubros — ERP para comercio, distribuidoras, servicios y restaurantes | ERP Panamá',
+    title: 'Rubros: ERP para comercio, distribuidoras, servicios y restaurantes | ERP Panamá',
     description:
         'ERP Panamá se adapta a comercio minorista, distribuidoras, servicios profesionales y restaurantes: facturación electrónica DGI, inventario y contabilidad para cada tipo de negocio.',
     alternates: { canonical: '/rubros' },

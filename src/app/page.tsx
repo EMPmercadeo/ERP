@@ -16,16 +16,17 @@ import {
     Building2,
     Package,
     Receipt,
-    Check,
     ShieldCheck,
+    Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { HeaderInicio } from '@/components/inicio/HeaderInicio';
 import { Footer } from '@/components/layout/Footer';
 import { FaqAccordion } from '@/components/inicio/FaqAccordion';
 
 export const metadata: Metadata = {
-    title: 'ERP Panamá — Contabilidad, Facturación Electrónica DGI e Inventario en un solo sistema',
+    title: 'ERP Panamá: Contabilidad, Facturación Electrónica DGI e Inventario en un solo sistema',
     description:
         'Contabilidad de partida doble automática, facturación electrónica ante la DGI e inventario multi-sucursal en un solo sistema, hecho para negocios panameños. Crea tu cuenta gratis.',
     keywords: [
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
         'inventario multi-sucursal',
     ],
     openGraph: {
-        title: 'ERP Panamá — Contabilidad, Facturación Electrónica DGI e Inventario',
+        title: 'ERP Panamá: Contabilidad, Facturación Electrónica DGI e Inventario',
         description:
             'El sistema que une contabilidad, facturación electrónica DGI e inventario multi-sucursal para negocios panameños.',
         type: 'website',
@@ -48,7 +49,7 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'ERP Panamá — Contabilidad, Facturación Electrónica DGI e Inventario',
+        title: 'ERP Panamá: Contabilidad, Facturación Electrónica DGI e Inventario',
         description:
             'El sistema que une contabilidad, facturación electrónica DGI e inventario multi-sucursal para negocios panameños.',
     },
@@ -62,13 +63,13 @@ const FUNCIONALIDADES = [
         icon: Calculator,
         title: 'Motor contable automático',
         description:
-            'Cada factura, cobro, compra y pago genera su asiento de partida doble automáticamente en tu Plan de Cuentas — sin capturar nada dos veces.',
+            'Cada factura, cobro, compra y pago genera su asiento de partida doble automáticamente en tu Plan de Cuentas, sin capturar nada dos veces.',
     },
     {
         icon: FileText,
         title: 'Facturación electrónica DGI',
         description:
-            'Emisión de facturas, notas de crédito y notas de débito con la numeración y estructura que exige la DGI. La integración con el PAC (proveedor autorizado de calificación) está en preparación — te avisaremos apenas esté disponible en producción.',
+            'Emisión de facturas, notas de crédito y notas de débito con la numeración y estructura que exige la DGI. La integración con el PAC (proveedor autorizado de calificación) está en preparación. Te avisaremos apenas esté disponible en producción.',
     },
     {
         icon: Landmark,
@@ -86,7 +87,7 @@ const FUNCIONALIDADES = [
         icon: BarChart3,
         title: 'Reportes financieros',
         description:
-            'Libro diario, libro mayor, balance de comprobación, estado de resultados y balance general — generados en tiempo real desde tus propios asientos, no desde una hoja de cálculo aparte.',
+            'Libro diario, libro mayor, balance de comprobación, estado de resultados y balance general, generados en tiempo real desde tus propios asientos, no desde una hoja de cálculo aparte.',
     },
 ];
 
@@ -121,12 +122,12 @@ const RUBROS = [
 ];
 
 const GLOSARIO = [
-    { term: 'DGI', def: 'Dirección General de Ingresos — la autoridad fiscal de Panamá, encargada de recaudar impuestos y regular la facturación electrónica.' },
+    { term: 'DGI', def: 'Dirección General de Ingresos: la autoridad fiscal de Panamá, encargada de recaudar impuestos y regular la facturación electrónica.' },
     { term: 'Factura Electrónica', def: 'Documento fiscal digital, con una estructura y firma definidas por la DGI, que reemplaza a la factura de papel para efectos legales y tributarios.' },
-    { term: 'PAC', def: 'Proveedor Autorizado de Calificación — empresa autorizada por la DGI para validar y calificar tus facturas electrónicas antes de que tengan validez fiscal.' },
-    { term: 'CAFE', def: 'Comprobante Auxiliar de Factura Electrónica — la representación impresa o en PDF de una factura electrónica, para entregar al cliente.' },
-    { term: 'RUC', def: 'Registro Único de Contribuyente — el número que identifica fiscalmente a una persona o empresa ante la DGI.' },
-    { term: 'DV', def: 'Dígito Verificador — un dígito adicional al RUC que sirve para validar que el número es correcto.' },
+    { term: 'PAC', def: 'Proveedor Autorizado de Calificación: empresa autorizada por la DGI para validar y calificar tus facturas electrónicas antes de que tengan validez fiscal.' },
+    { term: 'CAFE', def: 'Comprobante Auxiliar de Factura Electrónica: la representación impresa o en PDF de una factura electrónica, para entregar al cliente.' },
+    { term: 'RUC', def: 'Registro Único de Contribuyente: el número que identifica fiscalmente a una persona o empresa ante la DGI.' },
+    { term: 'DV', def: 'Dígito Verificador: un dígito adicional al RUC que sirve para validar que el número es correcto.' },
     { term: 'Autorización (DGI)', def: 'El permiso que otorga la DGI, a través del PAC, para que una factura electrónica sea válida fiscalmente.' },
 ];
 
@@ -216,7 +217,7 @@ const FAQS = [
     {
         question: '¿Qué pasa si todavía no tengo un PAC contratado?',
         answer:
-            'Puedes crear tu cuenta y empezar a configurar tu contabilidad, productos e inventario sin problema. La emisión de facturas fiscales ante la DGI requiere tener un PAC habilitado — nuestro equipo te acompaña en ese proceso apenas esté disponible.',
+            'Puedes crear tu cuenta y empezar a configurar tu contabilidad, productos e inventario sin problema. La emisión de facturas fiscales ante la DGI requiere tener un PAC habilitado. Nuestro equipo te acompaña en ese proceso apenas esté disponible.',
     },
     {
         question: '¿Puedo migrar mis datos desde otro sistema?',
@@ -242,7 +243,7 @@ export default function PaginaInicio() {
 
             {/* Hero */}
             <section className="relative overflow-hidden bg-brand-3 py-16 sm:py-28">
-                {/* Textura sutil de puntos — profundidad sin gradientes ni color decorativo */}
+                {/* Textura sutil de puntos: profundidad sin gradientes ni color decorativo */}
                 <div
                     className="pointer-events-none absolute inset-0 opacity-[0.15]"
                     style={{
@@ -282,19 +283,18 @@ export default function PaginaInicio() {
                                     <Link href="/precios">Ver precios</Link>
                                 </Button>
                             </div>
-                            <p className="mt-4 text-xs text-slate-400">Sin tarjeta de crédito · Configuras tu empresa en minutos</p>
                         </div>
 
-                        {/* Bento de producto: vista previa real del sistema, no fotos de stock */}
+                        {/* Bento de producto: componentes reales del sistema (StatusBadge), sin cifras inventadas */}
                         <div className="relative mx-auto w-full max-w-md pt-6 lg:mx-0 lg:max-w-none lg:pt-0">
                             <div className="grid grid-cols-2 gap-4">
-                                {/* Ventas del mes */}
+                                {/* Trazabilidad contable */}
                                 <div className="col-span-2 rounded-xl bg-white p-5 shadow-2xl">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-medium text-muted-foreground">Ventas del mes</span>
-                                        <span className="rounded-full bg-success-bg px-2 py-0.5 text-[10px] font-bold text-success">+18%</span>
+                                        <span className="text-xs font-medium text-muted-foreground">Trazabilidad contable</span>
+                                        <Calculator className="h-4 w-4 text-brand-1" />
                                     </div>
-                                    <p className="mt-1.5 text-2xl font-bold text-brand-3">$12,432.00</p>
+                                    <p className="mt-1.5 text-base font-bold text-brand-3">Un asiento por cada documento</p>
                                     <svg viewBox="0 0 300 70" preserveAspectRatio="none" className="mt-3 h-14 w-full">
                                         <path
                                             d="M0,50 C30,55 45,22 75,30 C105,38 120,10 150,18 C180,26 195,42 225,32 C255,22 270,14 300,18 L300,70 L0,70 Z"
@@ -311,46 +311,33 @@ export default function PaginaInicio() {
                                     </svg>
                                 </div>
 
-                                {/* Factura autorizada */}
+                                {/* Factura autorizada: usa el StatusBadge real del sistema */}
                                 <div className="rounded-xl bg-white p-4 shadow-2xl">
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-success-bg text-success">
-                                        <Check className="h-4 w-4" />
-                                    </div>
-                                    <p className="mt-3 text-xs font-semibold text-brand-3">Factura Autorizada</p>
-                                    <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">FE-0001-000045</p>
+                                    <StatusBadge status="aceptada" />
+                                    <p className="mt-3 text-xs font-semibold text-brand-3">Factura autorizada</p>
+                                    <p className="mt-0.5 text-[10px] text-muted-foreground">CUFE validado ante la DGI</p>
                                 </div>
 
-                                {/* Documentos usados */}
+                                {/* Bodegas y sucursales */}
                                 <div className="rounded-xl bg-white p-4 shadow-2xl">
-                                    <p className="text-[10px] font-medium text-muted-foreground">Documentos usados</p>
-                                    <p className="mt-1 text-lg font-bold text-brand-3">
-                                        128<span className="text-xs font-normal text-muted-foreground">/300</span>
-                                    </p>
-                                    <div className="mt-2 h-1.5 w-full rounded-full bg-brand-1/10">
-                                        <div className="h-1.5 rounded-full bg-brand-1" style={{ width: '42%' }} />
-                                    </div>
+                                    <Boxes className="h-5 w-5 text-brand-1" />
+                                    <p className="mt-2 text-xs font-semibold text-brand-3">Sucursales y bodegas</p>
+                                    <p className="mt-0.5 text-[10px] text-muted-foreground">Sin límite por empresa</p>
                                 </div>
 
-                                {/* Equipo / multiusuario */}
+                                {/* Multiusuario con roles */}
                                 <div className="col-span-2 flex items-center gap-3 rounded-xl bg-white p-4 shadow-2xl">
-                                    <div className="flex -space-x-2">
-                                        {['MG', 'JR', 'AL', '+7'].map((initials) => (
-                                            <div
-                                                key={initials}
-                                                className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-brand-1 text-[9px] font-bold text-white"
-                                            >
-                                                {initials}
-                                            </div>
-                                        ))}
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-1/10">
+                                        <Users className="h-4 w-4 text-brand-1" />
                                     </div>
-                                    <p className="text-xs text-muted-foreground">Multiusuario con permisos por rol</p>
+                                    <p className="text-xs text-muted-foreground">Roles configurables: admin, contador y cajero</p>
                                 </div>
                             </div>
 
                             {/* Badge flotante de cumplimiento */}
                             <div className="absolute -top-3 -right-3 hidden -rotate-2 items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 shadow-2xl sm:flex">
                                 <ShieldCheck className="h-4 w-4 text-brand-1" />
-                                <span className="text-[10px] font-semibold text-brand-3">DGI · PAC · CAFE</span>
+                                <span className="text-[10px] font-semibold text-brand-3">DGI, PAC y CAFE</span>
                             </div>
                         </div>
                     </div>
@@ -411,13 +398,13 @@ export default function PaginaInicio() {
                     <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
                         {PASOS.map((paso, index) => (
                             <div key={paso.title} className="relative text-center">
-                                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-1 text-white">
+                                <div className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-1 text-white">
                                     <paso.icon className="h-6 w-6" />
+                                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand-3 text-[10px] font-bold text-white ring-2 ring-white">
+                                        {index + 1}
+                                    </span>
                                 </div>
-                                <span className="mt-3 block text-xs font-bold uppercase tracking-wider text-brand-1">
-                                    Paso {index + 1}
-                                </span>
-                                <h3 className="mt-1 text-base font-semibold text-brand-3">{paso.title}</h3>
+                                <h3 className="mt-4 text-base font-semibold text-brand-3">{paso.title}</h3>
                                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{paso.description}</p>
                             </div>
                         ))}
