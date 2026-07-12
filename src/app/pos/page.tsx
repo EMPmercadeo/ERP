@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import QRCode from 'qrcode';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -185,6 +185,11 @@ export default function POSMultiDispositivoPage() {
   // Escaneo de código de barras por cámara
   const [showEscanerModal, setShowEscanerModal] = useState(false);
   const [avisoEscaneo, setAvisoEscaneo] = useState('');
+
+  // Avisos inline de carrito (stock agotado/máximo) y de sincronización con el PAC,
+  // en vez de `window.alert()` (congela la pantalla a mitad de una venta activa).
+  const [avisoCarrito, setAvisoCarrito] = useState('');
+  const [avisoSync, setAvisoSync] = useState<{ tipo: 'success' | 'error'; mensaje: string } | null>(null);
 
   // Hardware físico opcional (impresora térmica ESC/POS + cajón de dinero) vía Web Serial.
   // Nada de esto se puede probar en este entorno de desarrollo (no hay hardware real
@@ -420,10 +425,15 @@ export default function POSMultiDispositivoPage() {
     }
   };
 
-  const agregarAlCarrito = (p: ProductoPOS) => {
+  const mostrarAvisoCarrito = (mensaje: string) => {
+    setAvisoCarrito(mensaje);
+    setTimeout(() => setAvisoCarrito(''), 4000);
+  };
+
+  const agregarAlCarrito = useCallback((p: ProductoPOS) => {
     const esServicio = p.unidadMedida === 'SRV';
     if (!esServicio && p.stockActual <= 0) {
-      alert('Stock agotado para ' + p.descripcion);
+      mostrarAvisoCarrito('Stock agotado para ' + p.descripcion);
       return;
     }
     const existe = carrito.find(it => it.productoId === p.id);
@@ -431,7 +441,7 @@ export default function POSMultiDispositivoPage() {
 
     if (existe) {
       if (!esServicio && existe.cantidad + 1 > p.stockActual) {
-        alert('No puedes agregar más del stock disponible (' + p.stockActual + ')');
+        mostrarAvisoCarrito('No puedes agregar más del stock disponible (' + p.stockActual + ')');
         return;
       }
       setCarrito(carrito.map(it => it.productoId === p.id ? { ...it, cantidad: it.cantidad + 1 } : it));
@@ -447,7 +457,7 @@ export default function POSMultiDispositivoPage() {
         descuentoPorcentaje: p.descuentoSugerido || 0
       }]);
     }
-  };
+  }, [carrito]);
 
   const modificarDescuento = (productoId: string, valor: number) => {
     const pct = Math.min(100, Math.max(0, isNaN(valor) ? 0 : valor));
@@ -462,7 +472,7 @@ export default function POSMultiDispositivoPage() {
         const nueva = it.cantidad + delta;
         if (nueva <= 0) return null;
         if (nueva > maxStock) {
-          alert('Stock máximo excedido');
+          mostrarAvisoCarrito('Stock máximo excedido');
           return it;
         }
         return { ...it, cantidad: nueva };
@@ -639,6 +649,7 @@ export default function POSMultiDispositivoPage() {
   const retransmitirColaAlPAC = async () => {
     if (colaLocal.length === 0) return;
     setSincronizando(true);
+    setAvisoSync(null);
     try {
       const res = await fetch('/api/pos/ventas/sync', {
         method: 'POST',
@@ -649,17 +660,18 @@ export default function POSMultiDispositivoPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(`✔ ${data.message}`);
+        setAvisoSync({ tipo: 'success', mensaje: data.message || 'Ventas retransmitidas correctamente.' });
         setColaLocal([]);
         localStorage.removeItem('pos_ventas_queue');
         cargarProductos();
       } else {
-        alert('Error al retransmitir: ' + data.error);
+        setAvisoSync({ tipo: 'error', mensaje: 'Error al retransmitir: ' + (data.error || 'Error desconocido.') });
       }
     } catch {
-      alert('Error de conexión con el servidor PAC.');
+      setAvisoSync({ tipo: 'error', mensaje: 'Error de conexión con el servidor PAC.' });
     } finally {
       setSincronizando(false);
+      setTimeout(() => setAvisoSync(null), 6000);
     }
   };
 
@@ -672,6 +684,23 @@ export default function POSMultiDispositivoPage() {
     p.codigoInterno.toLowerCase().includes(buscar.toLowerCase()) ||
     (p.codigoBarras && p.codigoBarras.includes(buscar))
   );
+
+  // Agregar automáticamente al carrito cuando el texto de búsqueda coincide exacto con un
+  // código de barras (lectora física que "escribe" el código + Enter, o el escáner de cámara
+  // dejando el código en el buscador): evita el tap manual extra en cada venta.
+  useEffect(() => {
+    const query = buscar.trim();
+    if (!query) return;
+    const match = productos.find(p =>
+      p.codigoBarras && p.codigoBarras.trim() !== '' && p.codigoBarras.toLowerCase() === query.toLowerCase()
+    );
+    if (!match) return;
+    const id = setTimeout(() => {
+      agregarAlCarrito(match);
+      setBuscar('');
+    }, 0);
+    return () => clearTimeout(id);
+  }, [buscar, productos, agregarAlCarrito]);
 
   // Genera el QR real del recibo: codifica el link de verificación DGI (cafUrl, que ya trae
   // el CUFE embebido) o, si no hay link, el CUFE crudo. En contingencia no hay CUFE todavía
@@ -783,6 +812,16 @@ export default function POSMultiDispositivoPage() {
       {errorHardware && (
         <div className="px-4 pt-2 text-[11px] font-semibold text-warning bg-warning-bg border-b border-warning/30 py-1.5 text-center">
           {errorHardware}
+        </div>
+      )}
+
+      {avisoSync && (
+        <div className={`px-4 py-1.5 text-[11px] font-semibold text-center border-b ${
+          avisoSync.tipo === 'success'
+            ? 'text-success bg-success-bg border-success/30'
+            : 'text-destructive bg-danger-bg border-destructive/30'
+        }`}>
+          {avisoSync.mensaje}
         </div>
       )}
 
@@ -906,6 +945,12 @@ export default function POSMultiDispositivoPage() {
               </Button>
             )}
           </div>
+
+          {avisoCarrito && (
+            <div className="mx-3 mt-3 text-[11px] font-semibold text-warning bg-warning-bg border border-warning/30 rounded px-3 py-2">
+              {avisoCarrito}
+            </div>
+          )}
 
           {/* Lista de Ítems en Carrito */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2.5 divide-y divide-border">

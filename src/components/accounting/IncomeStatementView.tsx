@@ -81,23 +81,23 @@ export function IncomeStatementView({
       <div className="space-y-6">
         {/* Resumen de Utilidades */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-white/50 backdrop-blur-md border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
+          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Ingresos</div>
               <div className="mt-2 text-2xl font-bold text-emerald-600 font-mono">{formatCurrency(totalIngresos)}</div>
             </CardContent>
           </Card>
-          <Card className="bg-white/50 backdrop-blur-md border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
+          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Utilidad Bruta</div>
               <div className="mt-2 text-2xl font-bold text-foreground font-mono">{formatCurrency(utilidadBruta)}</div>
               <div className="text-[10px] text-muted-foreground mt-1">Ingresos - Costos</div>
             </CardContent>
           </Card>
-          <Card className={`backdrop-blur-md border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md ${utilidadNeta >= 0 ? 'bg-emerald-50/40 border-emerald-100' : 'bg-rose-50/40 border-rose-100'}`}>
+          <Card className={`border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md ${utilidadNeta >= 0 ? 'bg-success-bg border-success/30' : 'bg-danger-bg border-danger/30'}`}>
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Utilidad Neta (Ejercicio)</div>
-              <div className={`mt-2 text-2xl font-bold font-mono ${utilidadNeta >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+              <div className={`mt-2 text-2xl font-bold font-mono ${utilidadNeta >= 0 ? 'text-success' : 'text-danger'}`}>
                 {formatCurrency(utilidadNeta)}
               </div>
               <div className="text-[10px] text-muted-foreground mt-1">Utilidad Bruta - Gastos</div>
@@ -106,7 +106,7 @@ export function IncomeStatementView({
         </div>
 
         {/* Filtros */}
-        <Card className="bg-white/80 backdrop-blur-md border-border shadow-sm rounded-2xl">
+        <Card className="bg-card border-border shadow-sm rounded-2xl">
           <CardContent className="p-5 flex flex-col sm:flex-row sm:items-end sm:gap-4">
             <div className="flex-1 space-y-1.5">
               <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Fecha Desde</label>
@@ -147,7 +147,7 @@ export function IncomeStatementView({
         </Card>
 
         {/* Estado de Resultados Detallado */}
-        <Card className="bg-white/80 backdrop-blur-md border-border shadow-sm rounded-2xl overflow-hidden p-6 space-y-8">
+        <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden p-6 space-y-8">
           <div className="text-center pb-4 border-b border-border">
             <h2 className="text-lg font-bold text-foreground">Estado de Resultados</h2>
             <p className="text-xs text-muted-foreground mt-1">

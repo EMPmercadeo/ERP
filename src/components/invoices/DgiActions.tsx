@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { timbrarFacturaDGI, anularFacturaDGI, obtenerLogsPAC } from '@/lib/actions/billing-fe';
+import { humanizePacError } from '@/lib/facturacion-electronica/pac-errors';
 import { CheckCircle2, History, RotateCw, XCircle } from 'lucide-react';
 
 import {
@@ -187,8 +188,13 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
                                                         {log.codigoResultado || 'N/A'}
                                                     </span>
                                                 </div>
-                                                <span className="text-[10px] text-muted-foreground max-w-[150px] truncate block" title={log.mensajeResultado || ''}>
-                                                    {log.mensajeResultado || 'Sin mensaje.'}
+                                                <span
+                                                    className="text-[10px] text-muted-foreground max-w-[150px] truncate block"
+                                                    title={log.exitoso ? (log.mensajeResultado || '') : humanizePacError(log.codigoResultado, log.mensajeResultado)}
+                                                >
+                                                    {log.exitoso
+                                                        ? (log.mensajeResultado || 'Sin mensaje.')
+                                                        : humanizePacError(log.codigoResultado, log.mensajeResultado)}
                                                 </span>
                                             </div>
                                         </TableCell>

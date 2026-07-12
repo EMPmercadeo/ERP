@@ -601,7 +601,7 @@ export function ProductList({
                 />
 
                 {/* Compact Filters Grid (h-10 controls) */}
-                <Card className="bg-white shadow-sm border border-border rounded-xl overflow-visible">
+                <Card className="bg-card shadow-sm border border-border rounded-xl overflow-visible">
                     <CardContent className="p-4">
                         <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-7 gap-3 lg:gap-x-4">
                             {/* Buscar */}
@@ -717,7 +717,7 @@ export function ProductList({
                 </Card>
 
                 {/* Table */}
-                <Card className="bg-white border border-border shadow-sm rounded-xl overflow-hidden">
+                <Card className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
                     <CardContent className="p-0">
                         {/* Desktop Table View */}
                         <div className="hidden md:block overflow-x-auto min-h-[300px]">

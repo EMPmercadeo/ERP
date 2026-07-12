@@ -92,7 +92,7 @@ export function LedgerView({
     <ContentContainer>
       <div className="space-y-6">
         {/* Selección de Cuenta */}
-        <Card className="bg-white/80 backdrop-blur-md border-border shadow-sm rounded-2xl">
+        <Card className="bg-card border-border shadow-sm rounded-2xl">
           <CardContent className="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex-1 space-y-1.5">
               <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Seleccionar Cuenta Contable</label>
@@ -128,7 +128,7 @@ export function LedgerView({
         </Card>
 
         {selectedCuentaId === 'none' || !selectedCuentaId ? (
-          <Card className="bg-white/80 border border-border rounded-2xl p-12 text-center shadow-xs">
+          <Card className="bg-card border border-border rounded-2xl p-12 text-center shadow-xs">
             <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-base font-bold text-foreground mb-1">Libro Mayor</h3>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
@@ -139,7 +139,7 @@ export function LedgerView({
           <>
             {/* Tarjetas de Resumen */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-white/50 backdrop-blur-md border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
+              <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
                 <CardContent className="p-6">
                   <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <ArrowUpRight className="h-4 w-4 text-emerald-500" />
@@ -148,7 +148,7 @@ export function LedgerView({
                   <div className="mt-2 text-2xl font-bold text-foreground font-mono">{formatCurrency(totalDebe)}</div>
                 </CardContent>
               </Card>
-              <Card className="bg-white/50 backdrop-blur-md border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
+              <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
                 <CardContent className="p-6">
                   <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <ArrowDownLeft className="h-4 w-4 text-rose-500" />
@@ -169,7 +169,7 @@ export function LedgerView({
             </div>
 
             {/* Tabla de Movimientos */}
-            <Card className="bg-white/80 backdrop-blur-md border-border shadow-sm rounded-2xl overflow-hidden">
+            <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden">
               <Table>
                 <TableHeader className="bg-muted/50">
                   <TableRow className="border-b border-border hover:bg-transparent">

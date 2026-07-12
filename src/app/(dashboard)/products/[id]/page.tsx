@@ -304,7 +304,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
     return (
         <form action={formAction} className="flex flex-col min-h-screen bg-secondary/50">
             {/* Header Sticky - Compact */}
-            <div className="sticky top-0 z-30 bg-white border-b border-border px-4 md:px-6 py-2.5 flex items-center justify-between shadow-sm">
+            <div className="sticky top-0 z-30 bg-card border-b border-border px-4 md:px-6 py-2.5 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-3">
                     <Link href="/products" className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-full hover:bg-accent shrink-0">
                         <ArrowLeft className="h-4.5 w-4.5" />
@@ -348,7 +348,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                     
                     {/* LEFT COLUMN: Main Form with Tabs (8 cols) */}
                     <div className="xl:col-span-8 space-y-4">
-                        <Card className="bg-white border border-border shadow-sm rounded-xl overflow-visible">
+                        <Card className="bg-card border border-border shadow-sm rounded-xl overflow-visible">
                             <CardContent className="p-4 sm:p-5">
                                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4">
                                     {/* En mobile las 6 pestañas no caben en una fila sin desbordarse — se
@@ -356,22 +356,22 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                         o cortarlas. shrink-0 evita que cada trigger se comprima. */}
                                     <div className="-mx-1 px-1 overflow-x-auto">
                                         <TabsList className="bg-muted p-1 rounded-lg w-full sm:w-full justify-start h-10 border border-border inline-flex sm:flex min-w-max sm:min-w-0">
-                                            <TabsTrigger value="general" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
+                                            <TabsTrigger value="general" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-card data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
                                                 General
                                             </TabsTrigger>
-                                            <TabsTrigger value="prices" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
+                                            <TabsTrigger value="prices" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-card data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
                                                 Precios
                                             </TabsTrigger>
-                                            <TabsTrigger value="inventory" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
+                                            <TabsTrigger value="inventory" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-card data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
                                                 Inventario
                                             </TabsTrigger>
-                                            <TabsTrigger value="kit" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
+                                            <TabsTrigger value="kit" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-card data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
                                                 Kit
                                             </TabsTrigger>
-                                            <TabsTrigger value="multimedia" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
+                                            <TabsTrigger value="multimedia" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-card data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
                                                 Multimedia
                                             </TabsTrigger>
-                                            <TabsTrigger value="history" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-white data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
+                                            <TabsTrigger value="history" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-card data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
                                                 Historial
                                             </TabsTrigger>
                                         </TabsList>
@@ -688,7 +688,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                         {/* Sales History (Salidas de Facturación) */}
                                         <div className="space-y-2 pt-3">
                                             <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Historial de Salidas (Facturación Real)</h3>
-                                            <div className="border border-border rounded-xl overflow-hidden bg-white shadow-sm">
+                                            <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
                                                 <Table>
                                                     <TableHeader className="bg-muted">
                                                         <TableRow className="hover:bg-transparent">
@@ -760,7 +760,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                             <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Galería de Imágenes ({images.length})</Label>
                                             
                                             {images.length === 0 ? (
-                                                <div className="border rounded-xl p-8 text-center text-muted-foreground bg-white">
+                                                <div className="border rounded-xl p-8 text-center text-muted-foreground bg-card">
                                                     <ImageIcon className="mx-auto h-12 w-12 opacity-20 mb-2" />
                                                     <p className="text-xs font-semibold">No hay imágenes en la galería para este producto.</p>
                                                     <p className="text-[10px] text-muted-foreground mt-0.5">Usa el selector de arriba para agregar imágenes locales.</p>
@@ -769,7 +769,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                                     {images.map((img, idx) => (
                                                         <Card key={img.id} className={cn(
-                                                            "relative group overflow-hidden border shadow-sm flex flex-col justify-between bg-white",
+                                                            "relative group overflow-hidden border shadow-sm flex flex-col justify-between bg-card",
                                                             img.isPrimary ? "border-brand-1 ring-1 ring-brand-1/25" : "border-border"
                                                         )}>
                                                             {/* Image content */}
@@ -898,7 +898,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
 
                                                                 {/* Diff list */}
                                                                 {log.datosAntes && log.datosDespues && (
-                                                                    <div className="text-[10px] font-mono text-muted-foreground bg-white p-2 rounded-lg border border-border mt-1 space-y-1 leading-normal">
+                                                                    <div className="text-[10px] font-mono text-muted-foreground bg-card p-2 rounded-lg border border-border mt-1 space-y-1 leading-normal">
                                                                         {Object.keys(log.datosDespues as Record<string, unknown>).map((key) => {
                                                                             const before = (log.datosAntes as Record<string, unknown>)[key];
                                                                             const after = (log.datosDespues as Record<string, unknown>)[key];
@@ -939,10 +939,10 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                     <div className="xl:col-span-4 xl:sticky xl:top-[60px] self-start space-y-4">
                         
                         {/* Combined Summary & Metadata Card */}
-                        <Card className="bg-white border border-border shadow-sm rounded-xl overflow-hidden">
+                        <Card className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
                             {images.length > 0 ? (
                                 <div className="space-y-2 border-b border-border p-3 bg-muted/50">
-                                    <div className="w-full h-40 flex items-center justify-center relative bg-white border rounded-lg p-2">
+                                    <div className="w-full h-40 flex items-center justify-center relative bg-card border rounded-lg p-2">
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img 
                                             src={activePreviewUrl || imagenUrl || "/placeholder-product.png"} 
@@ -958,7 +958,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                     type="button"
                                                     onClick={() => setActivePreviewUrl(img.imageUrl)}
                                                     className={cn(
-                                                        "h-10 w-10 rounded border overflow-hidden shrink-0 transition-all p-0.5 bg-white",
+                                                        "h-10 w-10 rounded border overflow-hidden shrink-0 transition-all p-0.5 bg-card",
                                                         (activePreviewUrl || imagenUrl) === img.imageUrl 
                                                             ? "border-brand-1 scale-95 ring-1 ring-brand-1" 
                                                             : "border-border hover:border-brand-1/40"
@@ -1244,7 +1244,7 @@ function KitTab({ productoId, initialEsKit }: { productoId: string; initialEsKit
                                         autoFocus
                                     />
                                 </div>
-                                <div className="border border-border rounded-lg max-h-48 overflow-auto bg-white shadow-sm">
+                                <div className="border border-border rounded-lg max-h-48 overflow-auto bg-card shadow-sm">
                                     {filteredProductos.length > 0 ? filteredProductos.map((p) => (
                                         <button
                                             key={p.id}
@@ -1271,7 +1271,7 @@ function KitTab({ productoId, initialEsKit }: { productoId: string; initialEsKit
                         )}
                     </div>
 
-                    <div className="border border-border rounded-xl overflow-hidden bg-white shadow-sm">
+                    <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
                         <Table>
                             <TableHeader className="bg-muted">
                                 <TableRow className="hover:bg-transparent">

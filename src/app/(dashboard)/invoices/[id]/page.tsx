@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { Separator } from '@/components/ui/separator';
 import {
     Table,
@@ -68,37 +68,16 @@ export default async function InvoiceDetailPage(props: PageProps) {
         notFound();
     }
 
-    const getStatusColor = (status: string) => {
-        switch ((status || '').toLowerCase()) {
-            case 'authorized':
-            case 'autorizada':
-            case 'aceptada':
-                return 'bg-green-600 hover:bg-green-700 text-white';
-            case 'canceled':
-            case 'anulada':
-                return 'bg-secondary hover:bg-accent text-white';
-            case 'error':
-            case 'rechazada':
-                return 'bg-red-600 hover:bg-red-700 text-white';
-            case 'pending':
-            case 'pendiente':
-                return 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse';
-            default:
-                return 'bg-muted hover:bg-accent text-white';
-        }
-    };
-
-    const getPaymentStatusColor = (balance: number, total: number) => {
-        if (balance === 0) return 'bg-green-100 text-green-800';
-        if (balance === total) return 'bg-red-100 text-red-800';
-        return 'bg-yellow-100 text-yellow-800';
-    };
-
-    const getPaymentStatusLabel = (balance: number, total: number) => {
-        if (balance === 0) return 'Pagada';
-        if (balance === total) return 'Pendiente';
-        return 'Parcial';
-    };
+    const vencimiento = invoice.fechaVencimiento ? new Date(invoice.fechaVencimiento) : null;
+    const saldoPendiente = Number(invoice.saldoPendiente);
+    const totalNeto = Number(invoice.totalNeto);
+    const paymentStatus = saldoPendiente === 0
+        ? 'pagada'
+        : (vencimiento && vencimiento < new Date() && saldoPendiente > 0)
+            ? 'vencida'
+            : saldoPendiente === totalNeto
+                ? 'pendiente'
+                : 'parcial';
 
     return (
         <ContentContainer>
@@ -244,9 +223,7 @@ export default async function InvoiceDetailPage(props: PageProps) {
                             <CardContent className="space-y-4">
                                 <div>
                                     <div className="text-sm font-medium text-muted-foreground mb-1">DGI (Factura Electrónica)</div>
-                                    <Badge className={getStatusColor(invoice.estadoDgi)}>
-                                        {invoice.estadoDgi.toUpperCase()}
-                                    </Badge>
+                                    <StatusBadge status={invoice.estadoDgi} />
                                     {invoice.cufe && (
                                         <div className="mt-2 text-xs text-muted-foreground break-all font-mono bg-muted p-2 rounded">
                                             CUFE: {invoice.cufe}
@@ -265,11 +242,9 @@ export default async function InvoiceDetailPage(props: PageProps) {
                                 <Separator />
                                 <div>
                                     <div className="text-sm font-medium text-muted-foreground mb-1">Pago</div>
-                                    <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${getPaymentStatusColor(Number(invoice.saldoPendiente), Number(invoice.totalNeto))}`}>
-                                        {getPaymentStatusLabel(Number(invoice.saldoPendiente), Number(invoice.totalNeto))}
-                                    </div>
+                                    <StatusBadge status={paymentStatus} showIcon={false} />
                                     <div className="mt-2 text-sm text-muted-foreground">
-                                        Pendiente: ${Number(invoice.saldoPendiente).toFixed(2)}
+                                        Pendiente: ${saldoPendiente.toFixed(2)}
                                     </div>
                                 </div>
                             </CardContent>

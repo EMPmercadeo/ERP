@@ -43,7 +43,7 @@ export interface QuickClient {
 export function NewClientModal({ onCreated }: { onCreated: (cliente: QuickClient) => void }) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [tipoRuc, setTipoRuc] = useState('J');
+    const [tipoRuc, setTipoRuc] = useState('02');
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -109,9 +109,10 @@ export function NewClientModal({ onCreated }: { onCreated: (cliente: QuickClient
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="J">Jurídico (J)</SelectItem>
-                                    <SelectItem value="N">Natural (N)</SelectItem>
-                                    <SelectItem value="E">Extranjero (E)</SelectItem>
+                                    <SelectItem value="01">01 - Persona Natural</SelectItem>
+                                    <SelectItem value="02">02 - Persona Jurídica</SelectItem>
+                                    <SelectItem value="03">03 - Gobierno</SelectItem>
+                                    <SelectItem value="04">04 - Extranjero</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

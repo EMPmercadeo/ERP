@@ -75,70 +75,12 @@ export default function LoginPage() {
         }
     };
 
-    const handleBiometricLogin = async () => {
+    const handleBiometricLogin = () => {
+        // El login biométrico requiere verificación de challenge WebAuthn contra el
+        // servidor (no implementada todavía). Hasta que exista ese endpoint, no debe
+        // autenticar a nadie basado solo en un credential truthy del navegador.
         setError('');
-        if (typeof window === 'undefined' || !window.PublicKeyCredential) {
-            setActiveModal('bio_info');
-            return;
-        }
-
-        const isRegistered = localStorage.getItem('erp_passkey_saved') === 'true';
-
-        try {
-            if (isRegistered) {
-                const challenge = new Uint8Array(32);
-                window.crypto.getRandomValues(challenge);
-                const credential = await navigator.credentials.get({
-                    publicKey: {
-                        challenge: challenge,
-                        timeout: 60000,
-                        userVerification: "required"
-                    }
-                });
-
-                if (credential) {
-                    window.location.href = '/dashboard';
-                    return;
-                }
-            } else {
-                const challenge = new Uint8Array(32);
-                window.crypto.getRandomValues(challenge);
-                const userId = new Uint8Array(16);
-                window.crypto.getRandomValues(userId);
-
-                const newCredential = await navigator.credentials.create({
-                    publicKey: {
-                        challenge: challenge,
-                        rp: { name: "ERP Panamá" },
-                        user: {
-                            id: userId,
-                            name: email || "usuario@erppanama.com",
-                            displayName: email || "Usuario ERP Panamá",
-                        },
-                        pubKeyCredParams: [
-                            { type: "public-key", alg: -7 },
-                            { type: "public-key", alg: -257 }
-                        ],
-                        authenticatorSelection: {
-                            authenticatorAttachment: "platform",
-                            userVerification: "required"
-                        },
-                        timeout: 60000
-                    }
-                });
-
-                if (newCredential) {
-                    localStorage.setItem('erp_passkey_saved', 'true');
-                    window.location.href = '/dashboard';
-                    return;
-                }
-            }
-        } catch {
-            if (isRegistered) {
-                localStorage.removeItem('erp_passkey_saved');
-            }
-            setActiveModal('bio_info');
-        }
+        setActiveModal('bio_info');
     };
 
     return (
@@ -160,19 +102,16 @@ export default function LoginPage() {
                                 <div className="w-12 h-12 bg-blue-100 text-brand-1 rounded-full flex items-center justify-center mx-auto">
                                     <Fingerprint className="h-6 w-6" />
                                 </div>
-                                <h3 className="text-lg font-black text-foreground">Permiso Biométrico DGI</h3>
+                                <h3 className="text-lg font-black text-foreground">Login biométrico próximamente</h3>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
-                                    Para autorizar tu huella digital o Face ID en este dispositivo, escribe tu correo y pulsa el ícono de huella nuevamente para vincular la seguridad del dispositivo con tu cuenta.
+                                    Estamos preparando el ingreso con huella digital o Face ID de forma segura. Por ahora, ingresa con tu correo y contraseña.
                                 </p>
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setActiveModal(null);
-                                        localStorage.removeItem('erp_passkey_saved');
-                                    }}
+                                    onClick={() => setActiveModal(null)}
                                     className="w-full bg-brand-2 text-white font-bold py-3 rounded-xl text-sm hover:bg-brand-1 transition-all cursor-pointer"
                                 >
-                                    Entendido, autorizar ahora
+                                    Entendido
                                 </button>
                             </div>
                         )}
@@ -353,7 +292,8 @@ export default function LoginPage() {
                         <button
                             type="button"
                             onClick={handleBiometricLogin}
-                            title="Ingresar con Huella Digital"
+                            title="Login biométrico (próximamente)"
+                            aria-label="Login biométrico (próximamente)"
                             className="bg-white rounded-2xl h-11 w-11 sm:h-12 sm:w-12 shadow-sm flex items-center justify-center text-brand-medium hover:bg-blue-50 transition-all shrink-0 active:scale-95 cursor-pointer"
                         >
                             <Fingerprint className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -475,7 +415,8 @@ export default function LoginPage() {
                         <button
                             type="button"
                             onClick={handleBiometricLogin}
-                            title="Ingresar con Huella Digital / Passkey"
+                            title="Login biométrico (próximamente)"
+                            aria-label="Login biométrico (próximamente)"
                             className="bg-white border border-border rounded-xl p-3 shadow-sm flex items-center justify-center text-brand-1 hover:bg-blue-50/60 transition-all shrink-0 active:scale-95 cursor-pointer"
                         >
                             <Fingerprint className="h-5 w-5" />

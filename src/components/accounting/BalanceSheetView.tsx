@@ -74,31 +74,31 @@ export function BalanceSheetView({
       <div className="space-y-6">
         {/* Resumen de Balance Sheet */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-white/50 backdrop-blur-md border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
+          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Activo Total</div>
               <div className="mt-2 text-2xl font-bold text-foreground font-mono">{formatCurrency(totalActivos)}</div>
             </CardContent>
           </Card>
-          <Card className="bg-white/50 backdrop-blur-md border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
+          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pasivo + Patrimonio Total</div>
               <div className="mt-2 text-2xl font-bold text-foreground font-mono">{formatCurrency(totalPasivoPatrimonio)}</div>
             </CardContent>
           </Card>
-          <Card className={`backdrop-blur-md border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md ${isBalanced ? 'bg-emerald-50/40 border-emerald-100' : 'bg-rose-50/40 border-rose-100'}`}>
+          <Card className={`border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md ${isBalanced ? 'bg-success-bg border-success/30' : 'bg-danger-bg border-danger/30'}`}>
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Estado Ecuación Contable</div>
               <div className="mt-2 flex items-center gap-2">
                 {isBalanced ? (
                   <>
-                    <CheckCircle2 className="h-6 w-6 text-emerald-600" />
-                    <span className="text-lg font-bold text-emerald-800">Cuadrado (A = P + C)</span>
+                    <CheckCircle2 className="h-6 w-6 text-success" />
+                    <span className="text-lg font-bold text-success">Cuadrado (A = P + C)</span>
                   </>
                 ) : (
                   <>
-                    <AlertCircle className="h-6 w-6 text-rose-600" />
-                    <span className="text-lg font-bold text-rose-800">Descuadre ({formatCurrency(diferencia)})</span>
+                    <AlertCircle className="h-6 w-6 text-danger" />
+                    <span className="text-lg font-bold text-danger">Descuadre ({formatCurrency(diferencia)})</span>
                   </>
                 )}
               </div>
@@ -107,7 +107,7 @@ export function BalanceSheetView({
         </div>
 
         {/* Filtros */}
-        <Card className="bg-white/80 backdrop-blur-md border-border shadow-sm rounded-2xl">
+        <Card className="bg-card border-border shadow-sm rounded-2xl">
           <CardContent className="p-5 flex flex-col sm:flex-row sm:items-end sm:gap-4">
             <div className="flex-1 space-y-1.5">
               <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Fecha de Corte</label>
@@ -132,7 +132,7 @@ export function BalanceSheetView({
         </Card>
 
         {/* Balance General Detallado */}
-        <Card className="bg-white/80 backdrop-blur-md border-border shadow-sm rounded-2xl overflow-hidden p-6 space-y-8">
+        <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden p-6 space-y-8">
           <div className="text-center pb-4 border-b border-border">
             <h2 className="text-lg font-bold text-foreground">Balance General</h2>
             <p className="text-xs text-muted-foreground mt-1">

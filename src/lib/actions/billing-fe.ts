@@ -5,6 +5,7 @@ import { prisma } from '../db';
 import { getTenantContext } from '../auth/context';
 import { getPACProviderForEmpresa } from '../facturacion-electronica/factory';
 import { mapFacturaToDTO } from '../facturacion-electronica/mappers';
+import { humanizePacError } from '../facturacion-electronica/pac-errors';
 import { encrypt } from '../utils/crypto';
 import type { PACEmisionResponse, PACAnulacionResponse, PACTransaction } from '../facturacion-electronica/pac-provider.interface';
 import { revalidatePath } from 'next/cache';
@@ -116,7 +117,7 @@ export async function timbrarFacturaDGI(facturaId: string) {
         }
       });
       revalidatePath('/invoices');
-      return { success: false, message: `Error al timbrar factura: ${response.mensajeResultado || response.error}` };
+      return { success: false, message: humanizePacError(response.codigoResultado, response.mensajeResultado || response.error) };
     }
   } catch (error: unknown) {
     console.error('Error in timbrarFacturaDGI:', error);
@@ -197,7 +198,7 @@ export async function anularFacturaDGI(facturaId: string, motivo: string) {
       revalidatePath('/invoices');
       return { success: true, message: 'Factura anulada con éxito en la DGI.' };
     } else {
-      return { success: false, message: `Error al anular factura: ${response.mensajeResultado || response.error}` };
+      return { success: false, message: humanizePacError(response.codigoResultado, response.mensajeResultado || response.error) };
     }
   } catch (error: unknown) {
     console.error('Error in anularFacturaDGI:', error);

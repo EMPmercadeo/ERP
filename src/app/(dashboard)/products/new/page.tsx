@@ -97,7 +97,7 @@ export default function NewProductPage() {
         <form action={formAction} className="flex flex-col min-h-screen bg-secondary/50">
             <input type="hidden" name="imagenUrl" value={imagenUrl} />
             {/* Header Sticky - Compact */}
-            <div className="sticky top-0 z-30 bg-white border-b border-border px-4 md:px-6 py-2.5 flex items-center justify-between shadow-sm">
+            <div className="sticky top-0 z-30 bg-card border-b border-border px-4 md:px-6 py-2.5 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-3">
                     <Link href="/products" className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-full hover:bg-accent shrink-0">
                         <ArrowLeft className="h-4.5 w-4.5" />
@@ -135,7 +135,7 @@ export default function NewProductPage() {
                     
                     {/* LEFT COLUMN: General Information (8 cols) */}
                     <div className="xl:col-span-8 space-y-4">
-                        <Card className="bg-white border border-border shadow-sm rounded-xl overflow-visible">
+                        <Card className="bg-card border border-border shadow-sm rounded-xl overflow-visible">
                             <CardHeader className="py-4 px-5 border-b border-border">
                                 <CardTitle className="text-sm font-bold text-foreground uppercase tracking-wider">Información General</CardTitle>
                                 <CardDescription className="text-xs text-muted-foreground">Datos básicos e identificación del producto o servicio en el sistema</CardDescription>
@@ -232,7 +232,7 @@ export default function NewProductPage() {
                         </Card>
 
                         {/* Multimedia Support */}
-                        <Card className="bg-white border border-border shadow-sm rounded-xl overflow-hidden">
+                        <Card className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
                             <CardHeader className="py-3 px-5 border-b border-border bg-muted">
                                 <CardTitle className="text-xs font-bold text-foreground uppercase tracking-wider">Multimedia</CardTitle>
                             </CardHeader>
@@ -320,7 +320,7 @@ export default function NewProductPage() {
                     <div className="xl:col-span-4 space-y-4">
                         
                         {/* Price & Margins Card */}
-                        <Card className="bg-white border border-border shadow-sm rounded-xl overflow-hidden">
+                        <Card className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
                             {imagenUrl && (
                                 <div className="w-full h-32 bg-muted border-b border-border flex items-center justify-center p-2 relative">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -412,7 +412,7 @@ export default function NewProductPage() {
                                                     "cursor-pointer rounded-lg border p-2 text-center transition-all select-none",
                                                     codigoTasaItbms === rate.code
                                                         ? "border-brand-1 bg-brand-1/5 ring-1 ring-brand-1 text-brand-1 font-bold"
-                                                        : "border-border bg-white text-muted-foreground hover:bg-accent"
+                                                        : "border-border bg-card text-muted-foreground hover:bg-accent"
                                                 )}
                                             >
                                                 <div className="text-xs font-bold">{rate.label}</div>
@@ -451,7 +451,7 @@ export default function NewProductPage() {
                         </Card>
 
                         {/* Categoría y Descuento */}
-                        <Card className="bg-white border border-border shadow-sm rounded-xl overflow-hidden">
+                        <Card className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
                             <CardHeader className="bg-muted border-b border-border py-3.5 px-4 flex flex-row items-center gap-1.5">
                                 <CardTitle className="text-xs font-bold text-foreground uppercase tracking-wider">Categoría y Descuento</CardTitle>
                             </CardHeader>
@@ -492,7 +492,7 @@ export default function NewProductPage() {
                         </Card>
 
                         {/* Inventory Card */}
-                        <Card className="bg-white border border-border shadow-sm rounded-xl overflow-hidden">
+                        <Card className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
                             <CardHeader className="bg-muted border-b border-border py-3.5 px-4 flex flex-row items-center justify-between">
                                 <div className="flex items-center gap-1.5">
                                     <Package className="h-4.5 w-4.5 text-brand-1" />
