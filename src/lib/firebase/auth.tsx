@@ -278,6 +278,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             await firebaseSignOut(auth);
             mockUserRef.current = null;
+            setUser(null);
             setRole(null);
             await deleteSessionEmail();
         } catch (error: unknown) {
@@ -300,7 +301,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <AuthContext.Provider value={{
-            user: user || mockUserRef.current,
+            user,
             loading,
             role,
             error: authError,
@@ -312,7 +313,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             resetPassword,
             refreshUser,
             resendVerificationEmail,
-            isEmailVerified: (user || mockUserRef.current)?.emailVerified ?? false
+            isEmailVerified: user?.emailVerified ?? false
         }}>
             {children}
         </AuthContext.Provider>

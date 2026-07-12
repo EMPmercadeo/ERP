@@ -69,6 +69,7 @@ async function ImpersonationWrapper() {
   const { prisma } = await import('@/lib/db');
   const { ImpersonationBanner } = await import('@/components/layout/ImpersonationBanner');
 
+  let tenantName: string | null = null;
   try {
     const ctx = await getTenantContext();
     if (ctx.isImpersonating) {
@@ -76,11 +77,13 @@ async function ImpersonationWrapper() {
         where: { id: ctx.empresaId },
         select: { razonSocial: true }
       });
-      return <ImpersonationBanner isImpersonating={true} tenantName={tenant?.razonSocial || 'Unknown'} />;
+      tenantName = tenant?.razonSocial || 'Unknown';
     }
   } catch (e) {
     console.error('[ImpersonationWrapper] Error:', e);
     return null;
   }
-  return null;
+
+  if (tenantName === null) return null;
+  return <ImpersonationBanner isImpersonating={true} tenantName={tenantName} />;
 }

@@ -76,7 +76,7 @@ export function NewPurchaseForm({
     const [numeroFactura, setNumeroFactura] = useState('');
     const [fechaEmision, setFechaEmision] = useState(new Date().toISOString().split('T')[0]);
     const [fechaVencimiento, setFechaVencimiento] = useState(
-        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     );
     const [observaciones, setObservaciones] = useState('');
     const [bodegaId, setBodegaId] = useState(bodegas[0]?.id || '');
