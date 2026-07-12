@@ -180,7 +180,7 @@ export default function POSMultiDispositivoPage() {
   const [resumenCierreTurno, setResumenCierreTurno] = useState<TurnoCajaResumen | null>(null);
   const [montoContadoCierre, setMontoContadoCierre] = useState('');
   const [cerrandoTurno, setCerrandoTurno] = useState(false);
-  const [turnoRecienCerrado, setTurnoRecienCerrado] = useState<{ montoEsperadoCierre: number; montoContadoCierre: number; diferencia: number } | null>(null);
+  const [turnoRecienCerrado, setTurnoRecienCerrado] = useState<{ id?: string; montoEsperadoCierre: number; montoContadoCierre: number; diferencia: number } | null>(null);
 
   // Escaneo de código de barras por cámara
   const [showEscanerModal, setShowEscanerModal] = useState(false);
@@ -368,6 +368,7 @@ export default function POSMultiDispositivoPage() {
         setErrorTurno(data.error || 'No se pudo cerrar el turno de caja.');
       } else {
         setTurnoRecienCerrado({
+          id: data.turno.id,
           montoEsperadoCierre: data.turno.montoEsperadoCierre,
           montoContadoCierre: data.turno.montoContadoCierre,
           diferencia: data.turno.diferencia
@@ -1588,7 +1589,17 @@ export default function POSMultiDispositivoPage() {
                 <span className="font-mono">${Math.abs(turnoRecienCerrado.diferencia).toFixed(2)}</span>
               </div>
             </CardContent>
-            <div className="p-4 border-t border-border bg-secondary">
+            <div className="p-4 border-t border-border bg-secondary space-y-2">
+              {turnoRecienCerrado.id && (
+                <a
+                  href={`/pos/reporte-z?turnoId=${turnoRecienCerrado.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-accent font-black text-xs h-10"
+                >
+                  Ver Reporte Z
+                </a>
+              )}
               <Button
                 type="button"
                 onClick={() => { setTurnoRecienCerrado(null); cargarTurno(); }}
