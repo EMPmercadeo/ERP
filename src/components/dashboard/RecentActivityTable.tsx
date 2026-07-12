@@ -142,7 +142,7 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                                         </TableCell>
                                         <TableCell className={CELL_CLASS}>
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-[34px]. h-[34px] rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
+                                                <div className={`w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
                                                     {initials}
                                                 </div>
                                                 <div className="flex flex-col min-w-0">

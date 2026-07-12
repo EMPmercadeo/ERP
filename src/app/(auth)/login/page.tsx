@@ -294,13 +294,15 @@ export default function LoginPage() {
                     </span>
                 </div>
 
-                {/* Banner de Imagen (Exactamente 25vh según requerimiento) */}
-                <div className="h-[22vh] min-h-[110px] max-h-[170px] w-full bg-white/10 border border-white/25 rounded-3xl p-3 flex flex-col items-center justify-center text-center backdrop-blur-md shadow-md shrink-0 my-1 overflow-hidden">
-                    <div className="inline-block px-3 py-0.5 rounded-full bg-white/25 text-[10px] font-bold text-white uppercase tracking-wider mb-1.5 truncate max-w-full">
-                        Espacio para Imagen (25vh)
+                {/* Panel de marca institucional (equivalente móvil del panel derecho de escritorio) */}
+                <div className="relative h-[22vh] min-h-[110px] max-h-[170px] w-full bg-white/10 border border-white/25 rounded-3xl p-4 flex flex-col items-center justify-center text-center backdrop-blur-md shadow-md shrink-0 my-1 overflow-hidden">
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+                    <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="relative z-10 bg-white/15 p-2 rounded-xl mb-2">
+                        <Shield className="h-5 w-5 text-white" />
                     </div>
-                    <p className="text-xs sm:text-sm font-bold text-white leading-snug max-w-[260px] break-words">
-                        Ve por tu historia / Nosotros te acompañamos en tu gestión fiscal
+                    <p className="relative z-10 text-xs sm:text-sm font-bold text-white leading-snug max-w-[260px] break-words">
+                        Facturación electrónica, inventario y contabilidad, cumpliendo con la DGI en un solo lugar.
                     </p>
                 </div>
 
