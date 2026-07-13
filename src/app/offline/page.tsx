@@ -10,8 +10,8 @@ export default function OfflinePage() {
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-secondary px-4 text-center font-sans">
-            <div className="max-w-md w-full rounded-2xl bg-white border border-border p-8 shadow-xl">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-rose-500 mb-6">
+            <div className="max-w-md w-full rounded-2xl bg-card border border-border p-8 shadow-xl">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-danger-bg text-danger mb-6">
                     <WifiOff className="h-8 w-8 animate-pulse" />
                 </div>
                 

@@ -62,11 +62,11 @@ const getInitials = (name: string) => {
 };
 
 const palette = [
-    'from-brand-1 to-brand-2 text-white',
-    'from-blue-600 to-cyan-400 text-white',
-    'from-amber-500 to-orange-400 text-white',
-    'from-rose-500 to-red-400 text-white',
-    'from-emerald-500 to-teal-400 text-white'
+    'bg-brand-1 text-white',
+    'bg-info text-white',
+    'bg-warning text-white',
+    'bg-danger text-white',
+    'bg-success text-white'
 ];
 
 export function ReceivablesList({
@@ -215,7 +215,7 @@ export function ReceivablesList({
 
                 {/* Metrics Cards Overview */}
                 <div className="grid grid-cols-3 gap-3">
-                    <Card className="bg-white border-border shadow-sm rounded-xl">
+                    <Card className="bg-card border-border shadow-sm rounded-xl">
                         <CardContent className="p-3.5 flex flex-col justify-between h-full">
                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-none">Total Por Cobrar</span>
                             <span className="text-sm sm:text-base font-extrabold text-foreground mt-2 font-mono tabular-nums leading-none">
@@ -223,18 +223,18 @@ export function ReceivablesList({
                             </span>
                         </CardContent>
                     </Card>
-                    <Card className="bg-white border-border shadow-sm rounded-xl">
+                    <Card className="bg-card border-border shadow-sm rounded-xl">
                         <CardContent className="p-3.5 flex flex-col justify-between h-full">
-                            <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider leading-none">Saldo Al Día</span>
-                            <span className="text-sm sm:text-base font-extrabold text-emerald-600 mt-2 font-mono tabular-nums leading-none">
+                            <span className="text-[10px] font-bold text-success uppercase tracking-wider leading-none">Saldo Al Día</span>
+                            <span className="text-sm sm:text-base font-extrabold text-success mt-2 font-mono tabular-nums leading-none">
                                 {formatCurrency(metrics.alDia)}
                             </span>
                         </CardContent>
                     </Card>
-                    <Card className="bg-white border-border shadow-sm rounded-xl">
+                    <Card className="bg-card border-border shadow-sm rounded-xl">
                         <CardContent className="p-3.5 flex flex-col justify-between h-full">
-                            <span className="text-[10px] font-bold text-rose-500 uppercase tracking-wider leading-none">Saldo Vencido</span>
-                            <span className="text-sm sm:text-base font-extrabold text-rose-600 mt-2 font-mono tabular-nums leading-none">
+                            <span className="text-[10px] font-bold text-danger uppercase tracking-wider leading-none">Saldo Vencido</span>
+                            <span className="text-sm sm:text-base font-extrabold text-danger mt-2 font-mono tabular-nums leading-none">
                                 {formatCurrency(metrics.vencido)}
                             </span>
                         </CardContent>
@@ -242,7 +242,7 @@ export function ReceivablesList({
                 </div>
 
                 {/* Filter / Search Bar */}
-                <Card className="bg-white shadow-sm border border-border rounded-xl overflow-visible">
+                <Card className="bg-card shadow-sm border border-border rounded-xl overflow-visible">
                     <CardContent className="p-3">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -266,7 +266,7 @@ export function ReceivablesList({
                 </Card>
 
                 {/* Desktop and Mobile list view */}
-                <Card className="bg-white border border-border shadow-sm rounded-xl overflow-hidden">
+                <Card className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
                     <CardContent className="p-0">
                         {/* Desktop Table View */}
                         <div className="hidden md:block overflow-x-auto min-h-[300px]">
@@ -319,7 +319,7 @@ export function ReceivablesList({
                                                         {formatCurrency(invoice.saldoPendiente)}
                                                     </TableCell>
                                                     <TableCell className="py-3 text-center">
-                                                        <Badge className={overdue ? "bg-rose-50 text-rose-600 border-transparent hover:bg-rose-50 text-[10px] font-bold px-2 py-0.5 rounded" : "bg-emerald-50 text-emerald-600 border-transparent hover:bg-emerald-50 text-[10px] font-bold px-2 py-0.5 rounded"}>
+                                                        <Badge className={overdue ? "bg-danger-bg text-danger border-transparent hover:bg-danger-bg text-[10px] font-bold px-2 py-0.5 rounded" : "bg-success-bg text-success border-transparent hover:bg-success-bg text-[10px] font-bold px-2 py-0.5 rounded"}>
                                                             {overdue ? 'Vencida' : 'Al Día'}
                                                         </Badge>
                                                     </TableCell>
@@ -372,7 +372,7 @@ export function ReceivablesList({
                                         >
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="flex items-center gap-2.5 min-w-0">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ${gradClass} shrink-0 select-none`}>
                                                         {initials}
                                                     </div>
                                                     <div className="min-w-0">
@@ -380,7 +380,7 @@ export function ReceivablesList({
                                                         <p className="text-[10px] text-muted-foreground font-mono leading-none mt-0.5">{invoice.numeroCompleto}</p>
                                                     </div>
                                                 </div>
-                                                <Badge className={overdue ? "bg-rose-50 text-rose-600 border-transparent hover:bg-rose-50 text-[9px] font-bold px-2 py-0.5 rounded" : "bg-emerald-50 text-emerald-600 border-transparent hover:bg-emerald-50 text-[9px] font-bold px-2 py-0.5 rounded"}>
+                                                <Badge className={overdue ? "bg-danger-bg text-danger border-transparent hover:bg-danger-bg text-[9px] font-bold px-2 py-0.5 rounded" : "bg-success-bg text-success border-transparent hover:bg-success-bg text-[9px] font-bold px-2 py-0.5 rounded"}>
                                                     {overdue ? 'Vencida' : 'Al Día'}
                                                 </Badge>
                                             </div>
@@ -390,7 +390,7 @@ export function ReceivablesList({
                                                     <span>Total: {formatCurrency(invoice.totalNeto)}</span>
                                                     <span>Emisión: {new Date(invoice.fechaEmision).toLocaleDateString('es-PA')}</span>
                                                     {invoice.fechaVencimiento && (
-                                                        <span className={overdue ? "text-rose-600 font-medium" : ""}>
+                                                        <span className={overdue ? "text-danger font-medium" : ""}>
                                                             Vence: {new Date(invoice.fechaVencimiento).toLocaleDateString('es-PA')}
                                                         </span>
                                                     )}
@@ -445,7 +445,7 @@ export function ReceivablesList({
             {/* Registrar Cobro Modal */}
             {activeInvoice && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl border border-border dark:border-border shadow-2xl p-6 relative font-sans">
+                    <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-2xl p-6 relative font-sans">
                         <button
                             onClick={() => setActiveInvoice(null)}
                             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
@@ -470,7 +470,7 @@ export function ReceivablesList({
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground dark:text-muted-foreground font-medium">Factura:</span>
-                                    <span className="font-mono font-bold text-brand-1 dark:text-blue-400">{activeInvoice.numeroCompleto}</span>
+                                    <span className="font-mono font-bold text-brand-1">{activeInvoice.numeroCompleto}</span>
                                 </div>
                                 <div className="flex justify-between border-t border-border/50 dark:border-border pt-2 mt-1">
                                     <span className="text-muted-foreground dark:text-muted-foreground font-bold">Saldo Pendiente:</span>

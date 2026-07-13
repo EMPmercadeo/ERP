@@ -307,7 +307,7 @@ export function QuickSalePOS({
                                 placeholder="Buscar por código o nombre..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="h-11 pl-9 bg-white border-border focus-visible:ring-brand-1 rounded-xl text-sm"
+                                className="h-11 pl-9 bg-card border-border focus-visible:ring-brand-1 rounded-xl text-sm"
                             />
                             {searchQuery && (
                                 <button
@@ -322,7 +322,7 @@ export function QuickSalePOS({
                         {bodegas.length >= 2 && (
                             <div className="w-full sm:w-48 shrink-0">
                                 <Select value={bodegaId} onValueChange={setBodegaId}>
-                                    <SelectTrigger className="h-11 bg-white border-border rounded-xl text-sm w-full">
+                                    <SelectTrigger className="h-11 bg-card border-border rounded-xl text-sm w-full">
                                         <SelectValue placeholder="Bodega..." />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl">
@@ -349,7 +349,7 @@ export function QuickSalePOS({
                                     <div
                                         key={product.id}
                                         onClick={() => !isAgotado && addToCart(product)}
-                                        className={`bg-white border rounded-2xl p-2.5 flex flex-col justify-between shadow-sm relative transition-all select-none ${
+                                        className={`bg-card border rounded-2xl p-2.5 flex flex-col justify-between shadow-sm relative transition-all select-none ${
                                             isAgotado 
                                                 ? 'opacity-60 cursor-not-allowed border-border' 
                                                 : 'hover:border-border hover:shadow active:scale-[0.97] cursor-pointer border-border'
@@ -373,7 +373,7 @@ export function QuickSalePOS({
                                                 )}
                                                 
                                                 {/* ITBMS Badge */}
-                                                <span className="absolute bottom-1.5 left-1.5 bg-white/95 text-foreground backdrop-blur-sm text-[8px] font-bold px-1.5 py-0.5 rounded border border-border/50 shadow-sm leading-none">
+                                                <span className="absolute bottom-1.5 left-1.5 bg-card/95 text-foreground backdrop-blur-sm text-[8px] font-bold px-1.5 py-0.5 rounded border border-border/50 shadow-sm leading-none">
                                                     {product.itbms === '00' ? 'Exento' : `ITBMS ${product.itbms === '01' ? '7%' : product.itbms === '02' ? '10%' : '15%'}`}
                                                 </span>
                                             </div>
@@ -395,9 +395,9 @@ export function QuickSalePOS({
                                             </span>
                                             
                                             {isAgotado ? (
-                                                <Badge className="bg-red-50 text-red-600 border-transparent text-[8px] font-bold px-1.5 py-0">Agotado</Badge>
+                                                <Badge className="bg-danger-bg text-danger border-transparent text-[8px] font-bold px-1.5 py-0">Agotado</Badge>
                                             ) : product.stock < 10 ? (
-                                                <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1 py-0.5 rounded">
+                                                <span className="text-[9px] font-bold text-warning bg-warning-bg px-1 py-0.5 rounded">
                                                     {product.stock} uds
                                                 </span>
                                             ) : (
@@ -455,6 +455,7 @@ export function QuickSalePOS({
                                                     variant="outline"
                                                     className="h-7 w-7 rounded-lg"
                                                     onClick={() => decreaseQuantity(item.product.id)}
+                                                    aria-label={`Reducir cantidad de ${item.product.descripcion}`}
                                                 >
                                                     <Minus className="h-3 w-3" />
                                                 </Button>
@@ -464,6 +465,7 @@ export function QuickSalePOS({
                                                     variant="outline"
                                                     className="h-7 w-7 rounded-lg"
                                                     onClick={() => increaseQuantity(item)}
+                                                    aria-label={`Aumentar cantidad de ${item.product.descripcion}`}
                                                 >
                                                     <Plus className="h-3 w-3" />
                                                 </Button>
@@ -508,7 +510,7 @@ export function QuickSalePOS({
                 </div>
 
                 {/* Mobile Floating Drawer bar */}
-                <div className="fixed bottom-16 left-0 right-0 z-30 lg:hidden bg-white border-t border-border px-4 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.06)] font-sans">
+                <div className="fixed bottom-16 left-0 right-0 z-30 lg:hidden bg-card border-t border-border px-4 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.06)] font-sans">
                     <button
                         onClick={() => cart.length > 0 && setIsCartOpen(!isCartOpen)}
                         className="flex items-center gap-2 text-left bg-muted border border-border px-3.5 py-2.5 rounded-xl active:scale-95 transition-all select-none"
@@ -543,7 +545,7 @@ export function QuickSalePOS({
             {/* Mobile slide-up Cart detail Drawer */}
             {isCartOpen && cart.length > 0 && (
                 <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden animate-in fade-in">
-                    <div className="fixed bottom-32 left-0 right-0 bg-white border-t rounded-t-2xl shadow-2xl max-h-[60vh] flex flex-col font-sans pb-2">
+                    <div className="fixed bottom-32 left-0 right-0 bg-card border-t rounded-t-2xl shadow-2xl max-h-[60vh] flex flex-col font-sans pb-2">
                         <div className="px-4 py-3 border-b flex justify-between items-center bg-muted/50">
                             <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                 <ShoppingCart className="h-4 w-4 text-brand-1" />
@@ -576,6 +578,7 @@ export function QuickSalePOS({
                                             variant="outline"
                                             className="h-8 w-8 rounded-lg"
                                             onClick={() => decreaseQuantity(item.product.id)}
+                                            aria-label={`Reducir cantidad de ${item.product.descripcion}`}
                                         >
                                             <Minus className="h-3.5 w-3.5" />
                                         </Button>
@@ -585,6 +588,7 @@ export function QuickSalePOS({
                                             variant="outline"
                                             className="h-8 w-8 rounded-lg"
                                             onClick={() => increaseQuantity(item)}
+                                            aria-label={`Aumentar cantidad de ${item.product.descripcion}`}
                                         >
                                             <Plus className="h-3.5 w-3.5" />
                                         </Button>
@@ -599,7 +603,7 @@ export function QuickSalePOS({
             {/* Checkout Form Modal */}
             {showCheckoutModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl border border-border dark:border-border shadow-2xl p-6 relative font-sans">
+                    <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-2xl p-6 relative font-sans">
                         <button
                             onClick={() => setShowCheckoutModal(false)}
                             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
@@ -628,7 +632,7 @@ export function QuickSalePOS({
                                 </div>
                                 <div className="flex justify-between border-t border-border/50 dark:border-border pt-2 mt-1">
                                     <span className="text-muted-foreground dark:text-muted-foreground font-bold">Total a Cobrar:</span>
-                                    <span className="font-mono font-bold text-brand-1 dark:text-blue-400 text-base">{formatCurrency(totals.total)}</span>
+                                    <span className="font-mono font-bold text-brand-1 text-base">{formatCurrency(totals.total)}</span>
                                 </div>
                             </div>
 
@@ -652,7 +656,7 @@ export function QuickSalePOS({
                                                 />
                                             </div>
                                             {clientSearch && (
-                                                <div className="border rounded-lg max-h-40 overflow-auto bg-white divide-y shadow-sm">
+                                                <div className="border rounded-lg max-h-40 overflow-auto bg-card divide-y shadow-sm">
                                                     {filteredClients.length > 0 ? (
                                                         filteredClients.map(c => (
                                                             <button
@@ -668,7 +672,7 @@ export function QuickSalePOS({
                                                                     <div className="font-bold text-foreground">{c.razonSocial}</div>
                                                                     <div className="text-[10px] text-muted-foreground font-mono">RUC: {c.ruc}</div>
                                                                 </div>
-                                                                <span className="text-[10px] text-indigo-600 font-bold uppercase">Seleccionar</span>
+                                                                <span className="text-[10px] text-info font-bold uppercase">Seleccionar</span>
                                                             </button>
                                                         ))
                                                     ) : (
@@ -687,7 +691,7 @@ export function QuickSalePOS({
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => setClienteId('')}
-                                                className="text-indigo-600 hover:text-indigo-800 text-[10px] font-bold h-8"
+                                                className="text-info hover:text-info text-[10px] font-bold h-8"
                                             >
                                                 Cambiar
                                             </Button>
@@ -719,7 +723,7 @@ export function QuickSalePOS({
 
                             {/* Limits Info */}
                             <div className="flex items-center gap-2 text-[10px] text-muted-foreground bg-muted p-2.5 rounded-lg border border-border/80">
-                                <Zap className="h-3.5 w-3.5 text-indigo-500 fill-indigo-100" />
+                                <Zap className="h-3.5 w-3.5 text-info fill-info/20" />
                                 <span>Folios mensuales incluidos: {remainingDocuments} restantes.</span>
                             </div>
 
@@ -759,7 +763,7 @@ export function QuickSalePOS({
             {/* Success ticket sharing Modal */}
             {successInvoice && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl border border-border dark:border-border shadow-2xl p-6 relative font-sans">
+                    <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-2xl p-6 relative font-sans">
                         <button
                             onClick={() => setSuccessInvoice(null)}
                             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
@@ -769,7 +773,7 @@ export function QuickSalePOS({
 
                         <div className="space-y-6">
                             <div className="text-center space-y-2">
-                                <div className="mx-auto w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-500 mb-2">
+                                <div className="mx-auto w-12 h-12 rounded-full bg-success-bg flex items-center justify-center text-success mb-2">
                                     <svg className="w-6 h-6 stroke-current" fill="none" viewBox="0 0 24 24" strokeWidth="2.5">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -783,7 +787,7 @@ export function QuickSalePOS({
                             <div className="bg-muted dark:bg-card/50 border border-border dark:border-border rounded-xl p-4 space-y-2.5 text-xs">
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground dark:text-muted-foreground font-medium">Factura No:</span>
-                                    <span className="font-mono font-bold text-brand-1 dark:text-blue-400">{successInvoice.numeroCompleto}</span>
+                                    <span className="font-mono font-bold text-brand-1">{successInvoice.numeroCompleto}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground dark:text-muted-foreground font-medium">Monto Recibido:</span>
@@ -801,7 +805,7 @@ export function QuickSalePOS({
                                         href={whatsappUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="h-11 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98"
+                                        className="h-11 px-4 rounded-xl bg-success hover:bg-success/90 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98"
                                     >
                                         <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
                                             <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.062 5.248 5.308 0 11.777 0c3.137 0 6.085 1.22 8.302 3.439 2.219 2.219 3.438 5.168 3.436 8.307-.005 6.522-5.252 11.77-11.72 11.77-2.002-.001-3.97-.512-5.713-1.488L0 24zm6.59-4.859c1.72.1.085-.34 2.82.28 1.48.33 2.92.51 4.38.51 5.388 0 9.77-4.386 9.773-9.775.002-2.61-1.014-5.064-2.865-6.916C17.95 1.42 15.5 .4 12.89.4 7.502.4 3.12 4.78 3.117 10.165c-.002 1.63.39 3.22 1.13 4.64l.16.29-1.01 3.69 3.79-.99.3.18c1.35.8 2.9 1.22 4.47 1.22zM17.3 14.3c-.3-.15-1.78-.88-2.06-.98-.28-.1-.49-.15-.69.15-.2.3-.77.98-.95 1.18-.18.2-.36.23-.66.08-1.54-.77-2.58-1.34-3.56-3.03-.26-.45.26-.42.74-1.38.08-.16.04-.3-.02-.45-.06-.15-.49-1.18-.67-1.62-.18-.43-.37-.37-.5-.38l-.43-.01c-.15 0-.39.06-.6.28-.2.22-.8.78-.8 1.9s.82 2.2 1.05 2.5c.23.3 1.6 2.44 3.88 3.42.54.23 1 .37 1.34.48.55.17 1.05.15 1.44.09.44-.06 1.35-.55 1.54-1.08.19-.53.19-1 .13-1.08-.07-.08-.26-.13-.56-.28z"/>

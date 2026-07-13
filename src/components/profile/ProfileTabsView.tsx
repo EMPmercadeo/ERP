@@ -140,18 +140,18 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
         <div className="mx-auto max-w-5xl space-y-6 sm:space-y-8">
             {/* Super Admin Banner */}
             {effectiveRole === 'super_admin' && (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-amber-200 bg-amber-50/80 shadow-sm text-amber-900">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-warning/30 bg-warning-bg shadow-sm text-warning">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-white shadow-sm">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-warning text-white shadow-sm">
                             <Shield className="h-5 w-5" />
                         </div>
                         <div>
                             <h3 className="font-semibold text-base">Modo Super Admin Activo</h3>
-                            <p className="text-xs text-amber-800">Tienes privilegios globales para gestionar todas las empresas, usuarios y facturación del sistema.</p>
+                            <p className="text-xs text-warning/80">Tienes privilegios globales para gestionar todas las empresas, usuarios y facturación del sistema.</p>
                         </div>
                     </div>
                     <Link href="/admin">
-                        <Button className="bg-amber-600 hover:bg-amber-700 text-white shadow-sm">
+                        <Button className="bg-warning hover:bg-warning/90 text-white shadow-sm">
                             Ir al Panel de Administración
                             <ArrowRight className="h-4 w-4 ml-2" />
                         </Button>
@@ -169,18 +169,18 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                     <h2 className="text-3xl font-bold tracking-tight">{displayName}</h2>
                     <p className="text-muted-foreground font-medium">{user?.email || overviewData?.user?.email}</p>
                     <div className="flex flex-wrap justify-center md:justify-start gap-2 pt-1">
-                        <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-700/10 uppercase tracking-wide">
+                        <span className="inline-flex items-center rounded-full bg-info-bg px-3 py-1 text-xs font-semibold text-info ring-1 ring-inset ring-info/20 uppercase tracking-wide">
                             {roleLabel}
                         </span>
-                        <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
+                        <span className="inline-flex items-center rounded-full bg-success-bg px-3 py-1 text-xs font-semibold text-success ring-1 ring-inset ring-success/20">
                             Cuenta Activa
                         </span>
                         {isEmailVerified ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-success-bg px-3 py-1 text-xs font-semibold text-success ring-1 ring-inset ring-success/20">
                                 <MailCheck className="h-3 w-3" /> Correo Verificado
                             </span>
                         ) : (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-warning-bg px-3 py-1 text-xs font-semibold text-warning ring-1 ring-inset ring-warning/20">
                                 <MailWarning className="h-3 w-3" /> Correo sin verificar
                             </span>
                         )}
@@ -278,10 +278,10 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                         </Card>
 
                         {/* Security Form */}
-                        <Card className="h-fit border-orange-100">
+                        <Card className="h-fit border-warning/30">
                             <CardHeader>
                                 <div className="flex items-center gap-2">
-                                    <Lock className="h-5 w-5 text-orange-600" />
+                                    <Lock className="h-5 w-5 text-warning" />
                                     <CardTitle>Seguridad y Contraseña</CardTitle>
                                 </div>
                                 <CardDescription>
@@ -414,7 +414,7 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                             <Card>
                                 <CardHeader>
                                     <div className="flex items-center gap-2">
-                                        <FileText className="h-5 w-5 text-blue-600" />
+                                        <FileText className="h-5 w-5 text-info" />
                                         <CardTitle>Facturación Electrónica y DGI</CardTitle>
                                     </div>
                                     <CardDescription>Estado de conexión y folios fiscales disponibles</CardDescription>
@@ -441,16 +441,16 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                                     </div>
 
                                     {overviewData.billing && (
-                                        <div className="space-y-2 p-4 rounded-lg border border-blue-100 bg-blue-50/50">
+                                        <div className="space-y-2 p-4 rounded-lg border border-info/20 bg-info-bg/70">
                                             <div className="flex justify-between text-sm font-medium">
                                                 <span>Saldo de Folios FE</span>
-                                                <span className="text-blue-700 font-bold">
+                                                <span className="text-info font-bold">
                                                     {overviewData.billing.foliosRemaining} disponibles
                                                 </span>
                                             </div>
                                             <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
                                                 <div
-                                                    className="bg-blue-600 h-full rounded-full transition-all"
+                                                    className="bg-info h-full rounded-full transition-all"
                                                     style={{
                                                         width: `${Math.min(100, Math.round((overviewData.billing.foliosUsed / Math.max(1, overviewData.billing.foliosIncluded + overviewData.billing.foliosExtra)) * 100))}%`
                                                     }}
@@ -481,7 +481,7 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                             <Card>
                                 <CardHeader>
                                     <div className="flex items-center gap-2">
-                                        <CreditCard className="h-5 w-5 text-emerald-600" />
+                                        <CreditCard className="h-5 w-5 text-success" />
                                         <CardTitle>Plan y Suscripción</CardTitle>
                                     </div>
                                     <CardDescription>Resumen de tu suscripción en ERP Panamá</CardDescription>

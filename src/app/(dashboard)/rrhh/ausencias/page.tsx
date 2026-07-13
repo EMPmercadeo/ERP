@@ -177,19 +177,19 @@ export default function AusenciasPage() {
                 <div className="flex flex-wrap bg-muted p-1 rounded-md border border-border">
                   <button
                     onClick={() => setFiltroEstado('PENDIENTE')}
-                    className={`px-3 py-1 text-xs rounded transition-all ${filtroEstado === 'PENDIENTE' ? 'bg-amber-500 text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`px-3 py-1 text-xs rounded transition-all ${filtroEstado === 'PENDIENTE' ? 'bg-warning text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     Pendientes
                   </button>
                   <button
                     onClick={() => setFiltroEstado('APROBADA')}
-                    className={`px-3 py-1 text-xs rounded transition-all ${filtroEstado === 'APROBADA' ? 'bg-emerald-500 text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`px-3 py-1 text-xs rounded transition-all ${filtroEstado === 'APROBADA' ? 'bg-success text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     Aprobadas
                   </button>
                   <button
                     onClick={() => setFiltroEstado('RECHAZADA')}
-                    className={`px-3 py-1 text-xs rounded transition-all ${filtroEstado === 'RECHAZADA' ? 'bg-red-500 text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`px-3 py-1 text-xs rounded transition-all ${filtroEstado === 'RECHAZADA' ? 'bg-danger text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     Rechazadas
                   </button>
@@ -224,7 +224,7 @@ export default function AusenciasPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge className={
                           aus.tipo === 'VACACIONES' ? 'bg-brand-1/10 text-brand-1 border border-brand-1/30' :
-                          aus.tipo === 'ENFERMEDAD' || aus.tipo === 'MATERNIDAD' ? 'bg-purple-50 text-purple-600 border border-purple-200' :
+                          aus.tipo === 'ENFERMEDAD' || aus.tipo === 'MATERNIDAD' ? 'bg-info-bg text-info border-transparent' :
                           'bg-muted text-muted-foreground border border-border'
                         }>
                           {aus.tipo}
@@ -249,9 +249,9 @@ export default function AusenciasPage() {
                       )}
 
                       <Badge className={
-                        aus.estado === 'APROBADA' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-bold' :
-                        aus.estado === 'RECHAZADA' ? 'bg-red-50 text-red-600 border border-red-200 text-xs font-bold' :
-                        'bg-amber-50 text-amber-600 border border-amber-200 text-xs font-bold animate-pulse'
+                        aus.estado === 'APROBADA' ? 'bg-success-bg text-success border-transparent text-xs font-bold' :
+                        aus.estado === 'RECHAZADA' ? 'bg-danger-bg text-danger border-transparent text-xs font-bold' :
+                        'bg-warning-bg text-warning border-transparent text-xs font-bold animate-pulse'
                       }>
                         {aus.estado}
                       </Badge>
@@ -261,7 +261,7 @@ export default function AusenciasPage() {
                           <Button
                             size="sm"
                             onClick={() => handleResolver(aus.id, 'APROBADA')}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 px-3"
+                            className="bg-success hover:bg-success/90 text-white font-bold text-xs h-8 px-3"
                           >
                             <CheckCircle className="h-3.5 w-3.5 mr-1" /> Aprobar
                           </Button>
@@ -300,7 +300,7 @@ export default function AusenciasPage() {
             <form onSubmit={handleCrearAusencia}>
               <CardContent className="space-y-4 pt-4 text-xs">
                 {errorModal && (
-                  <div className="p-3 rounded bg-red-50 border border-red-200 text-red-600 flex items-center gap-2">
+                  <div className="p-3 rounded bg-danger-bg border border-danger/30 text-danger flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                     <span>{errorModal}</span>
                   </div>
@@ -360,13 +360,13 @@ export default function AusenciasPage() {
                 </div>
                 {(tipo === 'ENFERMEDAD' || tipo === 'MATERNIDAD') && (
                   <div>
-                    <label className="font-semibold text-purple-600 block mb-1">URL / Enlace Certificado Médico o CSS (*Obligatorio):</label>
+                    <label className="font-semibold text-info block mb-1">URL / Enlace Certificado Médico o CSS (*Obligatorio):</label>
                     <Input
                       required
                       placeholder="https://... certificado_css.pdf"
                       value={docUrl}
                       onChange={(e) => setDocUrl(e.target.value)}
-                      className="bg-muted/50 border-purple-300"
+                      className="bg-muted/50 border-info/40"
                     />
                   </div>
                 )}

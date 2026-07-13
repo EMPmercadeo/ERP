@@ -100,11 +100,11 @@ const getInitials = (name: string) => {
 };
 
 const palette = [
-    'from-brand-1 to-brand-2 text-white',
-    'from-emerald-500 to-teal-400 text-white',
-    'from-amber-500 to-orange-400 text-white',
-    'from-blue-600 to-cyan-400 text-white',
-    'from-rose-500 to-red-400 text-white',
+    'bg-brand-1 text-white',
+    'bg-success text-white',
+    'bg-warning text-white',
+    'bg-info text-white',
+    'bg-danger text-white',
 ];
 
 export function SupplierList({ 
@@ -281,7 +281,7 @@ export function SupplierList({
                                 placeholder="Buscar por nombre, RUC, correo..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="pl-8 bg-white h-9 text-xs"
+                                className="pl-8 bg-card h-9 text-xs"
                             />
                         </div>
 
@@ -289,7 +289,7 @@ export function SupplierList({
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="w-full h-9 rounded-md border border-input bg-white px-3 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                className="w-full h-9 rounded-md border border-input bg-card px-3 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
                             >
                                 <option value="todos">Estado: Todos</option>
                                 <option value="activo">Activos</option>
@@ -303,7 +303,7 @@ export function SupplierList({
                             <select
                                 value={saldoFilter}
                                 onChange={(e) => setSaldoFilter(e.target.value)}
-                                className="w-full h-9 rounded-md border border-input bg-white px-3 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                className="w-full h-9 rounded-md border border-input bg-card px-3 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
                             >
                                 <option value="todos">Saldos: Todos</option>
                                 <option value="con_saldo">Con Saldo Pendiente</option>
@@ -315,7 +315,7 @@ export function SupplierList({
                             <select
                                 value={termsFilter}
                                 onChange={(e) => setTermsFilter(e.target.value)}
-                                className="w-full h-9 rounded-md border border-input bg-white px-3 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                className="w-full h-9 rounded-md border border-input bg-card px-3 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
                             >
                                 <option value="todos">Términos: Todos</option>
                                 <option value="Contado">Contado</option>
@@ -351,7 +351,7 @@ export function SupplierList({
                                             <TableRow key={s.id} className="hover:bg-accent/60">
                                                 <TableCell>
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0`}>
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${gradClass} shrink-0`}>
                                                             {getInitials(s.razonSocial)}
                                                         </div>
                                                         <div>
@@ -502,7 +502,7 @@ export function SupplierList({
                                     <div key={s.id} className="bg-muted/60 border border-border rounded-xl p-3.5 space-y-3 shadow-sm">
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="flex items-center gap-2.5 min-w-0">
-                                                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0`}>
+                                                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${gradClass} shrink-0`}>
                                                     {getInitials(s.razonSocial)}
                                                 </div>
                                                 <div className="min-w-0">

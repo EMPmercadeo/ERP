@@ -162,7 +162,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                         <div className="p-3 bg-brand-1/10 text-brand-2 rounded-lg shrink-0">
                             {planType === 'free' && <Sparkles className="h-6 w-6" />}
                             {planType === 'basic' && <Zap className="h-6 w-6" />}
-                            {planType === 'pro' && <Zap className="h-6 w-6 animate-pulse text-amber-500" />}
+                            {planType === 'pro' && <Zap className="h-6 w-6 animate-pulse text-warning" />}
                             {planType === 'enterprise' && <Building className="h-6 w-6 text-brand-1" />}
                         </div>
                         <div>
@@ -202,7 +202,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                         onClick={() => setBillingCycle('monthly')}
                         className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
                             billingCycle === 'monthly'
-                                ? 'bg-white text-foreground shadow-sm'
+                                ? 'bg-card text-foreground shadow-sm'
                                 : 'text-muted-foreground hover:text-foreground'
                         }`}
                     >
@@ -256,7 +256,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                                     <span>{plan.name}</span>
                                     {plan.id === 'free' && <Sparkles className="h-5 w-5 text-brand-1" />}
                                     {plan.id === 'basic' && <Zap className="h-5 w-5 text-brand-1" />}
-                                    {plan.id === 'pro' && <Zap className="h-5 w-5 text-amber-500" />}
+                                    {plan.id === 'pro' && <Zap className="h-5 w-5 text-warning" />}
                                     {plan.id === 'enterprise' && <Building className="h-5 w-5 text-muted-foreground" />}
                                 </CardTitle>
                                 <CardDescription className="min-h-[40px] mt-2">
@@ -303,7 +303,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                                             ? 'bg-muted text-muted-foreground border-none cursor-default hover:bg-muted'
                                             : plan.highlight
                                                 ? 'bg-brand-1 hover:bg-brand-2 text-white shadow-sm hover:shadow-md'
-                                                : 'border-brand-1/20 text-brand-2 bg-white hover:bg-brand-1/50'
+                                                : 'border-brand-1/20 text-brand-2 bg-card hover:bg-brand-1/50'
                                     }`}
                                     variant={plan.variant}
                                     disabled={isCurrent || isPlanLoading}

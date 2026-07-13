@@ -510,12 +510,12 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                         value={precioVenta}
                                                         onChange={(e) => setPrecioVenta(e.target.value)}
                                                         required
-                                                        className={cn("h-10 text-xs sm:text-sm pl-7 pr-12 bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.precioVenta && "border-red-500")}
+                                                        className={cn("h-10 text-xs sm:text-sm pl-7 pr-12 bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.precioVenta && "border-danger")}
                                                         placeholder="0.00"
                                                     />
                                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground">USD</span>
                                                 </div>
-                                                {state?.errors?.precioVenta && <p className="text-[10px] text-red-500 font-bold mt-0.5">{state.errors.precioVenta[0]}</p>}
+                                                {state?.errors?.precioVenta && <p className="text-[10px] text-danger font-bold mt-0.5">{state.errors.precioVenta[0]}</p>}
                                             </div>
                                         </div>
 
@@ -806,6 +806,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                                         onClick={() => handleMove(idx, 'left')}
                                                                         className="h-7 flex-1 text-muted-foreground border-border"
                                                                         title="Mover Izquierda"
+                                                                        aria-label="Mover imagen a la izquierda"
                                                                     >
                                                                         ←
                                                                     </Button>
@@ -817,6 +818,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                                         onClick={() => handleMove(idx, 'right')}
                                                                         className="h-7 flex-1 text-muted-foreground border-border"
                                                                         title="Mover Derecha"
+                                                                        aria-label="Mover imagen a la derecha"
                                                                     >
                                                                         →
                                                                     </Button>
@@ -1304,7 +1306,7 @@ function KitTab({ productoId, initialEsKit }: { productoId: string; initialEsKit
                                         <TableCell className="py-2 text-xs text-right font-mono text-muted-foreground">{formatCurrency(c.costoUnitario)}</TableCell>
                                         <TableCell className="py-2 text-xs text-right font-mono font-bold text-foreground">{formatCurrency(c.costoUnitario * c.cantidad)}</TableCell>
                                         <TableCell className="py-2 text-right">
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeComponente(c.productoComponenteId)} className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeComponente(c.productoComponenteId)} className="h-7 w-7 text-muted-foreground hover:text-destructive" aria-label="Eliminar componente">
                                                 <Trash2 className="h-3.5 w-3.5" />
                                             </Button>
                                         </TableCell>

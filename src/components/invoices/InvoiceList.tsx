@@ -86,12 +86,12 @@ const getInitials = (name: string) => {
 };
 
 const palette = [
-    'from-blue-600 to-teal-400 text-white',
-    'from-emerald-500 to-teal-400 text-white',
-    'from-amber-500 to-orange-400 text-white',
-    'from-brand-1 to-brand-2 text-white',
-    'from-rose-500 to-red-400 text-white',
-    'from-primary to-primary/80 text-white'
+    'bg-info text-white',
+    'bg-success text-white',
+    'bg-warning text-white',
+    'bg-brand-1 text-white',
+    'bg-danger text-white',
+    'bg-primary text-white'
 ];
 
 
@@ -229,7 +229,7 @@ export function InvoiceList({
                 const gradClass = palette[row.index % palette.length];
                 return (
                     <div className="flex items-center gap-3">
-                        <div className={`w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
+                        <div className={`w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold ${gradClass} shrink-0 select-none`}>
                             {initials}
                         </div>
                         <div className="flex flex-col min-w-0">
@@ -651,7 +651,7 @@ export function InvoiceList({
                                         >
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="flex items-center gap-2.5 min-w-0">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ${gradClass} shrink-0 select-none`}>
                                                         {initials}
                                                     </div>
                                                     <div className="min-w-0">
@@ -708,7 +708,7 @@ export function InvoiceList({
             {/* Modal de Compartir Factura Creada */}
             {showShareModal && shareInvoiceId && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl border border-border dark:border-border shadow-2xl p-6 relative font-sans">
+                    <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-2xl p-6 relative font-sans">
                         <button
                             onClick={() => router.replace('/invoices')}
                             aria-label="Cerrar"
@@ -733,7 +733,7 @@ export function InvoiceList({
                             <div className="bg-muted dark:bg-card/50 border border-border dark:border-border rounded-xl p-4 space-y-2.5 text-xs">
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground dark:text-muted-foreground font-medium">No. Documento:</span>
-                                    <span className="font-mono font-bold text-brand-1 dark:text-blue-400">{shareInvoiceNum}</span>
+                                    <span className="font-mono font-bold text-brand-1">{shareInvoiceNum}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground dark:text-muted-foreground font-medium">Total Facturado:</span>

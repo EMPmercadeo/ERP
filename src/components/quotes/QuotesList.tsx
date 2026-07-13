@@ -79,12 +79,12 @@ const getInitials = (name: string) => {
 };
 
 const palette = [
-    'from-blue-600 to-teal-400 text-white',
-    'from-emerald-500 to-teal-400 text-white',
-    'from-amber-500 to-orange-400 text-white',
-    'from-brand-1 to-brand-2 text-white',
-    'from-rose-500 to-red-400 text-white',
-    'from-primary to-primary/80 text-white'
+    'bg-info text-white',
+    'bg-success text-white',
+    'bg-warning text-white',
+    'bg-brand-1 text-white',
+    'bg-danger text-white',
+    'bg-primary text-white'
 ];
 
 function formatCurrency(value: number) {
@@ -208,7 +208,7 @@ export function QuotesList({
                 const gradClass = palette[row.index % palette.length];
                 return (
                     <div className="flex items-center gap-3">
-                        <div className={`w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
+                        <div className={`w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold ${gradClass} shrink-0 select-none`}>
                             {initials}
                         </div>
                         <div className="flex flex-col min-w-0">

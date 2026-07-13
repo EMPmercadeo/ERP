@@ -24,7 +24,7 @@ export default async function SettingsPage() {
     if (!empresaId) {
         return (
             <ContentContainer className="py-8">
-                <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-900 shadow-sm max-w-2xl mx-auto my-12">
+                <div className="rounded-lg border border-danger/30 bg-danger-bg p-6 text-danger shadow-sm max-w-2xl mx-auto my-12">
                     <h2 className="text-xl font-bold mb-2">Identificador de Empresa Inválido</h2>
                     <p className="text-sm">
                         No se ha podido determinar el identificador de la empresa activa para su sesión. Por favor, intente iniciar sesión de nuevo.
@@ -69,10 +69,10 @@ export default async function SettingsPage() {
     if (!empresa) {
         return (
             <ContentContainer className="py-8">
-                <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-900 shadow-sm max-w-2xl mx-auto my-12">
+                <div className="rounded-lg border border-danger/30 bg-danger-bg p-6 text-danger shadow-sm max-w-2xl mx-auto my-12">
                     <h2 className="text-xl font-bold mb-2">Empresa no encontrada</h2>
                     <p className="text-sm mb-4">
-                        No se pudo encontrar la empresa con ID <code className="bg-red-100 px-1 py-0.5 rounded">{empresaId}</code> asociada a su sesión.
+                        No se pudo encontrar la empresa con ID <code className="bg-danger-bg/80 px-1 py-0.5 rounded">{empresaId}</code> asociada a su sesión.
                     </p>
                     <p className="text-sm">
                         Por favor, intente iniciar sesión de nuevo o contacte a soporte para verificar el estado de su cuenta.

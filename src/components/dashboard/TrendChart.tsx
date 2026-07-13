@@ -45,7 +45,7 @@ export function TrendChart({ data }: TrendChartProps) {
 
     if (!data || data.length === 0) {
         return (
-            <Card className="flex h-full flex-col bg-white shadow-premium border border-border rounded-2xl overflow-hidden transition-premium">
+            <Card className="flex h-full flex-col bg-card shadow-premium border border-border rounded-2xl overflow-hidden transition-premium">
                 <CardContent className="flex flex-1 items-center justify-center text-muted-foreground text-sm py-10">
                     No hay datos de tendencia disponibles
                 </CardContent>
@@ -87,7 +87,7 @@ export function TrendChart({ data }: TrendChartProps) {
     }
 
     return (
-        <Card className="flex h-full flex-col bg-white shadow-premium border border-border rounded-2xl overflow-hidden transition-premium">
+        <Card className="flex h-full flex-col bg-card shadow-premium border border-border rounded-2xl overflow-hidden transition-premium">
             <div className="flex flex-row items-center justify-between border-b border-border/50 p-5">
                 <div className="space-y-1">
                     <h3 className="text-base font-semibold text-foreground">Tendencia de Ventas</h3>
@@ -112,13 +112,6 @@ export function TrendChart({ data }: TrendChartProps) {
                         preserveAspectRatio="none"
                         aria-hidden="true"
                     >
-                        <defs>
-                            <linearGradient id="gF" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0" stopColor="var(--info)" stopOpacity={0.24} />
-                                <stop offset="1" stopColor="var(--info)" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-
                         {/* Grid lines and values */}
                         {gridLines.map((gl, i) => (
                             <g key={i}>
@@ -153,7 +146,7 @@ export function TrendChart({ data }: TrendChartProps) {
                         ))}
 
                         {/* Area */}
-                        {areaF && <path d={areaF} fill="url(#gF)" />}
+                        {areaF && <path d={areaF} fill="var(--info)" fillOpacity={0.08} />}
 
                         {/* Cobrado line (Dashed) */}
                         {dC && (
@@ -167,7 +160,7 @@ export function TrendChart({ data }: TrendChartProps) {
                             />
                         )}
 
-                        {/* Facturado line (Solid Gradient) */}
+                        {/* Facturado line (Solid) */}
                         {dF && (
                             <path
                                 d={dF}

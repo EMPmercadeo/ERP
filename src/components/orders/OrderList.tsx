@@ -189,7 +189,7 @@ export function OrderList({
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 gap-1"
+                                                            className="text-success border-success/30 hover:bg-success-bg gap-1"
                                                             onClick={() => handleStatusChange(order.id, 'en_proceso')}
                                                         >
                                                             <Clock className="h-3.5 w-3.5" />
@@ -200,7 +200,7 @@ export function OrderList({
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="text-blue-600 border-blue-200 hover:bg-blue-50 gap-1"
+                                                            className="text-info border-info/30 hover:bg-info-bg gap-1"
                                                             onClick={() => handleStatusChange(order.id, 'entregado')}
                                                         >
                                                             <CheckCircle className="h-3.5 w-3.5" />
@@ -258,7 +258,7 @@ export function OrderList({
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="h-8 text-[10px] font-bold text-emerald-600 border-emerald-200 hover:bg-emerald-50 rounded-lg gap-1"
+                                                className="h-8 text-[10px] font-bold text-success border-success/30 hover:bg-success-bg rounded-lg gap-1"
                                                 onClick={() => handleStatusChange(order.id, 'en_proceso')}
                                             >
                                                 <Clock className="h-3.5 w-3.5" />
@@ -269,7 +269,7 @@ export function OrderList({
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="h-8 text-[10px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 rounded-lg gap-1"
+                                                className="h-8 text-[10px] font-bold text-info border-info/30 hover:bg-info-bg rounded-lg gap-1"
                                                 onClick={() => handleStatusChange(order.id, 'entregado')}
                                             >
                                                 <CheckCircle className="h-3.5 w-3.5" />

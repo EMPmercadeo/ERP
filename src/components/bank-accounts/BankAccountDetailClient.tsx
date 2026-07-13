@@ -90,7 +90,7 @@ export function BankAccountDetailClient({
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                     <Link href="/bank-accounts">
-                        <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Volver a cuentas bancarias">
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </Link>
@@ -129,7 +129,7 @@ export function BankAccountDetailClient({
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Saldo Actual (calculado)</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-emerald-600">{formatCurrency(saldoActual)}</div>
+                        <div className="text-2xl font-bold text-success">{formatCurrency(saldoActual)}</div>
                     </CardContent>
                 </Card>
                 <Card className="shadow-sm">
@@ -137,7 +137,7 @@ export function BankAccountDetailClient({
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Movimientos sin conciliar</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-amber-600">{pendientesConciliar}</div>
+                        <div className="text-2xl font-bold text-warning">{pendientesConciliar}</div>
                     </CardContent>
                 </Card>
                 <Card className="shadow-sm">
@@ -177,13 +177,13 @@ export function BankAccountDetailClient({
                                                     {m.tipo === 'DEPOSITO' ? 'Depósito' : 'Retiro'}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className={`text-right font-mono text-xs font-bold ${m.tipo === 'DEPOSITO' ? 'text-emerald-600' : 'text-red-600'}`}>
+                                            <TableCell className={`text-right font-mono text-xs font-bold ${m.tipo === 'DEPOSITO' ? 'text-success' : 'text-danger'}`}>
                                                 {m.tipo === 'DEPOSITO' ? '+' : '-'}{formatCurrency(m.monto)}
                                             </TableCell>
                                             <TableCell className="text-xs text-muted-foreground">{m.origenImportacion || 'Manual'}</TableCell>
                                             <TableCell>
                                                 {m.conciliado ? (
-                                                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                                    <CheckCircle2 className="h-4 w-4 text-success" />
                                                 ) : (
                                                     <Circle className="h-4 w-4 text-muted-foreground" />
                                                 )}

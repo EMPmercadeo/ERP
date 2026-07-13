@@ -5,7 +5,7 @@ import { getTenantContext } from '@/lib/auth/context';
 import Link from 'next/link';
 import { Plus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/ui/status-badge';
 import {
     Table,
     TableBody,
@@ -46,10 +46,10 @@ export default async function CreditNotesListPage() {
             <ContentContainer>
                 <div className="space-y-6 max-w-7xl mx-auto pb-12">
                     {/* Header */}
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-border shadow-sm">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card p-6 rounded-2xl border border-border shadow-sm">
                         <div>
                             <h1 className="text-2xl font-extrabold text-foreground flex items-center gap-2.5">
-                                <FileText className="h-7 w-7 text-red-600" />
+                                <FileText className="h-7 w-7 text-danger" />
                                 Notas de Crédito y Devoluciones (DGI)
                             </h1>
                             <p className="text-sm text-muted-foreground mt-0.5">
@@ -57,7 +57,7 @@ export default async function CreditNotesListPage() {
                             </p>
                         </div>
                         <Link href="/credit-notes/new">
-                            <Button className="bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md flex items-center gap-2">
+                            <Button className="bg-danger hover:bg-danger/90 text-white font-bold px-5 py-2.5 rounded-xl shadow-md flex items-center gap-2">
                                 <Plus className="h-5 w-5" />
                                 Nueva Nota de Crédito
                             </Button>
@@ -65,7 +65,7 @@ export default async function CreditNotesListPage() {
                     </div>
 
                     {/* Tabla de Notas de Crédito */}
-                    <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+                    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
                         <Table>
                             <TableHeader className="bg-muted text-xs text-muted-foreground font-bold uppercase">
                                 <TableRow>
@@ -109,7 +109,7 @@ export default async function CreditNotesListPage() {
                                             </TableCell>
                                             <TableCell className="text-xs text-muted-foreground">
                                                 {nc.facturaOrigen ? (
-                                                    <span className="font-semibold text-blue-600">{nc.facturaOrigen.numeroCompleto}</span>
+                                                    <span className="font-semibold text-info">{nc.facturaOrigen.numeroCompleto}</span>
                                                 ) : (
                                                     <span className="text-muted-foreground font-mono">Ref. Externa / CUFE</span>
                                                 )}
@@ -118,19 +118,9 @@ export default async function CreditNotesListPage() {
                                                 {nc.motivoAnulacion || 'Devolución fiscal'}
                                             </TableCell>
                                             <TableCell>
-                                                <Badge
-                                                    className={`text-[10px] font-bold ${
-                                                        nc.estadoDgi === 'aceptada' || nc.estadoDgi === 'pagada'
-                                                            ? 'bg-green-100 text-green-800 border-green-200'
-                                                            : nc.estadoDgi === 'pendiente'
-                                                            ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                                                            : 'bg-muted text-foreground border-border'
-                                                    }`}
-                                                >
-                                                    {nc.estadoDgi.toUpperCase()}
-                                                </Badge>
+                                                <StatusBadge status={nc.estadoDgi} className="text-[10px]" />
                                             </TableCell>
-                                            <TableCell className="text-right pr-6 font-extrabold text-red-600">
+                                            <TableCell className="text-right pr-6 font-extrabold text-danger">
                                                 {formatCurrency(Number(nc.totalNeto))}
                                             </TableCell>
                                         </TableRow>

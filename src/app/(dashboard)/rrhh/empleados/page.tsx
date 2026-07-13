@@ -303,19 +303,19 @@ export default function EmpleadosRRHHPage() {
                         <TableCell className="text-xs">{emp.tipoContrato}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{new Date(emp.fechaIngreso).toLocaleDateString('es-PA')}</TableCell>
                         <TableCell>
-                          <Badge className={emp.activo ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}>
+                          <Badge className={emp.activo ? 'bg-success-bg text-success border-transparent' : 'bg-danger-bg text-danger border-transparent'}>
                             {emp.activo ? 'Activo' : 'Baja'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-center text-xs">
                           <span className="inline-flex items-center gap-1">
-                            <Calendar className="h-3.5 w-3.5 text-amber-500" />
+                            <Calendar className="h-3.5 w-3.5 text-warning" />
                             {emp._count?.ausencias || 0}
                           </span>
                         </TableCell>
                         <TableCell className="text-center text-xs">
                           <span className="inline-flex items-center gap-1">
-                            <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
+                            <AlertTriangle className="h-3.5 w-3.5 text-danger" />
                             {emp._count?.actas || 0}
                           </span>
                         </TableCell>
@@ -382,7 +382,7 @@ export default function EmpleadosRRHHPage() {
             <form onSubmit={handleCrearEmpleado}>
               <CardContent className="space-y-4 pt-4">
                 {errorModal && (
-                  <div className="p-3 rounded bg-red-50 border border-red-200 text-red-600 text-xs">
+                  <div className="p-3 rounded bg-danger-bg border border-danger/30 text-danger text-xs">
                     {errorModal}
                   </div>
                 )}

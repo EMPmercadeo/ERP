@@ -225,9 +225,9 @@ Al crear o editar productos:
                                                     <span className={cn(
                                                         "text-[9px] font-extrabold uppercase px-2 py-0.5 rounded",
                                                         art.category === 'dgi' && "text-brand-1 bg-brand-1/5",
-                                                        art.category === 'billing' && "text-amber-600 bg-amber-50",
-                                                        art.category === 'catalog' && "text-emerald-600 bg-emerald-50",
-                                                        art.category === 'api' && "text-blue-600 bg-blue-50"
+                                                        art.category === 'billing' && "text-warning bg-warning-bg",
+                                                        art.category === 'catalog' && "text-success bg-success-bg",
+                                                        art.category === 'api' && "text-info bg-info-bg"
                                                     )}>
                                                         {categories.find(c => c.id === art.category)?.name}
                                                     </span>

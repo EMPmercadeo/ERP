@@ -134,7 +134,7 @@ export function NewBankAccountModal({ cuentasContables }: { cuentasContables: Cu
                             </SelectContent>
                         </Select>
                         {cuentasContables.length === 0 && (
-                            <p className="text-xs text-amber-600 mt-1">
+                            <p className="text-xs text-warning mt-1">
                                 No hay cuentas de bancos (código 1.1.01.x) disponibles en el plan de cuentas.
                             </p>
                         )}

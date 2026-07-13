@@ -189,7 +189,7 @@ export default async function ReporteZPage({
                                         <span className="font-medium">{t.cajero}</span>{' '}
                                         <span className="text-muted-foreground">— {fmt(t.fechaApertura)}</span>
                                     </span>
-                                    <span className={`text-[11px] px-2 py-0.5 rounded-full ${t.estado === 'abierto' ? 'bg-amber-100 text-amber-700' : 'bg-muted text-muted-foreground'}`}>
+                                    <span className={`text-[11px] px-2 py-0.5 rounded-full ${t.estado === 'abierto' ? 'bg-warning-bg text-warning' : 'bg-muted text-muted-foreground'}`}>
                                         {t.estado}
                                     </span>
                                 </Link>

@@ -89,7 +89,7 @@ export function ReconcileClient({
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                     <Link href={`/bank-accounts/${cuentaId}`}>
-                        <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Volver a la cuenta bancaria">
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </Link>
@@ -138,7 +138,7 @@ export function ReconcileClient({
                                         </Badge>
                                     </div>
                                     <p className="text-sm font-medium text-foreground mt-1">{m.descripcion}</p>
-                                    <p className={cn('font-mono text-sm font-bold mt-1', m.tipo === 'DEPOSITO' ? 'text-emerald-600' : 'text-red-600')}>
+                                    <p className={cn('font-mono text-sm font-bold mt-1', m.tipo === 'DEPOSITO' ? 'text-success' : 'text-danger')}>
                                         {m.tipo === 'DEPOSITO' ? '+' : '-'}{formatCurrency(m.monto)}
                                     </p>
                                 </button>

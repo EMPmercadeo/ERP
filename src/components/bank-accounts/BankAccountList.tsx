@@ -125,7 +125,7 @@ export function BankAccountList({
                             placeholder="Buscar por nombre, banco o número de cuenta..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="pl-8 bg-white h-9 text-xs"
+                            className="pl-8 bg-card h-9 text-xs"
                         />
                     </div>
 

@@ -88,7 +88,7 @@ export function CompanyList({
                 </div>
             </div>
 
-            <div className="rounded-md border bg-white shadow">
+            <div className="rounded-md border bg-card shadow">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -129,15 +129,16 @@ export function CompanyList({
                                                 const res = await startImpersonation(company.id);
                                                 return res;
                                             }}>
-                                                <Button size="icon" variant="ghost" type="submit" className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50" title="Impersonar">
+                                                <Button size="icon" variant="ghost" type="submit" className="h-8 w-8 text-warning hover:text-warning hover:bg-warning-bg" title="Impersonar" aria-label={`Impersonar empresa ${company.razonSocial}`}>
                                                     <Shield className="h-4 w-4" />
                                                 </Button>
                                             </form>
                                             <Button
                                                 size="icon"
                                                 variant="ghost"
-                                                className={`h-8 w-8 ${company.status === 'Activa' ? 'text-red-600 hover:text-red-700 hover:bg-red-50' : 'text-green-600 hover:text-green-700 hover:bg-green-50'}`}
+                                                className={`h-8 w-8 ${company.status === 'Activa' ? 'text-danger hover:text-danger hover:bg-danger-bg' : 'text-success hover:text-success hover:bg-success-bg'}`}
                                                 title={company.status === 'Activa' ? 'Suspender empresa' : 'Reactivar empresa'}
+                                                aria-label={company.status === 'Activa' ? `Suspender empresa ${company.razonSocial}` : `Reactivar empresa ${company.razonSocial}`}
                                                 onClick={async () => {
                                                     const res = await toggleTenantStatus(company.id);
                                                     if (res.success) {
@@ -150,7 +151,7 @@ export function CompanyList({
                                                 <Power className="h-4 w-4" />
                                             </Button>
                                             <Link href={`/admin/empresas/${company.id}`}>
-                                                <Button size="icon" variant="ghost" className="h-8 w-8" title="Ver detalles">
+                                                <Button size="icon" variant="ghost" className="h-8 w-8" title="Ver detalles" aria-label={`Ver detalles de ${company.razonSocial}`}>
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                             </Link>

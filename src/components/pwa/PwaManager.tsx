@@ -39,14 +39,14 @@ export function PwaManager() {
         // Listen for Network Changes
         const handleOnline = () => {
             toast.success('Conexión restablecida. Trabajando en línea.', {
-                icon: <Wifi className="h-4 w-4 text-emerald-600" />,
+                icon: <Wifi className="h-4 w-4 text-success" />,
                 duration: 4000
             });
         };
 
         const handleOffline = () => {
             toast.error('Sin conexión a internet. Ciertas funciones pueden no estar disponibles.', {
-                icon: <WifiOff className="h-4 w-4 text-rose-600" />,
+                icon: <WifiOff className="h-4 w-4 text-danger" />,
                 duration: 5000
             });
         };
@@ -73,7 +73,7 @@ export function PwaManager() {
     if (!isInstallable || isDismissed) return null;
 
     return (
-        <div className="fixed bottom-20 left-4 right-4 z-50 md:bottom-6 md:left-auto md:right-6 md:w-80 rounded-xl bg-white border border-border p-4 shadow-xl animate-in slide-in-from-bottom-5 duration-300 font-sans">
+        <div className="fixed bottom-20 left-4 right-4 z-50 md:bottom-6 md:left-auto md:right-6 md:w-80 rounded-xl bg-card border border-border p-4 shadow-xl animate-in slide-in-from-bottom-5 duration-300 font-sans">
             <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                     <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Instalar Aplicación</h4>

@@ -9,7 +9,7 @@ export default function NotFound() {
       <div className="max-w-md w-full rounded-3xl bg-slate-900/40 border border-slate-800/80 p-8 shadow-2xl backdrop-blur-xl relative space-y-6">
         {/* Decorative background glow */}
         <div className="absolute -top-12 -left-12 w-48 h-48 rounded-full bg-brand-1/10 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-12 -right-12 w-48 h-48 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-12 -right-12 w-48 h-48 rounded-full bg-success/5 blur-3xl pointer-events-none" />
 
         {/* Big icon indicator */}
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-800/50 border border-slate-700/50 text-brand-1 mb-2 shadow-inner">

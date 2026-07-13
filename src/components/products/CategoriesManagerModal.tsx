@@ -184,10 +184,10 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
                                         <Badge variant={cat.descuentoPorcentaje > 0 ? 'info' : 'neutral'} className="text-[10px] shrink-0">
                                             {cat.descuentoPorcentaje > 0 ? `${cat.descuentoPorcentaje}% desc.` : 'Sin descuento'}
                                         </Badge>
-                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-brand-1" onClick={() => iniciarEdicion(cat)}>
+                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-brand-1" onClick={() => iniciarEdicion(cat)} aria-label={`Editar categoría ${cat.nombre}`}>
                                             <Pencil className="h-3.5 w-3.5" />
                                         </Button>
-                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleEliminar(cat)}>
+                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleEliminar(cat)} aria-label={`Eliminar categoría ${cat.nombre}`}>
                                             <Trash2 className="h-3.5 w-3.5" />
                                         </Button>
                                     </>

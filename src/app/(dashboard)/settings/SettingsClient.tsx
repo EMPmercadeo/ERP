@@ -944,7 +944,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                 </option>
                                             </select>
                                             {company.planType === 'free' && (
-                                                <p className="text-xs text-amber-600 font-medium mt-1">
+                                                <p className="text-xs text-warning font-medium mt-1">
                                                     * Para habilitar producción debes actualizar tu plan de pruebas actual.
                                                 </p>
                                             )}
@@ -1022,7 +1022,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                         <div className="flex items-center gap-3">
                                             <span className="text-sm font-medium text-muted-foreground">Estado de Conexión:</span>
                                             {estadoConexion === 'conectado' && (
-                                                <Badge className="bg-emerald-500 hover:bg-emerald-500 text-white">
+                                                <Badge className="bg-success hover:bg-success text-white">
                                                     <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
                                                     Conectado
                                                 </Badge>
@@ -1081,7 +1081,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             {company.planType === 'free' && <Sparkles className="h-6 w-6" />}
                                             {company.planType === 'emprendedor' && <Zap className="h-6 w-6" />}
                                             {company.planType === 'negocio' && <Zap className="h-6 w-6 text-brand-1" />}
-                                            {company.planType === 'pro' && <Zap className="h-6 w-6 animate-pulse text-amber-500" />}
+                                            {company.planType === 'pro' && <Zap className="h-6 w-6 animate-pulse text-warning" />}
                                             {company.planType === 'empresa' && <Building className="h-6 w-6 text-brand-1" />}
                                         </div>
                                         <div>
@@ -1099,12 +1099,12 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             {company.planType !== 'free' && (
                                                 <div className="mt-2.5 flex items-center gap-4">
                                                     <span className="text-xs text-brand-3/60 font-semibold flex items-center gap-1">
-                                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                                                        <CheckCircle2 className="h-3.5 w-3.5 text-success" />
                                                         Renovación PayPal activa
                                                     </span>
                                                     <button
                                                         onClick={() => setShowCancelModal(true)}
-                                                        className="text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline"
+                                                        className="text-xs font-bold text-danger hover:text-danger hover:underline"
                                                     >
                                                         Cancelar Suscripción
                                                     </button>
@@ -1147,7 +1147,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                         onClick={() => setBillingCycle('monthly')}
                                         className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
                                             billingCycle === 'monthly'
-                                                ? 'bg-white text-foreground shadow-sm'
+                                                ? 'bg-card text-foreground shadow-sm'
                                                 : 'text-muted-foreground hover:text-foreground'
                                         }`}
                                     >
@@ -1204,7 +1204,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                      <span>{plan.name}</span>
                                                      {plan.id === 'free' && <Sparkles className="h-5 w-5 text-brand-1" />}
                                                      {plan.id === 'basic' && <Zap className="h-5 w-5 text-brand-1" />}
-                                                     {plan.id === 'pro' && <Zap className="h-5 w-5 text-amber-500" />}
+                                                     {plan.id === 'pro' && <Zap className="h-5 w-5 text-warning" />}
                                                      {plan.id === 'enterprise' && <Building className="h-5 w-5 text-muted-foreground" />}
                                                  </CardTitle>
                                                 <CardDescription className="min-h-[40px] mt-2">
@@ -1259,7 +1259,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                             ? 'bg-muted text-muted-foreground border-none cursor-default hover:bg-muted'
                                                             : plan.highlight
                                                                 ? 'bg-brand-1 hover:bg-brand-2 text-white shadow-sm hover:shadow-md'
-                                                                : 'border-brand-1/20 text-brand-2 bg-white hover:bg-brand-1/50'
+                                                                : 'border-brand-1/20 text-brand-2 bg-card hover:bg-brand-1/50'
                                                     }`}
                                                     variant={plan.variant}
                                                     disabled={isCurrent || isPlanLoading}
@@ -1591,8 +1591,8 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                                     </div>
                                                                     <div className="flex items-center gap-2">
                                                                         <Badge className={
-                                                                            integration.status === 'active' ? "bg-emerald-500 text-white font-bold border-none" : 
-                                                                            integration.status === 'error' ? "bg-rose-500 text-white font-bold border-none" : 
+                                                                            integration.status === "active" ? "bg-success text-white font-bold border-none" : 
+                                                                            integration.status === "error" ? "bg-danger text-white font-bold border-none" : 
                                                                             "bg-muted text-foreground font-bold border-none"
                                                                         }>
                                                                             {integration.status === 'active' ? 'Conectado' : integration.status}
@@ -1601,7 +1601,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                                             variant="ghost" 
                                                                             size="sm" 
                                                                             onClick={() => handleDisconnectPOS(integration.providerSlug)}
-                                                                            className="text-xs h-7 text-rose-600 hover:bg-rose-50 font-bold"
+                                                                            className="text-xs h-7 text-danger hover:bg-danger-bg font-bold"
                                                                         >
                                                                             Desconectar
                                                                         </Button>
@@ -1652,7 +1652,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                                     ) : (
                                                                         <div className="space-y-1 max-h-[120px] overflow-y-auto pr-1">
                                                                             {integration.syncLogs?.map((log) => (
-                                                                                <div key={log.id} className="text-[10px] flex justify-between gap-2 p-1.5 bg-white rounded border">
+                                                                                <div key={log.id} className="text-[10px] flex justify-between gap-2 p-1.5 bg-card rounded border">
                                                                                     <div className="min-w-0 flex-1">
                                                                                         <span className="font-semibold text-foreground">
                                                                                             {log.syncType === 'products' ? 'Catálogo' : log.syncType === 'sales' ? 'Ventas' : 'Inventario'}: 
@@ -1661,7 +1661,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                                                     </div>
                                                                                     <div className="flex items-center gap-1.5 shrink-0">
                                                                                         <Badge className={
-                                                                                            log.status === 'success' ? "bg-emerald-100 text-emerald-800 text-[8px] px-1 py-0 border-none font-bold" : "bg-rose-100 text-rose-800 text-[8px] px-1 py-0 border-none font-bold"
+                                                                                            log.status === "success" ? "bg-success-bg text-success text-[8px] px-1 py-0 border-none font-bold" : "bg-danger-bg text-danger text-[8px] px-1 py-0 border-none font-bold"
                                                                                         }>
                                                                                             {log.status === 'success' ? 'Exitoso' : 'Error'}
                                                                                         </Badge>
@@ -2003,7 +2003,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
 
                         {paymentStep === 'success' && (
                             <div className="text-center py-8 space-y-6">
-                                <div className="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                                <div className="h-16 w-16 bg-success-bg text-success rounded-full flex items-center justify-center mx-auto">
                                     <Check className="h-10 w-10 stroke-[3]" />
                                 </div>
                                 <div className="space-y-2">
@@ -2041,7 +2041,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
 
                         <div className="space-y-5">
                             <div className="flex items-start gap-4">
-                                <div className="p-3 bg-rose-100 text-rose-700 rounded-full shrink-0">
+                                <div className="p-3 bg-danger-bg text-danger rounded-full shrink-0">
                                     <XCircle className="h-6 w-6" />
                                 </div>
                                 <div className="space-y-1">
@@ -2052,7 +2052,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                 </div>
                             </div>
 
-                            <div className="bg-rose-50/50 border border-rose-100 rounded-lg p-4 text-xs text-rose-800 space-y-2">
+                            <div className="bg-danger-bg/70 border border-danger/20 rounded-lg p-4 text-xs text-danger space-y-2">
                                 <p className="font-semibold">Esto implica las siguientes restricciones:</p>
                                 <ul className="list-disc pl-4 space-y-1">
                                     <li>Límite de facturación reducido a **10 documentos al mes** (actualmente {company.planType === 'pro' ? '500' : '100'}).</li>
@@ -2073,7 +2073,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                 </Button>
                                 <Button
                                     variant="destructive"
-                                    className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-semibold"
+                                    className="flex-1 bg-danger hover:bg-danger/90 text-white font-semibold"
                                     onClick={executeCancelSubscription}
                                     disabled={isPlanLoading}
                                 >
@@ -2118,7 +2118,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             className={`p-3 border rounded-lg flex flex-col items-center justify-center gap-1 transition-all ${
                                                 selectedBlockSize === block.size
                                                     ? 'border-brand-1 bg-brand-1/50 text-brand-3 ring-2 ring-brand-1/10'
-                                                    : 'border-border bg-white text-foreground hover:bg-accent'
+                                                    : 'border-border bg-card text-foreground hover:bg-accent'
                                             }`}
                                         >
                                             <span className="text-xs font-bold">{block.label}</span>

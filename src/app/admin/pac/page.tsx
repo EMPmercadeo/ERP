@@ -227,6 +227,7 @@ export default function SuperadminPACPage() {
                         onClick={() => handleEliminar(p.id)}
                         className="text-danger border-danger/30 hover:bg-danger-bg"
                         title="Eliminar PAC"
+                        aria-label="Eliminar PAC"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

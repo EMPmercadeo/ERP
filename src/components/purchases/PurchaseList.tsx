@@ -58,11 +58,11 @@ const getInitials = (name: string) => {
 };
 
 const palette = [
-    'from-blue-600 to-brand-1 text-white',
-    'from-emerald-500 to-teal-400 text-white',
-    'from-amber-500 to-orange-400 text-white',
-    'from-primary to-primary/80 text-white',
-    'from-rose-500 to-red-400 text-white',
+    'bg-info text-white',
+    'bg-success text-white',
+    'bg-warning text-white',
+    'bg-primary text-white',
+    'bg-danger text-white',
 ];
 
 export function PurchaseList({
@@ -194,7 +194,7 @@ export function PurchaseList({
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-2.5">
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-gradient-to-br ${gradClass} shrink-0`}>
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ${gradClass} shrink-0`}>
                                                             {getInitials(p.proveedor.razonSocial)}
                                                         </div>
                                                         <div>
@@ -263,7 +263,7 @@ export function PurchaseList({
                                     <div key={p.id} className="bg-muted/60 border border-border rounded-xl p-3.5 space-y-3 shadow-sm">
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="flex items-center gap-2.5 min-w-0">
-                                                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0`}>
+                                                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${gradClass} shrink-0`}>
                                                     {getInitials(p.proveedor.razonSocial)}
                                                 </div>
                                                 <div className="min-w-0">
