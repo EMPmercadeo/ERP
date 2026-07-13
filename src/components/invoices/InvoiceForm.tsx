@@ -271,11 +271,7 @@ export function InvoiceForm({
                 )}
 
                 {currentRemaining <= 0 && (
-<<<<<<< HEAD
-                    <div className="rounded-xl border border-warning/30 bg-warning-bg p-4 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in fade-in duration-200">
-=======
                     <div className="rounded-xl border border-warning/20 bg-warning-bg p-4 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in fade-in duration-200">
->>>>>>> impeccable-p1-fixes
                         <div className="flex items-start gap-3">
                             <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
                             <div>
