@@ -60,7 +60,7 @@ async function testRoles() {
     }), 'updateBankAccount (vendedor)');
     assertRejected(await toggleBankAccountStatus('some-id', false), 'toggleBankAccountStatus (vendedor)');
     assertRejected(await deleteBankAccount('some-id'), 'deleteBankAccount (vendedor)');
-    assertRejected(await importMovimientosBancarios('some-id', 'dummy.xlsx', Buffer.alloc(0)), 'importMovimientosBancarios (vendedor)');
+    assertRejected(await importMovimientosBancarios('some-id', 'dummy.xlsx', [] as Record<string, string>[]), 'importMovimientosBancarios (vendedor)');
     assertRejected(await reconciliarMovimiento('some-id', 'mov-id', 'asiento-id'), 'reconciliarMovimiento (vendedor)');
 
     // --- ESCENARIO 2: ROL CONTADOR ---
