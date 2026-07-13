@@ -521,38 +521,47 @@ export async function uploadProductImage(productId: string, formData: FormData) 
         await fs.writeFile(filepath, buffer);
         const imageUrl = `/uploads/products/${safeFilename}`;
 
-        // Save in DB
-        const result = await prisma.$transaction(async (tx) => {
-            const count = await tx.productImage.count({
-                where: { productoId: productId, empresaId }
-            });
-
-            const isPrimary = count === 0;
-
-            const newImage = await tx.productImage.create({
-                data: {
-                    productoId: productId,
-                    empresaId,
-                    imageUrl,
-                    storagePath: filepath,
-                    isPrimary,
-                    sortOrder: count
-                }
-            });
-
-            if (isPrimary) {
-                await tx.producto.update({
-                    where: { id: productId },
-                    data: { imagenUrl: imageUrl }
+        // Save in DB (with cleanup on failure)
+        try {
+            const result = await prisma.$transaction(async (tx) => {
+                const count = await tx.productImage.count({
+                    where: { productoId: productId, empresaId }
                 });
+
+                const isPrimary = count === 0;
+
+                const newImage = await tx.productImage.create({
+                    data: {
+                        productoId: productId,
+                        empresaId,
+                        imageUrl,
+                        storagePath: filepath,
+                        isPrimary,
+                        sortOrder: count
+                    }
+                });
+
+                if (isPrimary) {
+                    await tx.producto.update({
+                        where: { id: productId },
+                        data: { imagenUrl: imageUrl }
+                    });
+                }
+
+                return newImage;
+            });
+
+            revalidatePath('/products');
+            revalidatePath(`/products/${productId}`);
+            return { success: true, image: result };
+        } catch (dbError) {
+            try {
+                await fs.unlink(filepath);
+            } catch (unlinkErr) {
+                console.error('Could not clean up orphaned file:', unlinkErr);
             }
-
-            return newImage;
-        });
-
-        revalidatePath('/products');
-        revalidatePath(`/products/${productId}`);
-        return { success: true, image: result };
+            throw dbError;
+        }
     } catch (error) {
         console.error('Error uploading product image:', error);
         return { success: false, message: 'Error al subir la imagen.' };
