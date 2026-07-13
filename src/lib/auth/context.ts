@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import { crearPlanCuentasParaEmpresa } from '@/lib/contabilidad/planCuentasDefault';
@@ -18,6 +18,7 @@ export interface TenantContext {
     // (claim `email_verified` del ID token, vía Firebase Admin SDK). Nunca se
     // toma de una columna guardada en Postgres porque puede desactualizarse.
     emailVerified: boolean;
+    requestId?: string;
 }
 
 export const getTenantContext = cache(async (): Promise<TenantContext> => {
@@ -155,11 +156,20 @@ export const getTenantContext = cache(async (): Promise<TenantContext> => {
         }
     }
 
+    let requestId: string | undefined;
+    try {
+        const headerList = await headers();
+        requestId = headerList.get('x-request-id') || undefined;
+    } catch {
+        // Headers cannot be read (e.g. outside request context/prerendering)
+    }
+
     return {
         userId: devUser.id, // Always the real user ID
         empresaId: activeEmpresaId,
         role: devUser.rol,
         isImpersonating,
-        emailVerified
+        emailVerified,
+        requestId
     };
 });

@@ -89,7 +89,15 @@ export function middleware(request: NextRequest) {
     }
 
     // 3. Continuar con la petición permitida y adjuntar cabeceras CORS y Rate Limit
-    const response = NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    const requestId = crypto.randomUUID();
+    requestHeaders.set('x-request-id', requestId);
+
+    const response = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
     const remaining = Math.max(0, MAX_REQUESTS_PER_WINDOW - (rateLimitMap.get(request.headers.get('x-forwarded-for')?.split(',')[0] || 'anonymous-ip')?.count || 1));
     response.headers.set('X-RateLimit-Limit', MAX_REQUESTS_PER_WINDOW.toString());
     response.headers.set('X-RateLimit-Remaining', remaining.toString());
