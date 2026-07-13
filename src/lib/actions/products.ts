@@ -8,6 +8,7 @@ import { ProductSchema } from '@/lib/validations';
 import { getTenantContext } from '@/lib/auth/context';
 import fs from 'fs/promises';
 import path from 'path';
+import { getStorageProvider } from '@/lib/storage';
 
 export async function createProduct(prevState: unknown, formData: FormData) {
     const { empresaId, userId } = await getTenantContext();
@@ -513,13 +514,15 @@ export async function uploadProductImage(productId: string, formData: FormData) 
 
         // Define file path
         const safeFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}${path.extname(file.name)}`;
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products');
-        await fs.mkdir(uploadDir, { recursive: true });
-        const filepath = path.join(uploadDir, safeFilename);
 
-        // Write file
-        await fs.writeFile(filepath, buffer);
-        const imageUrl = `/uploads/products/${safeFilename}`;
+        // Write file using storage provider
+        const storage = getStorageProvider();
+        let imageUrl = '';
+        try {
+            imageUrl = await storage.uploadFile(buffer, safeFilename, file.type);
+        } catch (uploadErr) {
+            return { success: false, message: uploadErr instanceof Error ? uploadErr.message : 'Error al guardar el archivo.' };
+        }
 
         // Save in DB (with cleanup on failure)
         try {
@@ -535,17 +538,20 @@ export async function uploadProductImage(productId: string, formData: FormData) 
                         productoId: productId,
                         empresaId,
                         imageUrl,
-                        storagePath: filepath,
+                        storagePath: imageUrl,
                         isPrimary,
                         sortOrder: count
                     }
                 });
 
                 if (isPrimary) {
-                    await tx.producto.update({
-                        where: { id: productId },
+                    const updatedCount = await tx.producto.updateMany({
+                        where: { id: productId, empresaId },
                         data: { imagenUrl: imageUrl }
                     });
+                    if (updatedCount.count === 0) {
+                        throw new Error('Producto no encontrado o acceso denegado.');
+                    }
                 }
 
                 return newImage;
@@ -556,7 +562,7 @@ export async function uploadProductImage(productId: string, formData: FormData) 
             return { success: true, image: result };
         } catch (dbError) {
             try {
-                await fs.unlink(filepath);
+                await storage.deleteFile(imageUrl);
             } catch (unlinkErr) {
                 console.error('Could not clean up orphaned file:', unlinkErr);
             }

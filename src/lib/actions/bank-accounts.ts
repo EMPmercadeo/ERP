@@ -23,6 +23,12 @@ export async function getCuentasContablesBanco() {
 }
 
 export async function createBankAccount(prevState: unknown, formData: FormData) {
+    const { empresaId, role } = await getTenantContext();
+
+    if (role !== 'admin' && role !== 'gerente' && role !== 'contador') {
+        return { message: 'Acceso denegado. Permisos insuficientes.' };
+    }
+
     const rawData = {
         nombre: formData.get('nombre'),
         banco: formData.get('banco'),
@@ -42,11 +48,6 @@ export async function createBankAccount(prevState: unknown, formData: FormData) 
     }
 
     const { data } = validatedFields;
-    const { empresaId, role } = await getTenantContext();
-
-    if (role !== 'admin' && role !== 'gerente' && role !== 'contador') {
-        return { message: 'Acceso denegado. Permisos insuficientes.' };
-    }
 
     const cuentaContable = await prisma.planCuentas.findFirst({
         where: { id: data.cuentaContableId, empresaId, codigo: { startsWith: '1.1.01' } },

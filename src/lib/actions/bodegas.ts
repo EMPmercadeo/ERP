@@ -16,6 +16,11 @@ export async function getBodegas() {
 }
 
 export async function createBodega(prevState: unknown, formData: FormData) {
+    const { empresaId, role } = await getTenantContext();
+    if (role !== 'admin' && role !== 'gerente') {
+        return { message: 'Acceso denegado. Permisos insuficientes.' };
+    }
+
     const rawData = {
         codigo: formData.get('codigo'),
         nombre: formData.get('nombre'),
@@ -33,11 +38,6 @@ export async function createBodega(prevState: unknown, formData: FormData) {
     }
 
     const { data } = validatedFields;
-    const { empresaId, role } = await getTenantContext();
-
-    if (role !== 'admin' && role !== 'gerente') {
-        return { message: 'Acceso denegado. Permisos insuficientes.' };
-    }
 
     try {
         const existe = await prisma.bodega.findFirst({
@@ -74,6 +74,11 @@ export async function createBodega(prevState: unknown, formData: FormData) {
 }
 
 export async function updateBodega(id: string, prevState: unknown, formData: FormData) {
+    const { empresaId, role } = await getTenantContext();
+    if (role !== 'admin' && role !== 'gerente') {
+        return { message: 'Acceso denegado. Permisos insuficientes.' };
+    }
+
     const rawData = {
         codigo: formData.get('codigo'),
         nombre: formData.get('nombre'),
@@ -91,11 +96,6 @@ export async function updateBodega(id: string, prevState: unknown, formData: For
     }
 
     const { data } = validatedFields;
-    const { empresaId, role } = await getTenantContext();
-
-    if (role !== 'admin' && role !== 'gerente') {
-        return { message: 'Acceso denegado. Permisos insuficientes.' };
-    }
 
     try {
         const existing = await prisma.bodega.findFirst({

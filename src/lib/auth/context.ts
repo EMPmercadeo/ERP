@@ -22,6 +22,9 @@ export interface TenantContext {
 }
 
 export const getTenantContext = cache(async (): Promise<TenantContext> => {
+    if ((global as any).__mockTenantContext) {
+        return (global as any).__mockTenantContext;
+    }
     // 1. Get User Identity from session cookie
     const cookieStore = await cookies();
     const sessionCookieValue = cookieStore.get('session_token')?.value;

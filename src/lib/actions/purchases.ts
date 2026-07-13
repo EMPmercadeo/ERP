@@ -9,14 +9,9 @@ import { generarAsientoCompra } from '@/lib/contabilidad/asientos';
 import { resolverBodegaId, moverInventarioBodega } from './bodegas';
 
 export async function createPurchase(prevState: unknown, formData: FormData) {
-    const rawItems = formData.get('items');
-    let items: unknown[] = [];
-    if (rawItems) {
-        try {
-            items = JSON.parse(rawItems as string);
-        } catch {
-            return { message: 'Formato de ítems inválido.' };
-        }
+    const { empresaId, userId, role } = await getTenantContext();
+    if (role !== 'admin' && role !== 'gerente') {
+        return { message: 'Acceso denegado. Permisos insuficientes.' };
     }
 
     const rawData = {
@@ -26,7 +21,7 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
         fechaVencimiento: formData.get('fechaVencimiento'),
         observaciones: formData.get('observaciones') || null,
         bodegaId: formData.get('bodegaId') || null,
-        items,
+        items: JSON.parse((formData.get('items') as string) || '[]'),
     };
 
     const validatedFields = PurchaseSchema.safeParse(rawData);
@@ -39,11 +34,6 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
     }
 
     const { data } = validatedFields;
-    const { empresaId, userId, role } = await getTenantContext();
-
-    if (role !== 'admin' && role !== 'gerente') {
-        return { message: 'Acceso denegado. Permisos insuficientes.' };
-    }
 
     try {
         const proveedor = await prisma.proveedor.findFirst({

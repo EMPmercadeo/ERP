@@ -9,6 +9,11 @@ import { getTenantContext } from '@/lib/auth/context';
 import { sendEmail } from '@/lib/email/mailer';
 
 export async function createSupplier(prevState: unknown, formData: FormData) {
+    const { empresaId, role } = await getTenantContext();
+    if (role !== 'admin' && role !== 'gerente') {
+        return { message: 'Acceso denegado. Permisos insuficientes.' };
+    }
+
     const rawData = {
         tipoRuc: formData.get('tipoRuc'),
         ruc: formData.get('ruc'),
@@ -35,11 +40,6 @@ export async function createSupplier(prevState: unknown, formData: FormData) {
     }
 
     const { data } = validatedFields;
-    const { empresaId, role } = await getTenantContext();
-
-    if (role !== 'admin' && role !== 'gerente') {
-        return { message: 'Acceso denegado. Permisos insuficientes.' };
-    }
 
     try {
         await prisma.proveedor.create({
@@ -72,6 +72,11 @@ export async function createSupplier(prevState: unknown, formData: FormData) {
 }
 
 export async function updateSupplier(id: string, prevState: unknown, formData: FormData) {
+    const { empresaId, role } = await getTenantContext();
+    if (role !== 'admin' && role !== 'gerente') {
+        return { message: 'Acceso denegado. Permisos insuficientes.' };
+    }
+
     const rawData = {
         tipoRuc: formData.get('tipoRuc'),
         ruc: formData.get('ruc'),
@@ -98,11 +103,6 @@ export async function updateSupplier(id: string, prevState: unknown, formData: F
     }
 
     const { data } = validatedFields;
-    const { empresaId, role } = await getTenantContext();
-
-    if (role !== 'admin' && role !== 'gerente') {
-        return { message: 'Acceso denegado. Permisos insuficientes.' };
-    }
 
     try {
         const existing = await prisma.proveedor.findFirst({

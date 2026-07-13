@@ -46,21 +46,16 @@ export async function getProductosDisponiblesEnBodega(bodegaId: string) {
 }
 
 export async function createTransferencia(prevState: unknown, formData: FormData) {
-    const rawItems = formData.get('items');
-    let items: unknown[] = [];
-    if (rawItems) {
-        try {
-            items = JSON.parse(rawItems as string);
-        } catch {
-            return { message: 'Formato de ítems inválido.' };
-        }
+    const { empresaId, userId, role } = await getTenantContext();
+    if (role !== 'admin' && role !== 'gerente') {
+        return { message: 'Acceso denegado. Permisos insuficientes.' };
     }
 
     const rawData = {
         bodegaOrigenId: formData.get('bodegaOrigenId'),
         bodegaDestinoId: formData.get('bodegaDestinoId'),
         notas: formData.get('notas') || '',
-        items,
+        items: JSON.parse((formData.get('items') as string) || '[]'),
     };
 
     const validatedFields = TransferenciaBodegaSchema.safeParse(rawData);
@@ -72,10 +67,6 @@ export async function createTransferencia(prevState: unknown, formData: FormData
     }
 
     const { data } = validatedFields;
-    const { empresaId, userId, role } = await getTenantContext();
-    if (role !== 'admin' && role !== 'gerente') {
-        return { message: 'Acceso denegado. Permisos insuficientes.' };
-    }
 
     try {
         const [origen, destino] = await Promise.all([
