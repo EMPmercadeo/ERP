@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { checkRateLimit } from '@/lib/redis-ratelimit';
 
 // Lista de orígenes permitidos para consumir la API de nuestra aplicación
 const allowedOrigins = [
@@ -9,36 +10,66 @@ const allowedOrigins = [
   process.env.NEXT_PUBLIC_APP_URL,
 ].filter(Boolean) as string[];
 
-// Límite de solicitudes simple en memoria por IP (Rate Limiting para Edge)
-// Ventana de 60 segundos, máximo 120 peticiones por minuto por IP
-const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minuto
-const MAX_REQUESTS_PER_WINDOW = 120; // 2 solicitudes por segundo en promedio
+function getActionFromPath(pathname: string, method: string): string {
+  if (pathname.includes('/client-errors')) return 'client-error';
+  if (pathname.includes('/login') || pathname.includes('/auth/login')) return 'login';
+  if (pathname.includes('/session')) return 'session';
+  if (pathname.includes('/forgot-password') || pathname.includes('/auth/forgot-password')) return 'password-reset';
+  if (pathname.includes('/usuarios') && method === 'POST') return 'invitation';
+  if (pathname.includes('/upload')) return 'upload';
+  if (pathname.includes('/export') || pathname.includes('/download')) return 'export';
+  if (pathname.includes('/sync') || pathname.includes('/reporte-z')) return 'heavy-report';
+  if (pathname.includes('/webhooks')) return 'webhook';
+  if (pathname.startsWith('/api/v1/')) return 'public-api';
+  return 'default';
+}
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const method = request.method;
+
   // Solo aplicamos las reglas CORS y Rate Limit a las rutas del API (/api/*)
-  if (request.nextUrl.pathname.startsWith('/api/')) {
+  if (pathname.startsWith('/api/')) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'anonymous-ip';
-    const now = Date.now();
-    const rateData = rateLimitMap.get(ip) || { count: 0, lastReset: now };
+    const action = getActionFromPath(pathname, method);
+    
+    // Obtener empresaId si viene en la cabecera (para delimitar rate limit por empresa)
+    const empresaId = request.headers.get('x-empresa-id') || undefined;
 
-    if (now - rateData.lastReset > RATE_LIMIT_WINDOW) {
-      rateData.count = 1;
-      rateData.lastReset = now;
-    } else {
-      rateData.count += 1;
+    // Ejecutar Rate Limit (Upstash Redis en producción, Memoria local en dev)
+    let rateLimitResult;
+    try {
+      rateLimitResult = await checkRateLimit(ip, action, empresaId);
+    } catch (err) {
+      console.error('Middleware Rate Limit Error:', err);
+      // Fall-closed en producción: bloquear el request si falla la validación
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json(
+          { error: 'Error de configuración de seguridad: Rate Limit no disponible.' },
+          { status: 500 }
+        );
+      }
+      // En desarrollo permitir continuar
+      rateLimitResult = { success: true, limit: 120, remaining: 119, reset: Date.now() + 60000 };
     }
-    rateLimitMap.set(ip, rateData);
 
     // Si excede el límite, bloqueamos con HTTP 429 Too Many Requests
-    if (rateData.count > MAX_REQUESTS_PER_WINDOW) {
+    if (!rateLimitResult.success) {
       return NextResponse.json(
         { error: 'Demasiadas solicitudes. Por favor espera un momento antes de reintentar (Rate Limit Exceeded).' },
-        { status: 429, headers: { 'Retry-After': '60' } }
+        { 
+          status: 429, 
+          headers: { 
+            'Retry-After': '60',
+            'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.reset.toString()
+          } 
+        }
       );
     }
-    const origin = request.headers.get('origin');
 
+    const origin = request.headers.get('origin');
     let isAllowedOrigin = false;
     let responseOrigin = '';
 
@@ -64,7 +95,7 @@ export function middleware(request: NextRequest) {
     }
 
     // 1. Manejo de peticiones Preflight (OPTIONS)
-    if (request.method === 'OPTIONS') {
+    if (method === 'OPTIONS') {
       if (!isAllowedOrigin) {
         return new NextResponse(null, { status: 403, statusText: 'Forbidden (CORS)' });
       }
@@ -73,7 +104,7 @@ export function middleware(request: NextRequest) {
         headers: {
           'Access-Control-Allow-Origin': responseOrigin || allowedOrigins[0],
           'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, X-CSRF-Token, x-impersonation',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, X-CSRF-Token, x-impersonation, x-empresa-id',
           'Access-Control-Allow-Credentials': 'true',
           'Access-Control-Max-Age': '86400',
         },
@@ -98,23 +129,15 @@ export function middleware(request: NextRequest) {
         headers: requestHeaders,
       },
     });
-    const remaining = Math.max(0, MAX_REQUESTS_PER_WINDOW - (rateLimitMap.get(request.headers.get('x-forwarded-for')?.split(',')[0] || 'anonymous-ip')?.count || 1));
-    response.headers.set('X-RateLimit-Limit', MAX_REQUESTS_PER_WINDOW.toString());
-    response.headers.set('X-RateLimit-Remaining', remaining.toString());
+
+    response.headers.set('X-RateLimit-Limit', rateLimitResult.limit.toString());
+    response.headers.set('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
+    response.headers.set('X-RateLimit-Reset', rateLimitResult.reset.toString());
+
     if (responseOrigin) {
       response.headers.set('Access-Control-Allow-Origin', responseOrigin);
       response.headers.set('Access-Control-Allow-Credentials', 'true');
     }
-
-    // NOTA DE SEGURIDAD: la verificación real de rol super_admin para /api/admin/*
-    // se hace en cada route handler vía requireSuperAdminApi() (getTenantContext() +
-    // sesión Firebase real), NO aquí. El middleware corre en Edge y no puede consultar
-    // Postgres de forma segura y consistente con el resto de la app, así que ya no
-    // intenta validar aquí un secreto compartido: ese esquema (cookie/secret sin
-    // ningún flujo que la emitiera, con fallback a un valor hardcodeado en el código
-    // fuente y un bypass total vía header `x-test-mode`) era una autorización falsa
-    // que dejaba todos los endpoints /api/admin/* abiertos a cualquiera que conociera
-    // ese header. Deny-by-default real vive en cada route.ts.
 
     return response;
   }
@@ -125,4 +148,3 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/api/:path*', '/admin/:path*'],
 };
-

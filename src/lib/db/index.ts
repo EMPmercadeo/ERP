@@ -9,6 +9,10 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { validateEnv } from '@/lib/env-validator';
+
+// Validar variables de entorno antes de levantar el cliente de BD
+validateEnv();
 
 // Prevenir múltiples instancias en desarrollo (y reutilizar la misma instancia entre
 // invocaciones "warm" de una misma función serverless en producción — ver más abajo).

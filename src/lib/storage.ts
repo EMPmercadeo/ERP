@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { put, del } from '@vercel/blob';
 
 export interface StorageProvider {
     /**
@@ -29,40 +30,54 @@ export class LocalStorageProvider implements StorageProvider {
         try {
             await fs.unlink(filepath);
         } catch (err) {
-            // Ignoramos si el archivo ya no existe
             console.warn(`No se pudo eliminar el archivo local: ${filepath}`, err);
         }
     }
 }
 
 export class RemoteStorageProvider implements StorageProvider {
-    async uploadFile(_buffer: Buffer, filename: string, _mimeType: string): Promise<string> {
-        const hasAws = !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_BUCKET_NAME);
-        const hasVercelBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+    async uploadFile(buffer: Buffer, filename: string, mimeType: string): Promise<string> {
+        const token = process.env.BLOB_READ_WRITE_TOKEN;
 
-        if (!hasAws && !hasVercelBlob) {
-            throw new Error('Almacenamiento remoto no configurado. Las subidas de archivos están deshabilitadas en producción para evitar pérdida de datos.');
+        if (!token) {
+            throw new Error(
+                'Almacenamiento remoto no configurado (falta BLOB_READ_WRITE_TOKEN). Las subidas están deshabilitadas en producción para evitar pérdida de datos.'
+            );
         }
 
-        // Simulación controlada o llamada real a APIs de terceros
-        if (hasVercelBlob) {
+        // Subir a Vercel Blob de verdad (excepto en ambiente de test)
+        const isTest = process.env.NODE_ENV === 'test' || token === 'mock-blob-token';
+        if (isTest) {
             return `https://erp-panama.public.blob.vercel-storage.com/products/${filename}`;
         }
 
-        const bucket = process.env.AWS_BUCKET_NAME || 'erp-panama-bucket';
-        const region = process.env.AWS_REGION || 'us-east-1';
-        return `https://${bucket}.s3.${region}.amazonaws.com/products/${filename}`;
+        const blob = await put(`products/${filename}`, buffer, {
+            access: 'public',
+            contentType: mimeType,
+            token: token
+        });
+        return blob.url;
     }
 
-    async deleteFile(_filepathOrUrl: string): Promise<void> {
-        const hasAws = !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_BUCKET_NAME);
-        const hasVercelBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+    async deleteFile(filepathOrUrl: string): Promise<void> {
+        const token = process.env.BLOB_READ_WRITE_TOKEN;
 
-        if (!hasAws && !hasVercelBlob) {
-            // Bloqueado en producción sin proveedor configurado
+        if (!token) {
             return;
         }
-        // Borrado simulado o real
+
+        // Eliminar de Vercel Blob si la URL corresponde a este almacenamiento
+        if (filepathOrUrl.includes('public.blob.vercel-storage.com')) {
+            const isTest = process.env.NODE_ENV === 'test' || token === 'mock-blob-token';
+            if (isTest) {
+                return;
+            }
+            try {
+                await del(filepathOrUrl, { token });
+            } catch (err) {
+                console.error(`Error al eliminar archivo de Vercel Blob: ${filepathOrUrl}`, err);
+            }
+        }
     }
 }
 

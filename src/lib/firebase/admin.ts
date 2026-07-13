@@ -10,6 +10,9 @@ function getAdminApp(): App {
     throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY no está configurada.');
   }
   const serviceAccount = JSON.parse(serviceAccountRaw);
+  if (serviceAccount.private_key) {
+    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+  }
   return initializeApp({
     credential: cert(serviceAccount),
   });

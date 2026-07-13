@@ -145,4 +145,4 @@ Detallada en [`docs/security/AUTHORIZATION_MATRIX.md`](file:///C:/Users/ermom/.g
 ---
 
 ## 20. Veredicto Final
-**APROBACIÓN_CONDICIONADA** (Apto para producción en cuanto se introduzcan las credenciales reales de servicios externos en Vercel).
+**DEPLOYED — PENDIENTE_CONFIGURACIÓN_EXTERNA** (La aplicación está desplegada con éxito, pero requiere la configuración de las variables de entorno externas reales en Vercel para habilitar Firebase Admin, Upstash Redis y Vercel Blob de producción).
