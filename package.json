@@ -10,7 +10,10 @@
     "start": "next start",
     "lint": "eslint",
     "lint:colors": "npx tsx scripts/lint-colors.ts",
-    "db:seed": "npx tsx prisma/seed.ts"
+    "db:seed": "npx tsx prisma/seed.ts",
+    "typecheck": "tsc --noEmit",
+    "test:security": "npx tsx scripts/test-isolation.ts && npx tsx scripts/test-product-upload.ts && npx tsx scripts/test-roles-negative.ts && npx tsx scripts/test-sessions.ts && npx tsx scripts/test-mock-bypass-guard.ts && npx tsx scripts/test-logout.ts && npx tsx scripts/test-client-errors.ts && npx tsx scripts/test-storage.ts",
+    "verify:production-readiness": "npm run lint && npm run typecheck && npm run test:security && npm run build"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
