@@ -125,8 +125,13 @@ async function main() {
 
     // --- LIMPIEZA ---
     console.log('\n🧹 Limpiando registros de prueba...');
-    await prisma.cliente.deleteMany({ where: { id: { in: [clienteA.id, clienteB.id] } } });
-    await prisma.producto.deleteMany({ where: { id: productoA.id } });
+    await prisma.cliente.deleteMany({ where: { id: { in: [clienteA.id, clienteB.id] } } }).catch(() => {});
+    await prisma.producto.deleteMany({ where: { id: productoA.id } }).catch(() => {});
+    await prisma.caja.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(() => {});
+    await prisma.bodega.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(() => {});
+    await prisma.sucursal.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(() => {});
+    await prisma.planCuentas.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(() => {});
+    await prisma.usuario.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(() => {});
     await prisma.empresa.deleteMany({ where: { id: { in: [empresaA.id, empresaB.id] } } });
     console.log('✅ Limpieza completada.');
 
