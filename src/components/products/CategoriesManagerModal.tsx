@@ -138,7 +138,7 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
                         <Tags className="h-4.5 w-4.5 text-brand-1" />
                         <h3 className="text-sm font-bold text-foreground">Gestionar Categorías y sus Descuentos</h3>
                     </div>
-                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+                    <button onClick={onClose} aria-label="Cerrar gestor de categorías" className="text-muted-foreground hover:text-foreground">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
@@ -184,10 +184,10 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
                                         <Badge variant={cat.descuentoPorcentaje > 0 ? 'info' : 'neutral'} className="text-[10px] shrink-0">
                                             {cat.descuentoPorcentaje > 0 ? `${cat.descuentoPorcentaje}% desc.` : 'Sin descuento'}
                                         </Badge>
-                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-brand-1" onClick={() => iniciarEdicion(cat)}>
+                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-brand-1" onClick={() => iniciarEdicion(cat)} aria-label={`Editar categoría ${cat.nombre}`}>
                                             <Pencil className="h-3.5 w-3.5" />
                                         </Button>
-                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleEliminar(cat)}>
+                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleEliminar(cat)} aria-label={`Eliminar categoría ${cat.nombre}`}>
                                             <Trash2 className="h-3.5 w-3.5" />
                                         </Button>
                                     </>

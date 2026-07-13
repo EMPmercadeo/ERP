@@ -84,7 +84,7 @@ export function IncomeStatementView({
           <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Ingresos</div>
-              <div className="mt-2 text-2xl font-bold text-emerald-600 font-mono">{formatCurrency(totalIngresos)}</div>
+              <div className="mt-2 text-2xl font-bold text-success font-mono">{formatCurrency(totalIngresos)}</div>
             </CardContent>
           </Card>
           <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
@@ -159,7 +159,7 @@ export function IncomeStatementView({
           <div className="space-y-3">
             <div className="flex items-center justify-between border-b-2 border-border pb-1.5">
               <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">1. Ingresos Operacionales</h3>
-              <span className="font-mono text-sm font-bold text-emerald-600">{formatCurrency(totalIngresos)}</span>
+              <span className="font-mono text-sm font-bold text-success">{formatCurrency(totalIngresos)}</span>
             </div>
             <Table>
               <TableBody>
@@ -237,7 +237,7 @@ export function IncomeStatementView({
           </div>
 
           {/* Utilidad Neta */}
-          <div className={`flex items-center justify-between border rounded-xl px-4 py-4 ${utilidadNeta >= 0 ? 'bg-emerald-500 text-white border-emerald-600' : 'bg-rose-500 text-white border-rose-600'}`}>
+          <div className={`flex items-center justify-between border rounded-xl px-4 py-4 ${utilidadNeta >= 0 ? 'bg-success-bg border-success/30 text-success' : 'bg-danger-bg border-danger/30 text-danger'}`}>
             <span className="text-sm font-bold uppercase tracking-wider">UTILIDAD NETA DEL EJERCICIO</span>
             <span className="font-mono text-base font-black">{formatCurrency(utilidadNeta)}</span>
           </div>

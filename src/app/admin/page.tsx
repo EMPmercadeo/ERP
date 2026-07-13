@@ -67,10 +67,10 @@ export default async function AdminDashboardPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Empresas Activas</CardTitle>
-                        <Activity className="h-4 w-4 text-green-600" />
+                        <Activity className="h-4 w-4 text-success" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-600">{activeCompanies}</div>
+                        <div className="text-2xl font-bold text-success">{activeCompanies}</div>
                         <p className="text-xs text-muted-foreground mt-1">Suscripciones en estado activo</p>
                     </CardContent>
                 </Card>
@@ -78,10 +78,10 @@ export default async function AdminDashboardPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Empresas Suspendidas</CardTitle>
-                        <ShieldAlert className="h-4 w-4 text-red-600" />
+                        <ShieldAlert className="h-4 w-4 text-danger" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-600">{suspendedCompanies}</div>
+                        <div className="text-2xl font-bold text-danger">{suspendedCompanies}</div>
                         <p className="text-xs text-muted-foreground mt-1">Suscripciones suspendidas o vencidas</p>
                     </CardContent>
                 </Card>

@@ -198,14 +198,14 @@ export default function FichaColaboradorPage() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
             <div className="flex items-center gap-3 min-w-0">
               <Link href="/rrhh/empleados">
-                <Button variant="outline" size="icon" className="shrink-0">
+                <Button variant="outline" size="icon" className="shrink-0" aria-label="Volver al listado de colaboradores">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">{ficha.nombre}</h1>
-                  <Badge className={ficha.activo ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}>
+                  <Badge className={ficha.activo ? 'bg-success-bg text-success border border-success/20' : 'bg-danger-bg text-danger border border-danger/20'}>
                     {ficha.activo ? 'Activo' : 'Baja (Soft-Delete)'}
                   </Badge>
                 </div>
@@ -254,7 +254,7 @@ export default function FichaColaboradorPage() {
                   <p className="text-xs text-muted-foreground font-medium">Saldo de Vacaciones (Ledger)</p>
                   <p className="text-xl font-bold text-brand-1 font-mono mt-1">{saldoVacaciones.toFixed(2)} días</p>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+                <div className="h-10 w-10 rounded-full bg-success-bg flex items-center justify-center text-success shrink-0">
                   <Calendar className="h-5 w-5" />
                 </div>
               </CardContent>
@@ -266,7 +266,7 @@ export default function FichaColaboradorPage() {
                   <p className="text-xs text-muted-foreground font-medium">Ausencias Solicitadas</p>
                   <p className="text-xl font-bold text-foreground mt-1">{ficha.ausencias?.length || 0}</p>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
+                <div className="h-10 w-10 rounded-full bg-warning-bg flex items-center justify-center text-warning shrink-0">
                   <Clock className="h-5 w-5" />
                 </div>
               </CardContent>
@@ -276,9 +276,9 @@ export default function FichaColaboradorPage() {
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground font-medium">Actas Disciplinarias</p>
-                  <p className="text-xl font-bold text-red-600 mt-1">{ficha.actas?.length || 0}</p>
+                  <p className="text-xl font-bold text-danger mt-1">{ficha.actas?.length || 0}</p>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0">
+                <div className="h-10 w-10 rounded-full bg-danger-bg flex items-center justify-center text-danger shrink-0">
                   <AlertTriangle className="h-5 w-5" />
                 </div>
               </CardContent>
@@ -346,14 +346,14 @@ export default function FichaColaboradorPage() {
                             </td>
                             <td className="py-3 px-4">
                               <Badge className={
-                                mov.tipo === 'DEVENGO' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
-                                mov.tipo === 'TOMA' ? 'bg-amber-50 text-amber-600 border border-amber-200' :
-                                'bg-blue-50 text-blue-600 border border-blue-200'
+                                mov.tipo === 'DEVENGO' ? 'bg-success-bg text-success border border-success/20' :
+                                mov.tipo === 'TOMA' ? 'bg-warning-bg text-warning border border-warning/20' :
+                                'bg-info-bg text-info border border-info/20'
                               }>
                                 {mov.tipo}
                               </Badge>
                             </td>
-                            <td className={`py-3 px-4 font-mono font-bold ${Number(mov.dias) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            <td className={`py-3 px-4 font-mono font-bold ${Number(mov.dias) >= 0 ? 'text-success' : 'text-danger'}`}>
                               {Number(mov.dias) >= 0 ? `+${Number(mov.dias).toFixed(2)}` : Number(mov.dias).toFixed(2)} días
                             </td>
                             <td className="py-3 px-4 font-mono font-bold text-foreground">
@@ -409,7 +409,7 @@ export default function FichaColaboradorPage() {
                           <tr key={aus.id} className="hover:bg-muted/50">
                             <td className="py-3 px-4 font-bold text-foreground">
                               {aus.tipo}
-                              {!aus.justificada && <span className="text-red-600 block text-[10px]">INJUSTIFICADA</span>}
+                              {!aus.justificada && <span className="text-danger block text-[10px]">INJUSTIFICADA</span>}
                             </td>
                             <td className="py-3 px-4 text-foreground">
                               {new Date(aus.desde).toLocaleDateString('es-PA')} al {new Date(aus.hasta).toLocaleDateString('es-PA')}
@@ -426,9 +426,9 @@ export default function FichaColaboradorPage() {
                             </td>
                             <td className="py-3 px-4">
                               <Badge className={
-                                aus.estado === 'APROBADA' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
-                                aus.estado === 'RECHAZADA' ? 'bg-red-50 text-red-600 border border-red-200' :
-                                'bg-amber-50 text-amber-600 border border-amber-200'
+                                aus.estado === 'APROBADA' ? 'bg-success-bg text-success border border-success/20' :
+                                aus.estado === 'RECHAZADA' ? 'bg-danger-bg text-danger border border-danger/20' :
+                                'bg-warning-bg text-warning border border-warning/20'
                               }>
                                 {aus.estado}
                               </Badge>
@@ -466,7 +466,7 @@ export default function FichaColaboradorPage() {
               {ficha.actas?.length === 0 ? (
                 <Card className="border-border text-center py-12">
                   <CardContent>
-                    <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-3" />
+                    <CheckCircle2 className="h-12 w-12 text-success mx-auto mb-3" />
                     <h3 className="text-base font-bold text-foreground mb-1">Expediente Disciplinario Limpio</h3>
                     <p className="text-xs text-muted-foreground">Este colaborador no presenta llamados de atención, memorandos ni suspensiones en el sistema.</p>
                   </CardContent>
@@ -474,11 +474,11 @@ export default function FichaColaboradorPage() {
               ) : (
                 <div className="space-y-4">
                   {ficha.actas?.map((acta) => (
-                    <Card key={acta.id} className="border-border border-l-4 border-l-red-500 hover:border-l-red-600 transition-all shadow-sm">
+                    <Card key={acta.id} className="border-border hover:shadow-md transition-all shadow-sm">
                       <CardHeader className="pb-2">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <Badge className="bg-red-50 text-red-600 border border-red-200 text-xs uppercase font-bold">
+                            <Badge className="bg-danger-bg text-danger border border-danger/20 text-xs uppercase font-bold">
                               {acta.tipo.replace('_', ' ')}
                             </Badge>
                             <span className="text-xs text-muted-foreground font-mono">
@@ -487,7 +487,7 @@ export default function FichaColaboradorPage() {
                           </div>
                           <div className="flex items-center gap-2">
                             {acta.acuseEmpleado ? (
-                              <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-200 text-[11px] flex items-center gap-1">
+                              <Badge className="bg-success-bg text-success border border-success/20 text-[11px] flex items-center gap-1">
                                 <CheckCircle2 className="h-3 w-3" />
                                 Acuse Firmado el {acta.fechaAcuse ? new Date(acta.fechaAcuse).toLocaleDateString('es-PA') : ''}
                               </Badge>
@@ -496,7 +496,7 @@ export default function FichaColaboradorPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleFirmarAcuse(acta.id)}
-                                className="border-amber-300 text-amber-700 hover:bg-amber-50 text-xs h-7"
+                                className="border-warning/40 text-warning hover:bg-warning-bg text-xs h-7"
                               >
                                 <PenTool className="h-3 w-3 mr-1" />
                                 Registrar Acuse / Firma
@@ -533,7 +533,7 @@ export default function FichaColaboradorPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <Card className="w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
             <CardHeader className="border-b border-border pb-4">
-              <CardTitle className="text-lg font-bold text-red-600 flex items-center gap-2">
+              <CardTitle className="text-lg font-bold text-danger flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5" />
                 Emitir Acta Disciplinaria (Sanción/Llamado)
               </CardTitle>
@@ -548,7 +548,7 @@ export default function FichaColaboradorPage() {
                   <select
                     value={actaTipo}
                     onChange={(e) => setActaTipo(e.target.value)}
-                    className="w-full bg-muted/50 border border-border rounded-md text-sm text-foreground px-3 py-2 h-10 focus:outline-none focus:ring-1 focus:ring-red-400 focus:border-red-400"
+                    className="w-full bg-muted/50 border border-border rounded-md text-sm text-foreground px-3 py-2 h-10 focus:outline-none focus:ring-1 focus:ring-danger focus:border-danger"
                   >
                     <option value="AMONESTACION_VERBAL">AMONESTACIÓN VERBAL (REGISTRO)</option>
                     <option value="AMONESTACION_ESCRITA">AMONESTACIÓN ESCRITA</option>
@@ -574,7 +574,7 @@ export default function FichaColaboradorPage() {
                     placeholder="Describa con exactitud fecha, hora, testigos e infracción cometida..."
                     value={actaDesc}
                     onChange={(e) => setActaDesc(e.target.value)}
-                    className="w-full bg-muted/50 border border-border rounded-md text-sm text-foreground px-3 py-2 focus:outline-none focus:ring-1 focus:ring-red-400 focus:border-red-400"
+                    className="w-full bg-muted/50 border border-border rounded-md text-sm text-foreground px-3 py-2 focus:outline-none focus:ring-1 focus:ring-danger focus:border-danger"
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

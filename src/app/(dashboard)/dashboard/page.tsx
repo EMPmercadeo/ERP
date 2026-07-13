@@ -390,7 +390,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                     <Link href="/invoices?status=pendiente" className="block">
                         <Card className="cursor-pointer transition-colors hover:bg-accent border-border group h-full">
                             <CardContent className="flex items-center gap-4 pt-6">
-                                <div className="rounded-lg bg-emerald-500/10 p-3 group-hover:bg-emerald-500 group-hover:text-white transition-colors text-emerald-500">
+                                <div className="rounded-lg bg-success-bg p-3 group-hover:bg-success group-hover:text-white transition-colors text-success">
                                     <DollarSign className="h-6 w-6" />
                                 </div>
                                 <div>
@@ -403,7 +403,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                     <Link href="/reports" className="block">
                         <Card className="cursor-pointer transition-colors hover:bg-accent border-border group h-full">
                             <CardContent className="flex items-center gap-4 pt-6">
-                                <div className="rounded-lg bg-purple-500/10 p-3 group-hover:bg-purple-500 group-hover:text-white transition-colors text-purple-500">
+                                <div className="rounded-lg bg-info-bg p-3 group-hover:bg-info group-hover:text-white transition-colors text-info">
                                     <TrendingUp className="h-6 w-6" />
                                 </div>
                                 <div>

@@ -98,11 +98,11 @@ export function CompanyDetailView({ company }: { company: TenantDetailData }) {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-lg border shadow-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card p-6 rounded-lg border shadow-sm">
                 <div>
                     <div className="flex items-center gap-3">
                         <Link href="/admin/empresas">
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Volver al listado de empresas">
                                 <ArrowLeft className="h-4 w-4" />
                             </Button>
                         </Link>
@@ -123,7 +123,7 @@ export function CompanyDetailView({ company }: { company: TenantDetailData }) {
                     <form action={async () => {
                         await startImpersonation(company.id);
                     }}>
-                        <Button variant="outline" type="submit" className="text-amber-600 border-amber-200 hover:bg-amber-50">
+                        <Button variant="outline" type="submit" className="text-warning border-warning/30 hover:bg-warning-bg">
                             <Shield className="h-4 w-4 mr-2" />
                             Impersonar
                         </Button>

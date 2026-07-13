@@ -162,7 +162,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                         <div className="p-3 bg-brand-1/10 text-brand-2 rounded-lg shrink-0">
                             {planType === 'free' && <Sparkles className="h-6 w-6" />}
                             {planType === 'basic' && <Zap className="h-6 w-6" />}
-                            {planType === 'pro' && <Zap className="h-6 w-6 animate-pulse text-amber-500" />}
+                            {planType === 'pro' && <Zap className="h-6 w-6 animate-pulse text-warning" />}
                             {planType === 'enterprise' && <Building className="h-6 w-6 text-brand-1" />}
                         </div>
                         <div>
@@ -256,7 +256,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                                     <span>{plan.name}</span>
                                     {plan.id === 'free' && <Sparkles className="h-5 w-5 text-brand-1" />}
                                     {plan.id === 'basic' && <Zap className="h-5 w-5 text-brand-1" />}
-                                    {plan.id === 'pro' && <Zap className="h-5 w-5 text-amber-500" />}
+                                    {plan.id === 'pro' && <Zap className="h-5 w-5 text-warning" />}
                                     {plan.id === 'enterprise' && <Building className="h-5 w-5 text-muted-foreground" />}
                                 </CardTitle>
                                 <CardDescription className="min-h-[40px] mt-2">

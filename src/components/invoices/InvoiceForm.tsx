@@ -257,12 +257,12 @@ export function InvoiceForm({
                 )}
 
                 {currentRemaining <= 0 && (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in fade-in duration-200">
+                    <div className="rounded-xl border border-warning/20 bg-warning-bg p-4 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in fade-in duration-200">
                         <div className="flex items-start gap-3">
-                            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                            <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
                             <div>
-                                <h4 className="font-bold text-amber-950 text-sm">Límite mensual de facturación alcanzado</h4>
-                                <p className="text-xs text-amber-900/80 mt-0.5">
+                                <h4 className="font-bold text-warning text-sm">Límite mensual de facturación alcanzado</h4>
+                                <p className="text-xs text-warning/80 mt-0.5">
                                     Has agotado los documentos de facturación electrónica incluidos en tu plan para este mes.
                                     Para continuar facturando y timbrando con la DGI, adquiere un bloque adicional o actualiza tu plan.
                                 </p>
@@ -273,7 +273,7 @@ export function InvoiceForm({
                                 type="button"
                                 variant="default"
                                 size="sm"
-                                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs"
+                                className="bg-warning hover:bg-warning/90 text-white font-bold text-xs"
                                 onClick={() => setShowPurchaseBlockModal(true)}
                             >
                                 <Zap className="h-3.5 w-3.5 mr-1.5 fill-white" />
@@ -283,7 +283,7 @@ export function InvoiceForm({
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                className="border-amber-200 text-amber-800 hover:bg-amber-100/50 text-xs font-semibold"
+                                className="border-warning/20 text-warning hover:bg-warning-bg/50 text-xs font-semibold"
                                 asChild
                             >
                                 <Link href="/settings">
@@ -325,11 +325,11 @@ export function InvoiceForm({
                                                     placeholder="Buscar cliente por nombre o RUC..."
                                                     value={clientSearch}
                                                     onChange={(e) => setClientSearch(e.target.value)}
-                                                    className={`pl-8 h-11 md:h-10 ${state?.errors?.clienteId ? 'border-red-500' : ''}`}
+                                                    className={`pl-8 h-11 md:h-10 ${state?.errors?.clienteId ? 'border-danger' : ''}`}
                                                 />
                                             </div>
                                             {clientSearch && (
-                                                <div className="border rounded-lg max-h-48 overflow-auto bg-white z-10 shadow-md divide-y">
+                                                <div className="border rounded-lg max-h-48 overflow-auto bg-card z-10 shadow-md divide-y">
                                                     {filteredClients.length > 0 ? (
                                                         filteredClients.map(client => (
                                                             <button
@@ -345,7 +345,7 @@ export function InvoiceForm({
                                                                     <div className="font-medium text-foreground text-sm">{client.razonSocial}</div>
                                                                     <div className="text-xs text-muted-foreground">RUC: {client.ruc}</div>
                                                                 </div>
-                                                                <span className="text-xs text-indigo-600 font-semibold uppercase tracking-wider">Elegir</span>
+                                                                <span className="text-xs text-brand-1 font-semibold uppercase tracking-wider">Elegir</span>
                                                             </button>
                                                         ))
                                                     ) : (
@@ -363,7 +363,7 @@ export function InvoiceForm({
                                         selectedClient && (
                                             <div className="p-4 border rounded-xl bg-muted flex items-center justify-between shadow-sm">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
+                                                    <div className="h-10 w-10 rounded-full bg-brand-1/10 text-brand-1 flex items-center justify-center font-bold">
                                                         {selectedClient.razonSocial.slice(0, 2).toUpperCase()}
                                                     </div>
                                                     <div>
@@ -376,7 +376,7 @@ export function InvoiceForm({
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => setClienteId('')}
-                                                    className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 h-11 md:h-9"
+                                                    className="text-brand-1 hover:bg-brand-1/5 h-11 md:h-9"
                                                 >
                                                     Cambiar Cliente
                                                 </Button>
@@ -481,6 +481,7 @@ export function InvoiceForm({
                                                                         size="icon"
                                                                         onClick={() => removeItem(item.id)}
                                                                         className="text-destructive hover:text-destructive"
+                                                                        aria-label={`Eliminar ítem ${item.descripcion}`}
                                                                     >
                                                                         <Trash2 className="h-4 w-4" />
                                                                     </Button>
@@ -504,8 +505,9 @@ export function InvoiceForm({
                                                                 type="button"
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0 rounded-lg"
+                                                                className="h-8 w-8 text-danger hover:bg-danger-bg shrink-0 rounded-lg"
                                                                 onClick={() => removeItem(item.id)}
+                                                                aria-label={`Eliminar ítem ${item.descripcion}`}
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
                                                             </Button>
@@ -672,19 +674,19 @@ export function InvoiceForm({
                                             onClick={() => setSelectedBlockSize(block.size)}
                                             className={`p-3 border rounded-lg flex flex-col items-center justify-center gap-1 transition-all ${
                                                 selectedBlockSize === block.size
-                                                    ? 'border-indigo-600 bg-indigo-50/50 text-indigo-950 ring-2 ring-indigo-600/10'
-                                                    : 'border-border bg-white text-foreground hover:bg-accent'
+                                                    ? 'border-brand-1 bg-brand-1/5 text-brand-1 ring-2 ring-brand-1/10'
+                                                    : 'border-border bg-card text-foreground hover:bg-accent'
                                             }`}
                                         >
                                             <span className="text-xs font-bold">{block.label}</span>
-                                            <span className="text-xs font-semibold text-indigo-600">${block.price.toFixed(2)}</span>
+                                            <span className="text-xs font-semibold text-brand-1">${block.price.toFixed(2)}</span>
                                             <span className="text-[9px] text-muted-foreground">($0.05 c/u)</span>
                                         </button>
                                     ))}
                                 </div>
                             </div>
 
-                            <div className="bg-indigo-50/30 border border-indigo-100 rounded-lg p-4 space-y-2 text-xs text-indigo-950/80">
+                            <div className="bg-brand-1/5 border border-brand-1/10 rounded-lg p-4 space-y-2 text-xs text-foreground/80">
                                 <div className="flex justify-between font-semibold">
                                     <span>Costo del Bloque</span>
                                     <span>${(selectedBlockSize * 0.05).toFixed(2)} USD</span>
