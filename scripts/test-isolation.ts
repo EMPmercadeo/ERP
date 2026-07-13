@@ -125,13 +125,29 @@ async function main() {
 
     // --- LIMPIEZA ---
     console.log('\n🧹 Limpiando registros de prueba...');
-    await prisma.cliente.deleteMany({ where: { id: { in: [clienteA.id, clienteB.id] } } }).catch(() => {});
-    await prisma.producto.deleteMany({ where: { id: productoA.id } }).catch(() => {});
-    await prisma.caja.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(() => {});
-    await prisma.bodega.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(() => {});
-    await prisma.sucursal.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(() => {});
-    await prisma.planCuentas.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(() => {});
-    await prisma.usuario.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(() => {});
+    await prisma.compraItem.deleteMany({ where: { compra: { empresaId: { in: [empresaA.id, empresaB.id] } } } }).catch(err => console.error('compraItem delete error:', err));
+    await prisma.compra.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(err => console.error('compra delete error:', err));
+    await prisma.facturaItem.deleteMany({ where: { factura: { empresaId: { in: [empresaA.id, empresaB.id] } } } }).catch(err => console.error('facturaItem delete error:', err));
+    await prisma.factura.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(err => console.error('factura delete error:', err));
+    await prisma.albaranVentaItem.deleteMany({ where: { albaran: { empresaId: { in: [empresaA.id, empresaB.id] } } } }).catch(err => console.error('albaranItem delete error:', err));
+    await prisma.albaranVenta.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(err => console.error('albaran delete error:', err));
+    await prisma.secuencia.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(err => console.error('secuencia delete error:', err));
+    await prisma.documentUsage.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(err => console.error('documentUsage delete error:', err));
+    
+    await prisma.asientoContableLinea.deleteMany({ where: { asiento: { empresaId: { in: [empresaA.id, empresaB.id] } } } }).catch(err => console.error('asientoLinea delete error:', err));
+    await prisma.asientoContable.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(err => console.error('asiento delete error:', err));
+    
+    await prisma.loteProducto.deleteMany({ where: { bodega: { sucursal: { empresaId: { in: [empresaA.id, empresaB.id] } } } } }).catch(err => console.error('lote delete error:', err));
+    await prisma.inventarioBodega.deleteMany({ where: { bodega: { sucursal: { empresaId: { in: [empresaA.id, empresaB.id] } } } } }).catch(err => console.error('inventarioBodega delete error:', err));
+    await prisma.productImage.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(err => console.error('productImage delete error:', err));
+    
+    await prisma.cliente.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(err => console.error('cliente delete error:', err));
+    await prisma.producto.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(err => console.error('producto delete error:', err));
+    await prisma.caja.deleteMany({ where: { sucursal: { empresaId: { in: [empresaA.id, empresaB.id] } } } }).catch(err => console.error('caja delete error:', err));
+    await prisma.bodega.deleteMany({ where: { sucursal: { empresaId: { in: [empresaA.id, empresaB.id] } } } }).catch(err => console.error('bodega delete error:', err));
+    await prisma.sucursal.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(err => console.error('sucursal delete error:', err));
+    await prisma.planCuentas.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(err => console.error('planCuentas delete error:', err));
+    await prisma.usuario.deleteMany({ where: { empresaId: { in: [empresaA.id, empresaB.id] } } }).catch(err => console.error('usuario delete error:', err));
     await prisma.empresa.deleteMany({ where: { id: { in: [empresaA.id, empresaB.id] } } });
     console.log('✅ Limpieza completada.');
 
