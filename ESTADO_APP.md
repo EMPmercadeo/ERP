@@ -189,14 +189,11 @@ Las siguientes funciones se despliegan en la pantalla pero están **mockeadas**,
    * **Flujo:** El botón de huella digital en el login móvil ejecuta funciones WebAuthn del navegador (`navigator.credentials.create`), pero no existe validación de llaves públicas ni registro en base de datos.
    * **Archivos implicados:**
      * [login/page.tsx](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/app/(auth)/login/page.tsx#L78-L141): Flujo simulado a nivel de cliente. Guarda un flag en `localStorage` (`erp_passkey_saved`) para decidir si el usuario entra de forma directa, sin validación criptográfica en el servidor.
-4. **Envío de Correos a Proveedores:**
-   * **Flujo:** El botón para enviar estados de cuenta o facturas de compra por correo electrónico a proveedores.
+4. **Integraciones de WhatsApp y Webhooks (código listo, pendiente credenciales):**
+   * **Flujo:** Las secciones para ingresar número/token de WhatsApp y URLs/token de Webhook en Configuración guardan los datos en la tabla `Empresa`. El código de envío de mensajes y disparos de webhooks **está implementado** en [whatsapp.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/integrations/whatsapp.ts) y [webhooks.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/integrations/webhooks.ts), y está correctamente gateado: no ejecuta nada si la empresa no tiene credenciales/URL configuradas. Sin embargo, ninguna empresa tiene credenciales reales configuradas aún, por lo que la funcionalidad no se ejerce en producción.
    * **Archivos implicados:**
-     * [suppliers.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/actions/suppliers.ts#L352-L353): La función `sendSupplierEmailAction` simula el proceso de red mediante un retardo (`setTimeout` de 800ms) y devuelve un mensaje de éxito, pero no utiliza ningún servicio de correos (ej. Resend o Sendgrid).
-5. **Integraciones de WhatsApp y Webhooks:**
-   * **Flujo:** Las secciones para ingresar número/token de WhatsApp y URLs/token de Webhook en Configuración guardan los datos en la tabla `Empresa`, pero no hay código que envíe los mensajes o dispare las llamadas HTTP al ocurrir eventos en la app.
-   * **Archivos implicados:**
-     * [settings.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/actions/settings.ts#L96-L124): Solo guarda los campos en base de datos.
+     * [whatsapp.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/integrations/whatsapp.ts): Lógica de envío real (HTTP POST a la API de WhatsApp Business). No hace nada sin `whatsappPhone`/`whatsappToken` configurados en la empresa.
+     * [webhooks.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/integrations/webhooks.ts): Dispara POST HTTP con payload JSON ante eventos (factura creada, pago recibido). No hace nada sin `webhookUrl` configurado.
 
 ---
 
@@ -241,11 +238,11 @@ Las siguientes funciones se despliegan en la pantalla pero están **mockeadas**,
   * **Estado:** Simulado en backend local.
   * **Detalle:** La base de datos guarda correctamente los esquemas y estados (`aceptada`, `anulada`), pero las APIs de Next.js de firmado y autorización devuelven CUFE y XML estáticos simulados. No existe integración web service SOAP/REST real con la DGI o PAC.
 * **WhatsApp API:**
-  * **Estado:** Solo declarada.
-  * **Detalle:** Existe el modelo en base de datos para guardar número y token de WhatsApp en Configuración, pero no hay lógica de envíos de mensajes al facturar o cobrar.
+  * **Estado:** ⚠️ Código implementado, pendiente credenciales.
+  * **Detalle:** Módulo funcional en [whatsapp.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/integrations/whatsapp.ts) con lógica de envío real (HTTP POST a la API de WhatsApp Business). Gateado correctamente: no hace nada sin `whatsappPhone`/`whatsappToken` configurados en la empresa. Pendiente: credenciales reales y template aprobado en Meta Business Manager.
 * **Webhooks Externos:**
-  * **Estado:** Solo declarada.
-  * **Detalle:** Registra la URL y token en Configuración, pero no existe código que dispare llamadas HTTP externas ante eventos.
+  * **Estado:** ⚠️ Código implementado, pendiente configuración.
+  * **Detalle:** Módulo funcional en [webhooks.ts](file:///C:/Users/ermom/.gemini/antigravity/scratch/erp-panama/src/lib/integrations/webhooks.ts) que dispara POST HTTP con payload JSON ante eventos (factura creada, pago recibido). Gateado correctamente: no hace nada sin `webhookUrl` configurado. Pendiente: que una empresa configure una URL real.
 * **Email de Notificaciones:**
-  * **Estado:** Simulado en backend.
-  * **Detalle:** Envío de estados de cuenta y correos a proveedores utiliza delays mockeados.
+  * **Estado:** ✅ Implementado.
+  * **Detalle:** Envío real de correos transaccionales vía SMTP genérico (nodemailer). Soporta cualquier proveedor SMTP (Google Workspace, Resend, Zoho, etc.) configurando variables de entorno (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`). Sin credenciales configuradas, devuelve un error descriptivo en vez de simular envío.
