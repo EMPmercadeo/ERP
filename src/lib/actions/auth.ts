@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { adminAuth } from '@/lib/firebase/admin';
 import { resolveUsuarioPorEmail } from '@/lib/auth/resolveUsuario';
+import { logger } from '@/lib/logger';
 
 // getUserRole/getCurrentUser/getCurrentUserWithPlan son la fuente que consume el
 // cliente (hook useAuth -> role). Antes usaban `findUnique({ where: { email } })`,
@@ -82,10 +83,27 @@ export async function setSessionToken(idToken: string) {
         path: '/',
         maxAge: expiresIn / 1000,
     });
+    logger.info('Sesión de usuario iniciada correctamente', { email: decoded.email, uid: decoded.uid });
 }
 
 export async function deleteSessionEmail() {
     const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('session_token')?.value;
     cookieStore.delete('session_token');
     cookieStore.delete('session_email');
+    
+    if (sessionToken) {
+        try {
+            const decoded = await adminAuth.verifySessionCookie(sessionToken).catch(() => null);
+            if (decoded) {
+                logger.info('Sesión de usuario cerrada correctamente', { email: decoded.email, uid: decoded.uid });
+            } else {
+                logger.info('Sesión de usuario cerrada (token ya expirado o inválido)');
+            }
+        } catch {
+            logger.info('Sesión de usuario cerrada (error al decodificar para log)');
+        }
+    } else {
+        logger.info('Sesión de usuario cerrada (sin token activo)');
+    }
 }
