@@ -121,7 +121,7 @@ export function ImportClientsDialog() {
             const result = await importClients(rows);
 
             if (result.success) {
-                setSummary({ count: result.count, errors: result.errors });
+                setSummary({ count: result.count ?? 0, errors: result.errors ?? [] });
                 setFile(null);
                 router.refresh();
             } else {
