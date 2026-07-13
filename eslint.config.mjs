@@ -16,22 +16,28 @@ const eslintConfig = defineConfig([
           "caughtErrorsIgnorePattern": "^_"
         }
       ],
-      // Justificación: El tipo 'any' es común en respuestas JSON y adaptadores del ERP
-      "@typescript-eslint/no-explicit-any": "off",
+      // Justificación: El tipo 'any' es común en respuestas JSON y adaptadores del ERP.
+      // Se deja en "warn" (no "off") para que siga siendo visible en `npm run lint` sin
+      // romper el build — una desactivación total ocultaría usos nuevos e innecesarios.
+      "@typescript-eslint/no-explicit-any": "warn",
       // Justificación: Preferencias de estilo menores, no críticas para producción
       "prefer-const": "off",
       "react/no-unescaped-entities": "off",
       "@next/next/no-html-link-for-pages": "off",
 
       // --- Reglas del Compilador de React (React 19 / Next 16) ---
+      // Estas cuatro reglas se dejan en "warn" en vez de "off": permiten que el build
+      // y el lint pasen sin bloquear el trabajo existente, pero mantienen visibles los
+      // patrones que señalan (mutaciones en efectos, librerías incompatibles con el
+      // compilador, impurezas de render, hoisting) en vez de ocultarlos por completo.
       // Justificación: Cambiar estado en useEffect es común en componentes heredados
-      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/set-state-in-effect": "warn",
       // Justificación: useReactTable retorna funciones no memoizables por diseño de la biblioteca
-      "react-hooks/incompatible-library": "off",
+      "react-hooks/incompatible-library": "warn",
       // Justificación: La pureza estricta de renderizado bloquea el uso de Date.now() en ID locales de sincronización offline
-      "react-hooks/purity": "off",
+      "react-hooks/purity": "warn",
       // Justificación: Llamadas a cargadores internos dentro de useEffect antes de su declaración (hoisting funcional)
-      "react-hooks/immutability": "off",
+      "react-hooks/immutability": "warn",
 
       // --- Reglas de Hooks Críticas (Advertencias en lugar de desactivación total) ---
       "react-hooks/exhaustive-deps": "warn",

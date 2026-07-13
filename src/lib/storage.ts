@@ -5,9 +5,13 @@ import { put, del } from '@vercel/blob';
 export interface StorageProvider {
     /**
      * Sube un archivo a partir de un buffer y retorna su URL pública accesible.
+     * `empresaId` (opcional, pero se debe pasar siempre que exista un tenant) se usa
+     * para aislar físicamente los archivos de cada empresa en su propio prefijo de
+     * ruta (`products/{empresaId}/{filename}`), de modo que dos empresas nunca
+     * comparten carpeta ni pueden enumerar archivos ajenas por convención de nombre.
      */
-    uploadFile(buffer: Buffer, filename: string, mimeType: string): Promise<string>;
-    
+    uploadFile(buffer: Buffer, filename: string, mimeType: string, empresaId?: string): Promise<string>;
+
     /**
      * Elimina un archivo mediante su URL o ruta guardada.
      */
@@ -15,18 +19,22 @@ export interface StorageProvider {
 }
 
 export class LocalStorageProvider implements StorageProvider {
-    async uploadFile(buffer: Buffer, filename: string, _mimeType: string): Promise<string> {
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products');
+    async uploadFile(buffer: Buffer, filename: string, _mimeType: string, empresaId?: string): Promise<string> {
+        const segment = empresaId ? `products/${empresaId}` : 'products';
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads', segment);
         await fs.mkdir(uploadDir, { recursive: true });
         const filepath = path.join(uploadDir, filename);
         await fs.writeFile(filepath, buffer);
-        return `/uploads/products/${filename}`;
+        return `/uploads/${segment}/${filename}`;
     }
 
     async deleteFile(filepathOrUrl: string): Promise<void> {
-        const filename = path.basename(filepathOrUrl);
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products');
-        const filepath = path.join(uploadDir, filename);
+        // filepathOrUrl viene como `/uploads/products/{empresaId}/{filename}` (o legado
+        // `/uploads/products/{filename}` sin empresaId) — reconstruimos la ruta relativa
+        // completa en vez de solo el basename, para no intentar borrar en la carpeta
+        // equivocada cuando hay subcarpetas por empresa.
+        const relative = filepathOrUrl.replace(/^\/?uploads\//, '');
+        const filepath = path.join(process.cwd(), 'public', 'uploads', relative);
         try {
             await fs.unlink(filepath);
         } catch (err) {
@@ -36,7 +44,7 @@ export class LocalStorageProvider implements StorageProvider {
 }
 
 export class RemoteStorageProvider implements StorageProvider {
-    async uploadFile(buffer: Buffer, filename: string, mimeType: string): Promise<string> {
+    async uploadFile(buffer: Buffer, filename: string, mimeType: string, empresaId?: string): Promise<string> {
         const token = process.env.BLOB_READ_WRITE_TOKEN;
 
         if (!token) {
@@ -45,16 +53,24 @@ export class RemoteStorageProvider implements StorageProvider {
             );
         }
 
+        // Aislamiento por tenant: cada empresa sube a su propio prefijo de carpeta.
+        // Las imágenes de producto son de naturaleza pública (catálogo/tienda), por lo
+        // que se mantienen en acceso público de Vercel Blob (no confidenciales); el
+        // prefijo por empresa es para evitar colisiones de nombre y facilitar
+        // auditoría/borrado por tenant, no para ocultar el archivo.
+        const pathPrefix = empresaId ? `products/${empresaId}` : 'products';
+
         // Subir a Vercel Blob de verdad (excepto en ambiente de test)
         const isTest = process.env.NODE_ENV === 'test' || token === 'mock-blob-token';
         if (isTest) {
-            return `https://erp-panama.public.blob.vercel-storage.com/products/${filename}`;
+            return `https://erp-panama.public.blob.vercel-storage.com/${pathPrefix}/${filename}`;
         }
 
-        const blob = await put(`products/${filename}`, buffer, {
+        const blob = await put(`${pathPrefix}/${filename}`, buffer, {
             access: 'public',
             contentType: mimeType,
-            token: token
+            token: token,
+            addRandomSuffix: true,
         });
         return blob.url;
     }

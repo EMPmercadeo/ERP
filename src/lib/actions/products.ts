@@ -522,7 +522,7 @@ export async function uploadProductImage(productId: string, formData: FormData) 
         const storage = getStorageProvider();
         let imageUrl = '';
         try {
-            imageUrl = await storage.uploadFile(buffer, safeFilename, file.type);
+            imageUrl = await storage.uploadFile(buffer, safeFilename, file.type, empresaId);
         } catch (uploadErr) {
             return { success: false, message: uploadErr instanceof Error ? uploadErr.message : 'Error al guardar el archivo.' };
         }

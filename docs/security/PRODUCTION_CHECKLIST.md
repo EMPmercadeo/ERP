@@ -28,3 +28,12 @@ Este documento contiene la lista obligatoria de verificaciones y pasos necesario
 ## 4. Despliegue en Vercel
 - [ ] **Upstash Redis Activado:** Verificar que el rate limit de peticiones API no se ejecuta en la memoria local de la función serverless (Upstash configurado).
 - [ ] **Storage Remoto:** Asegurar que `STORAGE_PROVIDER` está en `vercel` o `s3` y no en `local` (el disco efímero de las Serverless Functions borrará las imágenes).
+
+---
+
+## 5. Pasos exactos para pasar de "degradado" a "estricto" (antes de vender al público)
+Ver el procedimiento detallado en `PRODUCTION_CHECKLIST.md` (raíz del repo). En resumen:
+configurar `UPSTASH_REDIS_REST_URL`/`TOKEN` y `BLOB_READ_WRITE_TOKEN` reales, verificarlos
+con una prueba real (login + subida de imagen de producto), y solo entonces activar
+`REQUIRE_DISTRIBUTED_RATE_LIMIT=true` y `REQUIRE_REMOTE_STORAGE=true` en Vercel → Production.
+No declarar `APTO_PARA_PRODUCCIÓN` antes de completar esto con credenciales reales.

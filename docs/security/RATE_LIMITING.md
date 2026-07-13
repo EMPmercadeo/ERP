@@ -6,7 +6,16 @@ Este documento detalla el control y mitigación contra ataques de fuerza bruta y
 
 ## 1. Middleware y Proveedores
 * **Upstash Redis:** Proveedor principal para entornos de producción en la nube. Los límites de tasa se persisten de forma distribuida en Redis.
-* **Memoria Local:** Utilizado como fallback exclusivo en desarrollo y pruebas para evitar costos innecesarios.
+* **Memoria Local:** pensado para desarrollo y pruebas, **pero también es el fallback real
+  en producción** mientras `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` no estén
+  configurados (ver `src/lib/redis-ratelimit.ts`). Esto significa que, hoy, cada instancia
+  serverless de Vercel lleva su propio contador independiente — el límite real efectivo es
+  aproximadamente `límite × número de instancias activas`, no el límite nominal. Cada
+  petición degradada emite un `console.warn` visible en los logs de Vercel.
+* **`REQUIRE_DISTRIBUTED_RATE_LIMIT=true`:** variable de entorno opcional que, una vez
+  Upstash esté configurado y probado, fuerza Fail-Closed (HTTP 429) si Redis falta o no
+  responde, en vez de degradar a memoria local. Recomendado activarla antes de vender al
+  público — mientras no se active, el rate limiting en producción **no es distribuido**.
 
 ---
 
