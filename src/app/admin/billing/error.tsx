@@ -23,8 +23,8 @@ export default function BillingError({
                     Ocurrió un error inesperado al cargar la página de facturación.
                 </p>
                 {error?.digest && (
-                    <p className="text-xs text-danger/80 mb-4">
-                        Código de error: <code className="bg-danger-bg/80 px-1 py-0.5 rounded">{error.digest}</code>
+                    <p className="text-xs text-danger mb-4">
+                        Código de error: <code className="bg-danger/10 px-1 py-0.5 rounded">{error.digest}</code>
                     </p>
                 )}
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
@@ -36,7 +36,7 @@ export default function BillingError({
                     </button>
                     <Link
                         href="/"
-                        className="px-4 py-2 bg-card border border-danger/40 text-danger rounded-md hover:bg-danger-bg transition-colors text-sm font-medium"
+                        className="px-4 py-2 bg-card border border-danger/30 text-danger rounded-md hover:bg-danger-bg transition-colors text-sm font-medium"
                     >
                         Ir al Inicio
                     </Link>

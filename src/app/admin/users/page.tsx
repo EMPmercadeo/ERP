@@ -48,21 +48,21 @@ export default async function AdminUsersPage(props: PageProps) {
         switch (userRole) {
             case 'super_admin':
                 return (
-                    <Badge variant="outline" className="border-transparent bg-danger-bg text-danger font-semibold gap-1">
+                    <Badge variant="outline" className="border-danger/20 bg-danger-bg text-danger font-semibold gap-1">
                         <ShieldAlert className="h-3 w-3" />
                         Super Admin
                     </Badge>
                 );
             case 'admin':
                 return (
-                    <Badge variant="outline" className="border-transparent bg-info-bg text-info font-semibold gap-1">
+                    <Badge variant="outline" className="border-info/20 bg-info-bg text-info font-semibold gap-1">
                         <ShieldCheck className="h-3 w-3" />
                         Admin
                     </Badge>
                 );
             case 'contador':
                 return (
-                    <Badge variant="outline" className="border-transparent bg-warning-bg text-warning font-medium">
+                    <Badge variant="outline" className="border-warning/20 bg-warning-bg text-warning font-medium">
                         Contador
                     </Badge>
                 );

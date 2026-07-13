@@ -57,7 +57,7 @@ export default async function AdminBillingPage() {
                 <div className="rounded-lg border border-danger/30 bg-danger-bg p-6 text-danger shadow-sm max-w-2xl mx-auto my-12">
                     <h2 className="text-xl font-bold mb-2">Empresa no encontrada</h2>
                     <p className="text-sm mb-4">
-                        No se pudo encontrar la empresa con ID <code className="bg-danger-bg/80 px-1 py-0.5 rounded">{empresaId}</code>.
+                        No se pudo encontrar la empresa con ID <code className="bg-danger/10 px-1 py-0.5 rounded">{empresaId}</code>.
                     </p>
                     <p className="text-sm">
                         Si es un super administrador impersonando a otra empresa, por favor finalice la impersonación o seleccione otra empresa válida desde el panel de control.

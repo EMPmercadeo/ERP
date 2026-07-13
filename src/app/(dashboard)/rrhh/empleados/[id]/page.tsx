@@ -198,14 +198,14 @@ export default function FichaColaboradorPage() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
             <div className="flex items-center gap-3 min-w-0">
               <Link href="/rrhh/empleados">
-                <Button variant="outline" size="icon" className="shrink-0">
+                <Button variant="outline" size="icon" className="shrink-0" aria-label="Volver al listado de colaboradores">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">{ficha.nombre}</h1>
-                  <Badge className={ficha.activo ? 'bg-success-bg text-success border-transparent' : 'bg-danger-bg text-danger border-transparent'}>
+                  <Badge className={ficha.activo ? 'bg-success-bg text-success border border-success/20' : 'bg-danger-bg text-danger border border-danger/20'}>
                     {ficha.activo ? 'Activo' : 'Baja (Soft-Delete)'}
                   </Badge>
                 </div>
@@ -346,9 +346,9 @@ export default function FichaColaboradorPage() {
                             </td>
                             <td className="py-3 px-4">
                               <Badge className={
-                                mov.tipo === 'DEVENGO' ? 'bg-success-bg text-success border-transparent' :
-                                mov.tipo === 'TOMA' ? 'bg-warning-bg text-warning border-transparent' :
-                                'bg-info-bg text-info border-transparent'
+                                mov.tipo === 'DEVENGO' ? 'bg-success-bg text-success border border-success/20' :
+                                mov.tipo === 'TOMA' ? 'bg-warning-bg text-warning border border-warning/20' :
+                                'bg-info-bg text-info border border-info/20'
                               }>
                                 {mov.tipo}
                               </Badge>
@@ -426,9 +426,9 @@ export default function FichaColaboradorPage() {
                             </td>
                             <td className="py-3 px-4">
                               <Badge className={
-                                aus.estado === 'APROBADA' ? 'bg-success-bg text-success border-transparent' :
-                                aus.estado === 'RECHAZADA' ? 'bg-danger-bg text-danger border-transparent' :
-                                'bg-warning-bg text-warning border-transparent'
+                                aus.estado === 'APROBADA' ? 'bg-success-bg text-success border border-success/20' :
+                                aus.estado === 'RECHAZADA' ? 'bg-danger-bg text-danger border border-danger/20' :
+                                'bg-warning-bg text-warning border border-warning/20'
                               }>
                                 {aus.estado}
                               </Badge>
@@ -447,7 +447,7 @@ export default function FichaColaboradorPage() {
           {/* TAB 3: EXPEDIENTE DISCIPLINARIO */}
           {activeTab === 'expediente' && (
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 bg-card p-4 rounded-lg border border-border shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 bg-white p-4 rounded-lg border border-border shadow-sm">
                 <div>
                   <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
                     <ShieldCheck className="h-5 w-5 text-brand-1 shrink-0" />
@@ -474,11 +474,11 @@ export default function FichaColaboradorPage() {
               ) : (
                 <div className="space-y-4">
                   {ficha.actas?.map((acta) => (
-                    <Card key={acta.id} className="border-border shadow-sm">
+                    <Card key={acta.id} className="border-border hover:shadow-md transition-all shadow-sm">
                       <CardHeader className="pb-2">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <Badge className="bg-danger-bg text-danger border-transparent text-xs uppercase font-bold">
+                            <Badge className="bg-danger-bg text-danger border border-danger/20 text-xs uppercase font-bold">
                               {acta.tipo.replace('_', ' ')}
                             </Badge>
                             <span className="text-xs text-muted-foreground font-mono">
@@ -487,7 +487,7 @@ export default function FichaColaboradorPage() {
                           </div>
                           <div className="flex items-center gap-2">
                             {acta.acuseEmpleado ? (
-                              <Badge className="bg-success-bg text-success border-transparent text-[11px] flex items-center gap-1">
+                              <Badge className="bg-success-bg text-success border border-success/20 text-[11px] flex items-center gap-1">
                                 <CheckCircle2 className="h-3 w-3" />
                                 Acuse Firmado el {acta.fechaAcuse ? new Date(acta.fechaAcuse).toLocaleDateString('es-PA') : ''}
                               </Badge>
@@ -496,7 +496,7 @@ export default function FichaColaboradorPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleFirmarAcuse(acta.id)}
-                                className="border-warning text-warning hover:bg-warning-bg text-xs h-7"
+                                className="border-warning/40 text-warning hover:bg-warning-bg text-xs h-7"
                               >
                                 <PenTool className="h-3 w-3 mr-1" />
                                 Registrar Acuse / Firma

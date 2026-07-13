@@ -155,7 +155,7 @@ export default function AusenciasPage() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <Button onClick={cargarDatos} variant="outline" size="icon" className="shrink-0">
+              <Button onClick={cargarDatos} variant="outline" size="icon" className="shrink-0" aria-label="Actualizar lista de ausencias">
                 <RefreshCw className="h-4 w-4" />
               </Button>
               <Button
@@ -224,7 +224,7 @@ export default function AusenciasPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge className={
                           aus.tipo === 'VACACIONES' ? 'bg-brand-1/10 text-brand-1 border border-brand-1/30' :
-                          aus.tipo === 'ENFERMEDAD' || aus.tipo === 'MATERNIDAD' ? 'bg-info-bg text-info border-transparent' :
+                          aus.tipo === 'ENFERMEDAD' || aus.tipo === 'MATERNIDAD' ? 'bg-info-bg text-info border border-info/20' :
                           'bg-muted text-muted-foreground border border-border'
                         }>
                           {aus.tipo}
@@ -249,9 +249,9 @@ export default function AusenciasPage() {
                       )}
 
                       <Badge className={
-                        aus.estado === 'APROBADA' ? 'bg-success-bg text-success border-transparent text-xs font-bold' :
-                        aus.estado === 'RECHAZADA' ? 'bg-danger-bg text-danger border-transparent text-xs font-bold' :
-                        'bg-warning-bg text-warning border-transparent text-xs font-bold animate-pulse'
+                        aus.estado === 'APROBADA' ? 'bg-success-bg text-success border border-success/20 text-xs font-bold' :
+                        aus.estado === 'RECHAZADA' ? 'bg-danger-bg text-danger border border-danger/20 text-xs font-bold' :
+                        'bg-warning-bg text-warning border border-warning/20 text-xs font-bold animate-pulse'
                       }>
                         {aus.estado}
                       </Badge>
@@ -300,7 +300,7 @@ export default function AusenciasPage() {
             <form onSubmit={handleCrearAusencia}>
               <CardContent className="space-y-4 pt-4 text-xs">
                 {errorModal && (
-                  <div className="p-3 rounded bg-danger-bg border border-danger/30 text-danger flex items-center gap-2">
+                  <div className="p-3 rounded bg-danger-bg border border-danger/20 text-danger flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                     <span>{errorModal}</span>
                   </div>

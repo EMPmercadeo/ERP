@@ -129,14 +129,14 @@ export function CompanyList({
                                                 const res = await startImpersonation(company.id);
                                                 return res;
                                             }}>
-                                                <Button size="icon" variant="ghost" type="submit" className="h-8 w-8 text-warning hover:text-warning hover:bg-warning-bg" title="Impersonar" aria-label={`Impersonar empresa ${company.razonSocial}`}>
+                                                <Button size="icon" variant="ghost" type="submit" className="h-8 w-8 text-warning hover:bg-warning-bg" title="Impersonar" aria-label={`Impersonar empresa ${company.razonSocial}`}>
                                                     <Shield className="h-4 w-4" />
                                                 </Button>
                                             </form>
                                             <Button
                                                 size="icon"
                                                 variant="ghost"
-                                                className={`h-8 w-8 ${company.status === 'Activa' ? 'text-danger hover:text-danger hover:bg-danger-bg' : 'text-success hover:text-success hover:bg-success-bg'}`}
+                                                className={`h-8 w-8 ${company.status === 'Activa' ? 'text-danger hover:bg-danger-bg' : 'text-success hover:bg-success-bg'}`}
                                                 title={company.status === 'Activa' ? 'Suspender empresa' : 'Reactivar empresa'}
                                                 aria-label={company.status === 'Activa' ? `Suspender empresa ${company.razonSocial}` : `Reactivar empresa ${company.razonSocial}`}
                                                 onClick={async () => {
@@ -151,7 +151,7 @@ export function CompanyList({
                                                 <Power className="h-4 w-4" />
                                             </Button>
                                             <Link href={`/admin/empresas/${company.id}`}>
-                                                <Button size="icon" variant="ghost" className="h-8 w-8" title="Ver detalles" aria-label={`Ver detalles de ${company.razonSocial}`}>
+                                                <Button size="icon" variant="ghost" className="h-8 w-8" title="Ver detalles" aria-label={`Ver detalles de la empresa ${company.razonSocial}`}>
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                             </Link>

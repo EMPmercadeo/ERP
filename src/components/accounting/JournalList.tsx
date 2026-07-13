@@ -257,10 +257,10 @@ export function JournalList({
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={`font-semibold rounded-lg px-2 py-0.5 text-[10px] ${
-                            asiento.origen === 'FACTURA' ? 'bg-info-bg border-transparent text-info' :
-                            asiento.origen === 'COBRO' ? 'bg-success-bg border-transparent text-success' :
-                            asiento.origen === 'COMPRA' ? 'bg-warning-bg border-transparent text-warning' :
-                            asiento.origen === 'PAGO_PROVEEDOR' ? 'bg-danger-bg border-transparent text-danger' :
+                            asiento.origen === 'FACTURA' ? 'bg-info-bg border-info/20 text-info' :
+                            asiento.origen === 'COBRO' ? 'bg-success-bg border-success/20 text-success' :
+                            asiento.origen === 'COMPRA' ? 'bg-warning-bg border-warning/20 text-warning' :
+                            asiento.origen === 'PAGO_PROVEEDOR' ? 'bg-danger-bg border-danger/20 text-danger' :
                             'bg-muted border-border text-foreground'
                           }`}>
                             {asiento.origen}

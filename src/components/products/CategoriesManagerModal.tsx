@@ -138,7 +138,7 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
                         <Tags className="h-4.5 w-4.5 text-brand-1" />
                         <h3 className="text-sm font-bold text-foreground">Gestionar Categorías y sus Descuentos</h3>
                     </div>
-                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+                    <button onClick={onClose} aria-label="Cerrar gestor de categorías" className="text-muted-foreground hover:text-foreground">
                         <X className="h-5 w-5" />
                     </button>
                 </div>

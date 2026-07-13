@@ -22,8 +22,8 @@ export default function AdminError({
                     No se pudo cargar el panel de administración. Esto puede deberse a un problema de autenticación o conexión.
                 </p>
                 {error?.digest && (
-                    <p className="text-xs text-danger/80 mb-4">
-                        Código: <code className="bg-danger-bg/80 px-1 py-0.5 rounded">{error.digest}</code>
+                    <p className="text-xs text-danger mb-4">
+                        Código: <code className="bg-danger/10 px-1 py-0.5 rounded">{error.digest}</code>
                     </p>
                 )}
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
@@ -35,7 +35,7 @@ export default function AdminError({
                     </button>
                     <a
                         href="/login"
-                        className="px-4 py-2 bg-card border border-danger/40 text-danger rounded-md hover:bg-danger-bg transition-colors text-sm font-medium"
+                        className="px-4 py-2 bg-card border border-danger/30 text-danger rounded-md hover:bg-danger-bg transition-colors text-sm font-medium"
                     >
                         Iniciar Sesión
                     </a>

@@ -151,7 +151,7 @@ export function CuotasInactivasClient({
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="text-danger hover:text-danger hover:bg-danger-bg"
+                                                className="text-danger hover:bg-danger-bg"
                                                 onClick={() => eliminarSaldo(c)}
                                             >
                                                 <Trash2 className="h-4 w-4 mr-1" />

@@ -212,7 +212,7 @@ export function BalanceSheetView({
                     <TableRow className="border-b border-border/50 hover:bg-accent/10">
                       <TableCell className="font-mono text-[11px] text-muted-foreground w-1/4">-</TableCell>
                       <TableCell className="text-xs text-foreground font-bold italic">Utilidad del Ejercicio (Ingresos - Gastos)</TableCell>
-                      <TableCell className="text-right font-mono text-xs text-info font-black italic">{formatCurrency(utilidadEjercicio)}</TableCell>
+                      <TableCell className={`text-right font-mono text-xs font-black italic ${utilidadEjercicio >= 0 ? 'text-success' : 'text-danger'}`}>{formatCurrency(utilidadEjercicio)}</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>

@@ -102,7 +102,7 @@ export function CompanyDetailView({ company }: { company: TenantDetailData }) {
                 <div>
                     <div className="flex items-center gap-3">
                         <Link href="/admin/empresas">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Volver a la lista de empresas">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Volver al listado de empresas">
                                 <ArrowLeft className="h-4 w-4" />
                             </Button>
                         </Link>

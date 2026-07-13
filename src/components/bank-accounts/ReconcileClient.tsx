@@ -89,7 +89,7 @@ export function ReconcileClient({
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                     <Link href={`/bank-accounts/${cuentaId}`}>
-                        <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Volver a la cuenta bancaria">
+                        <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Volver al detalle de la cuenta bancaria">
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </Link>

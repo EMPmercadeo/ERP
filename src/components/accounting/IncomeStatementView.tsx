@@ -237,7 +237,7 @@ export function IncomeStatementView({
           </div>
 
           {/* Utilidad Neta */}
-          <div className={`flex items-center justify-between border rounded-xl px-4 py-4 ${utilidadNeta >= 0 ? 'bg-success text-white border-success' : 'bg-danger text-white border-danger'}`}>
+          <div className={`flex items-center justify-between border rounded-xl px-4 py-4 ${utilidadNeta >= 0 ? 'bg-success-bg border-success/30 text-success' : 'bg-danger-bg border-danger/30 text-danger'}`}>
             <span className="text-sm font-bold uppercase tracking-wider">UTILIDAD NETA DEL EJERCICIO</span>
             <span className="font-mono text-base font-black">{formatCurrency(utilidadNeta)}</span>
           </div>

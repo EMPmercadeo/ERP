@@ -9,10 +9,10 @@ const alertVariants = cva(
     {
         variants: {
             variant: {
-                error: "bg-danger-bg text-danger border-danger/30",
-                success: "bg-success-bg text-success border-success/30",
-                warning: "bg-warning-bg text-warning border-warning/30",
-                info: "bg-info-bg text-info border-info/30",
+                error: "bg-danger-bg text-danger border-danger/20",
+                success: "bg-success-bg text-success border-success/20",
+                warning: "bg-warning-bg text-warning border-warning/20",
+                info: "bg-info-bg text-info border-info/20",
                 neutral: "bg-muted text-foreground border-border",
             },
         },

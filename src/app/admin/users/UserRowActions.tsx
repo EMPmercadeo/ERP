@@ -73,8 +73,8 @@ export function UserRowActions({ userId, initialRole, initialActive }: UserRowAc
                 variant={active ? "outline" : "outline"}
                 className={`h-8 gap-1.5 text-xs px-2.5 font-medium transition-colors ${
                     active
-                        ? 'border-transparent text-success bg-success-bg hover:bg-success-bg/70'
-                        : 'border-transparent text-danger bg-danger-bg hover:bg-danger-bg/70'
+                        ? 'border-success/20 text-success bg-success-bg hover:bg-success-bg/80'
+                        : 'border-danger/20 text-danger bg-danger-bg hover:bg-danger-bg/80'
                 }`}
                 onClick={handleStatusToggle}
                 disabled={isPending}

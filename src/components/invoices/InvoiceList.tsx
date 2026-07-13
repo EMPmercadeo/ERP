@@ -85,14 +85,7 @@ const getInitials = (name: string) => {
         .toUpperCase();
 };
 
-const palette = [
-    'bg-info text-white',
-    'bg-success text-white',
-    'bg-warning text-white',
-    'bg-brand-1 text-white',
-    'bg-danger text-white',
-    'bg-primary text-white'
-];
+const avatarClass = 'bg-brand-1/10 text-brand-1';
 
 
 
@@ -226,10 +219,9 @@ export function InvoiceList({
             cell: ({ row }) => {
                 const name = row.getValue('clientName') as string;
                 const initials = getInitials(name) || 'CF';
-                const gradClass = palette[row.index % palette.length];
                 return (
                     <div className="flex items-center gap-3">
-                        <div className={`w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold ${gradClass} shrink-0 select-none`}>
+                        <div className={`w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold ${avatarClass} shrink-0 select-none`}>
                             {initials}
                         </div>
                         <div className="flex flex-col min-w-0">
@@ -632,9 +624,8 @@ export function InvoiceList({
                         {/* Mobile Card List View */}
                         <div className="block md:hidden p-4 space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto min-h-[300px] border-b">
                             {initialData.length > 0 ? (
-                                initialData.map((invoice, index) => {
+                                initialData.map((invoice) => {
                                     const initials = getInitials(invoice.clientName) || 'CF';
-                                    const gradClass = palette[index % palette.length];
                                     const balance = invoice.saldoPendiente;
                                     const total = invoice.totalNeto;
                                     const paymentStatus = balance === 0
@@ -651,7 +642,7 @@ export function InvoiceList({
                                         >
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="flex items-center gap-2.5 min-w-0">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ${gradClass} shrink-0 select-none`}>
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ${avatarClass} shrink-0 select-none`}>
                                                         {initials}
                                                     </div>
                                                     <div className="min-w-0">
@@ -708,7 +699,7 @@ export function InvoiceList({
             {/* Modal de Compartir Factura Creada */}
             {showShareModal && shareInvoiceId && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-2xl p-6 relative font-sans">
+                    <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl border border-border dark:border-border shadow-2xl p-6 relative font-sans">
                         <button
                             onClick={() => router.replace('/invoices')}
                             aria-label="Cerrar"
@@ -751,7 +742,7 @@ export function InvoiceList({
                                         href={baseUrl && shareInvoiceNum && shareInvoiceId ? `https://api.whatsapp.com/send?text=${encodeURIComponent(`Hola, adjunto su factura electrónica ${shareInvoiceNum} por un total de ${formatCurrency(shareInvoiceTotal)}. Puede visualizarla en el siguiente enlace: ${baseUrl}/invoices/${shareInvoiceId}`)}` : '#'}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="h-11 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98"
+                                        className="h-11 px-4 rounded-xl bg-success hover:bg-success/90 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98"
                                     >
                                         <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
                                             <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.062 5.248 5.308 0 11.777 0c3.137 0 6.085 1.22 8.302 3.439 2.219 2.219 3.438 5.168 3.436 8.307-.005 6.522-5.252 11.77-11.72 11.77-2.002-.001-3.97-.512-5.713-1.488L0 24zm6.59-4.859c1.72.1.085-.34 2.82.28 1.48.33 2.92.51 4.38.51 5.388 0 9.77-4.386 9.773-9.775.002-2.61-1.014-5.064-2.865-6.916C17.95 1.42 15.5 .4 12.89.4 7.502.4 3.12 4.78 3.117 10.165c-.002 1.63.39 3.22 1.13 4.64l.16.29-1.01 3.69 3.79-.99.3.18c1.35.8 2.9 1.22 4.47 1.22zM17.3 14.3c-.3-.15-1.78-.88-2.06-.98-.28-.1-.49-.15-.69.15-.2.3-.77.98-.95 1.18-.18.2-.36.23-.66.08-1.54-.77-2.58-1.34-3.56-3.03-.26-.45.26-.42.74-1.38.08-.16.04-.3-.02-.45-.06-.15-.49-1.18-.67-1.62-.18-.43-.37-.37-.5-.38l-.43-.01c-.15 0-.39.06-.6.28-.2.22-.8.78-.8 1.9s.82 2.2 1.05 2.5c.23.3 1.6 2.44 3.88 3.42.54.23 1 .37 1.34.48.55.17 1.05.15 1.44.09.44-.06 1.35-.55 1.54-1.08.19-.53.19-1 .13-1.08-.07-.08-.26-.13-.56-.28z"/>

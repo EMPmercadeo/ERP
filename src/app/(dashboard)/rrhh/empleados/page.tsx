@@ -303,7 +303,7 @@ export default function EmpleadosRRHHPage() {
                         <TableCell className="text-xs">{emp.tipoContrato}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{new Date(emp.fechaIngreso).toLocaleDateString('es-PA')}</TableCell>
                         <TableCell>
-                          <Badge className={emp.activo ? 'bg-success-bg text-success border-transparent' : 'bg-danger-bg text-danger border-transparent'}>
+                          <Badge className={emp.activo ? 'bg-success-bg text-success border border-success/20' : 'bg-danger-bg text-danger border border-danger/20'}>
                             {emp.activo ? 'Activo' : 'Baja'}
                           </Badge>
                         </TableCell>
@@ -382,7 +382,7 @@ export default function EmpleadosRRHHPage() {
             <form onSubmit={handleCrearEmpleado}>
               <CardContent className="space-y-4 pt-4">
                 {errorModal && (
-                  <div className="p-3 rounded bg-danger-bg border border-danger/30 text-danger text-xs">
+                  <div className="p-3 rounded bg-danger-bg border border-danger/20 text-danger text-xs">
                     {errorModal}
                   </div>
                 )}

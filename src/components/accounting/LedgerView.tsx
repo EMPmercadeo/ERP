@@ -160,10 +160,10 @@ export function LedgerView({
               <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
                 <CardContent className="p-6">
                   <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <Calculator className="h-4 w-4 text-info" />
+                    <Calculator className="h-4 w-4 text-primary" />
                     Saldo Final ({naturaleza})
                   </div>
-                  <div className="mt-2 text-2xl font-bold text-white font-mono">{formatCurrency(saldoFinal)}</div>
+                  <div className="mt-2 text-2xl font-bold text-foreground font-mono">{formatCurrency(saldoFinal)}</div>
                 </CardContent>
               </Card>
             </div>
@@ -204,10 +204,10 @@ export function LedgerView({
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={`font-semibold rounded-lg px-2 py-0.5 text-[9px] ${
-                            mov.origen === 'FACTURA' ? 'bg-info-bg border-transparent text-info' :
-                            mov.origen === 'COBRO' ? 'bg-success-bg border-transparent text-success' :
-                            mov.origen === 'COMPRA' ? 'bg-warning-bg border-transparent text-warning' :
-                            mov.origen === 'PAGO_PROVEEDOR' ? 'bg-danger-bg border-transparent text-danger' :
+                            mov.origen === 'FACTURA' ? 'bg-info-bg border-info/20 text-info' :
+                            mov.origen === 'COBRO' ? 'bg-success-bg border-success/20 text-success' :
+                            mov.origen === 'COMPRA' ? 'bg-warning-bg border-warning/20 text-warning' :
+                            mov.origen === 'PAGO_PROVEEDOR' ? 'bg-danger-bg border-danger/20 text-danger' :
                             'bg-muted border-border text-foreground'
                           }`}>
                             {mov.origen}

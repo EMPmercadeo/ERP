@@ -1306,7 +1306,7 @@ function KitTab({ productoId, initialEsKit }: { productoId: string; initialEsKit
                                         <TableCell className="py-2 text-xs text-right font-mono text-muted-foreground">{formatCurrency(c.costoUnitario)}</TableCell>
                                         <TableCell className="py-2 text-xs text-right font-mono font-bold text-foreground">{formatCurrency(c.costoUnitario * c.cantidad)}</TableCell>
                                         <TableCell className="py-2 text-right">
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeComponente(c.productoComponenteId)} className="h-7 w-7 text-muted-foreground hover:text-destructive" aria-label="Eliminar componente">
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeComponente(c.productoComponenteId)} className="h-7 w-7 text-muted-foreground hover:text-destructive" aria-label={`Quitar componente ${c.descripcion}`}>
                                                 <Trash2 className="h-3.5 w-3.5" />
                                             </Button>
                                         </TableCell>

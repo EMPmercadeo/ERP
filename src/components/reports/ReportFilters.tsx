@@ -372,6 +372,7 @@ export function ReportFilters({
                                 <button
                                     type="button"
                                     onClick={handleClearClient}
+                                    aria-label="Quitar filtro de cliente"
                                     className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     <X className="h-4 w-4" />
@@ -426,6 +427,7 @@ export function ReportFilters({
                                 <button
                                     type="button"
                                     onClick={handleClearProduct}
+                                    aria-label="Quitar filtro de producto"
                                     className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     <X className="h-4 w-4" />
