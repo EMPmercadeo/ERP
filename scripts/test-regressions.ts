@@ -52,7 +52,7 @@ async function runRegressionTests() {
     if (!caja) {
         caja = await prisma.caja.create({
             data: {
-                sucursalId: sucursal.id,
+                sucursal: { connect: { id: sucursal.id } },
                 empresa: { connect: { id: idEmpresaA } },
                 codigo: '001',
                 nombre: 'Caja Test A'
@@ -96,11 +96,15 @@ async function runRegressionTests() {
     await prisma.compra.deleteMany({ where: { empresaId: idEmpresaA } }).catch(() => {});
     await prisma.facturaItem.deleteMany({ where: { factura: { empresaId: idEmpresaA } } }).catch(() => {});
     await prisma.factura.deleteMany({ where: { empresaId: idEmpresaA } }).catch(() => {});
-    await prisma.albaranVentaItem.deleteMany({ where: { albaran: { empresaId: idEmpresaA } } }).catch(() => {});
-    await prisma.albaranVenta.deleteMany({ where: { empresaId: idEmpresaA } }).catch(() => {});
     
+    // Limpieza global de Albaranes/Despachos para evitar violaciones de unicidad de folio (numero)
+    await prisma.albaranVentaItem.deleteMany({ where: { albaran: { numero: { startsWith: 'ALB-' } } } }).catch(() => {});
+    await prisma.albaranVenta.deleteMany({ where: { numero: { startsWith: 'ALB-' } } }).catch(() => {});
+    await prisma.secuencia.deleteMany({ where: { tipoDocumento: 'ALB' } }).catch(() => {});
+
     // Ahora eliminar catálogos
     await prisma.proveedor.deleteMany({ where: { empresaId: idEmpresaA } }).catch(() => {});
+    await prisma.inventarioBodega.deleteMany({ where: { bodega: { empresaId: idEmpresaA } } }).catch(() => {});
     await prisma.producto.deleteMany({ where: { empresaId: idEmpresaA } }).catch(() => {});
     await prisma.cliente.deleteMany({ where: { empresaId: idEmpresaA } }).catch(() => {});
 
@@ -362,6 +366,7 @@ async function runRegressionTests() {
         await prisma.compra.deleteMany({ where: { proveedorId: proveedor.id } }).catch(() => {});
         await prisma.facturaItem.deleteMany({ where: { productoId: producto.id } }).catch(() => {});
         await prisma.factura.deleteMany({ where: { clienteId: cliente.id } }).catch(() => {});
+        await prisma.inventarioBodega.deleteMany({ where: { productoId: producto.id } }).catch(() => {});
 
         // Limpieza final de registros de regresión
         await prisma.proveedor.delete({ where: { id: proveedor.id } }).catch(() => {});

@@ -9,6 +9,7 @@ import { getTenantContext } from '@/lib/auth/context';
 import fs from 'fs/promises';
 import path from 'path';
 import { getStorageProvider } from '@/lib/storage';
+import { logger } from '@/lib/logger';
 
 export async function createProduct(prevState: unknown, formData: FormData) {
     const { empresaId, userId } = await getTenantContext();
@@ -456,13 +457,15 @@ export async function getProductsForExport(filters: {
 
 export async function uploadProductImage(productId: string, formData: FormData) {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId, userId, requestId } = await getTenantContext();
+        logger.info('Iniciando subida de imagen de producto', { productId, empresaId, userId, requestId });
 
         // 1. BOLA/IDOR Protection: Verify product exists and belongs to the active tenant
         const product = await prisma.producto.findFirst({
             where: { id: productId, empresaId }
         });
         if (!product) {
+            logger.warn('Intento de subida de imagen bloqueado por BOLA/IDOR o producto inexistente', { productId, empresaId, userId, requestId });
             return { success: false, message: 'Producto no encontrado o acceso denegado.' };
         }
 
@@ -557,14 +560,16 @@ export async function uploadProductImage(productId: string, formData: FormData) 
                 return newImage;
             });
 
+            logger.info('Subida de imagen de producto completada con éxito', { productId, empresaId, userId, requestId, imageUrl });
             revalidatePath('/products');
             revalidatePath(`/products/${productId}`);
             return { success: true, image: result };
         } catch (dbError) {
+            logger.error('Error de base de datos durante el guardado de la imagen', dbError, { productId, empresaId, userId, requestId, imageUrl });
             try {
                 await storage.deleteFile(imageUrl);
             } catch (unlinkErr) {
-                console.error('Could not clean up orphaned file:', unlinkErr);
+                logger.error('No se pudo limpiar el archivo físico tras fallo de base de datos', unlinkErr, { filepath: imageUrl });
             }
             throw dbError;
         }
