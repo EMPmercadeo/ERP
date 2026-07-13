@@ -199,7 +199,7 @@ export function DeliveryNoteList({
                         <Button
                             onClick={handleGroupInvoice}
                             disabled={isSubmitting}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-sm"
+                            className="bg-success hover:bg-success/90 text-white gap-2 shadow-sm"
                         >
                             <CheckSquare className="h-4 w-4" />
                             Facturar {selectedIds.length} Agrupados
@@ -284,7 +284,7 @@ export function DeliveryNoteList({
                                     <TableHead className="w-12 text-center">
                                         <input
                                             type="checkbox"
-                                            className="rounded border-border text-blue-600 focus:ring-blue-500"
+                                            className="rounded border-border text-brand-1 focus:ring-brand-1"
                                             onChange={(e) => handleSelectAll(e.target.checked)}
                                             checked={selectedIds.length > 0 && selectedIds.length === filteredNotes.filter(n => n.estado !== 'facturado' && !n.factura).length}
                                         />
@@ -324,7 +324,7 @@ export function DeliveryNoteList({
                                                     {!isFacturado && note.estado !== 'anulado' && (
                                                         <input
                                                             type="checkbox"
-                                                            className="rounded border-border text-blue-600 focus:ring-blue-500"
+                                                            className="rounded border-border text-brand-1 focus:ring-brand-1"
                                                             checked={selectedIds.includes(note.id)}
                                                             onChange={(e) => handleSelectOne(note.id, e.target.checked)}
                                                         />
@@ -348,8 +348,8 @@ export function DeliveryNoteList({
                                                 </TableCell>
                                                 <TableCell>
                                                     {note.factura ? (
-                                                        <span 
-                                                            className="inline-flex items-center text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-200 hover:underline"
+                                                        <span
+                                                            className="inline-flex items-center text-xs font-medium text-info bg-info-bg px-2 py-1 rounded border border-info/20 hover:underline"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 router.push(`/invoices/${note.factura?.id}`);
@@ -371,6 +371,7 @@ export function DeliveryNoteList({
                                                         onClick={() => router.push(`/delivery-notes/${note.id}`)}
                                                         className="text-muted-foreground hover:text-foreground"
                                                         title="Ver detalle"
+                                                        aria-label="Ver detalle"
                                                     >
                                                         <Eye className="h-4 w-4" />
                                                     </Button>

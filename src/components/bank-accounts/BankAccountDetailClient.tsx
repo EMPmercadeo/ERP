@@ -94,7 +94,7 @@ export function BankAccountDetailClient({
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </Link>
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-brand-1 to-brand-2 text-white shrink-0">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-brand-1 text-white shrink-0">
                         <Landmark className="h-5 w-5" />
                     </div>
                     <div>

@@ -235,6 +235,7 @@ export function NewTransferModal({ bodegas }: { bodegas: BodegaOption[] }) {
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => removeItem(item.productoId)}
+                                                aria-label="Quitar producto"
                                                 className="text-destructive hover:text-destructive shrink-0"
                                             >
                                                 <Trash2 className="h-4 w-4" />

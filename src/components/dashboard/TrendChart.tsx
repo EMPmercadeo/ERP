@@ -95,7 +95,7 @@ export function TrendChart({ data }: TrendChartProps) {
                 </div>
                 <div className="flex items-center gap-4 text-xs font-semibold text-muted-foreground">
                     <span className="flex items-center gap-1.5">
-                        <i className="w-3 h-3 rounded-full" style={{ background: 'linear-gradient(135deg, var(--info), var(--info-light))' }} />
+                        <i className="w-3 h-3 rounded-full" style={{ background: 'var(--info)' }} />
                         Facturado
                     </span>
                     <span className="flex items-center gap-1.5">
@@ -116,10 +116,6 @@ export function TrendChart({ data }: TrendChartProps) {
                             <linearGradient id="gF" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="0" stopColor="var(--info)" stopOpacity={0.24} />
                                 <stop offset="1" stopColor="var(--info)" stopOpacity={0} />
-                            </linearGradient>
-                            <linearGradient id="gline" x1="0" y1="0" x2="1" y2="0">
-                                <stop offset="0" stopColor="var(--info)" />
-                                <stop offset="1" stopColor="var(--info-light)" />
                             </linearGradient>
                         </defs>
 
@@ -176,7 +172,7 @@ export function TrendChart({ data }: TrendChartProps) {
                             <path
                                 d={dF}
                                 fill="none"
-                                stroke="url(#gline)"
+                                stroke="var(--info)"
                                 strokeWidth={3.2}
                                 strokeLinecap="round"
                                 strokeLinejoin="round"

@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-import { User, Lock, Fingerprint, MessageSquare, Shield, Tag, QrCode, Star, X, Camera } from 'lucide-react';
+import { User, Lock, Fingerprint, MessageSquare, Shield, Star, X } from 'lucide-react';
 import { Alert } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/firebase/auth';
 
-type ModalType = 'soporte' | 'seguridad' | 'planes' | 'qr' | 'bio_info' | null;
+type ModalType = 'soporte' | 'bio_info' | null;
 
 export default function LoginPage() {
 
@@ -68,7 +70,7 @@ export default function LoginPage() {
             const error = err as { code?: string; message?: string };
             console.error('Google Login Error:', error);
             if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
-                setError(`Error al conectar con Google (${error.code || 'Desconocido'}).`);
+                setError('No se pudo conectar con Google. Intenta de nuevo.');
             }
         } finally {
             setIsGoogleLoading(false);
@@ -92,6 +94,7 @@ export default function LoginPage() {
                         <button
                             type="button"
                             onClick={() => setActiveModal(null)}
+                            aria-label="Cerrar"
                             className="absolute top-4 right-4 p-1 rounded-full bg-muted hover:bg-accent text-muted-foreground transition-colors cursor-pointer"
                         >
                             <X className="h-5 w-5" />
@@ -99,7 +102,7 @@ export default function LoginPage() {
 
                         {activeModal === 'bio_info' && (
                             <div className="text-center space-y-3">
-                                <div className="w-12 h-12 bg-blue-100 text-brand-1 rounded-full flex items-center justify-center mx-auto">
+                                <div className="w-12 h-12 bg-info-bg text-info rounded-full flex items-center justify-center mx-auto">
                                     <Fingerprint className="h-6 w-6" />
                                 </div>
                                 <h3 className="text-lg font-black text-foreground">Login biométrico próximamente</h3>
@@ -118,7 +121,7 @@ export default function LoginPage() {
 
                         {activeModal === 'soporte' && (
                             <div className="text-center space-y-3">
-                                <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
+                                <div className="w-12 h-12 bg-success-bg text-success rounded-full flex items-center justify-center mx-auto">
                                     <MessageSquare className="h-6 w-6" />
                                 </div>
                                 <h3 className="text-lg font-black text-foreground">Soporte DGI 24/7</h3>
@@ -127,86 +130,10 @@ export default function LoginPage() {
                                 </p>
                                 <Link
                                     href="/help"
-                                    className="block w-full bg-green-600 text-white font-bold py-3 rounded-xl text-sm hover:bg-green-700 transition-all text-center"
+                                    className="block w-full bg-success text-white font-bold py-3 rounded-xl text-sm hover:bg-success/90 transition-all text-center"
                                 >
                                     Ir al Centro de Ayuda
                                 </Link>
-                            </div>
-                        )}
-
-                        {activeModal === 'seguridad' && (
-                            <div className="text-center space-y-3">
-                                <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto">
-                                    <Shield className="h-6 w-6" />
-                                </div>
-                                <h3 className="text-lg font-black text-foreground">Seguridad Bancaria</h3>
-                                <p className="text-xs text-muted-foreground leading-relaxed">
-                                    Tus certificados fiscales (.p12) y las llaves contables están blindados con encriptación militar AES-256 en servidores certificados.
-                                </p>
-                                <Link
-                                    href="/privacy"
-                                    className="block w-full bg-brand-2 text-white font-bold py-3 rounded-xl text-sm hover:bg-brand-1 transition-all text-center"
-                                >
-                                    Ver Políticas de Seguridad
-                                </Link>
-                            </div>
-                        )}
-
-                        {activeModal === 'planes' && (
-                            <div className="space-y-3">
-                                <div className="text-center">
-                                    <h3 className="text-lg font-black text-foreground">Planes ERP Panamá</h3>
-                                    <p className="text-xs text-muted-foreground">Facturación ilimitada sin costos ocultos</p>
-                                </div>
-                                <div className="space-y-2 text-xs">
-                                    <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-100 flex justify-between items-center">
-                                        <div>
-                                            <strong className="text-foreground block font-bold">Emprendedor</strong>
-                                            <span className="text-muted-foreground">1 Usuario • 150 documentos/mes</span>
-                                        </div>
-                                        <span className="font-extrabold text-brand-1">$19.99/mes</span>
-                                    </div>
-                                    <div className="p-2.5 rounded-xl bg-blue-50 border-2 border-brand-1 flex justify-between items-center shadow-sm">
-                                        <div>
-                                            <span className="bg-brand-1 text-white text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Recomendado</span>
-                                            <strong className="text-foreground block font-bold mt-0.5">Pro</strong>
-                                            <span className="text-muted-foreground">5 Usuarios • 600 documentos/mes</span>
-                                        </div>
-                                        <span className="font-extrabold text-brand-1">$54.99/mes</span>
-                                    </div>
-                                    <div className="p-2.5 rounded-xl bg-muted border border-border flex justify-between items-center">
-                                        <div>
-                                            <strong className="text-foreground block font-bold">Empresa</strong>
-                                            <span className="text-muted-foreground">10 Usuarios • 1000 documentos/mes</span>
-                                        </div>
-                                        <span className="font-extrabold text-foreground">$89.99/mes</span>
-                                    </div>
-                                </div>
-                                <Link
-                                    href="/register"
-                                    className="block w-full bg-brand-2 text-white font-bold py-3 rounded-xl text-sm hover:bg-brand-1 transition-all text-center shadow-md"
-                                >
-                                    Comenzar Prueba Gratis
-                                </Link>
-                            </div>
-                        )}
-
-                        {activeModal === 'qr' && (
-                            <div className="text-center space-y-3">
-                                <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto text-white border-2 border-dashed border-blue-400 relative animate-pulse">
-                                    <Camera className="h-8 w-8 text-blue-400" />
-                                </div>
-                                <h3 className="text-lg font-black text-foreground">Verificador QR DGI</h3>
-                                <p className="text-xs text-muted-foreground leading-relaxed">
-                                    Escanea el código QR de cualquier factura electrónica o albarán para auditar su validez en tiempo real ante el PAC y la DGI.
-                                </p>
-                                <button
-                                    type="button"
-                                    onClick={() => { setActiveModal(null); }}
-                                    className="w-full bg-brand-2 text-white font-bold py-3 rounded-xl text-sm hover:bg-brand-1 transition-all cursor-pointer"
-                                >
-                                    Ingresar para Escanear
-                                </button>
                             </div>
                         )}
                     </div>
@@ -214,7 +141,7 @@ export default function LoginPage() {
             )}
 
             {error && (
-                <Alert variant="error" className="bg-red-500/95 text-white border-none rounded-xl shadow-md py-2 text-xs mb-3">
+                <Alert variant="error" className="bg-danger/95 text-white border-none rounded-xl shadow-md py-2 text-xs mb-3">
                     {error}
                 </Alert>
             )}
@@ -250,18 +177,22 @@ export default function LoginPage() {
                     {/* Input 1: Usuario / Correo */}
                     <div className="bg-white rounded-2xl h-11 sm:h-12 px-3.5 shadow-sm flex items-center gap-2.5 text-foreground w-full min-w-0">
                         <User className="h-4.5 w-4.5 text-muted-foreground shrink-0" />
-                        <input
+                        <Label htmlFor="login-email-mobile" className="sr-only">Usuario o correo</Label>
+                        <Input
+                            id="login-email-mobile"
                             type="email"
                             placeholder="Usuario o Correo DGI"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="bg-transparent border-none text-foreground placeholder:text-muted-foreground focus:outline-none w-full min-w-0 text-xs sm:text-sm font-medium"
+                            autoComplete="email"
+                            className="h-auto border-none shadow-none bg-transparent p-0 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 w-full min-w-0 text-xs sm:text-sm font-medium"
                         />
                         {email && (
                             <button
                                 type="button"
                                 onClick={() => setEmail('')}
+                                aria-label="Limpiar campo de correo"
                                 className="text-muted-foreground hover:text-foreground px-1 text-sm font-bold cursor-pointer shrink-0"
                             >
                                 ✕
@@ -273,13 +204,16 @@ export default function LoginPage() {
                     <div className="flex gap-2 items-center w-full min-w-0">
                         <div className="bg-white rounded-2xl h-11 sm:h-12 px-3.5 shadow-sm flex items-center gap-2 flex-1 text-foreground min-w-0">
                             <Lock className="h-4.5 w-4.5 text-muted-foreground shrink-0" />
-                            <input
+                            <Label htmlFor="login-password-mobile" className="sr-only">Contraseña</Label>
+                            <Input
+                                id="login-password-mobile"
                                 type={showPassword ? 'text' : 'password'}
                                 placeholder="Contraseña"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="bg-transparent border-none text-foreground placeholder:text-muted-foreground focus:outline-none w-full min-w-0 text-xs sm:text-sm font-medium"
+                                autoComplete="current-password"
+                                className="h-auto border-none shadow-none bg-transparent p-0 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 w-full min-w-0 text-xs sm:text-sm font-medium"
                             />
                             <button
                                 type="button"
@@ -294,7 +228,7 @@ export default function LoginPage() {
                             onClick={handleBiometricLogin}
                             title="Login biométrico (próximamente)"
                             aria-label="Login biométrico (próximamente)"
-                            className="bg-white rounded-2xl h-11 w-11 sm:h-12 sm:w-12 shadow-sm flex items-center justify-center text-brand-medium hover:bg-blue-50 transition-all shrink-0 active:scale-95 cursor-pointer"
+                            className="bg-white rounded-2xl h-11 w-11 sm:h-12 sm:w-12 shadow-sm flex items-center justify-center text-brand-medium hover:bg-info-bg transition-all shrink-0 active:scale-95 cursor-pointer"
                         >
                             <Fingerprint className="h-5 w-5 sm:h-6 sm:w-6" />
                         </button>
@@ -341,26 +275,18 @@ export default function LoginPage() {
                     </span>
                 </div>
 
-                {/* 4 Tarjetas Inferiores */}
-                <div className="shrink-0 pb-0.5 w-full min-w-0">
-                    <div className="grid grid-cols-4 gap-1.5 sm:gap-2 w-full">
-                        <button type="button" onClick={() => setActiveModal('soporte')} className="border border-white/40 rounded-2xl p-1.5 flex flex-col items-center justify-center hover:bg-white/10 transition-all aspect-square cursor-pointer min-w-0">
-                            <MessageSquare className="h-4.5 w-4.5 mb-0.5 text-white shrink-0" />
-                            <span className="text-[9px] font-semibold text-white truncate max-w-full">Contactar</span>
-                        </button>
-                        <button type="button" onClick={() => setActiveModal('seguridad')} className="border border-white/40 rounded-2xl p-1.5 flex flex-col items-center justify-center hover:bg-white/10 transition-all aspect-square cursor-pointer min-w-0">
-                            <Shield className="h-4.5 w-4.5 mb-0.5 text-white shrink-0" />
-                            <span className="text-[9px] font-semibold text-white truncate max-w-full">Token</span>
-                        </button>
-                        <button type="button" onClick={() => setActiveModal('planes')} className="border border-white/40 rounded-2xl p-1.5 flex flex-col items-center justify-center hover:bg-white/10 transition-all aspect-square cursor-pointer min-w-0">
-                            <Tag className="h-4.5 w-4.5 mb-0.5 text-white shrink-0" />
-                            <span className="text-[9px] font-semibold text-white truncate max-w-full">Planes</span>
-                        </button>
-                        <button type="button" onClick={() => setActiveModal('qr')} className="border border-white/40 rounded-2xl p-1.5 flex flex-col items-center justify-center hover:bg-white/10 transition-all aspect-square cursor-pointer min-w-0">
-                            <QrCode className="h-4.5 w-4.5 mb-0.5 text-white shrink-0" />
-                            <span className="text-[9px] font-semibold text-white truncate max-w-full">Lector QR</span>
-                        </button>
-                    </div>
+                {/* Soporte (único control decorativo restante; el resto de tarjetas
+                    promocionales/no-funcionales del diseño anterior se retiraron para
+                    reducir ruido cognitivo en una pantalla de login de 2 campos) */}
+                <div className="shrink-0 pb-0.5 w-full min-w-0 flex justify-center">
+                    <button
+                        type="button"
+                        onClick={() => setActiveModal('soporte')}
+                        className="inline-flex items-center gap-1.5 text-white/80 hover:text-white text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                        <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+                        ¿Necesitas ayuda? Contactar soporte
+                    </button>
                 </div>
             </div>
 
@@ -381,26 +307,32 @@ export default function LoginPage() {
                 <form onSubmit={handleSubmit} className="space-y-3.5">
                     <div className="bg-white border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-3 focus-within:border-brand-1 focus-within:ring-2 focus-within:ring-brand-1/10 transition-all shadow-sm">
                         <User className="h-5 w-5 text-muted-foreground shrink-0" />
-                        <input
+                        <Label htmlFor="login-email-desktop" className="sr-only">Usuario o correo</Label>
+                        <Input
+                            id="login-email-desktop"
                             type="email"
                             placeholder="Usuario o Correo DGI"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="w-full bg-transparent text-sm text-foreground font-medium placeholder:text-muted-foreground outline-none"
+                            autoComplete="email"
+                            className="h-auto border-none shadow-none bg-transparent p-0 text-sm text-foreground font-medium placeholder:text-muted-foreground focus-visible:ring-0"
                         />
                     </div>
 
                     <div className="flex gap-2.5 items-center">
                         <div className="bg-white border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-3 flex-1 focus-within:border-brand-1 focus-within:ring-2 focus-within:ring-brand-1/10 transition-all shadow-sm">
                             <Lock className="h-5 w-5 text-muted-foreground shrink-0" />
-                            <input
+                            <Label htmlFor="login-password-desktop" className="sr-only">Contraseña</Label>
+                            <Input
+                                id="login-password-desktop"
                                 type={showPassword ? 'text' : 'password'}
                                 placeholder="Contraseña"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="w-full bg-transparent text-sm text-foreground font-medium placeholder:text-muted-foreground outline-none"
+                                autoComplete="current-password"
+                                className="h-auto border-none shadow-none bg-transparent p-0 text-sm text-foreground font-medium placeholder:text-muted-foreground focus-visible:ring-0"
                             />
                             <button
                                 type="button"
@@ -417,7 +349,7 @@ export default function LoginPage() {
                             onClick={handleBiometricLogin}
                             title="Login biométrico (próximamente)"
                             aria-label="Login biométrico (próximamente)"
-                            className="bg-white border border-border rounded-xl p-3 shadow-sm flex items-center justify-center text-brand-1 hover:bg-blue-50/60 transition-all shrink-0 active:scale-95 cursor-pointer"
+                            className="bg-white border border-border rounded-xl p-3 shadow-sm flex items-center justify-center text-brand-1 hover:bg-info-bg transition-all shrink-0 active:scale-95 cursor-pointer"
                         >
                             <Fingerprint className="h-5 w-5" />
                         </button>
@@ -445,7 +377,7 @@ export default function LoginPage() {
                 <div className="space-y-3">
                     <Link
                         href="/register"
-                        className="block w-full border border-brand-1 text-brand-1 font-bold py-3 rounded-xl text-sm hover:bg-blue-50/50 transition-all text-center shadow-sm"
+                        className="block w-full border border-brand-1 text-brand-1 font-bold py-3 rounded-xl text-sm hover:bg-info-bg transition-all text-center shadow-sm"
                     >
                         Crea tu usuario o abre tu cuenta
                     </Link>

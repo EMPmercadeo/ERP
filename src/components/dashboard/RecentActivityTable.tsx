@@ -68,15 +68,6 @@ const getInitials = (name: string) => {
         .toUpperCase();
 };
 
-const palette = [
-    'from-blue-600 to-teal-400 text-white',
-    'from-emerald-500 to-teal-400 text-white',
-    'from-amber-500 to-orange-400 text-white',
-    'from-brand-1 to-brand-2 text-white',
-    'from-rose-500 to-red-400 text-white',
-    'from-primary to-primary/80 text-white'
-];
-
 const ITEMS_PER_PAGE = 5;
 const HEAD_CLASS = 'h-auto bg-surface-light px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground';
 const CELL_CLASS = 'px-4 py-3.5 align-middle';
@@ -97,7 +88,7 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
     };
 
     return (
-        <Card className="flex h-full flex-col bg-white shadow-premium border border-border rounded-2xl overflow-hidden transition-premium">
+        <Card className="flex h-full flex-col bg-card shadow-premium border border-border rounded-2xl overflow-hidden transition-premium">
             <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 p-5">
                 <div className="space-y-1">
                     <CardTitle className="text-base font-semibold">Facturas Recientes</CardTitle>
@@ -129,8 +120,7 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {currentInvoices.map((invoice, index) => {
-                                const gradClass = palette[(startIndex + index) % palette.length];
+                            {currentInvoices.map((invoice) => {
                                 const initials = getInitials(invoice.client) || 'CF';
 
                                 return (
@@ -142,7 +132,7 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                                         </TableCell>
                                         <TableCell className={CELL_CLASS}>
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
+                                                <div className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold bg-brand-1 text-white shrink-0 select-none">
                                                     {initials}
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
@@ -194,6 +184,7 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="icon"
+                                                                    aria-label="Ver detalles"
                                                                     className="h-7 w-7 text-muted-foreground hover:text-brand-1 rounded-lg"
                                                                 >
                                                                     <Eye className="h-4 w-4" />
@@ -217,6 +208,7 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="icon"
+                                                                    aria-label="Ver PDF"
                                                                     className="h-7 w-7 text-muted-foreground hover:text-brand-1 rounded-lg"
                                                                 >
                                                                     <FileText className="h-4 w-4" />
@@ -234,7 +226,8 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="icon"
-                                                                    className="h-7 w-7 text-muted-foreground hover:text-emerald-600 rounded-lg"
+                                                                    aria-label="Registrar cobro"
+                                                                    className="h-7 w-7 text-muted-foreground hover:text-success rounded-lg"
                                                                 >
                                                                     <CreditCard className="h-4 w-4" />
                                                                 </Button>
@@ -261,14 +254,13 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
 
                 {/* Mobile View Card List */}
                 <div className="block md:hidden p-4 space-y-3">
-                    {currentInvoices.map((invoice, index) => {
-                        const gradClass = palette[(startIndex + index) % palette.length];
+                    {currentInvoices.map((invoice) => {
                         const initials = getInitials(invoice.client) || 'CF';
                         return (
                             <div key={invoice.id} className="bg-muted/50 border border-border rounded-xl p-3.5 space-y-3 shadow-sm">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="flex items-center gap-2.5 min-w-0">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
+                                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-brand-1 text-white shrink-0 select-none">
                                             {initials}
                                         </div>
                                         <div className="min-w-0">
@@ -305,7 +297,7 @@ export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
                                     </a>
                                     {invoice.balance > 0 && (
                                         <Link href={`/receivables?search=${encodeURIComponent(invoice.id)}`} className="flex-1">
-                                            <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-emerald-600 border-emerald-100 hover:bg-emerald-50 rounded-lg">
+                                            <Button variant="outline" size="sm" className="w-full h-9 text-[10px] font-bold text-success border-success/20 hover:bg-success-bg rounded-lg">
                                                 Cobrar
                                             </Button>
                                         </Link>

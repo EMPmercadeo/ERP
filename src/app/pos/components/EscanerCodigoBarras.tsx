@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Camera, X, AlertCircle } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 /**
  * Escaneo de código de barras desde la cámara del celular/tablet (sin hardware externo).
@@ -142,37 +143,42 @@ export default function EscanerCodigoBarras({ onDetectado, onCerrar }: EscanerCo
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/80 backdrop-blur-sm p-4">
-      <div className="bg-card border border-border rounded-xl shadow-premium-hover w-full max-w-md overflow-hidden">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Camera className="h-5 w-5 text-primary" />
-            <h2 className="text-sm font-bold text-foreground">Escanear código de barras</h2>
-          </div>
-          <button onClick={handleCerrar} className="text-muted-foreground hover:text-foreground">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="relative aspect-[4/3] bg-black">
-          {modo === 'error' ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center gap-2 p-6 text-white">
-              <AlertCircle className="h-8 w-8 text-warning" />
-              <p className="text-xs">{error}</p>
+    <Dialog open onOpenChange={(open) => { if (!open) handleCerrar(); }}>
+      <DialogContent
+        showCloseButton={false}
+        className="p-0 gap-0 border-0 bg-transparent shadow-none max-w-md overflow-hidden"
+      >
+        <div className="bg-card border border-border rounded-xl shadow-premium-hover w-full overflow-hidden">
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Camera className="h-5 w-5 text-primary" />
+              <h2 className="text-sm font-bold text-foreground">Escanear código de barras</h2>
             </div>
-          ) : (
-            <>
-              <video ref={videoRef} className="w-full h-full object-cover" muted playsInline autoPlay />
-              <div className="absolute inset-8 border-2 border-primary/70 rounded-lg pointer-events-none" />
-            </>
-          )}
-        </div>
+            <button onClick={handleCerrar} aria-label="Cerrar escáner de código de barras" className="text-muted-foreground hover:text-foreground">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-        <div className="p-4 text-[11px] text-muted-foreground text-center">
-          {modo === 'iniciando' && 'Iniciando cámara...'}
-          {modo === 'activo' && 'Apunta la cámara al código de barras del producto.'}
+          <div className="relative aspect-[4/3] bg-black">
+            {modo === 'error' ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center gap-2 p-6 text-white">
+                <AlertCircle className="h-8 w-8 text-warning" />
+                <p className="text-xs">{error}</p>
+              </div>
+            ) : (
+              <>
+                <video ref={videoRef} className="w-full h-full object-cover" muted playsInline autoPlay />
+                <div className="absolute inset-8 border-2 border-primary/70 rounded-lg pointer-events-none" />
+              </>
+            )}
+          </div>
+
+          <div className="p-4 text-[11px] text-muted-foreground text-center">
+            {modo === 'iniciando' && 'Iniciando cámara...'}
+            {modo === 'activo' && 'Apunta la cámara al código de barras del producto.'}
+          </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

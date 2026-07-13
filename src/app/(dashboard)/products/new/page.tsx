@@ -152,9 +152,9 @@ export default function NewProductPage() {
                                             onChange={(e) => setCodigoInterno(e.target.value)}
                                             required 
                                             placeholder="PROD-001"
-                                            className={cn("h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.codigoInterno && "border-red-500")}
+                                            className={cn("h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.codigoInterno && "border-danger")}
                                         />
-                                        {state?.errors?.codigoInterno && <p className="text-[10px] text-red-500 font-bold mt-0.5">{state.errors.codigoInterno[0]}</p>}
+                                        {state?.errors?.codigoInterno && <p className="text-[10px] text-danger font-bold mt-0.5">{state.errors.codigoInterno[0]}</p>}
                                     </div>
 
                                     {/* Código de Barras / SKU Alterno */}
@@ -210,9 +210,9 @@ export default function NewProductPage() {
                                         onChange={(e) => setDescripcion(e.target.value)}
                                         required 
                                         placeholder="Nombre identificador del producto o servicio"
-                                        className={cn("h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.descripcion && "border-red-500")}
+                                        className={cn("h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.descripcion && "border-danger")}
                                     />
-                                    {state?.errors?.descripcion && <p className="text-[10px] text-red-500 font-bold mt-0.5">{state.errors.descripcion[0]}</p>}
+                                    {state?.errors?.descripcion && <p className="text-[10px] text-danger font-bold mt-0.5">{state.errors.descripcion[0]}</p>}
                                 </div>
 
                                 {/* Descripción Detallada */}
@@ -298,7 +298,7 @@ export default function NewProductPage() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setImagenUrl('')}
-                                                        className="absolute top-2 right-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-[10px] uppercase px-2 py-1 rounded border border-red-200 shadow-sm transition-colors active:scale-95"
+                                                        className="absolute top-2 right-2 bg-destructive/10 hover:bg-destructive/20 text-destructive font-bold text-[10px] uppercase px-2 py-1 rounded border border-destructive/20 shadow-sm transition-colors active:scale-95"
                                                     >
                                                         Remover
                                                     </button>
@@ -370,23 +370,23 @@ export default function NewProductPage() {
                                             value={precioVenta}
                                             onChange={(e) => setPrecioVenta(e.target.value)}
                                             required
-                                            className={cn("h-10 text-xs sm:text-sm pl-7 bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.precioVenta && "border-red-500")}
+                                            className={cn("h-10 text-xs sm:text-sm pl-7 bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.precioVenta && "border-danger")}
                                             placeholder="0.00"
                                         />
                                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground">USD</span>
                                     </div>
-                                    {state?.errors?.precioVenta && <p className="text-[10px] text-red-500 font-bold mt-0.5">{state.errors.precioVenta[0]}</p>}
+                                    {state?.errors?.precioVenta && <p className="text-[10px] text-danger font-bold mt-0.5">{state.errors.precioVenta[0]}</p>}
                                 </div>
 
                                 {/* Margen & Rentabilidad */}
                                 <div className="bg-muted rounded-xl p-3 border border-border space-y-2">
                                     <div className="flex items-center justify-between text-xs">
                                         <span className="font-semibold text-muted-foreground">Rentabilidad</span>
-                                        <span className="font-bold text-emerald-600">+{formatCurrency(parseFloat(rentabilidad))}</span>
+                                        <span className="font-bold text-success">+{formatCurrency(parseFloat(rentabilidad))}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[10px] text-muted-foreground">Margen Bruto</span>
-                                        <Badge className="bg-emerald-50 text-emerald-600 border-transparent hover:bg-emerald-50 text-[10px] font-bold py-0.5 px-2 rounded-md">
+                                        <Badge className="bg-success-bg text-success border-transparent hover:bg-success-bg text-[10px] font-bold py-0.5 px-2 rounded-md">
                                             {margin}%
                                         </Badge>
                                     </div>
@@ -502,7 +502,7 @@ export default function NewProductPage() {
                             <CardContent className="p-4 space-y-4">
                                 {unidadMedida === 'SRV' ? (
                                     <>
-                                        <Alert className="py-2.5 px-3 text-xs bg-blue-50 border-blue-200 text-blue-700">
+                                        <Alert className="py-2.5 px-3 text-xs bg-info-bg border-info/20 text-info">
                                             <AlertCircle className="h-4 w-4 mr-2" />
                                             <span>Este producto está marcado como <strong>Servicio</strong> (unidad SRV) — no lleva control de inventario. Se puede vender sin límite de stock.</span>
                                         </Alert>

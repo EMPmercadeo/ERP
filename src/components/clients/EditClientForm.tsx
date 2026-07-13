@@ -117,7 +117,7 @@ export function EditClientForm({ client }: EditClientFormProps) {
                                                 name="ruc"
                                                 defaultValue={client.ruc}
                                                 required
-                                                className={state?.errors?.ruc ? 'border-red-500' : ''}
+                                                className={state?.errors?.ruc ? 'border-destructive' : ''}
                                             />
                                             {state?.errors?.ruc && <p className="text-xs text-destructive mt-1">{state.errors.ruc[0]}</p>}
                                         </div>
@@ -141,7 +141,7 @@ export function EditClientForm({ client }: EditClientFormProps) {
                                             name="razonSocial"
                                             defaultValue={client.razonSocial}
                                             required
-                                            className={state?.errors?.razonSocial ? 'border-red-500' : ''}
+                                            className={state?.errors?.razonSocial ? 'border-destructive' : ''}
                                         />
                                         {state?.errors?.razonSocial && <p className="text-xs text-destructive mt-1">{state.errors.razonSocial[0]}</p>}
                                     </div>

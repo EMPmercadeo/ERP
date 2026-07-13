@@ -190,14 +190,14 @@ export function ReportsDashboard({
     const renderTrendBadge = (change: number) => {
         if (change > 0) {
             return (
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-success bg-success-bg px-1.5 py-0.5 rounded">
                     <ArrowUpRight className="h-3 w-3" />
                     +{change.toFixed(1)}%
                 </span>
             );
         } else if (change < 0) {
             return (
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-danger bg-danger-bg px-1.5 py-0.5 rounded">
                     <ArrowDownRight className="h-3 w-3" />
                     {change.toFixed(1)}%
                 </span>
@@ -477,7 +477,7 @@ export function ReportsDashboard({
             {/* Loading Overlay */}
             {isLoading && (
                 <div className="fixed inset-0 bg-primary/10 backdrop-blur-[1px] z-50 flex items-center justify-center pointer-events-auto">
-                    <Card className="p-5 shadow-2xl flex items-center gap-3 bg-white border border-border">
+                    <Card className="p-5 shadow-2xl flex items-center gap-3 bg-card border border-border">
                         <Loader2 className="h-5 w-5 animate-spin text-brand-1" />
                         <span className="text-xs font-bold text-foreground">Cargando datos contables...</span>
                     </Card>
@@ -517,43 +517,43 @@ export function ReportsDashboard({
                 <div className="flex flex-wrap items-center gap-2 p-3 bg-muted border border-border rounded-xl text-xs">
                     <span className="font-bold text-muted-foreground">Filtros activos:</span>
                     {currentFilters.clienteId !== 'all' && (
-                        <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
+                        <Badge variant="secondary" className="gap-1.5 bg-card border border-border text-foreground">
                             Cliente: {filterClients.find(c => c.id === currentFilters.clienteId)?.razonSocial || 'Seleccionado'}
                             <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeFilter('clienteId')} />
                         </Badge>
                     )}
                     {currentFilters.productoId !== 'all' && (
-                        <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
+                        <Badge variant="secondary" className="gap-1.5 bg-card border border-border text-foreground">
                             Producto: {filterProducts.find(p => p.id === currentFilters.productoId)?.descripcion || 'Seleccionado'}
                             <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeFilter('productoId')} />
                         </Badge>
                     )}
                     {currentFilters.creadorId !== 'all' && (
-                        <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
+                        <Badge variant="secondary" className="gap-1.5 bg-card border border-border text-foreground">
                             Vendedor: {filterSellers.find(s => s.id === currentFilters.creadorId)?.nombre || 'Seleccionado'}
                             <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeFilter('creadorId')} />
                         </Badge>
                     )}
                     {currentFilters.tipoDocumento !== 'all' && (
-                        <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
+                        <Badge variant="secondary" className="gap-1.5 bg-card border border-border text-foreground">
                             Tipo: {currentFilters.tipoDocumento}
                             <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeFilter('tipoDocumento')} />
                         </Badge>
                     )}
                     {currentFilters.estadoDgi !== 'all' && (
-                        <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
+                        <Badge variant="secondary" className="gap-1.5 bg-card border border-border text-foreground">
                             DGI: {currentFilters.estadoDgi}
                             <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeFilter('estadoDgi')} />
                         </Badge>
                     )}
                     {currentFilters.paymentStatus !== 'all' && (
-                        <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
+                        <Badge variant="secondary" className="gap-1.5 bg-card border border-border text-foreground">
                             Pago: {currentFilters.paymentStatus}
                             <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeFilter('paymentStatus')} />
                         </Badge>
                     )}
                     {currentFilters.metodoPago && currentFilters.metodoPago !== 'all' && (
-                        <Badge variant="secondary" className="gap-1.5 bg-white border border-border text-foreground">
+                        <Badge variant="secondary" className="gap-1.5 bg-card border border-border text-foreground">
                             Método: {currentFilters.metodoPago === 'efectivo' ? 'Efectivo' : currentFilters.metodoPago === 'transferencia' ? 'Transferencia' : currentFilters.metodoPago === 'tarjeta' ? 'Tarjeta' : currentFilters.metodoPago === 'cheque' ? 'Cheque' : currentFilters.metodoPago}
                             <X className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeFilter('metodoPago')} />
                         </Badge>
@@ -571,7 +571,7 @@ export function ReportsDashboard({
 
             {/* 8-Card KPIs Grid */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-                <Card className="bg-white border shadow-sm">
+                <Card className="bg-card border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Facturado (Ventas Netas)</CardTitle>
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -585,7 +585,7 @@ export function ReportsDashboard({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white border shadow-sm">
+                <Card className="bg-card border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Cobrado (Caja Recaudado)</CardTitle>
                         <Coins className="h-4 w-4 text-muted-foreground" />
@@ -599,7 +599,7 @@ export function ReportsDashboard({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white border shadow-sm">
+                <Card className="bg-card border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Ganancia Bruta</CardTitle>
                         <Briefcase className="h-4 w-4 text-muted-foreground" />
@@ -615,7 +615,7 @@ export function ReportsDashboard({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white border shadow-sm">
+                <Card className="bg-card border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">ITBMS Recaudado</CardTitle>
                         <Percent className="h-4 w-4 text-muted-foreground" />
@@ -629,7 +629,7 @@ export function ReportsDashboard({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white border shadow-sm">
+                <Card className="bg-card border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Ticket Promedio</CardTitle>
                         <Ticket className="h-4 w-4 text-muted-foreground" />
@@ -643,29 +643,29 @@ export function ReportsDashboard({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white border shadow-sm">
+                <Card className="bg-card border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Cuentas por Cobrar</CardTitle>
                         <Receipt className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-amber-600 tabular-nums">{formatCurrency(kpis.current.accountsReceivable)}</div>
+                        <div className="text-2xl font-bold text-warning tabular-nums">{formatCurrency(kpis.current.accountsReceivable)}</div>
                         <p className="text-xs text-muted-foreground mt-1.5">Saldo neto pendiente de cobro</p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white border shadow-sm">
+                <Card className="bg-card border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Cartera Vencida</CardTitle>
-                        <AlertCircle className="h-4 w-4 text-red-500" />
+                        <AlertCircle className="h-4 w-4 text-danger" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-600 tabular-nums">{formatCurrency(kpis.current.accountsOverdue)}</div>
+                        <div className="text-2xl font-bold text-danger tabular-nums">{formatCurrency(kpis.current.accountsOverdue)}</div>
                         <p className="text-xs text-muted-foreground mt-1.5">Facturas vencidas por cobrar</p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white border shadow-sm">
+                <Card className="bg-card border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Facturas Emitidas</CardTitle>
                         <FileText className="h-4 w-4 text-muted-foreground" />
@@ -683,7 +683,7 @@ export function ReportsDashboard({
             {/* Graphics and Status Row */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {/* Sales Trend line chart */}
-                <Card className="bg-white border shadow-sm lg:col-span-2 flex flex-col">
+                <Card className="bg-card border shadow-sm lg:col-span-2 flex flex-col">
                     <CardHeader className="p-5 border-b flex flex-row items-center justify-between">
                         <div>
                             <CardTitle className="text-base font-semibold">Tendencia de Ventas y Recaudación</CardTitle>
@@ -691,11 +691,11 @@ export function ReportsDashboard({
                         </div>
                         <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground">
                             <span className="flex items-center gap-1.5">
-                                <i className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                                <i className="w-2.5 h-2.5 rounded-full bg-info" />
                                 Facturado
                             </span>
                             <span className="flex items-center gap-1.5">
-                                <i className="w-2.5 h-2.5 rounded-full border border-dashed border-emerald-500 bg-white" />
+                                <i className="w-2.5 h-2.5 rounded-full border border-dashed border-success bg-card" />
                                 Cobrado
                             </span>
                         </div>
@@ -776,7 +776,7 @@ export function ReportsDashboard({
                 </Card>
 
                 {/* Donut validation statuses */}
-                <Card className="bg-white border shadow-sm flex flex-col">
+                <Card className="bg-card border shadow-sm flex flex-col">
                     <CardHeader className="p-5 border-b">
                         <CardTitle className="text-base font-semibold">Estado DGI (Fiscal)</CardTitle>
                         <CardDescription className="text-xs">Distribución de documentos de este periodo</CardDescription>
@@ -838,10 +838,10 @@ export function ReportsDashboard({
 
                                 <div className="space-y-1 mt-4">
                                     {statusSales.map((s, i) => {
-                                        let color = 'bg-blue-500';
-                                        if (s.status === 'aceptada') color = 'bg-green-500';
-                                        if (s.status === 'rechazada') color = 'bg-red-500';
-                                        if (s.status === 'pendiente') color = 'bg-yellow-500';
+                                        let color = 'bg-info';
+                                        if (s.status === 'aceptada') color = 'bg-success';
+                                        if (s.status === 'rechazada') color = 'bg-danger';
+                                        if (s.status === 'pendiente') color = 'bg-warning';
                                         if (s.status === 'anulada') color = 'bg-muted';
 
                                         const total = statusSales.reduce((a, b) => a + b.count, 0);
@@ -868,7 +868,7 @@ export function ReportsDashboard({
             </div>
 
             {/* Aging Cartera Section */}
-            <Card className="bg-white border shadow-sm">
+            <Card className="bg-card border shadow-sm">
                 <CardHeader className="p-5 border-b">
                     <CardTitle className="text-base font-semibold">Antigüedad de Saldos por Cobrar (Aging)</CardTitle>
                     <CardDescription className="text-xs">Distribución temporal del saldo total pendiente ({formatCurrency(totalAging)})</CardDescription>
@@ -884,35 +884,35 @@ export function ReportsDashboard({
                             <div className="w-full bg-muted h-4 rounded-full flex overflow-hidden shadow-inner">
                                 {receivablesAging.noVencido > 0 && (
                                     <div
-                                        className="bg-green-500 h-full transition-all"
+                                        className="bg-success h-full transition-all"
                                         style={{ width: `${(receivablesAging.noVencido / totalAging) * 100}%` }}
                                         title={`Al día (No Vencido): ${formatCurrency(receivablesAging.noVencido)}`}
                                     />
                                 )}
                                 {receivablesAging.days30 > 0 && (
                                     <div
-                                        className="bg-yellow-400 h-full transition-all"
+                                        className="bg-warning/60 h-full transition-all"
                                         style={{ width: `${(receivablesAging.days30 / totalAging) * 100}%` }}
                                         title={`0-30 días: ${formatCurrency(receivablesAging.days30)}`}
                                     />
                                 )}
                                 {receivablesAging.days60 > 0 && (
                                     <div
-                                        className="bg-orange-400 h-full transition-all"
+                                        className="bg-warning h-full transition-all"
                                         style={{ width: `${(receivablesAging.days60 / totalAging) * 100}%` }}
                                         title={`31-60 días: ${formatCurrency(receivablesAging.days60)}`}
                                     />
                                 )}
                                 {receivablesAging.days90 > 0 && (
                                     <div
-                                        className="bg-rose-500 h-full transition-all"
+                                        className="bg-danger/60 h-full transition-all"
                                         style={{ width: `${(receivablesAging.days90 / totalAging) * 100}%` }}
                                         title={`61-90 días: ${formatCurrency(receivablesAging.days90)}`}
                                     />
                                 )}
                                 {receivablesAging.daysOver90 > 0 && (
                                     <div
-                                        className="bg-red-700 h-full transition-all"
+                                        className="bg-danger h-full transition-all"
                                         style={{ width: `${(receivablesAging.daysOver90 / totalAging) * 100}%` }}
                                         title={`+90 días: ${formatCurrency(receivablesAging.daysOver90)}`}
                                     />
@@ -929,11 +929,11 @@ export function ReportsDashboard({
                             {/* Color Legend & Values */}
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-center">
                                 {[
-                                    { label: 'No vencido', val: receivablesAging.noVencido, color: 'bg-green-500' },
-                                    { label: '1 - 30 días', val: receivablesAging.days30, color: 'bg-yellow-400' },
-                                    { label: '31 - 60 días', val: receivablesAging.days60, color: 'bg-orange-400' },
-                                    { label: '61 - 90 días', val: receivablesAging.days90, color: 'bg-rose-500' },
-                                    { label: '+90 días', val: receivablesAging.daysOver90, color: 'bg-red-700' },
+                                    { label: 'No vencido', val: receivablesAging.noVencido, color: 'bg-success' },
+                                    { label: '1 - 30 días', val: receivablesAging.days30, color: 'bg-warning/60' },
+                                    { label: '31 - 60 días', val: receivablesAging.days60, color: 'bg-warning' },
+                                    { label: '61 - 90 días', val: receivablesAging.days90, color: 'bg-danger/60' },
+                                    { label: '+90 días', val: receivablesAging.daysOver90, color: 'bg-danger' },
                                     { label: 'Sin Vencimiento', val: receivablesAging.sinVencimiento, color: 'bg-muted' }
                                 ].map((bucket, i) => {
                                     const pct = totalAging > 0 ? (bucket.val / totalAging) * 100 : 0;
@@ -957,7 +957,7 @@ export function ReportsDashboard({
             {/* Top Products and Clients horizontal bar lists */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {/* Top Products */}
-                <Card className="bg-white border shadow-sm">
+                <Card className="bg-card border shadow-sm">
                     <CardHeader className="p-5 border-b flex flex-row items-center gap-2">
                         <Package className="h-5 w-5 text-brand-1" />
                         <div>
@@ -988,7 +988,7 @@ export function ReportsDashboard({
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right font-mono font-semibold">{formatNumber(p.cantidad)}</TableCell>
-                                            <TableCell className="text-right font-mono font-bold text-emerald-600">{margin.toFixed(1)}%</TableCell>
+                                            <TableCell className="text-right font-mono font-bold text-success">{margin.toFixed(1)}%</TableCell>
                                             <TableCell className="text-right font-mono pr-5 py-3">
                                                 <div className="flex flex-col items-end">
                                                     <span className="font-bold text-foreground">{formatCurrency(p.ingreso)}</span>
@@ -1013,9 +1013,9 @@ export function ReportsDashboard({
                 </Card>
 
                 {/* Top Clients */}
-                <Card className="bg-white border shadow-sm">
+                <Card className="bg-card border shadow-sm">
                     <CardHeader className="p-5 border-b flex flex-row items-center gap-2">
-                        <Users className="h-5 w-5 text-emerald-600" />
+                        <Users className="h-5 w-5 text-brand-1" />
                         <div>
                             <CardTitle className="text-base font-semibold">Clientes Principales (Top 10)</CardTitle>
                             <CardDescription className="text-xs">Los clientes con mayor facturación, cobros y saldos pendientes</CardDescription>
@@ -1043,14 +1043,14 @@ export function ReportsDashboard({
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right font-mono font-semibold">{c.facturasCount}</TableCell>
-                                            <TableCell className={`text-right font-mono font-bold ${c.saldoPendiente > 0 ? 'text-amber-500' : 'text-muted-foreground/40'}`}>
+                                            <TableCell className={`text-right font-mono font-bold ${c.saldoPendiente > 0 ? 'text-warning' : 'text-muted-foreground/40'}`}>
                                                 {c.saldoPendiente > 0 ? formatCurrency(c.saldoPendiente) : '—'}
                                             </TableCell>
                                             <TableCell className="text-right font-mono pr-5 py-3">
                                                 <div className="flex flex-col items-end">
                                                     <span className="font-bold text-foreground">{formatCurrency(c.totalFacturado)}</span>
                                                     <div className="w-16 bg-muted h-1 rounded-full mt-1.5 overflow-hidden">
-                                                        <div className="bg-emerald-600 h-full rounded-full" style={{ width: `${progress}%` }} />
+                                                        <div className="bg-brand-1 h-full rounded-full" style={{ width: `${progress}%` }} />
                                                     </div>
                                                 </div>
                                             </TableCell>
@@ -1071,7 +1071,7 @@ export function ReportsDashboard({
             </div>
 
             {/* Sales by Seller */}
-            <Card className="bg-white border shadow-sm">
+            <Card className="bg-card border shadow-sm">
                 <CardHeader className="p-5 border-b">
                     <CardTitle className="text-base font-semibold">Ventas por Vendedor</CardTitle>
                     <CardDescription className="text-xs">Volumen total de facturas y montos netos emitidos por cada usuario</CardDescription>
@@ -1108,7 +1108,7 @@ export function ReportsDashboard({
             </Card>
 
             {/* Invoice Detail with server-side pagination */}
-            <Card className="bg-white border shadow-sm">
+            <Card className="bg-card border shadow-sm">
                 <CardHeader className="p-5 border-b">
                     <CardTitle className="text-base font-semibold">Registro Detallado de Documentos</CardTitle>
                     <CardDescription className="text-xs">Listado de facturas y notas de crédito con sus respectivos estados fiscales</CardDescription>
@@ -1129,10 +1129,10 @@ export function ReportsDashboard({
                         </TableHeader>
                         <TableBody>
                             {invoiceDetail.invoices.map((inv, i) => {
-                                let badgeColor = 'bg-blue-500';
-                                if (inv.estadoDgi === 'aceptada') badgeColor = 'bg-green-500';
-                                if (inv.estadoDgi === 'rechazada') badgeColor = 'bg-red-500';
-                                if (inv.estadoDgi === 'pendiente') badgeColor = 'bg-yellow-500';
+                                let badgeColor = 'bg-info';
+                                if (inv.estadoDgi === 'aceptada') badgeColor = 'bg-success';
+                                if (inv.estadoDgi === 'rechazada') badgeColor = 'bg-danger';
+                                if (inv.estadoDgi === 'pendiente') badgeColor = 'bg-warning';
                                 if (inv.estadoDgi === 'anulada') badgeColor = 'bg-muted';
 
                                 return (
@@ -1144,7 +1144,7 @@ export function ReportsDashboard({
                                         <TableCell className="font-semibold text-foreground text-sm max-w-[160px] truncate">{inv.clienteNombre}</TableCell>
                                         <TableCell className="text-sm text-muted-foreground">{inv.vendedor}</TableCell>
                                         <TableCell className="text-right font-mono font-semibold tabular-nums text-foreground">{formatCurrency(inv.totalNeto)}</TableCell>
-                                        <TableCell className={`text-right font-mono font-semibold tabular-nums ${inv.saldoPendiente > 0 ? 'text-amber-500 font-bold' : 'text-muted-foreground/60'}`}>
+                                        <TableCell className={`text-right font-mono font-semibold tabular-nums ${inv.saldoPendiente > 0 ? 'text-warning font-bold' : 'text-muted-foreground/60'}`}>
                                             {inv.saldoPendiente > 0 ? formatCurrency(inv.saldoPendiente) : '—'}
                                         </TableCell>
                                         <TableCell>

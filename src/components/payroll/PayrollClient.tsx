@@ -37,7 +37,12 @@ import {
   ShieldAlert,
   Search,
   CheckCircle2,
-  UserPlus
+  UserPlus,
+  Wallet,
+  Landmark,
+  Receipt,
+  PiggyBank,
+  Info
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -309,42 +314,62 @@ export function PayrollClient() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="border-l-4 border-l-cyan-500 shadow-sm">
+                <Card className="shadow-sm">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Total Nómina Bruta (Mensual)</CardTitle>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Total Nómina Bruta (Mensual)</CardTitle>
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-info-bg text-info">
+                        <Wallet className="h-4 w-4" />
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-extrabold text-cyan-600 dark:text-cyan-400">{formatMoney(dashMetrics.totalBruto)}</div>
+                    <div className="text-3xl font-extrabold text-info">{formatMoney(dashMetrics.totalBruto)}</div>
                     <p className="text-xs text-muted-foreground mt-1">{colaboradores.length} colaborador{colaboradores.length === 1 ? '' : 'es'} activo{colaboradores.length === 1 ? '' : 's'}</p>
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-l-amber-500 shadow-sm">
+                <Card className="shadow-sm">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Cargas Patronales (CSS+SE+RP)</CardTitle>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Cargas Patronales (CSS+SE+RP)</CardTitle>
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-warning-bg text-warning">
+                        <Landmark className="h-4 w-4" />
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">{formatMoney(dashMetrics.totalPatronal)}</div>
+                    <div className="text-3xl font-extrabold text-warning">{formatMoney(dashMetrics.totalPatronal)}</div>
                     <p className="text-xs text-muted-foreground mt-1">Tasa CSS Patronal vigente: 13.25%</p>
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-l-blue-500 shadow-sm">
+                <Card className="shadow-sm">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Retenciones DGI / CSS Obrero</CardTitle>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Retenciones DGI / CSS Obrero</CardTitle>
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-danger-bg text-danger">
+                        <Receipt className="h-4 w-4" />
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-extrabold text-blue-600 dark:text-blue-400">{formatMoney(dashMetrics.totalRetenciones)}</div>
+                    <div className="text-3xl font-extrabold text-danger">{formatMoney(dashMetrics.totalRetenciones)}</div>
                     <p className="text-xs text-muted-foreground mt-1">CSS (9.75%) + SE (1.25%) + ISR Progresivo</p>
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-l-emerald-500 shadow-sm">
+                <Card className="shadow-sm">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Costo Total Empresa</CardTitle>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">Costo Total Empresa</CardTitle>
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-success-bg text-success">
+                        <PiggyBank className="h-4 w-4" />
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">{formatMoney(dashMetrics.costoTotal)}</div>
+                    <div className="text-3xl font-extrabold text-success">{formatMoney(dashMetrics.costoTotal)}</div>
                     <p className="text-xs text-muted-foreground mt-1">Bruto + Total Cargas Patronales</p>
                   </CardContent>
                 </Card>
@@ -360,35 +385,35 @@ export function PayrollClient() {
                     <div className="flex h-10 w-full rounded-lg overflow-hidden bg-muted font-bold text-xs">
                       <div
                         style={{ width: `${Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100)}%` }}
-                        className="bg-emerald-500 text-black flex items-center justify-center px-2 transition-all"
+                        className="bg-success-bg text-success flex items-center justify-center px-2 transition-all"
                       >
                         Neto ({Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100)}%)
                       </div>
                       <div
                         style={{ width: `${Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100)}%` }}
-                        className="bg-cyan-500 text-black flex items-center justify-center px-2 transition-all"
+                        className="bg-danger-bg text-danger flex items-center justify-center px-2 transition-all"
                       >
                         Obrero ({Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100)}%)
                       </div>
                       <div
                         style={{ width: `${Math.max(1, 100 - Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100) - Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100))}%` }}
-                        className="bg-amber-500 text-black flex items-center justify-center px-2 transition-all"
+                        className="bg-warning-bg text-warning flex items-center justify-center px-2 transition-all"
                       >
                         Patronal ({Math.max(1, 100 - Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100) - Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100))}%)
                       </div>
                     </div>
 
                     <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground gap-2">
-                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-500"></span> Salario Neto Recibido</span>
-                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-cyan-500"></span> Retenciones Obreras (CSS + SE + ISR)</span>
-                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-amber-500"></span> Cargas Patronales (CSS + SE + RP)</span>
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-success"></span> Salario Neto Recibido</span>
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-danger"></span> Retenciones Obreras (CSS + SE + ISR)</span>
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-warning"></span> Cargas Patronales (CSS + SE + RP)</span>
                     </div>
                   </CardContent>
                 </Card>
               )}
 
-              <div className="bg-cyan-500/10 border-l-4 border-cyan-500 p-4 rounded-r-lg flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-cyan-500 shrink-0 mt-0.5" />
+              <div className="bg-info-bg border border-info/30 p-4 rounded-lg flex items-start gap-3">
+                <Info className="h-5 w-5 text-info shrink-0 mt-0.5" />
                 <div className="text-sm">
                   <strong className="font-semibold text-foreground">Cumplimiento Legal y Reforma CSS (Ley 462 de 2025):</strong> El motor de cálculo detecta la fecha del periodo de nómina. Para el tramo actual (hasta febrero de 2027), se aplica exactamente la cuota del <strong>13.25%</strong> en Seguro Social Patronal.
                 </div>
@@ -499,9 +524,12 @@ export function PayrollClient() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Desglose Obrero */}
-              <Card className="border-t-4 border-t-cyan-500">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg text-cyan-600 dark:text-cyan-400">Deducciones del Trabajador (Obrero)</CardTitle>
+                  <CardTitle className="text-lg text-danger flex items-center gap-2">
+                    <Receipt className="h-4 w-4" />
+                    Deducciones del Trabajador (Obrero)
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   <div className="flex justify-between py-1 border-b border-border/50">
@@ -513,14 +541,14 @@ export function PayrollClient() {
                       Seguro Social (CSS 9.75%)
                       <Tooltip><TooltipTrigger asChild><HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" /></TooltipTrigger><TooltipContent>Tasa fija del colaborador según Art. 114 Ley 51/462</TooltipContent></Tooltip>
                     </span>
-                    <span className="text-red-500 font-medium">-{formatMoney(dedObrero.cssObrero)}</span>
+                    <span className="text-danger font-medium">-{formatMoney(dedObrero.cssObrero)}</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-border/50">
                     <span className="flex items-center gap-1.5">
                       Seguro Educativo (SE 1.25%)
                       <Tooltip><TooltipTrigger asChild><HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" /></TooltipTrigger><TooltipContent>Aporte fijo obligatorio del trabajador</TooltipContent></Tooltip>
                     </span>
-                    <span className="text-red-500 font-medium">-{formatMoney(dedObrero.seObrero)}</span>
+                    <span className="text-danger font-medium">-{formatMoney(dedObrero.seObrero)}</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-border/50 bg-muted/40 px-2 rounded">
                     <span className="font-medium">Total Deducción CSS + SE:</span>
@@ -531,11 +559,11 @@ export function PayrollClient() {
                       Retención ISR Progresivo
                       <Tooltip><TooltipTrigger asChild><HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" /></TooltipTrigger><TooltipContent>Exento hasta $11,000 netos anuales. Tramos 15% y 25% prorrateados</TooltipContent></Tooltip>
                     </span>
-                    <span className="text-amber-500 font-medium">{formatMoney(dedObrero.isrObrero)}</span>
+                    <span className="text-warning font-medium">{formatMoney(dedObrero.isrObrero)}</span>
                   </div>
                   <div className="flex justify-between pt-3 border-t-2 border-border text-base font-bold">
                     <span>SALARIO NETO A PAGAR:</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 text-xl">{formatMoney(dedObrero.salarioNeto)}</span>
+                    <span className="text-success text-xl">{formatMoney(dedObrero.salarioNeto)}</span>
                   </div>
                   <div className="text-xs text-muted-foreground pt-2">
                     Base gravable anual proyectada para cálculo de ISR: <span className="font-semibold text-foreground">{formatMoney(dedObrero.baseGravableAnualProyectada)}</span>
@@ -544,9 +572,12 @@ export function PayrollClient() {
               </Card>
 
               {/* Desglose Patronal */}
-              <Card className="border-t-4 border-t-amber-500">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg text-amber-600 dark:text-amber-400">Cargas del Empleador (Patronal)</CardTitle>
+                  <CardTitle className="text-lg text-warning flex items-center gap-2">
+                    <Landmark className="h-4 w-4" />
+                    Cargas del Empleador (Patronal)
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   <div className="flex justify-between py-1 border-b border-border/50">
@@ -558,25 +589,25 @@ export function PayrollClient() {
                       Seguro Social Patronal ({(aportesPatronal.tasaCSSPatronalAplicada * 100).toFixed(2)}%)
                       <Tooltip><TooltipTrigger asChild><HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" /></TooltipTrigger><TooltipContent>Escalonado Ley 462: 13.25% vigente hasta feb-2027</TooltipContent></Tooltip>
                     </span>
-                    <span className="font-medium text-amber-600 dark:text-amber-400">{formatMoney(aportesPatronal.cssPatronal)}</span>
+                    <span className="font-medium text-warning">{formatMoney(aportesPatronal.cssPatronal)}</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-border/50">
                     <span className="flex items-center gap-1.5">
                       Seguro Educativo Patronal (1.50%)
                       <Tooltip><TooltipTrigger asChild><HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" /></TooltipTrigger><TooltipContent>Aporte obligatorio de la empresa</TooltipContent></Tooltip>
                     </span>
-                    <span className="font-medium text-amber-600 dark:text-amber-400">{formatMoney(aportesPatronal.sePatronal)}</span>
+                    <span className="font-medium text-warning">{formatMoney(aportesPatronal.sePatronal)}</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-border/50">
                     <span className="flex items-center gap-1.5">
                       Riesgos Profesionales ({(aportesPatronal.tasaRiesgoAplicada * 100).toFixed(2)}%)
                       <Tooltip><TooltipTrigger asChild><HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" /></TooltipTrigger><TooltipContent>Según clasificación de riesgo en tabla CIIU</TooltipContent></Tooltip>
                     </span>
-                    <span className="font-medium text-amber-600 dark:text-amber-400">{formatMoney(aportesPatronal.riesgosProfesionales)}</span>
+                    <span className="font-medium text-warning">{formatMoney(aportesPatronal.riesgosProfesionales)}</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-border/50 bg-muted/40 px-2 rounded">
                     <span className="font-medium">Total Cargas Patronales:</span>
-                    <strong className="font-bold text-amber-600 dark:text-amber-400">{formatMoney(aportesPatronal.totalPatronal)}</strong>
+                    <strong className="font-bold text-warning">{formatMoney(aportesPatronal.totalPatronal)}</strong>
                   </div>
                   <div className="flex justify-between pt-3 border-t-2 border-border text-base font-bold">
                     <span>COSTO TOTAL EMPRESA:</span>
@@ -619,8 +650,8 @@ export function PayrollClient() {
           {cargandoColaboradores ? (
             <div className="text-center py-16 text-muted-foreground animate-pulse text-sm">Cargando colaboradores...</div>
           ) : errorColaboradores ? (
-            <Card className="border-red-200 bg-red-50 text-center py-8">
-              <CardContent className="text-sm text-red-600">{errorColaboradores}</CardContent>
+            <Card className="border-danger/30 bg-danger-bg text-center py-8">
+              <CardContent className="text-sm text-danger">{errorColaboradores}</CardContent>
             </Card>
           ) : !hayColaboradores ? (
             <Card className="border-dashed border-2 text-center py-12">
@@ -686,8 +717,8 @@ export function PayrollClient() {
             </Card>
           )}
 
-          <div className="bg-amber-500/10 border-l-4 border-amber-500 p-4 rounded-r-lg flex items-start gap-3">
-            <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+          <div className="bg-warning-bg border border-warning/30 p-4 rounded-lg flex items-start gap-3">
+            <ShieldAlert className="h-5 w-5 text-warning shrink-0 mt-0.5" />
             <div className="text-sm">
               <strong className="font-semibold text-foreground">Cumplimiento Ley 81 de 2019 de Protección de Datos Personales:</strong> Esta información se consulta en vivo desde el backend Prisma + Postgres, con seguridad de filas (RLS) habilitada y aislamiento por empresa. No se almacena en el navegador.
             </div>
@@ -734,9 +765,12 @@ export function PayrollClient() {
           </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="border-t-4 border-t-cyan-500">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-cyan-600 dark:text-cyan-400">Deducción al Trabajador en el XIII Mes</CardTitle>
+                <CardTitle className="text-lg text-danger flex items-center gap-2">
+                  <Receipt className="h-4 w-4" />
+                  Deducción al Trabajador en el XIII Mes
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between py-1 border-b border-border/50">
@@ -745,7 +779,7 @@ export function PayrollClient() {
                 </div>
                 <div className="flex justify-between py-1 border-b border-border/50">
                   <span>Seguro Social Especial (7.25%):</span>
-                  <span className="text-red-500 font-medium">-{formatMoney(decCalc.cssObrero)}</span>
+                  <span className="text-danger font-medium">-{formatMoney(decCalc.cssObrero)}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-border/50">
                   <span>Seguro Educativo (Exento por Ley):</span>
@@ -753,14 +787,17 @@ export function PayrollClient() {
                 </div>
                 <div className="flex justify-between pt-3 border-t-2 border-border text-base font-bold">
                   <span>PAGO NETO A RECIBIR:</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 text-xl">{formatMoney(decCalc.montoNeto)}</span>
+                  <span className="text-success text-xl">{formatMoney(decCalc.montoNeto)}</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-t-4 border-t-amber-500">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-amber-600 dark:text-amber-400">Aporte Patronal sobre el XIII Mes</CardTitle>
+                <CardTitle className="text-lg text-warning flex items-center gap-2">
+                  <Landmark className="h-4 w-4" />
+                  Aporte Patronal sobre el XIII Mes
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between py-1 border-b border-border/50">
@@ -769,7 +806,7 @@ export function PayrollClient() {
                 </div>
                 <div className="flex justify-between py-1 border-b border-border/50">
                   <span>CSS Patronal sobre Décimo (10.75%):</span>
-                  <span className="font-medium text-amber-600 dark:text-amber-400">{formatMoney(decCalc.cssPatronal)}</span>
+                  <span className="font-medium text-warning">{formatMoney(decCalc.cssPatronal)}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-border/50">
                   <span>Seguro Educativo Patronal (Exento):</span>
@@ -841,9 +878,12 @@ export function PayrollClient() {
           </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="border-t-4 border-t-emerald-500">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-emerald-600 dark:text-emerald-400">Derechos Adquiridos (Renuncia o Despido Justificado)</CardTitle>
+                <CardTitle className="text-lg text-success flex items-center gap-2">
+                  <PiggyBank className="h-4 w-4" />
+                  Derechos Adquiridos (Renuncia o Despido Justificado)
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between py-1 border-b border-border/50">
@@ -860,14 +900,17 @@ export function PayrollClient() {
                 </div>
                 <div className="flex justify-between pt-3 border-t-2 border-border text-base font-bold">
                   <span>TOTAL DERECHOS ADQUIRIDOS:</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 text-xl">{formatMoney(liqCalc.totalDerechosAdquiridos)}</span>
+                  <span className="text-success text-xl">{formatMoney(liqCalc.totalDerechosAdquiridos)}</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-t-4 border-t-amber-500">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-amber-600 dark:text-amber-400">Escenario por Despido Injustificado</CardTitle>
+                <CardTitle className="text-lg text-warning flex items-center gap-2">
+                  <ShieldAlert className="h-4 w-4" />
+                  Escenario por Despido Injustificado
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between py-1 border-b border-border/50">
@@ -880,7 +923,7 @@ export function PayrollClient() {
                 </div>
                 <div className="flex justify-between pt-3 border-t-2 border-border text-base font-bold">
                   <span>TOTAL CON DESPIDO INJUSTIFICADO:</span>
-                  <span className="text-amber-600 dark:text-amber-400 text-xl">{formatMoney(liqCalc.totalConDespidoInjustificado)}</span>
+                  <span className="text-warning text-xl">{formatMoney(liqCalc.totalConDespidoInjustificado)}</span>
                 </div>
               </CardContent>
             </Card>

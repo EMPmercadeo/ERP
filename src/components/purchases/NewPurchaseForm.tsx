@@ -184,7 +184,7 @@ export function NewPurchaseForm({
     return (
         <ContentContainer className="py-6 max-w-5xl space-y-6">
             <div className="flex items-center gap-4">
-                <Button variant="outline" size="icon" asChild>
+                <Button variant="outline" size="icon" asChild aria-label="Volver a compras">
                     <Link href="/purchases">
                         <ArrowLeft className="h-4 w-4" />
                     </Link>
@@ -385,7 +385,8 @@ export function NewPurchaseForm({
                                                     type="button"
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-red-500"
+                                                    aria-label="Eliminar ítem"
+                                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                                                     onClick={() => removeItem(index)}
                                                     disabled={items.length === 1}
                                                 >
@@ -421,7 +422,7 @@ export function NewPurchaseForm({
                                 <span>{formatCurrency(subtotal)}</span>
                             </div>
                             {totalDescuento > 0 && (
-                                <div className="flex justify-between text-red-600">
+                                <div className="flex justify-between text-danger">
                                     <span>Descuento:</span>
                                     <span>-{formatCurrency(totalDescuento)}</span>
                                 </div>

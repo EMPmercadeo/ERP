@@ -319,7 +319,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                             </Badge>
                             <Badge className={cn(
                                 "text-[10px] font-bold px-2 py-0.5 rounded border-transparent",
-                                activo === 'true' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                                activo === 'true' ? "bg-success-bg text-success" : "bg-danger-bg text-danger"
                             )}>
                                 {activo === 'true' ? 'Activo' : 'Inactivo'}
                             </Badge>
@@ -393,9 +393,9 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                     value={codigoInterno} 
                                                     onChange={(e) => setCodigoInterno(e.target.value)}
                                                     required 
-                                                    className={cn("h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.codigoInterno && "border-red-500")}
+                                                    className={cn("h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.codigoInterno && "border-danger")}
                                                 />
-                                                {state?.errors?.codigoInterno && <p className="text-[10px] text-red-500 font-bold mt-0.5">{state.errors.codigoInterno[0]}</p>}
+                                                {state?.errors?.codigoInterno && <p className="text-[10px] text-danger font-bold mt-0.5">{state.errors.codigoInterno[0]}</p>}
                                             </div>
 
                                             {/* Código de Barras / SKU Alterno */}
@@ -438,8 +438,8 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent className="rounded-lg">
-                                                        <SelectItem value="true" className="text-xs sm:text-sm cursor-pointer text-emerald-600 font-semibold">Activo</SelectItem>
-                                                        <SelectItem value="false" className="text-xs sm:text-sm cursor-pointer text-red-600 font-semibold">Inactivo</SelectItem>
+                                                        <SelectItem value="true" className="text-xs sm:text-sm cursor-pointer text-success font-semibold">Activo</SelectItem>
+                                                        <SelectItem value="false" className="text-xs sm:text-sm cursor-pointer text-danger font-semibold">Inactivo</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
@@ -454,9 +454,9 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                 value={descripcion} 
                                                 onChange={(e) => setDescripcion(e.target.value)}
                                                 required 
-                                                className={cn("h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.descripcion && "border-red-500")}
+                                                className={cn("h-10 text-xs sm:text-sm bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full", state?.errors?.descripcion && "border-danger")}
                                             />
-                                            {state?.errors?.descripcion && <p className="text-[10px] text-red-500 font-bold mt-0.5">{state.errors.descripcion[0]}</p>}
+                                            {state?.errors?.descripcion && <p className="text-[10px] text-danger font-bold mt-0.5">{state.errors.descripcion[0]}</p>}
                                         </div>
 
                                         {/* Descripción Detallada */}
@@ -553,10 +553,10 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                 <div className={cn(
                                                     "h-10 flex items-center justify-between px-3 rounded-lg border text-xs font-bold font-mono",
                                                     parseFloat(margin) <= 0 
-                                                        ? "bg-red-50 border-red-200 text-red-700" 
-                                                        : parseFloat(margin) < 15 
-                                                        ? "bg-amber-50 border-amber-200 text-amber-700" 
-                                                        : "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                                        ? "bg-danger-bg border-danger/20 text-danger"
+                                                        : parseFloat(margin) < 15
+                                                        ? "bg-warning-bg border-warning/20 text-warning"
+                                                        : "bg-success-bg border-success/20 text-success"
                                                 )}>
                                                     <span>Rent: +{formatearMoneda(parseFloat(rentabilidad))}</span>
                                                     <span>{formatearPorcentaje(parseFloat(margin))}</span>
@@ -633,7 +633,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                     <TabsContent value="inventory" forceMount className="mt-4 space-y-4 outline-none data-[state=inactive]:hidden">
                                         {unidadMedida === 'SRV' ? (
                                             <>
-                                                <Alert className="py-2.5 px-3 text-xs bg-blue-50 border-blue-200 text-blue-700">
+                                                <Alert className="py-2.5 px-3 text-xs bg-info-bg border-info/20 text-info">
                                                     <AlertCircle className="h-4 w-4 mr-2" />
                                                     <span>Este producto está marcado como <strong>Servicio</strong> (unidad SRV) — no lleva control de inventario. Se puede vender sin límite de stock.</span>
                                                 </Alert>
@@ -829,7 +829,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                                             type="button"
                                                                             variant="outline"
                                                                             onClick={() => handleSetPrimary(img.id)}
-                                                                            className="h-7 flex-1 text-[10px] font-bold text-indigo-600 border-indigo-100 hover:bg-indigo-50"
+                                                                            className="h-7 flex-1 text-[10px] font-bold text-info border-info/20 hover:bg-info-bg"
                                                                         >
                                                                             Principal
                                                                         </Button>
@@ -842,7 +842,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                                         type="button"
                                                                         variant="outline"
                                                                         onClick={() => handleDelete(img.id)}
-                                                                        className="h-7 w-7 text-rose-600 hover:text-white hover:bg-rose-600 border-rose-100 hover:border-transparent p-0 flex items-center justify-center"
+                                                                        className="h-7 w-7 text-destructive hover:text-white hover:bg-destructive border-destructive/20 hover:border-transparent p-0 flex items-center justify-center"
                                                                     >
                                                                         ✕
                                                                     </Button>
@@ -890,7 +890,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                                     </span>
                                                                     <Badge className={cn(
                                                                         "text-[9px] font-bold px-1.5 py-0.5 rounded border-transparent",
-                                                                        log.accion === 'crear' ? "bg-emerald-50 text-emerald-600" : "bg-brand-1/5 text-brand-1"
+                                                                        log.accion === 'crear' ? "bg-success-bg text-success" : "bg-brand-1/5 text-brand-1"
                                                                     )}>
                                                                         {log.accion.toUpperCase()}
                                                                     </Badge>
@@ -908,9 +908,9 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                                                 return (
                                                                                     <div key={key} className="flex flex-wrap gap-1">
                                                                                         <span className="font-bold text-foreground">{key}:</span>
-                                                                                        <span className="text-red-500 line-through">{String(before || '—')}</span>
+                                                                                        <span className="text-danger line-through">{String(before || '—')}</span>
                                                                                         <span className="text-muted-foreground">→</span>
-                                                                                        <span className="text-emerald-600 font-bold">{String(after || '—')}</span>
+                                                                                        <span className="text-success font-bold">{String(after || '—')}</span>
                                                                                     </div>
                                                                                 );
                                                                             }
@@ -1022,11 +1022,11 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Rentabilidad:</span>
-                                        <span className="font-bold text-emerald-600 font-mono">+{formatearMoneda(parseFloat(rentabilidad))}</span>
+                                        <span className="font-bold text-success font-mono">+{formatearMoneda(parseFloat(rentabilidad))}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Margen Bruto:</span>
-                                        <Badge className="bg-emerald-50 text-emerald-600 border-transparent hover:bg-emerald-50 text-[10px] font-bold px-2 py-0.5 rounded">
+                                        <Badge className="bg-success-bg text-success border-transparent hover:bg-success-bg text-[10px] font-bold px-2 py-0.5 rounded">
                                             {formatearPorcentaje(parseFloat(margin))}
                                         </Badge>
                                     </div>
@@ -1039,17 +1039,17 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Estado de Stock:</span>
                                         {unidadMedida === 'SRV' ? (
-                                            <Badge className="text-[10px] font-bold px-2 py-0.5 rounded border-transparent bg-blue-50 text-blue-600 hover:bg-blue-50">
+                                            <Badge className="text-[10px] font-bold px-2 py-0.5 rounded border-transparent bg-info-bg text-info hover:bg-info-bg">
                                                 Servicio (sin inventario)
                                             </Badge>
                                         ) : (
                                             <Badge className={cn(
                                                 "text-[10px] font-bold px-2 py-0.5 rounded border-transparent",
                                                 stockActualNum <= 0
-                                                    ? "bg-red-50 text-red-600 hover:bg-red-50"
+                                                    ? "bg-danger-bg text-danger hover:bg-danger-bg"
                                                     : stockActualNum < stockMinimoNum
-                                                    ? "bg-amber-50 text-amber-600 hover:bg-amber-50"
-                                                    : "bg-emerald-50 text-emerald-600 hover:bg-emerald-50"
+                                                    ? "bg-warning-bg text-warning hover:bg-warning-bg"
+                                                    : "bg-success-bg text-success hover:bg-success-bg"
                                             )}>
                                                 {stockActualNum <= 0 ? 'Agotado' : stockActualNum < stockMinimoNum ? 'Bajo Stock' : 'Saludable'}
                                             </Badge>
@@ -1304,7 +1304,7 @@ function KitTab({ productoId, initialEsKit }: { productoId: string; initialEsKit
                                         <TableCell className="py-2 text-xs text-right font-mono text-muted-foreground">{formatCurrency(c.costoUnitario)}</TableCell>
                                         <TableCell className="py-2 text-xs text-right font-mono font-bold text-foreground">{formatCurrency(c.costoUnitario * c.cantidad)}</TableCell>
                                         <TableCell className="py-2 text-right">
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeComponente(c.productoComponenteId)} className="h-7 w-7 text-muted-foreground hover:text-rose-600">
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeComponente(c.productoComponenteId)} className="h-7 w-7 text-muted-foreground hover:text-destructive">
                                                 <Trash2 className="h-3.5 w-3.5" />
                                             </Button>
                                         </TableCell>

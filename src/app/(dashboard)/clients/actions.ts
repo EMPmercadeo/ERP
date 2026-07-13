@@ -14,35 +14,44 @@ export async function importClients(clients: Record<string, string>[]) {
         let createdCount = 0;
         const errors: string[] = [];
 
-        for (const row of clients) {
+        for (let i = 0; i < clients.length; i++) {
+            const row = clients[i];
+            // Fila visible para el usuario: +1 por índice 0-based, +1 por la fila de encabezado.
+            const fila = i + 2;
             try {
                 // Expected Row: { ruc, razonSocial, email, telefono, direccion }
-                const ruc = row.ruc;
-                if (!ruc) continue;
+                const ruc = row.ruc?.trim();
+                if (!ruc) {
+                    errors.push(`Fila ${fila}: sin RUC, se omitió.`);
+                    continue;
+                }
 
                 const exists = await prisma.cliente.findFirst({
                     where: { empresaId, ruc: ruc }
                 });
 
-                if (!exists) {
-                    await prisma.cliente.create({
-                        data: {
-                            empresaId,
-                            ruc: ruc,
-                            razonSocial: row.razonSocial || 'Sin Nombre',
-                            tipoRuc: ruc.includes('-') ? '01' : '02',
-                            email: row.email,
-                            telefono: row.telefono,
-                            direccion: row.direccion,
-                            estado: 'activo'
-                        }
-                    });
-                    createdCount++;
+                if (exists) {
+                    errors.push(`Fila ${fila}: el RUC ${ruc} ya existe (${exists.razonSocial}), se omitió.`);
+                    continue;
                 }
+
+                await prisma.cliente.create({
+                    data: {
+                        empresaId,
+                        ruc: ruc,
+                        razonSocial: row.razonSocial || 'Sin Nombre',
+                        tipoRuc: ruc.includes('-') ? '01' : '02',
+                        email: row.email || null,
+                        telefono: row.telefono || null,
+                        direccion: row.direccion || null,
+                        estado: 'activo'
+                    }
+                });
+                createdCount++;
 
             } catch (err) {
                 console.error('Error importing client row:', row, err);
-                errors.push(`RUC ${row.ruc}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                errors.push(`Fila ${fila}: ${err instanceof Error ? err.message : 'Error desconocido'}`);
             }
         }
 

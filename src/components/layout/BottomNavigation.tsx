@@ -168,7 +168,7 @@ export function BottomNavigation() {
     const MenuRow = ({ name, href, icon: Icon }: { name: string; href: string; icon: typeof Package }) => (
         <Link
             href={href}
-            className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-foreground hover:bg-white active:bg-accent transition-colors"
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-foreground hover:bg-accent active:bg-accent transition-colors"
         >
             <Icon className="h-4.5 w-4.5 text-brand-1 shrink-0" />
             <span className="flex-1">{name}</span>
@@ -179,7 +179,7 @@ export function BottomNavigation() {
     return (
         <>
             {/* Bottom Nav Bar - Sticky to bottom on mobile */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-border h-16 flex items-center justify-around px-2 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.05)] lg:hidden font-sans">
+            <div className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border h-16 flex items-center justify-around px-2 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.05)] lg:hidden font-sans">
                 {mainItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
                     const Icon = item.icon;
@@ -218,7 +218,7 @@ export function BottomNavigation() {
                     className="fixed inset-0 z-50 bg-muted flex flex-col font-sans lg:hidden animate-in slide-in-from-bottom duration-300"
                 >
                     {/* Header */}
-                    <div className="bg-white border-b border-border px-4 py-3 flex items-center justify-between shrink-0">
+                    <div className="bg-background border-b border-border px-4 py-3 flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className="h-9 w-9 rounded-full bg-brand-1 text-white font-bold flex items-center justify-center text-xs shadow-sm shrink-0">
                                 {userName ? userName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
@@ -229,9 +229,9 @@ export function BottomNavigation() {
                             </div>
                             <Badge className={cn(
                                 "text-[8px] px-1.5 py-0 border-none font-bold uppercase shrink-0",
-                                userPlan === 'pro' && "bg-amber-500 text-white",
-                                userPlan === 'emprendedor' && "bg-indigo-500 text-white",
-                                userPlan === 'negocio' && "bg-cyan-600 text-white",
+                                userPlan === 'pro' && "bg-warning text-white",
+                                userPlan === 'emprendedor' && "bg-info text-white",
+                                userPlan === 'negocio' && "bg-success text-white",
                                 userPlan === 'empresa' && "bg-secondary text-white",
                                 userPlan === 'free' && "bg-muted text-foreground"
                             )}>
@@ -240,6 +240,7 @@ export function BottomNavigation() {
                         </div>
                         <button
                             onClick={() => setIsMenuOpen(false)}
+                            aria-label="Cerrar menú"
                             className="text-muted-foreground hover:text-foreground p-1.5 rounded-full hover:bg-accent active:scale-90 transition-transform shrink-0"
                         >
                             <X className="h-5 w-5" />
@@ -267,11 +268,11 @@ export function BottomNavigation() {
 
                         {isSuperAdmin && (
                             <div>
-                                <h5 className="flex items-center gap-1 text-[10px] font-bold text-amber-600 uppercase tracking-wider px-3 mb-1">
+                                <h5 className="flex items-center gap-1 text-[10px] font-bold text-warning uppercase tracking-wider px-3 mb-1">
                                     <Shield className="h-3 w-3" />
                                     Super Admin
                                 </h5>
-                                <div className="bg-amber-50 rounded-xl overflow-hidden divide-y divide-white border border-amber-100">
+                                <div className="bg-warning-bg rounded-xl overflow-hidden divide-y divide-white border border-warning/20">
                                     {adminItems.map((item) => (
                                         <MenuRow key={item.name} {...item} />
                                     ))}
@@ -281,7 +282,7 @@ export function BottomNavigation() {
 
                         <Button
                             onClick={handleLogout}
-                            className="w-full h-11 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-bold text-sm rounded-xl flex items-center justify-center gap-2 active:scale-98 transition-all"
+                            className="w-full h-11 bg-danger-bg hover:bg-destructive hover:text-white border border-destructive/20 text-destructive font-bold text-sm rounded-xl flex items-center justify-center gap-2 active:scale-98 transition-all"
                         >
                             <LogOut className="h-4.5 w-4.5" />
                             <span>Cerrar Sesión</span>

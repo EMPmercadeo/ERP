@@ -44,6 +44,7 @@ export function NewClientModal({ onCreated }: { onCreated: (cliente: QuickClient
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [tipoRuc, setTipoRuc] = useState('02');
+    const [diasCredito, setDiasCredito] = useState('0');
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -59,6 +60,9 @@ export function NewClientModal({ onCreated }: { onCreated: (cliente: QuickClient
                 email: String(formData.get('email') || ''),
                 telefono: String(formData.get('telefono') || ''),
                 direccion: String(formData.get('direccion') || ''),
+                limiteCredito: String(formData.get('limiteCredito') || ''),
+                diasCredito,
+                descuentoEspecial: String(formData.get('descuentoEspecial') || ''),
             });
 
             if (!res.success) {
@@ -147,6 +151,33 @@ export function NewClientModal({ onCreated }: { onCreated: (cliente: QuickClient
                     <div>
                         <Label htmlFor="qc-direccion">Dirección</Label>
                         <Input id="qc-direccion" name="direccion" placeholder="Ciudad, Calle, Local..." />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                        <div>
+                            <Label htmlFor="qc-limiteCredito">Límite Crédito (USD)</Label>
+                            <Input id="qc-limiteCredito" name="limiteCredito" type="number" min="0" step="0.01" placeholder="0.00" />
+                        </div>
+                        <div>
+                            <Label htmlFor="qc-diasCredito">Días Crédito</Label>
+                            <Select value={diasCredito} onValueChange={setDiasCredito}>
+                                <SelectTrigger id="qc-diasCredito">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="0">Contado</SelectItem>
+                                    <SelectItem value="15">15 días</SelectItem>
+                                    <SelectItem value="30">30 días</SelectItem>
+                                    <SelectItem value="45">45 días</SelectItem>
+                                    <SelectItem value="60">60 días</SelectItem>
+                                    <SelectItem value="90">90 días</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="qc-descuentoEspecial">Descuento (%)</Label>
+                            <Input id="qc-descuentoEspecial" name="descuentoEspecial" type="number" min="0" max="100" step="0.01" placeholder="0" />
+                        </div>
                     </div>
 
                     <DialogFooter className="pt-2">

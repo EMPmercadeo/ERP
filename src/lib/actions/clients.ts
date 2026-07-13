@@ -170,6 +170,12 @@ export async function createClientQuick(input: {
     email?: string | null;
     telefono?: string | null;
     direccion?: string | null;
+    // Opcionales: la alta rápida (modal) puede omitirlos y quedan en sus defaults,
+    // pero si se envían usan la misma lógica que el alta de página completa (createClient)
+    // para que ambos flujos produzcan el mismo modelo de datos.
+    limiteCredito?: string | null;
+    diasCredito?: string | null;
+    descuentoEspecial?: string | null;
 }) {
     const validated = ClientSchema.safeParse({
         tipoRuc: input.tipoRuc,
@@ -179,6 +185,9 @@ export async function createClientQuick(input: {
         email: input.email || null,
         telefono: input.telefono || null,
         direccion: input.direccion || null,
+        limiteCredito: input.limiteCredito || null,
+        diasCredito: input.diasCredito || null,
+        descuentoEspecial: input.descuentoEspecial || null,
     });
 
     if (!validated.success) {
@@ -202,9 +211,9 @@ export async function createClientQuick(input: {
                 email: data.email,
                 telefono: data.telefono,
                 direccion: data.direccion,
-                limiteCredito: 0,
-                condicionPago: 'Contado',
-                descuentoEspecial: 0,
+                limiteCredito: data.limiteCredito ? parseFloat(data.limiteCredito) : 0,
+                condicionPago: data.diasCredito ? (data.diasCredito === '0' ? 'Contado' : `Crédito ${data.diasCredito}`) : 'Contado',
+                descuentoEspecial: data.descuentoEspecial ? parseFloat(data.descuentoEspecial) : 0,
                 estado: 'activo',
             },
             select: {

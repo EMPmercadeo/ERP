@@ -84,7 +84,7 @@ export function EditSupplierModal({
             <DialogContent className="max-w-xl">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-xl font-bold">
-                        <Edit className="h-5 w-5 text-indigo-600" />
+                        <Edit className="h-5 w-5 text-brand-1" />
                         Editar Proveedor
                     </DialogTitle>
                     <DialogDescription>
@@ -199,7 +199,7 @@ export function EditSupplierModal({
                         >
                             Cancelar
                         </Button>
-                        <Button type="submit" disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                        <Button type="submit" disabled={loading} className="bg-brand-1 hover:bg-brand-1/90 text-white">
                             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Guardar Cambios
                         </Button>

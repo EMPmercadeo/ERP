@@ -151,7 +151,7 @@ export function WarehouseList({
                                             </TableCell>
                                             <TableCell>
                                                 {b.activa ? (
-                                                    <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border border-emerald-200">
+                                                    <Badge className="bg-success-bg text-success hover:bg-success-bg border border-success/20">
                                                         Activa
                                                     </Badge>
                                                 ) : (
@@ -176,7 +176,8 @@ export function WarehouseList({
                                                         variant="ghost"
                                                         size="icon"
                                                         onClick={() => handleDelete(b.id)}
-                                                        className="h-8 w-8 text-muted-foreground hover:text-rose-600 hover:bg-rose-50/50"
+                                                        aria-label="Eliminar bodega"
+                                                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>

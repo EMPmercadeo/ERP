@@ -332,6 +332,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                     <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Cerrar menú"
                         className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent"
                         onClick={() => setMobileOpen(false)}
                     >
@@ -418,6 +419,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                         <Button
                             variant="ghost"
                             size="sm"
+                            aria-label={isCollapsed ? "Expandir menú" : "Colapsar menú"}
                             className="w-full justify-center text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                             onClick={toggleCollapsed}
                         >
@@ -444,7 +446,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                             )}
                         >
                             {/* Avatar */}
-                            <div className="h-9 w-9 rounded-full bg-indigo-600 text-white font-semibold flex items-center justify-center text-sm shadow-inner shrink-0">
+                            <div className="h-9 w-9 rounded-full bg-brand-1 text-white font-semibold flex items-center justify-center text-sm shadow-inner shrink-0">
                                 {initials}
                             </div>
                             
@@ -456,8 +458,8 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                         </p>
                                         <Badge className={cn(
                                             "text-[9px] px-1.5 py-0 border-none font-bold uppercase",
-                                            userPlan === 'pro' && "bg-amber-500 hover:bg-amber-500 text-white shadow-sm",
-                                            userPlan === 'basic' && "bg-indigo-500 hover:bg-indigo-500 text-white",
+                                            userPlan === 'pro' && "bg-warning hover:bg-warning text-white shadow-sm",
+                                            userPlan === 'basic' && "bg-info hover:bg-info text-white",
                                             userPlan === 'enterprise' && "bg-secondary hover:bg-secondary text-white",
                                             userPlan === 'free' && "bg-muted hover:bg-muted text-foreground"
                                         )}>
@@ -486,8 +488,8 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                                 <span className="text-[9px] text-muted-foreground">Plan activo:</span>
                                                 <span className={cn(
                                                     "text-[9px] font-bold uppercase px-1 rounded",
-                                                    userPlan === 'pro' && "text-amber-600 bg-amber-50",
-                                                    userPlan === 'basic' && "text-indigo-600 bg-indigo-50",
+                                                    userPlan === 'pro' && "text-warning bg-warning-bg",
+                                                    userPlan === 'basic' && "text-info bg-info-bg",
                                                     userPlan === 'enterprise' && "text-foreground bg-muted",
                                                     userPlan === 'free' && "text-muted-foreground bg-muted"
                                                 )}>
@@ -599,9 +601,9 @@ const handleSendFeedback = async (e: React.FormEvent) => {
 
                                         <button
                                             onClick={handleLogout}
-                                            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold text-rose-600 rounded-lg hover:bg-rose-50 transition-colors text-left"
+                                            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold text-destructive rounded-lg hover:bg-danger-bg transition-colors text-left"
                                         >
-                                            <LogOut className="h-4 w-4 shrink-0 text-rose-600" />
+                                            <LogOut className="h-4 w-4 shrink-0 text-destructive" />
                                             <span>Cerrar Sesión</span>
                                         </button>
                                     </div>
@@ -627,7 +629,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                             className="w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg hover:bg-sidebar-accent text-left"
                                         >
                                             <span>Español</span>
-                                            {language === 'es' && <Check className="h-4 w-4 text-indigo-600" />}
+                                            {language === 'es' && <Check className="h-4 w-4 text-brand-1" />}
                                         </button>
 
                                         <button
@@ -640,7 +642,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                             className="w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg hover:bg-sidebar-accent text-left"
                                         >
                                             <span>English</span>
-                                            {language === 'en' && <Check className="h-4 w-4 text-indigo-600" />}
+                                            {language === 'en' && <Check className="h-4 w-4 text-brand-1" />}
                                         </button>
                                     </div>
                                 )}
@@ -694,12 +696,13 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                     <div className="w-full max-w-md bg-card rounded-xl border border-sidebar-border shadow-2xl p-6 relative">
                         <button
                             onClick={() => setShowReferralModal(false)}
+                            aria-label="Cerrar"
                             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
                         >
                             <X className="h-5 w-5" />
                         </button>
                         <div className="text-center space-y-3">
-                            <div className="h-12 w-12 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+                            <div className="h-12 w-12 bg-brand-1/10 text-brand-1 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
                                 🎁
                             </div>
                             <h3 className="text-lg font-bold text-foreground">Refiere a un amigo</h3>
@@ -724,6 +727,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                     <div className="w-full max-w-md bg-card rounded-xl border border-sidebar-border shadow-2xl p-6 relative">
                         <button
                             onClick={() => setShowFeedbackModal(false)}
+                            aria-label="Cerrar"
                             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
                         >
                             <X className="h-5 w-5" />
@@ -760,6 +764,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                     <div className="w-full max-w-md bg-card rounded-xl border border-sidebar-border shadow-2xl p-6 relative font-sans">
                         <button
                             onClick={() => setShowSupportModal(false)}
+                            aria-label="Cerrar"
                             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
                         >
                             <X className="h-5 w-5" />

@@ -480,9 +480,9 @@ export function InvoiceList({
                             <Download className="mr-2 h-4 w-4" />
                             Exportar Excel
                         </Button>
-                        <Button asChild variant="outline" className="rounded-xl border-red-200 hover:bg-red-50 text-red-700 font-semibold">
+                        <Button asChild variant="outline" className="rounded-xl border-danger/20 hover:bg-danger-bg text-danger font-semibold">
                             <Link href="/credit-notes">
-                                <FileText className="mr-2 h-4 w-4 text-red-600" />
+                                <FileText className="mr-2 h-4 w-4 text-danger" />
                                 Notas de Crédito
                             </Link>
                         </Button>
@@ -711,6 +711,7 @@ export function InvoiceList({
                     <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl border border-border dark:border-border shadow-2xl p-6 relative font-sans">
                         <button
                             onClick={() => router.replace('/invoices')}
+                            aria-label="Cerrar"
                             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
                         >
                             <X className="h-5 w-5" />
@@ -718,7 +719,7 @@ export function InvoiceList({
 
                         <div className="space-y-6">
                             <div className="text-center space-y-2">
-                                <div className="mx-auto w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-500 mb-2">
+                                <div className="mx-auto w-12 h-12 rounded-full bg-success-bg flex items-center justify-center text-success mb-2">
                                     <svg className="w-6 h-6 stroke-current" fill="none" viewBox="0 0 24 24" strokeWidth="2.5">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>

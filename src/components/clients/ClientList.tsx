@@ -75,15 +75,6 @@ const getInitials = (name: string) => {
         .toUpperCase();
 };
 
-const palette = [
-    'from-blue-600 to-teal-400 text-white',
-    'from-emerald-500 to-teal-400 text-white',
-    'from-amber-500 to-orange-400 text-white',
-    'from-brand-1 to-brand-2 text-white',
-    'from-rose-500 to-red-400 text-white',
-    'from-primary to-primary/80 text-white'
-];
-
 function formatCurrency(value: number) {
     return new Intl.NumberFormat('es-PA', {
         style: 'currency',
@@ -177,10 +168,9 @@ export function ClientList({
             cell: ({ row }) => {
                 const name = row.getValue('razonSocial') as string;
                 const initials = getInitials(name) || 'CF';
-                const gradClass = palette[row.index % palette.length];
                 return (
                     <div className="flex items-center gap-3">
-                        <div className={`w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
+                        <div className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-xs font-bold bg-brand-1 text-white shrink-0 select-none">
                             {initials}
                         </div>
                         <div className="flex flex-col min-w-0">
@@ -260,7 +250,7 @@ export function ClientList({
                 return (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" suppressHydrationWarning>
+                            <Button variant="ghost" size="icon" aria-label="Acciones del cliente" suppressHydrationWarning>
                                 <MoreHorizontal className="h-4 w-4" />
                                 <span className="sr-only">Acciones</span>
                             </Button>
@@ -496,18 +486,17 @@ export function ClientList({
                         {/* Mobile Card List View */}
                         <div className="block md:hidden p-4 space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto min-h-[300px] border-b font-sans">
                             {initialData.length > 0 ? (
-                                initialData.map((client, index) => {
+                                initialData.map((client) => {
                                     const initials = getInitials(client.razonSocial) || 'CL';
-                                    const gradClass = palette[index % palette.length];
                                     return (
-                                        <div 
+                                        <div
                                             key={client.id}
                                             onClick={() => router.push(`/clients/${client.id}`)}
                                             className="bg-muted/50 border border-border rounded-xl p-3.5 space-y-3 shadow-sm active:scale-98 transition-transform cursor-pointer"
                                         >
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-gradient-to-br ${gradClass} shrink-0 select-none`}>
+                                                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-brand-1 text-white shrink-0 select-none">
                                                         {initials}
                                                     </div>
                                                     <div className="min-w-0 flex-1">

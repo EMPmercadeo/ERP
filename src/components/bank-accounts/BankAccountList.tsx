@@ -149,7 +149,7 @@ export function BankAccountList({
                                         <TableRow key={c.id} className="hover:bg-accent/60">
                                             <TableCell>
                                                 <div className="flex items-center gap-2.5">
-                                                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-brand-1 to-brand-2 text-white shrink-0">
+                                                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-brand-1 text-white shrink-0">
                                                         <Landmark className="h-4 w-4" />
                                                     </div>
                                                     <Link href={`/bank-accounts/${c.id}`} className="font-semibold text-foreground hover:text-brand-1">
@@ -172,14 +172,15 @@ export function BankAccountList({
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-1">
                                                     <Link href={`/bank-accounts/${c.id}`}>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-brand-1/10" title="Ver Detalle">
+                                                        <Button variant="ghost" size="icon" aria-label="Ver detalle" className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-brand-1/10" title="Ver Detalle">
                                                             <Eye className="h-4 w-4" />
                                                         </Button>
                                                     </Link>
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="h-8 w-8 text-muted-foreground hover:text-amber-600 hover:bg-amber-50"
+                                                        aria-label="Editar cuenta bancaria"
+                                                        className="h-8 w-8 text-muted-foreground hover:text-warning hover:bg-warning-bg"
                                                         title="Editar"
                                                         onClick={() => setEditingCuenta(c)}
                                                     >
@@ -195,16 +196,16 @@ export function BankAccountList({
                                                         <DropdownMenuContent align="end" className="w-56">
                                                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                                                             {c.activa ? (
-                                                                <DropdownMenuItem onClick={() => handleToggleStatus(c.id, false)} className="text-amber-600 cursor-pointer">
+                                                                <DropdownMenuItem onClick={() => handleToggleStatus(c.id, false)} className="text-warning cursor-pointer">
                                                                     <Ban className="mr-2 h-4 w-4" /> Desactivar
                                                                 </DropdownMenuItem>
                                                             ) : (
-                                                                <DropdownMenuItem onClick={() => handleToggleStatus(c.id, true)} className="text-emerald-600 cursor-pointer">
+                                                                <DropdownMenuItem onClick={() => handleToggleStatus(c.id, true)} className="text-success cursor-pointer">
                                                                     <CheckCircle2 className="mr-2 h-4 w-4" /> Reactivar
                                                                 </DropdownMenuItem>
                                                             )}
                                                             <DropdownMenuSeparator />
-                                                            <DropdownMenuItem onClick={() => handleDelete(c.id)} className="text-red-600 cursor-pointer">
+                                                            <DropdownMenuItem onClick={() => handleDelete(c.id)} className="text-destructive cursor-pointer">
                                                                 <Trash2 className="mr-2 h-4 w-4" /> Eliminar
                                                             </DropdownMenuItem>
                                                         </DropdownMenuContent>

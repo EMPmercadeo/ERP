@@ -36,8 +36,8 @@ export interface TransferListItem {
 }
 
 const ESTADO_INFO: Record<string, { label: string; className: string }> = {
-    en_transito: { label: 'En Tránsito', className: 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-50' },
-    recibido: { label: 'Recibido', className: 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-50' },
+    en_transito: { label: 'En Tránsito', className: 'bg-info-bg text-info border border-info/20 hover:bg-info-bg' },
+    recibido: { label: 'Recibido', className: 'bg-success-bg text-success border border-success/20 hover:bg-success-bg' },
     cancelado: { label: 'Cancelado', className: 'bg-muted text-muted-foreground border border-border hover:bg-muted' },
 };
 
@@ -182,7 +182,7 @@ export function TransferList({
                                                                 size="sm"
                                                                 onClick={() => handleRecibir(t.id)}
                                                                 disabled={processingId === t.id}
-                                                                className="h-8 text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                                                                className="h-8 text-xs text-success border-success/20 hover:bg-success-bg"
                                                             >
                                                                 <PackageCheck className="h-3.5 w-3.5 mr-1" />
                                                                 Recibir
@@ -192,7 +192,8 @@ export function TransferList({
                                                                 size="icon"
                                                                 onClick={() => handleCancelar(t.id)}
                                                                 disabled={processingId === t.id}
-                                                                className="h-8 w-8 text-muted-foreground hover:text-rose-600 hover:bg-rose-50/50"
+                                                                aria-label="Cancelar transferencia"
+                                                                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                                             >
                                                                 <XCircle className="h-4 w-4" />
                                                             </Button>

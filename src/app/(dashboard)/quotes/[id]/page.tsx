@@ -84,8 +84,8 @@ export default async function QuoteDetailPage(props: PageProps) {
     // Map status to badge color
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'aceptada': return 'bg-green-500';
-            case 'enviada': return 'bg-blue-500';
+            case 'aceptada': return 'bg-success text-white';
+            case 'enviada': return 'bg-info text-white';
             case 'rechazada': return 'destructive';
             default: return 'secondary';
         }

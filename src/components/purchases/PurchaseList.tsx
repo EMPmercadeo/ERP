@@ -209,8 +209,8 @@ export function PurchaseList({
                                                 </TableCell>
                                                 <TableCell>
                                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                                        isPaid ? 'bg-emerald-100 text-emerald-800' :
-                                                        p.estadoPago === 'parcial' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                                                        isPaid ? 'bg-success-bg text-success' :
+                                                        p.estadoPago === 'parcial' ? 'bg-info-bg text-info' : 'bg-warning-bg text-warning'
                                                     }`}>
                                                         {isPaid ? 'Pagada' : p.estadoPago}
                                                     </span>
@@ -219,7 +219,7 @@ export function PurchaseList({
                                                     {formatCurrency(p.totalNeto)}
                                                 </TableCell>
                                                 <TableCell className="text-right font-mono font-bold">
-                                                    <span className={!isPaid ? 'text-amber-600 font-bold' : 'text-muted-foreground'}>
+                                                    <span className={!isPaid ? 'text-warning font-bold' : 'text-muted-foreground'}>
                                                         {formatCurrency(p.saldoPendiente)}
                                                     </span>
                                                 </TableCell>
@@ -234,7 +234,7 @@ export function PurchaseList({
                                                                 saldoPendiente={p.saldoPendiente}
                                                             />
                                                         )}
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(p.id)}>
+                                                        <Button variant="ghost" size="icon" aria-label="Eliminar compra" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(p.id)}>
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
                                                     </div>
@@ -273,8 +273,8 @@ export function PurchaseList({
                                             </div>
                                             <div className="text-right">
                                                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                                                    isPaid ? 'bg-emerald-100 text-emerald-800' :
-                                                    p.estadoPago === 'parcial' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                                                    isPaid ? 'bg-success-bg text-success' :
+                                                    p.estadoPago === 'parcial' ? 'bg-info-bg text-info' : 'bg-warning-bg text-warning'
                                                 }`}>
                                                     {isPaid ? 'Pagada' : p.estadoPago}
                                                 </span>
@@ -289,7 +289,7 @@ export function PurchaseList({
                                             </div>
                                             <div className="text-right">
                                                 <span className="text-muted-foreground text-[10px] block">Por Pagar</span>
-                                                <span className={`font-mono font-bold ${!isPaid ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                                                <span className={`font-mono font-bold ${!isPaid ? 'text-warning' : 'text-muted-foreground'}`}>
                                                     {formatCurrency(p.saldoPendiente)}
                                                 </span>
                                             </div>
@@ -307,7 +307,7 @@ export function PurchaseList({
                                                     />
                                                 </div>
                                             )}
-                                            <Button variant="outline" size="sm" className="h-8 px-3 text-red-500 rounded-lg shrink-0 ml-auto" onClick={() => handleDelete(p.id)}>
+                                            <Button variant="outline" size="sm" className="h-8 px-3 text-destructive rounded-lg shrink-0 ml-auto" onClick={() => handleDelete(p.id)}>
                                                 <Trash2 className="h-3.5 w-3.5 mr-1" />
                                                 Eliminar
                                             </Button>

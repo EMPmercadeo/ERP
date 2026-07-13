@@ -47,8 +47,8 @@ export default function AuthLayout({
                 <div className="w-1/2 bg-gradient-to-br from-brand-1 via-brand-2 to-brand-3 p-12 lg:p-16 text-white flex flex-col justify-between relative overflow-hidden shadow-2xl">
                     {/* Pattern and decorative lights */}
                     <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
-                    <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/10 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-white/15 rounded-full blur-3xl pointer-events-none" />
 
                     {/* Logo Superior */}
                     <div className="flex items-center gap-2.5 relative z-10">

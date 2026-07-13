@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import EscanerCodigoBarras from './components/EscanerCodigoBarras';
 import YappyBotonPago from './components/YappyBotonPago';
 import { haySoporteSerial, conectarImpresoraSerial, desconectarImpresoraSerial, imprimirReciboEscPos, abrirCajonDinero } from '@/lib/pos/hardwareEscPos';
@@ -136,6 +138,8 @@ export default function POSMultiDispositivoPage() {
   // Estado de Red y Cola Offline IndexedDB / LocalStorage
   const [isOnline, setIsOnline] = useState(true);
   const [contingenciaForzada, setContingenciaForzada] = useState(false);
+  const [showContingenciaConfirm, setShowContingenciaConfirm] = useState(false);
+  const [showVaciarCarritoConfirm, setShowVaciarCarritoConfirm] = useState(false);
   const [colaLocal, setColaLocal] = useState<VentaOfflineQueueItem[]>([]);
   const [sincronizando, setSincronizando] = useState(false);
 
@@ -768,7 +772,7 @@ export default function POSMultiDispositivoPage() {
 
           {/* Botón de Estado y Contingencia */}
           <button
-            onClick={() => setContingenciaForzada(!contingenciaForzada)}
+            onClick={() => setShowContingenciaConfirm(true)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
               !isOnline || contingenciaForzada
                 ? 'bg-warning-bg text-warning border-warning/40'
@@ -938,7 +942,7 @@ export default function POSMultiDispositivoPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setCarrito([])}
+                onClick={() => setShowVaciarCarritoConfirm(true)}
                 className="text-destructive hover:text-destructive hover:bg-danger-bg text-xs h-7 px-2"
               >
                 <Trash2 className="h-3.5 w-3.5 mr-1" /> Vaciar
@@ -1066,8 +1070,11 @@ export default function POSMultiDispositivoPage() {
       </main>
 
       {/* MODAL DE COBRO MULTIPUNTO (EFECTIVO, YAPPY, TARJETA) */}
-      {showPagoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4">
+      <Dialog
+        open={showPagoModal}
+        onOpenChange={(open) => { if (!open) { setShowPagoModal(false); setReferenciaPago(''); } }}
+      >
+        <DialogContent showCloseButton={false} className="p-0 gap-0 border-0 bg-transparent shadow-none max-w-lg">
           <Card className="bg-card border-border w-full max-w-lg shadow-premium-hover">
             <CardHeader className="border-b border-border pb-4">
               <CardTitle className="text-lg font-bold text-foreground flex items-center justify-between">
@@ -1323,12 +1330,21 @@ export default function POSMultiDispositivoPage() {
               </Button>
             </div>
           </Card>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* MODAL DE AUTORIZACIÓN DE DESCUENTO (PIN de admin/gerente) */}
-      {showAutorizacionModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4">
+      <Dialog
+        open={showAutorizacionModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowAutorizacionModal(false);
+            setErrorAutorizacion('');
+            setPinAutorizacion('');
+          }
+        }}
+      >
+        <DialogContent showCloseButton={false} className="p-0 gap-0 border-0 bg-transparent shadow-none max-w-sm">
           <Card className="bg-card border-border w-full max-w-sm shadow-premium-hover">
             <CardHeader className="border-b border-border pb-4">
               <CardTitle className="text-base font-bold text-foreground">Autorización requerida</CardTitle>
@@ -1389,12 +1405,13 @@ export default function POSMultiDispositivoPage() {
               </Button>
             </div>
           </Card>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* MODAL RECIBO TÉRMICO (80mm) & QR CUFE */}
-      {reciboVenta && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 backdrop-blur-sm p-4 overflow-y-auto">
+      <Dialog open={!!reciboVenta} onOpenChange={(open) => { if (!open) setReciboVenta(null); }}>
+        <DialogContent showCloseButton={false} className="p-0 gap-0 border-0 bg-transparent shadow-none max-w-[340px] max-h-[90vh] overflow-y-auto">
+          {reciboVenta && (
           <div className="bg-white text-ink font-mono text-xs w-full max-w-[340px] p-5 rounded shadow-premium-hover my-auto print:max-w-full print:shadow-none print:m-0">
             <div className="text-center border-b-2 border-ink pb-3 mb-3">
               <h2 className="font-black text-base uppercase">ERP PANAMÁ POS</h2>
@@ -1489,8 +1506,9 @@ export default function POSMultiDispositivoPage() {
               </Button>
             </div>
           </div>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* ESCÁNER DE CÓDIGO DE BARRAS (cámara) */}
       {showEscanerModal && (
@@ -1501,8 +1519,14 @@ export default function POSMultiDispositivoPage() {
       )}
 
       {/* MODAL BLOQUEANTE: APERTURA DE TURNO DE CAJA (no se puede vender sin esto) */}
-      {!cargandoTurno && !turnoActivo && !turnoRecienCerrado && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-ink/80 backdrop-blur-sm p-4">
+      <Dialog open={!cargandoTurno && !turnoActivo && !turnoRecienCerrado} onOpenChange={() => {}}>
+        <DialogContent
+          showCloseButton={false}
+          className="p-0 gap-0 border-0 bg-transparent shadow-none max-w-sm"
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <Card className="bg-card border-border w-full max-w-sm shadow-premium-hover">
             <CardHeader className="border-b border-border pb-4">
               <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
@@ -1544,12 +1568,13 @@ export default function POSMultiDispositivoPage() {
               </Button>
             </div>
           </Card>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* MODAL DE CIERRE DE TURNO DE CAJA (conteo de efectivo y diferencia) */}
-      {showCierreTurnoModal && turnoActivo && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/70 backdrop-blur-sm p-4">
+      <Dialog open={showCierreTurnoModal && !!turnoActivo} onOpenChange={(open) => { if (!open) setShowCierreTurnoModal(false); }}>
+        <DialogContent showCloseButton={false} className="p-0 gap-0 border-0 bg-transparent shadow-none max-w-sm">
+          {turnoActivo && (
           <Card className="bg-card border-border w-full max-w-sm shadow-premium-hover">
             <CardHeader className="border-b border-border pb-4">
               <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
@@ -1613,12 +1638,20 @@ export default function POSMultiDispositivoPage() {
               </Button>
             </div>
           </Card>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* CONFIRMACIÓN DE ARQUEO TRAS CERRAR TURNO */}
-      {turnoRecienCerrado && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-ink/80 backdrop-blur-sm p-4">
+      <Dialog open={!!turnoRecienCerrado} onOpenChange={() => {}}>
+        <DialogContent
+          showCloseButton={false}
+          className="p-0 gap-0 border-0 bg-transparent shadow-none max-w-sm"
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          {turnoRecienCerrado && (
           <Card className="bg-card border-border w-full max-w-sm shadow-premium-hover">
             <CardHeader className="border-b border-border pb-4">
               <CardTitle className="text-base font-bold text-foreground">Turno cerrado</CardTitle>
@@ -1654,8 +1687,41 @@ export default function POSMultiDispositivoPage() {
               </Button>
             </div>
           </Card>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* CONFIRMACIÓN: vaciar carrito (destruye la venta en curso) */}
+      <ConfirmDialog
+        open={showVaciarCarritoConfirm}
+        onOpenChange={setShowVaciarCarritoConfirm}
+        title="¿Vaciar el carrito?"
+        description="Se eliminarán todos los productos agregados a esta venta. Esta acción no se puede deshacer."
+        confirmLabel="Vaciar carrito"
+        confirmVariant="destructive"
+        onConfirm={() => {
+          setCarrito([]);
+          setShowVaciarCarritoConfirm(false);
+        }}
+      />
+
+      {/* CONFIRMACIÓN: activar/desactivar modo contingencia forzada (cambia cómo se emite ante DGI) */}
+      <ConfirmDialog
+        open={showContingenciaConfirm}
+        onOpenChange={setShowContingenciaConfirm}
+        title={contingenciaForzada ? '¿Volver a modo en línea (PAC DGI)?' : '¿Activar modo contingencia forzada?'}
+        description={
+          contingenciaForzada
+            ? 'Las próximas ventas volverán a emitirse en línea contra el PAC DGI, en vez de guardarse localmente para retransmitir después.'
+            : 'Las próximas ventas se guardarán localmente y no se enviarán al PAC DGI en el momento — se retransmitirán dentro de las 72h reglamentarias. Actívalo solo si sabes que no hay conexión real con el PAC.'
+        }
+        confirmLabel={contingenciaForzada ? 'Volver a en línea' : 'Activar contingencia'}
+        confirmVariant={contingenciaForzada ? 'default' : 'destructive'}
+        onConfirm={() => {
+          setContingenciaForzada(!contingenciaForzada);
+          setShowContingenciaConfirm(false);
+        }}
+      />
     </div>
   );
 }

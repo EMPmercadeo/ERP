@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Check, ChevronDown } from 'lucide-react';
+import { Calendar as CalendarIcon, Check, ChevronDown, Loader2 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,7 @@ export function TimeFilter({ className }: TimeFilterProps) {
     const currentStart = React.useMemo(() => searchParams.get('start') ? new Date(searchParams.get('start')!) : undefined, [searchParams]);
     const currentEnd = React.useMemo(() => searchParams.get('end') ? new Date(searchParams.get('end')!) : undefined, [searchParams]);
 
+    const [isPending, startTransition] = React.useTransition();
     const [open, setOpen] = React.useState(false);
     const [tempPeriod, setTempPeriod] = React.useState<Period>(currentPeriod);
     const [tempStart, setTempStart] = React.useState<Date | undefined>(currentStart);
@@ -94,8 +95,10 @@ export function TimeFilter({ className }: TimeFilterProps) {
 
         const newUrl = `/dashboard?${params.toString()}`;
         console.log('Applying filter:', newUrl);
-        router.push(newUrl);
-        router.refresh(); // Force server re-fetch
+        startTransition(() => {
+            router.push(newUrl);
+            router.refresh(); // Force server re-fetch
+        });
         setOpen(false);
     };
 
@@ -107,12 +110,14 @@ export function TimeFilter({ className }: TimeFilterProps) {
 
         const newUrl = `/dashboard?${params.toString()}`;
         console.log('Inline selecting filter:', newUrl);
-        router.push(newUrl);
-        router.refresh(); // Force server re-fetch
+        startTransition(() => {
+            router.push(newUrl);
+            router.refresh(); // Force server re-fetch
+        });
     };
 
     return (
-        <div className={cn("inline-flex max-w-full overflow-x-auto scrollbar-none h-9 items-center justify-start sm:justify-center rounded-lg border bg-background p-0", className)}>
+        <div className={cn("relative inline-flex max-w-full overflow-x-auto scrollbar-none h-9 items-center justify-start sm:justify-center rounded-lg border bg-background p-0", isPending && "opacity-70", className)} aria-busy={isPending}>
             {/* Quick Actions */}
             {quickOptions.map((option) => {
                 const isSelected = currentPeriod === option.value;
@@ -120,6 +125,7 @@ export function TimeFilter({ className }: TimeFilterProps) {
                     <button
                         key={option.value}
                         onClick={() => handleInlineSelect(option.value)}
+                        disabled={isPending}
                         className={cn(
                             "inline-flex h-full shrink-0 items-center justify-center whitespace-nowrap px-3 sm:px-4 text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
                             isSelected
@@ -128,7 +134,7 @@ export function TimeFilter({ className }: TimeFilterProps) {
                             "border-r"
                         )}
                     >
-                        {isSelected && <Check className="mr-1.5 sm:mr-2 h-3.5 w-3.5" />}
+                        {isSelected && (isPending ? <Loader2 className="mr-1.5 sm:mr-2 h-3.5 w-3.5 animate-spin" /> : <Check className="mr-1.5 sm:mr-2 h-3.5 w-3.5" />)}
                         {option.label}
                     </button>
                 );
@@ -247,8 +253,11 @@ export function TimeFilter({ className }: TimeFilterProps) {
                     </Tabs>
 
                     <DialogFooter className="p-4 border-t bg-muted/10 sm:justify-end gap-2">
-                        <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
-                        <Button onClick={handleApply}>Aplicar</Button>
+                        <Button variant="ghost" onClick={() => setOpen(false)} disabled={isPending}>Cancelar</Button>
+                        <Button onClick={handleApply} disabled={isPending}>
+                            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Aplicar
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

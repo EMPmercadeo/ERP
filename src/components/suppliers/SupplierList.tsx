@@ -228,7 +228,7 @@ export function SupplierList({
                 <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total por Pagar</CardTitle>
-                        <DollarSign className="h-4 w-4 text-amber-500" />
+                        <DollarSign className="h-4 w-4 text-warning" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-foreground">{formatCurrency(summaryState.totalPorPagar)}</div>
@@ -239,10 +239,10 @@ export function SupplierList({
                 <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Saldo Vencido</CardTitle>
-                        <AlertCircle className="h-4 w-4 text-red-500" />
+                        <AlertCircle className="h-4 w-4 text-danger" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-600">{formatCurrency(summaryState.saldoVencido)}</div>
+                        <div className="text-2xl font-bold text-danger">{formatCurrency(summaryState.saldoVencido)}</div>
                         <p className="text-xs text-muted-foreground mt-1">Facturas expiradas pendientes de pago</p>
                     </CardContent>
                 </Card>
@@ -261,7 +261,7 @@ export function SupplierList({
                 <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Proveedores Activos</CardTitle>
-                        <Building2 className="h-4 w-4 text-emerald-500" />
+                        <Building2 className="h-4 w-4 text-success" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-foreground">{summaryState.proveedoresActivos}</div>
@@ -392,12 +392,12 @@ export function SupplierList({
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="text-right font-mono text-xs">
-                                                    <span className={s.saldoPendiente > 0 ? 'text-amber-600 font-bold' : 'text-muted-foreground font-medium'}>
+                                                    <span className={s.saldoPendiente > 0 ? 'text-warning font-bold' : 'text-muted-foreground font-medium'}>
                                                         {formatCurrency(s.saldoPendiente)}
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="text-right font-mono text-xs">
-                                                    <span className={s.vencido && s.vencido > 0 ? 'text-red-600 font-bold' : 'text-muted-foreground font-medium'}>
+                                                    <span className={s.vencido && s.vencido > 0 ? 'text-danger font-bold' : 'text-muted-foreground font-medium'}>
                                                         {formatCurrency(s.vencido || 0)}
                                                     </span>
                                                 </TableCell>
@@ -407,23 +407,25 @@ export function SupplierList({
                                                 <TableCell className="text-right">
                                                     <div className="flex items-center justify-end gap-1">
                                                         <Link href={`/suppliers/${s.id}?tab=info`}>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-brand-1/10" title="Ver Detalle">
+                                                            <Button variant="ghost" size="icon" aria-label="Ver detalle" className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-brand-1/10" title="Ver Detalle">
                                                                 <Eye className="h-4 w-4" />
                                                             </Button>
                                                         </Link>
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            className="h-8 w-8 text-muted-foreground hover:text-amber-600 hover:bg-amber-50" 
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            aria-label="Editar proveedor"
+                                                            className="h-8 w-8 text-muted-foreground hover:text-warning hover:bg-warning-bg"
                                                             title="Editar Proveedor"
                                                             onClick={() => setEditingSupplier(s)}
                                                         >
                                                             <Edit className="h-4 w-4" />
                                                         </Button>
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            className="h-8 w-8 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50" 
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            aria-label="Enviar estado de cuenta al correo"
+                                                            className="h-8 w-8 text-muted-foreground hover:text-success hover:bg-success-bg"
                                                             title="Enviar Estado de Cuenta al Correo"
                                                             onClick={() => handleSendEmail(s, 'estado_cuenta')}
                                                         >
@@ -444,10 +446,10 @@ export function SupplierList({
                                                                     </Link>
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem onClick={() => setEditingSupplier(s)} className="cursor-pointer">
-                                                                    <Edit className="mr-2 h-4 w-4 text-amber-600" /> Editar Datos
+                                                                    <Edit className="mr-2 h-4 w-4 text-warning" /> Editar Datos
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem onClick={() => handleSendEmail(s, 'estado_cuenta')} className="cursor-pointer">
-                                                                    <Send className="mr-2 h-4 w-4 text-emerald-600" /> Enviar Estado de Cuenta
+                                                                    <Send className="mr-2 h-4 w-4 text-success" /> Enviar Estado de Cuenta
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuSeparator />
                                                                 <DropdownMenuItem asChild>
@@ -457,20 +459,20 @@ export function SupplierList({
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem asChild>
                                                                     <Link href={`/suppliers/${s.id}?tab=payments`} className="cursor-pointer">
-                                                                        <DollarSign className="mr-2 h-4 w-4 text-emerald-600" /> Registrar Pago
+                                                                        <DollarSign className="mr-2 h-4 w-4 text-success" /> Registrar Pago
                                                                     </Link>
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuSeparator />
                                                                 {s.estado === 'activo' ? (
-                                                                    <DropdownMenuItem onClick={() => handleToggleStatus(s.id, 'archivado')} className="text-amber-600 cursor-pointer">
+                                                                    <DropdownMenuItem onClick={() => handleToggleStatus(s.id, 'archivado')} className="text-warning cursor-pointer">
                                                                         <Archive className="mr-2 h-4 w-4" /> Archivar proveedor
                                                                     </DropdownMenuItem>
                                                                 ) : (
-                                                                    <DropdownMenuItem onClick={() => handleToggleStatus(s.id, 'activo')} className="text-emerald-600 cursor-pointer">
+                                                                    <DropdownMenuItem onClick={() => handleToggleStatus(s.id, 'activo')} className="text-success cursor-pointer">
                                                                         <CheckCircle2 className="mr-2 h-4 w-4" /> Reactivar proveedor
                                                                     </DropdownMenuItem>
                                                                 )}
-                                                                <DropdownMenuItem onClick={() => handleDelete(s.id)} className="text-red-600 cursor-pointer">
+                                                                <DropdownMenuItem onClick={() => handleDelete(s.id)} className="text-destructive cursor-pointer">
                                                                     <Trash2 className="mr-2 h-4 w-4" /> Eliminar proveedor
                                                                 </DropdownMenuItem>
                                                             </DropdownMenuContent>
@@ -510,14 +512,14 @@ export function SupplierList({
                                             </div>
                                             <div className="text-right">
                                                 <span className="text-[10px] text-muted-foreground block">Saldo Pendiente</span>
-                                                <span className={`font-mono font-bold text-sm ${s.saldoPendiente > 0 ? 'text-amber-600' : 'text-foreground'}`}>
+                                                <span className={`font-mono font-bold text-sm ${s.saldoPendiente > 0 ? 'text-warning' : 'text-foreground'}`}>
                                                     {formatCurrency(s.saldoPendiente)}
                                                 </span>
                                             </div>
                                         </div>
 
                                         {(s.email || s.telefono || s.nombreContacto) && (
-                                            <div className="text-xs text-muted-foreground space-y-1 bg-white p-2 rounded border border-border">
+                                            <div className="text-xs text-muted-foreground space-y-1 bg-card p-2 rounded border border-border">
                                                 {s.nombreContacto && <div className="flex items-center gap-1.5 font-medium"><User className="h-3 w-3 text-muted-foreground shrink-0" /> {s.nombreContacto}</div>}
                                                 {s.email && <div className="flex items-center gap-1.5 truncate"><Mail className="h-3 w-3 text-muted-foreground shrink-0" /> {s.email}</div>}
                                                 {s.telefono && <div className="flex items-center gap-1.5"><Phone className="h-3 w-3 text-muted-foreground shrink-0" /> {s.telefono}</div>}
@@ -537,26 +539,28 @@ export function SupplierList({
                                                     Ver Detalle
                                                 </Button>
                                             </Link>
-                                            <Button 
-                                                variant="outline" 
-                                                size="icon" 
-                                                className="h-9 w-9 text-amber-600 rounded-lg shrink-0" 
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                aria-label="Editar proveedor"
+                                                className="h-9 w-9 text-warning rounded-lg shrink-0"
                                                 title="Editar"
                                                 onClick={() => setEditingSupplier(s)}
                                             >
                                                 <Edit className="h-4 w-4" />
                                             </Button>
-                                            <Button 
-                                                variant="outline" 
-                                                size="icon" 
-                                                className="h-9 w-9 text-emerald-600 rounded-lg shrink-0" 
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                aria-label="Enviar correo"
+                                                className="h-9 w-9 text-success rounded-lg shrink-0"
                                                 title="Enviar Correo"
                                                 onClick={() => handleSendEmail(s, 'estado_cuenta')}
                                             >
                                                 <Send className="h-4 w-4" />
                                             </Button>
                                             <Link href={`/purchases/new?supplierId=${s.id}`}>
-                                                <Button variant="outline" size="icon" className="h-9 w-9 text-brand-1 rounded-lg shrink-0" title="Nueva compra">
+                                                <Button variant="outline" size="icon" aria-label="Nueva compra" className="h-9 w-9 text-brand-1 rounded-lg shrink-0" title="Nueva compra">
                                                     <PlusCircle className="h-4 w-4" />
                                                 </Button>
                                             </Link>

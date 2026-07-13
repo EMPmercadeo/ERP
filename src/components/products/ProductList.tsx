@@ -278,7 +278,7 @@ export function ProductList({
                             {formatCurrency(price)}
                         </span>
                         {margin !== null && (
-                            <span className="text-[10px] text-emerald-600 font-bold leading-none mt-0.5 inline-block">
+                            <span className="text-[10px] text-success font-bold leading-none mt-0.5 inline-block">
                                 Margen: {margin.toFixed(1)}%
                             </span>
                         )}
@@ -338,7 +338,7 @@ export function ProductList({
                 if (row.original.unidadMedida === 'SRV') {
                     return (
                         <div className="text-center">
-                            <Badge className="bg-blue-50 text-blue-600 border-transparent hover:bg-blue-50 text-[10px] font-bold px-2 py-0.5 rounded">
+                            <Badge className="bg-info-bg text-info border-transparent hover:bg-info-bg text-[10px] font-bold px-2 py-0.5 rounded">
                                 Servicio
                             </Badge>
                         </div>
@@ -347,7 +347,7 @@ export function ProductList({
                 if (stock <= 0) {
                     return (
                         <div className="text-center">
-                            <Badge className="bg-red-50 text-red-600 border-transparent hover:bg-red-50 text-[10px] font-bold px-2 py-0.5 rounded">
+                            <Badge className="bg-danger-bg text-danger border-transparent hover:bg-danger-bg text-[10px] font-bold px-2 py-0.5 rounded">
                                 Agotado
                             </Badge>
                         </div>
@@ -356,7 +356,7 @@ export function ProductList({
                 if (stock < 10) {
                     return (
                         <div className="text-center">
-                            <Badge className="bg-amber-50 text-amber-600 border-transparent hover:bg-amber-50 text-[10px] font-bold px-2 py-0.5 rounded">
+                            <Badge className="bg-warning-bg text-warning border-transparent hover:bg-warning-bg text-[10px] font-bold px-2 py-0.5 rounded">
                                 {stock} uds
                             </Badge>
                         </div>
@@ -364,7 +364,7 @@ export function ProductList({
                 }
                 return (
                     <div className="text-center">
-                        <Badge className="bg-emerald-50 text-emerald-600 border-transparent hover:bg-emerald-50 text-[10px] font-bold px-2 py-0.5 rounded">
+                        <Badge className="bg-success-bg text-success border-transparent hover:bg-success-bg text-[10px] font-bold px-2 py-0.5 rounded">
                             {stock} uds
                         </Badge>
                     </div>
@@ -388,9 +388,9 @@ export function ProductList({
                 return (
                     <Badge className={cn(
                         "text-[10px] font-bold px-2 py-0.5 rounded border-transparent hover:bg-transparent",
-                        active 
-                            ? "bg-emerald-50 text-emerald-600" 
-                            : "bg-red-50 text-red-600"
+                        active
+                            ? "bg-success-bg text-success"
+                            : "bg-danger-bg text-danger"
                     )}>
                         {active ? 'Activo' : 'Inactivo'}
                     </Badge>
@@ -406,7 +406,7 @@ export function ProductList({
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-accent rounded-lg" asChild>
+                                    <Button variant="ghost" size="icon" aria-label="Editar producto" className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-accent rounded-lg" asChild>
                                         <Link href={`/products/${product.id}`}>
                                             <Edit className="h-3.5 w-3.5" />
                                         </Link>
@@ -417,7 +417,7 @@ export function ProductList({
 
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-accent rounded-lg" asChild>
+                                    <Button variant="ghost" size="icon" aria-label="Ver historial del producto" className="h-8 w-8 text-muted-foreground hover:text-brand-1 hover:bg-accent rounded-lg" asChild>
                                         <Link href={`/products/${product.id}?tab=history`}>
                                             <History className="h-3.5 w-3.5" />
                                         </Link>
@@ -431,7 +431,8 @@ export function ProductList({
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                                        aria-label="Eliminar producto"
+                                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg"
                                         onClick={() => handleDelete(product.id, product.descripcion)}
                                     >
                                         <Trash2 className="h-3.5 w-3.5" />
@@ -819,26 +820,26 @@ export function ProductList({
                                                     )}
                                                     
                                                     {/* ITBMS Badge */}
-                                                    <span className="absolute top-1.5 left-1.5 bg-white/95 text-foreground backdrop-blur-sm text-[9px] font-bold px-1.5 py-0.5 rounded border border-border shadow-sm leading-none">
+                                                    <span className="absolute top-1.5 left-1.5 bg-card/95 text-foreground text-[9px] font-bold px-1.5 py-0.5 rounded border border-border shadow-sm leading-none">
                                                         {product.codigoTasaItbms === '00' ? 'Exento' : `${itbmsConfig[product.codigoTasaItbms] || product.codigoTasaItbms}`}
                                                     </span>
 
                                                     {/* Stock Status Badge */}
                                                     <span className="absolute top-1.5 right-1.5 leading-none">
                                                         {product.unidadMedida === 'SRV' ? (
-                                                            <Badge className="bg-blue-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
+                                                            <Badge className="bg-info/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
                                                                 Servicio
                                                             </Badge>
                                                         ) : product.stockActual <= 0 ? (
-                                                            <Badge className="bg-red-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
+                                                            <Badge className="bg-danger/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
                                                                 Agotado
                                                             </Badge>
                                                         ) : product.stockActual < 10 ? (
-                                                            <Badge className="bg-amber-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
+                                                            <Badge className="bg-warning/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
                                                                 {product.stockActual} uds
                                                             </Badge>
                                                         ) : (
-                                                            <Badge className="bg-emerald-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
+                                                            <Badge className="bg-success/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
                                                                 {product.stockActual} uds
                                                             </Badge>
                                                         )}
@@ -903,7 +904,8 @@ export function ProductList({
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg p-0 shrink-0"
+                                                        aria-label="Eliminar producto"
+                                                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg p-0 shrink-0"
                                                         onClick={() => handleDelete(product.id, product.descripcion)}
                                                     >
                                                         <Trash2 className="h-3 w-3" />

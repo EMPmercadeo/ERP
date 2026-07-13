@@ -179,6 +179,7 @@ export function QuoteItemsTable({ items, onUpdate }: QuoteItemsTableProps) {
                                         <Button
                                             variant="ghost"
                                             size="icon"
+                                            aria-label="Eliminar ítem"
                                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
                                             onClick={() => handleRemoveItem(item.id)}
                                         >

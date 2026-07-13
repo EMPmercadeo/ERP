@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Mail, ArrowLeft, Star, CheckCircle } from 'lucide-react';
 import { Alert } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/firebase/auth';
 
 export default function ForgotPasswordPage() {
@@ -50,20 +52,20 @@ export default function ForgotPasswordPage() {
 
             <div className="text-center space-y-2">
                 <h2 className="text-2xl font-black text-white lg:text-foreground">Recuperar Contraseña</h2>
-                <p className="text-sm text-blue-100 lg:text-muted-foreground">
+                <p className="text-sm text-white/80 lg:text-muted-foreground">
                     Ingresa tu correo institucional y te enviaremos las instrucciones para restablecer tu contraseña.
                 </p>
             </div>
 
             {error && (
-                <Alert variant="error" className="bg-red-500/90 text-white border-none rounded-2xl shadow-lg">
+                <Alert variant="error" className="bg-danger/90 text-white border-none rounded-2xl shadow-lg">
                     {error}
                 </Alert>
             )}
 
             {success ? (
-                <div className="bg-white lg:bg-green-50 rounded-3xl p-6 text-center space-y-4 shadow-xl border border-green-200">
-                    <div className="mx-auto w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                <div className="bg-white lg:bg-success-bg rounded-3xl p-6 text-center space-y-4 shadow-xl border border-success/30">
+                    <div className="mx-auto w-12 h-12 bg-success-bg text-success rounded-full flex items-center justify-center">
                         <CheckCircle className="h-6 w-6" />
                     </div>
                     <h3 className="text-xl font-bold text-foreground">¡Correo enviado!</h3>
@@ -79,15 +81,18 @@ export default function ForgotPasswordPage() {
                 </div>
             ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="bg-white rounded-2xl p-2 shadow-lg flex items-center gap-3 border border-transparent focus-within:ring-2 focus-within:ring-blue-300 transition-all text-foreground">
+                    <div className="bg-white rounded-2xl p-2 shadow-lg flex items-center gap-3 border border-transparent focus-within:ring-2 focus-within:ring-info/40 transition-all text-foreground">
                         <Mail className="h-5 w-5 text-muted-foreground ml-2 shrink-0" />
-                        <input
+                        <Label htmlFor="forgot-password-email" className="sr-only">Correo electrónico</Label>
+                        <Input
+                            id="forgot-password-email"
                             type="email"
                             placeholder="correo@empresa.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="bg-transparent border-none text-foreground placeholder:text-muted-foreground focus:outline-none w-full py-2 text-base font-medium"
+                            autoComplete="email"
+                            className="h-auto border-none shadow-none bg-transparent text-foreground placeholder:text-muted-foreground focus-visible:ring-0 w-full py-2 text-base font-medium"
                         />
                     </div>
 

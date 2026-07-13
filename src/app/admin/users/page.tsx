@@ -92,7 +92,7 @@ export default async function AdminUsersPage(props: PageProps) {
             </Suspense>
 
             {/* User List Card Container */}
-            <div className="rounded-md border bg-white shadow overflow-hidden">
+            <div className="rounded-md border bg-card shadow overflow-hidden">
                 <Table>
                     <TableHeader className="bg-muted/50">
                         <TableRow>
@@ -150,7 +150,7 @@ export default async function AdminUsersPage(props: PageProps) {
                         <div className="flex flex-1 justify-between sm:hidden">
                             <Link
                                 href={currentPage > 1 ? buildPageUrl(currentPage - 1) : '#'}
-                                className={`relative inline-flex items-center rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-foreground hover:bg-accent ${
+                                className={`relative inline-flex items-center rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent ${
                                     currentPage <= 1 ? 'pointer-events-none opacity-50' : ''
                                 }`}
                             >
@@ -158,7 +158,7 @@ export default async function AdminUsersPage(props: PageProps) {
                             </Link>
                             <Link
                                 href={currentPage < totalPages ? buildPageUrl(currentPage + 1) : '#'}
-                                className={`relative ml-3 inline-flex items-center rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-foreground hover:bg-accent ${
+                                className={`relative ml-3 inline-flex items-center rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent ${
                                     currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''
                                 }`}
                             >
@@ -174,7 +174,7 @@ export default async function AdminUsersPage(props: PageProps) {
                                 </p>
                             </div>
                             <div>
-                                <nav className="isolate inline-flex -space-x-px rounded-md shadow-xs bg-white" aria-label="Paginación">
+                                <nav className="isolate inline-flex -space-x-px rounded-md shadow-xs bg-background" aria-label="Paginación">
                                     <Link
                                         href={currentPage > 1 ? buildPageUrl(currentPage - 1) : '#'}
                                         className={`relative inline-flex items-center rounded-l-md px-3 py-2 text-muted-foreground ring-1 ring-inset ring-border hover:bg-accent focus:z-20 focus:outline-offset-0 ${

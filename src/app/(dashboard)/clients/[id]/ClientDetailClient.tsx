@@ -190,10 +190,10 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium text-muted-foreground">Saldo Pendiente</CardTitle>
-                                <Scale className="h-4 w-4 text-amber-500" />
+                                <Scale className="h-4 w-4 text-warning" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-amber-600">
+                                <div className="text-2xl font-bold text-warning">
                                     {formatCurrency(client.saldoPendiente)}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">Deuda acumulada por facturas no cobradas</p>
@@ -202,10 +202,10 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium text-muted-foreground">Total Facturado</CardTitle>
-                                <DollarSign className="h-4 w-4 text-emerald-500" />
+                                <DollarSign className="h-4 w-4 text-success" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-emerald-700">
+                                <div className="text-2xl font-bold text-success">
                                     {formatCurrency(totalFacturado)}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">Suma acumulada de todas las facturas</p>
@@ -427,10 +427,10 @@ export function ClientDetailClient({ client, invoices, payments, deliveryNotes =
                                                         <span className="text-foreground">{entry.description}</span>
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="text-right text-red-600 text-sm font-medium">
+                                                <TableCell className="text-right text-danger text-sm font-medium">
                                                     {entry.type === 'charge' ? `+${formatCurrency(entry.amount)}` : ''}
                                                 </TableCell>
-                                                <TableCell className="text-right text-emerald-600 text-sm font-medium">
+                                                <TableCell className="text-right text-success text-sm font-medium">
                                                     {entry.type === 'credit' ? `-${formatCurrency(entry.amount)}` : ''}
                                                 </TableCell>
                                                 <TableCell className="text-right font-bold text-foreground text-sm">

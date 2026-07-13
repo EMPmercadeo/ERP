@@ -171,10 +171,10 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
                                     <>
                                         <Input value={editNombre} onChange={(e) => setEditNombre(e.target.value)} className="h-8 text-xs flex-1" />
                                         <Input type="number" min={0} max={100} step={0.5} value={editDescuento} onChange={(e) => setEditDescuento(e.target.value)} className="h-8 text-xs w-20" />
-                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-success" disabled={guardando} onClick={() => guardarEdicion(cat.id)}>
+                                        <Button size="icon" variant="ghost" aria-label="Guardar cambios de la categoría" className="h-8 w-8 text-success" disabled={guardando} onClick={() => guardarEdicion(cat.id)}>
                                             <Check className="h-4 w-4" />
                                         </Button>
-                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground" onClick={() => setEditandoId(null)}>
+                                        <Button size="icon" variant="ghost" aria-label="Cancelar edición" className="h-8 w-8 text-muted-foreground" onClick={() => setEditandoId(null)}>
                                             <X className="h-4 w-4" />
                                         </Button>
                                     </>

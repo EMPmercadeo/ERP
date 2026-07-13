@@ -180,9 +180,9 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
                                             <div className="flex flex-col gap-0.5">
                                                 <div className="flex items-center gap-1">
                                                     {log.exitoso ? (
-                                                        <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                                                        <CheckCircle2 className="h-3 w-3 text-success" />
                                                     ) : (
-                                                        <XCircle className="h-3 w-3 text-rose-500" />
+                                                        <XCircle className="h-3 w-3 text-danger" />
                                                     )}
                                                     <span className="text-xs font-medium text-foreground">
                                                         {log.codigoResultado || 'N/A'}

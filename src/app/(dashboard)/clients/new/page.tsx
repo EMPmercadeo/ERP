@@ -90,7 +90,7 @@ export default function NewClientPage() {
                                                 name="ruc"
                                                 placeholder={tipoRuc === '01' ? '8-123-4567' : '155-123-456789'}
                                                 required
-                                                className={state?.errors?.ruc ? 'border-red-500' : ''}
+                                                className={state?.errors?.ruc ? 'border-destructive' : ''}
                                             />
                                             {state?.errors?.ruc && <p className="text-xs text-destructive mt-1">{state.errors.ruc[0]}</p>}
                                         </div>
@@ -114,7 +114,7 @@ export default function NewClientPage() {
                                             name="razonSocial"
                                             placeholder="Nombre completo o razón social"
                                             required
-                                            className={state?.errors?.razonSocial ? 'border-red-500' : ''}
+                                            className={state?.errors?.razonSocial ? 'border-destructive' : ''}
                                         />
                                         {state?.errors?.razonSocial && <p className="text-xs text-destructive mt-1">{state.errors.razonSocial[0]}</p>}
                                     </div>

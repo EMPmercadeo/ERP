@@ -128,7 +128,7 @@ export function Topbar({ title, children }: TopbarProps) {
                     <DropdownMenuSeparator />
                     {notificaciones.length === 0 ? (
                         <div className="flex flex-col items-center gap-2 px-3 py-6 text-center">
-                            <CheckCheck className="h-5 w-5 text-emerald-500" />
+                            <CheckCheck className="h-5 w-5 text-success" />
                             <p className="text-xs text-muted-foreground">Todo al día, sin pendientes.</p>
                         </div>
                     ) : (
@@ -140,7 +140,7 @@ export function Topbar({ title, children }: TopbarProps) {
                                         <Icono
                                             className={cn(
                                                 'mt-0.5 h-4 w-4 shrink-0',
-                                                n.severidad === 'critical' ? 'text-rose-500' : 'text-amber-500'
+                                                n.severidad === 'critical' ? 'text-danger' : 'text-warning'
                                             )}
                                         />
                                         <div className="flex flex-col gap-0.5">
@@ -164,7 +164,7 @@ export function Topbar({ title, children }: TopbarProps) {
             <div className="hidden lg:block">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild id="user-menu-trigger">
-                        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                        <Button variant="ghost" aria-label="Abrir menú de usuario" className="relative h-9 w-9 rounded-full">
                             <Avatar className="h-9 w-9">
                                 {user?.photoURL && (
                                     <AvatarImage src={user.photoURL} alt={displayName} />

@@ -85,13 +85,13 @@ export default async function InvoiceDetailPage(props: PageProps) {
                 {/* Header Actions */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" asChild>
+                        <Button variant="ghost" size="icon" asChild aria-label="Volver a facturas">
                             <Link href="/invoices">
                                 <ArrowLeft className="h-5 w-5" />
                             </Link>
                         </Button>
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight">Factura {invoice.numeroCompleto || 'Borrador'}</h1>
+                            <h1 className="text-2xl font-bold tracking-tight">Factura <span className="font-mono">{invoice.numeroCompleto || 'Borrador'}</span></h1>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Clock className="h-4 w-4" />
                                 {format(invoice.fechaEmision, "d 'de' MMMM, yyyy", { locale: es })}
@@ -121,7 +121,7 @@ export default async function InvoiceDetailPage(props: PageProps) {
                 </div>
 
                 {sentParam === 'true' && (
-                    <div className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 p-4 rounded-lg flex items-center gap-2 text-sm font-semibold">
+                    <div className="bg-success-bg text-success border border-success/20 p-4 rounded-lg flex items-center gap-2 text-sm font-semibold">
                         <CheckCircle className="h-5 w-5" />
                         Factura enviada por correo electrónico con éxito a {invoice.cliente.email || 'el cliente'}.
                     </div>
@@ -138,7 +138,7 @@ export default async function InvoiceDetailPage(props: PageProps) {
                                         <h3 className="text-sm font-medium text-muted-foreground mb-2">De</h3>
                                         <div className="font-semibold text-lg">{invoice.empresa.nombreComercial || invoice.empresa.razonSocial}</div>
                                         <div className="text-sm text-muted-foreground">
-                                            RUC: {invoice.empresa.ruc}-{invoice.empresa.dv}<br />
+                                            RUC: <span className="font-mono">{invoice.empresa.ruc}-{invoice.empresa.dv}</span><br />
                                             {invoice.sucursal?.direccion || invoice.empresa.direccion || '--'}
                                         </div>
                                     </div>
@@ -146,7 +146,7 @@ export default async function InvoiceDetailPage(props: PageProps) {
                                         <h3 className="text-sm font-medium text-muted-foreground mb-2">Para</h3>
                                         <div className="font-semibold text-lg">{invoice.cliente.razonSocial}</div>
                                         <div className="text-sm text-muted-foreground">
-                                            RUC: {invoice.cliente.ruc}{invoice.cliente.dv ? `-${invoice.cliente.dv}` : ''}<br />
+                                            RUC: <span className="font-mono">{invoice.cliente.ruc}{invoice.cliente.dv ? `-${invoice.cliente.dv}` : ''}</span><br />
                                             Email: {invoice.cliente.email || '--'}<br />
                                             Teléfono: {invoice.cliente.telefono || '--'}
                                         </div>

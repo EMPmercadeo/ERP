@@ -85,7 +85,7 @@ export function NewPaymentModal({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-8 text-xs">
+                <Button size="sm" className="bg-success hover:bg-success/90 text-white font-semibold h-8 text-xs">
                     <DollarSign className="mr-1 h-3.5 w-3.5" />
                     Pagar
                 </Button>
@@ -100,7 +100,7 @@ export function NewPaymentModal({
                 <form onSubmit={handleSubmit} className="space-y-4 py-2">
                     <div className="bg-muted p-3 rounded-lg border flex justify-between items-center">
                         <span className="text-xs text-muted-foreground font-medium">Saldo Pendiente:</span>
-                        <span className="font-mono font-bold text-amber-600 text-base">{formatCurrency(saldoPendiente)}</span>
+                        <span className="font-mono font-bold text-warning text-base">{formatCurrency(saldoPendiente)}</span>
                     </div>
 
                     <div>
@@ -141,7 +141,7 @@ export function NewPaymentModal({
                         <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                             Cancelar
                         </Button>
-                        <Button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <Button type="submit" disabled={loading} className="bg-success hover:bg-success/90 text-white">
                             {loading ? 'Procesando...' : 'Aplicar Pago'}
                         </Button>
                     </DialogFooter>

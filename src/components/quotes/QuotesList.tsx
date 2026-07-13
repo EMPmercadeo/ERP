@@ -283,7 +283,7 @@ export function QuotesList({
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
+                                    <Button variant="ghost" size="icon" aria-label="Ver detalles" className="h-8 w-8 text-muted-foreground hover:text-primary" asChild>
                                         <Link href={`/quotes/${quote.id}`}>
                                             <Eye className="h-4 w-4" />
                                         </Link>
@@ -297,6 +297,7 @@ export function QuotesList({
                                     <Button
                                         variant="ghost"
                                         size="icon"
+                                        aria-label="Enviar cotización"
                                         className="h-8 w-8 text-muted-foreground hover:text-primary"
                                         onClick={() => handleSendEmail(quote.id)}
                                     >
@@ -311,7 +312,8 @@ export function QuotesList({
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                        aria-label="Aceptar cotización"
+                                        className="h-8 w-8 text-success hover:text-success hover:bg-success-bg"
                                         onClick={() => handleStatusUpdate(quote.id, 'aceptada', 'aceptada')}
                                     >
                                         <CheckCircle className="h-4 w-4" />
@@ -325,7 +327,8 @@ export function QuotesList({
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                        aria-label="Rechazar cotización"
+                                        className="h-8 w-8 text-danger hover:text-danger hover:bg-danger-bg"
                                         onClick={() => handleStatusUpdate(quote.id, 'rechazada', 'rechazada')}
                                     >
                                         <XCircle className="h-4 w-4" />

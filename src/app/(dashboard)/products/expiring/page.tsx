@@ -126,15 +126,15 @@ export default async function ExpiringProductsPage() {
                                                 </TableCell>
                                                 <TableCell>
                                                     {l.status === 'expired' ? (
-                                                        <Badge className="bg-rose-50 text-rose-700 hover:bg-rose-50 border border-rose-200">
+                                                        <Badge className="bg-danger-bg text-danger hover:bg-danger-bg border border-danger/20">
                                                             Vencido ({Math.abs(l.daysToExpiry || 0)} días)
                                                         </Badge>
                                                     ) : l.status === 'critical' ? (
-                                                        <Badge className="bg-amber-50 text-amber-700 hover:bg-amber-50 border border-amber-200 animate-pulse">
+                                                        <Badge className="bg-warning-bg text-warning hover:bg-warning-bg border border-warning/20 animate-pulse">
                                                             Crítico ({l.daysToExpiry} días)
                                                         </Badge>
                                                     ) : (
-                                                        <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border border-emerald-200">
+                                                        <Badge className="bg-success-bg text-success hover:bg-success-bg border border-success/20">
                                                             {l.daysToExpiry} días
                                                         </Badge>
                                                     )}

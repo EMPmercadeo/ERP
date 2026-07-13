@@ -413,7 +413,7 @@ export function DeliveryNoteForm({ clients, products, quotes, users }: FormProps
                                                         className="w-24 text-right ml-auto h-8"
                                                     />
                                                 </TableCell>
-                                                <TableCell className="text-right font-semibold text-amber-600">
+                                                <TableCell className="text-right font-semibold text-warning">
                                                     {item.cantidadPendiente}
                                                 </TableCell>
                                                 <TableCell className="text-right">{formatCurrency(item.precioUnitario)}</TableCell>
@@ -421,11 +421,12 @@ export function DeliveryNoteForm({ clients, products, quotes, users }: FormProps
                                                     {formatCurrency(item.cantidadPedida * item.precioUnitario)}
                                                 </TableCell>
                                                 <TableCell className="text-center">
-                                                    <Button 
-                                                        type="button" 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="text-red-500 hover:text-red-700 h-8 w-8"
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        aria-label="Eliminar producto"
+                                                        className="text-destructive hover:text-destructive h-8 w-8"
                                                         onClick={() => handleRemoveItem(idx)}
                                                     >
                                                         <Trash className="h-4 w-4" />
@@ -496,7 +497,7 @@ export function DeliveryNoteForm({ clients, products, quotes, users }: FormProps
                                     <span className="text-muted-foreground">Subtotal:</span>
                                     <span className="font-semibold">{formatCurrency(totals.subtotal)}</span>
                                 </div>
-                                <div className="flex justify-between text-sm text-red-600">
+                                <div className="flex justify-between text-sm text-danger">
                                     <span>Descuento:</span>
                                     <span>-{formatCurrency(totals.totalDescuento)}</span>
                                 </div>

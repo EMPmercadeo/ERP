@@ -143,7 +143,7 @@ export function QuoteSummarySidebar({
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Descuento</span>
-                            <span className="text-red-600">-${discountTotal.toFixed(2)}</span>
+                            <span className="text-danger">-${discountTotal.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">ITBMS (7%)</span>

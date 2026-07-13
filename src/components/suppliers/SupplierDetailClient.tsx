@@ -186,10 +186,10 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium text-muted-foreground">Saldo Pendiente</CardTitle>
-                                <Scale className="h-4 w-4 text-amber-500" />
+                                <Scale className="h-4 w-4 text-warning" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-amber-600">
+                                <div className="text-2xl font-bold text-warning">
                                     {formatCurrency(calculatedSaldoPendiente)}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">Cuentas por pagar pendientes de cobro</p>
@@ -198,10 +198,10 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium text-muted-foreground">Total Comprado</CardTitle>
-                                <DollarSign className="h-4 w-4 text-emerald-500" />
+                                <DollarSign className="h-4 w-4 text-success" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-emerald-700">
+                                <div className="text-2xl font-bold text-success">
                                     {formatCurrency(totalComprado)}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">Suma acumulada de todas las compras</p>
@@ -386,7 +386,7 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                                                 <TableCell>{formatCurrency(pur.totalNeto)}</TableCell>
                                                 <TableCell className="font-semibold">
                                                     {pur.saldoPendiente > 0 ? (
-                                                        <span className="text-amber-600">{formatCurrency(pur.saldoPendiente)}</span>
+                                                        <span className="text-warning">{formatCurrency(pur.saldoPendiente)}</span>
                                                     ) : (
                                                         <span className="text-muted-foreground">$0.00</span>
                                                     )}
@@ -449,7 +449,7 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                                                     </TableCell>
                                                     <TableCell>{pay.metodoPago}</TableCell>
                                                     <TableCell>{pay.referencia || '-'}</TableCell>
-                                                    <TableCell className="text-right font-semibold text-emerald-600">
+                                                    <TableCell className="text-right font-semibold text-success">
                                                         {formatCurrency(pay.monto)}
                                                     </TableCell>
                                                 </TableRow>
@@ -491,10 +491,10 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                                                 <TableCell className="text-sm font-medium text-foreground">
                                                     {entry.description}
                                                 </TableCell>
-                                                <TableCell className="text-right text-red-600 text-sm font-medium">
+                                                <TableCell className="text-right text-danger text-sm font-medium">
                                                     {entry.type === 'charge' ? `+${formatCurrency(entry.amount)}` : ''}
                                                 </TableCell>
-                                                <TableCell className="text-right text-emerald-600 text-sm font-medium">
+                                                <TableCell className="text-right text-success text-sm font-medium">
                                                     {entry.type === 'credit' ? `-${formatCurrency(entry.amount)}` : ''}
                                                 </TableCell>
                                                 <TableCell className="text-right font-bold text-foreground text-sm">

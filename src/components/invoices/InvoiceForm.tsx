@@ -40,8 +40,9 @@ import {
 } from '@/components/ui/table';
 import { createInvoice } from '@/lib/actions/invoices';
 import { purchaseDocumentBlock } from '@/lib/actions/billing';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 // Interfaces for Props
 export interface ClientOption {
@@ -111,6 +112,19 @@ export function InvoiceForm({
 }) {
     const router = useRouter();
     const [state, formAction] = useFormState(createInvoice, initialState);
+    const formRef = useRef<HTMLFormElement>(null);
+
+    // Confirmación previa a timbrar: un solo click en "Guardar y Timbrar" dispara una emisión
+    // real ante la DGI (no se puede deshacer), así que se intercepta el submit una vez para
+    // mostrar un paso de confirmación antes de dejarlo pasar.
+    const [showTimbrarConfirm, setShowTimbrarConfirm] = useState(false);
+    const [confirmedSubmit, setConfirmedSubmit] = useState(false);
+
+    useEffect(() => {
+        // Si el servidor respondió (éxito con redirect, o error de validación), se reinicia
+        // la confirmación para que el próximo intento de guardar vuelva a pedirla.
+        setConfirmedSubmit(false);
+    }, [state]);
 
     // Billing and Limits state
     const [currentRemaining, setCurrentRemaining] = useState(remainingDocuments);

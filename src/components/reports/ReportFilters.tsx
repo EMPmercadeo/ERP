@@ -288,7 +288,7 @@ export function ReportFilters({
     };
 
     return (
-        <Card className="bg-white shadow-sm border border-border rounded-xl overflow-visible">
+        <Card className="bg-card shadow-sm border border-border rounded-xl overflow-visible">
             <CardContent className="p-4 sm:p-5">
                 <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-x-4 lg:gap-y-3">
                     {/* FILA 1: Filtros Visibles Principales */}
@@ -306,10 +306,10 @@ export function ReportFilters({
                                     setPeriodoRapido('personalizado');
                                 }}
                                 className={`h-10 text-xs sm:text-sm pl-9 pr-2 bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full transition-colors ${
-                                    isDateRangeInvalid ? 'border-red-500 focus-visible:ring-red-500 bg-red-50/10' : ''
+                                    isDateRangeInvalid ? 'border-danger focus-visible:ring-danger bg-danger-bg' : ''
                                 }`}
                             />
-                            <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${isDateRangeInvalid ? 'text-red-400' : 'text-muted-foreground'}`} />
+                            <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${isDateRangeInvalid ? 'text-danger' : 'text-muted-foreground'}`} />
                         </div>
                     </div>
 
@@ -326,10 +326,10 @@ export function ReportFilters({
                                     setPeriodoRapido('personalizado');
                                 }}
                                 className={`h-10 text-xs sm:text-sm pl-9 pr-2 bg-muted/50 border-border focus-visible:ring-brand-1 rounded-lg w-full transition-colors ${
-                                    isDateRangeInvalid ? 'border-red-500 focus-visible:ring-red-500 bg-red-50/10' : ''
+                                    isDateRangeInvalid ? 'border-danger focus-visible:ring-danger bg-danger-bg' : ''
                                 }`}
                             />
-                            <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${isDateRangeInvalid ? 'text-red-400' : 'text-muted-foreground'}`} />
+                            <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${isDateRangeInvalid ? 'text-danger' : 'text-muted-foreground'}`} />
                         </div>
                     </div>
 
@@ -379,7 +379,7 @@ export function ReportFilters({
                             )}
                         </div>
                         {showClientDropdown && (clientSuggestions.length > 0 || clientLoading) && (
-                            <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-border rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                            <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-56 overflow-y-auto">
                                 {clientLoading ? (
                                     <div className="p-3 text-xs text-muted-foreground font-semibold">Buscando clientes...</div>
                                 ) : (
@@ -433,7 +433,7 @@ export function ReportFilters({
                             )}
                         </div>
                         {showProductDropdown && (productSuggestions.length > 0 || productLoading) && (
-                            <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-border rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                            <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-56 overflow-y-auto">
                                 {productLoading ? (
                                     <div className="p-3 text-xs text-muted-foreground font-semibold">Buscando productos...</div>
                                 ) : (
@@ -606,7 +606,7 @@ export function ReportFilters({
 
                     {/* Alerta de validación de fechas (si la inicial es mayor que la final) */}
                     {isDateRangeInvalid && (
-                        <div className="col-span-1 sm:col-span-3 lg:col-span-6 flex items-center gap-2 p-2 bg-red-50 text-red-600 rounded-lg text-xs font-semibold border border-red-100 transition-all">
+                        <div className="col-span-1 sm:col-span-3 lg:col-span-6 flex items-center gap-2 p-2 bg-danger-bg text-danger rounded-lg text-xs font-semibold border border-danger/20 transition-all">
                             <AlertCircle className="h-4.5 w-4.5 shrink-0" />
                             <span>La fecha inicial (Desde) no puede ser posterior a la fecha final (Hasta).</span>
                         </div>
@@ -648,11 +648,11 @@ export function ReportFilters({
                                 <DropdownMenuLabel className="text-xs font-bold text-muted-foreground px-3 py-2">Formatos de Exportación</DropdownMenuLabel>
                                 <DropdownMenuSeparator className="bg-muted" />
                                 <DropdownMenuItem onClick={onExportExcel} className="cursor-pointer text-xs font-semibold py-2 hover:bg-accent">
-                                    <FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" />
+                                    <FileSpreadsheet className="mr-2 h-4 w-4 text-success" />
                                     Reporte Excel (.xlsx)
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={onExportCSV} className="cursor-pointer text-xs font-semibold py-2 hover:bg-accent">
-                                    <FileText className="mr-2 h-4 w-4 text-blue-500" />
+                                    <FileText className="mr-2 h-4 w-4 text-info" />
                                     Detalle CSV (.csv)
                                 </DropdownMenuItem>
                             </DropdownMenuContent>

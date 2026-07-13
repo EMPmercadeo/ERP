@@ -210,7 +210,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                     <td className="p-2.5 font-medium">{item.descripcion}</td>
                                     <td className="p-2.5 text-right">{item.cantidadPedida}</td>
                                     <td className="p-2.5 text-right font-bold text-foreground">{item.cantidad}</td>
-                                    <td className="p-2.5 text-right text-amber-600">{item.cantidadPendiente}</td>
+                                    <td className="p-2.5 text-right text-warning">{item.cantidadPendiente}</td>
                                     <td className="p-2.5 text-right">{formatCurrency(item.precioUnitario)}</td>
                                     <td className="p-2.5 text-right font-semibold">{formatCurrency(item.cantidadPedida * item.precioUnitario)}</td>
                                 </tr>
@@ -243,7 +243,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                             <span>Subtotal:</span>
                             <span>{formatCurrency(note.subtotal)}</span>
                         </div>
-                        <div className="flex justify-between text-xs text-red-600">
+                        <div className="flex justify-between text-xs text-danger">
                             <span>Descuento:</span>
                             <span>-{formatCurrency(note.totalDescuento)}</span>
                         </div>
@@ -302,7 +302,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                     <Button
                                         onClick={() => handleUpdateStatus('entregado')}
                                         disabled={actionLoading}
-                                        className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 font-semibold shadow-sm"
+                                        className="bg-success hover:bg-success/90 text-white gap-2 font-semibold shadow-sm"
                                     >
                                         <CheckCircle2 className="h-4.5 w-4.5" />
                                         Completar Entrega
@@ -323,7 +323,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                 <Button 
                                     onClick={handleFacturar} 
                                     disabled={actionLoading}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 font-semibold shadow-sm"
+                                    className="bg-success hover:bg-success/90 text-white gap-2 font-semibold shadow-sm"
                                 >
                                     <DollarSign className="h-4.5 w-4.5" />
                                     Convertir a Factura
@@ -416,10 +416,10 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                         </div>
                                         {note.fechaRealEntrega && (
                                             <div className="flex items-start gap-2.5">
-                                                <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 mt-0.5" />
+                                                <CheckCircle2 className="h-4.5 w-4.5 text-success mt-0.5" />
                                                 <div>
-                                                    <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider text-emerald-600">Entregado El</span>
-                                                    <span className="text-emerald-700 font-bold">{formatDate(note.fechaRealEntrega)}</span>
+                                                    <span className="block text-xs font-semibold uppercase text-muted-foreground tracking-wider text-success">Entregado El</span>
+                                                    <span className="text-success font-bold">{formatDate(note.fechaRealEntrega)}</span>
                                                 </div>
                                             </div>
                                         )}
@@ -456,7 +456,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                                     <TableCell className="font-medium">{item.descripcion}</TableCell>
                                                     <TableCell className="text-right">{item.cantidadPedida}</TableCell>
                                                     <TableCell className="text-right font-bold text-foreground">{item.cantidad}</TableCell>
-                                                    <TableCell className="text-right font-semibold text-amber-600">{item.cantidadPendiente}</TableCell>
+                                                    <TableCell className="text-right font-semibold text-warning">{item.cantidadPendiente}</TableCell>
                                                     <TableCell className="text-right">{formatCurrency(item.precioUnitario)}</TableCell>
                                                     <TableCell className="text-right font-semibold">{formatCurrency(item.cantidadPedida * item.precioUnitario)}</TableCell>
                                                 </TableRow>
@@ -478,7 +478,7 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                         <span className="text-muted-foreground">Subtotal:</span>
                                         <span className="font-semibold">{formatCurrency(note.subtotal)}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm text-red-600">
+                                    <div className="flex justify-between text-sm text-danger">
                                         <span>Descuento:</span>
                                         <span>-{formatCurrency(note.totalDescuento)}</span>
                                     </div>
@@ -507,8 +507,8 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                     )}
                                     {note.notasInternas && (
                                         <div>
-                                            <span className="block text-xs font-semibold uppercase text-amber-700 tracking-wider mb-1">Notas Internas (Confidencial)</span>
-                                            <p className="text-amber-800 text-sm whitespace-pre-line bg-amber-50/50 p-3 rounded-lg border border-amber-100 font-medium">
+                                            <span className="block text-xs font-semibold uppercase text-warning tracking-wider mb-1">Notas Internas (Confidencial)</span>
+                                            <p className="text-warning text-sm whitespace-pre-line bg-warning-bg p-3 rounded-lg border border-warning/20 font-medium">
                                                 {note.notasInternas}
                                             </p>
                                         </div>
@@ -527,18 +527,18 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
                                     <div className="relative pl-6 border-l space-y-6">
                                         {note.historialEstados.map((hist, _idx) => (
                                             <div key={hist.id} className="relative">
-                                                <div className={`absolute -left-[31px] top-1 h-3.5 w-3.5 rounded-full border-2 bg-white ${
-                                                    hist.estadoNuevo === 'facturado' ? 'border-emerald-600 bg-emerald-600' :
-                                                    hist.estadoNuevo === 'entregado' ? 'border-green-500 bg-green-500' :
-                                                    hist.estadoNuevo === 'anulado' ? 'border-red-500 bg-red-500' : 'border-brand-1 bg-brand-1'
+                                                <div className={`absolute -left-[31px] top-1 h-3.5 w-3.5 rounded-full border-2 bg-card ${
+                                                    hist.estadoNuevo === 'facturado' ? 'border-success bg-success' :
+                                                    hist.estadoNuevo === 'entregado' ? 'border-success bg-success' :
+                                                    hist.estadoNuevo === 'anulado' ? 'border-danger bg-danger' : 'border-brand-1 bg-brand-1'
                                                 }`} />
                                                 <p className="text-xs font-bold text-foreground flex items-center gap-1.5 flex-wrap">
                                                     {hist.estadoAnterior ? getEstadoLabel(hist.estadoAnterior) : 'Creación'}
                                                     <ChevronRight className="h-3 w-3 text-muted-foreground" />
                                                     <span className={
-                                                        hist.estadoNuevo === 'facturado' ? 'text-emerald-600' :
-                                                        hist.estadoNuevo === 'entregado' ? 'text-green-600' :
-                                                        hist.estadoNuevo === 'anulado' ? 'text-red-600' : 'text-brand-1'
+                                                        hist.estadoNuevo === 'facturado' ? 'text-success' :
+                                                        hist.estadoNuevo === 'entregado' ? 'text-success' :
+                                                        hist.estadoNuevo === 'anulado' ? 'text-danger' : 'text-brand-1'
                                                     }>{getEstadoLabel(hist.estadoNuevo)}</span>
                                                 </p>
                                                 {hist.notas && <p className="text-[11px] text-muted-foreground mt-0.5">{hist.notas}</p>}
@@ -551,8 +551,8 @@ export function DeliveryNoteDetailClient({ note, printMode = false }: DeliveryNo
 
                                         {note.estado === 'facturado' && note.factura && (
                                             <div className="relative pt-2 border-t border-border">
-                                                <div className="absolute -left-[31px] top-4 h-3.5 w-3.5 rounded-full border-2 border-emerald-600 bg-emerald-600" />
-                                                <p className="text-xs font-bold text-emerald-600">Facturado</p>
+                                                <div className="absolute -left-[31px] top-4 h-3.5 w-3.5 rounded-full border-2 border-success bg-success" />
+                                                <p className="text-xs font-bold text-success">Facturado</p>
                                                 <Link 
                                                     href={`/invoices/${note.factura.id}`} 
                                                     className="text-xs font-semibold text-brand-1 hover:underline block mt-0.5"
