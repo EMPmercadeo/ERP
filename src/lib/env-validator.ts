@@ -36,29 +36,32 @@ export function validateEnv() {
         }
     }
 
-    // 2. Validaciones estrictas en producción en runtime (FASE 3)
+    // 2. Validaciones en producción en runtime (FASE 3)
+    // Separamos las variables en CRÍTICAS (sin ellas la app no puede funcionar)
+    // y DEGRADABLES (sin ellas, la funcionalidad correspondiente se deshabilita
+    // con un warning, pero la app sigue sirviendo peticiones).
     if (isProduction && !isBuildTime) {
-        const missingProductionVars: string[] = [];
+        const criticalMissing: string[] = [];
+        const degradedFeatures: string[] = [];
 
-        // Firebase Admin
+        // === CRÍTICAS (causan crash si faltan) ===
+        // Firebase Admin: sin esto, ningún usuario puede autenticarse
         if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-            missingProductionVars.push('FIREBASE_SERVICE_ACCOUNT_KEY');
+            criticalMissing.push('FIREBASE_SERVICE_ACCOUNT_KEY');
         }
 
-        // Redis (Upstash)
-        if (!process.env.UPSTASH_REDIS_REST_URL) {
-            missingProductionVars.push('UPSTASH_REDIS_REST_URL');
-        }
-        if (!process.env.UPSTASH_REDIS_REST_TOKEN) {
-            missingProductionVars.push('UPSTASH_REDIS_REST_TOKEN');
+        // === DEGRADABLES (causan warning si faltan) ===
+
+        // Redis (Upstash) — sin esto, el rate limiting usa fallback en memoria local
+        if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+            degradedFeatures.push('Rate Limiting distribuido (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN) — usando fallback en memoria local');
         }
 
-        // Storage Remoto (No se permite 'local' en producción)
-        const provider = process.env.STORAGE_PROVIDER || 'remote';
+        // Storage Remoto — sin esto, la subida de archivos fallará con error descriptivo
+        const provider = process.env.STORAGE_PROVIDER || 'vercel';
         if (provider === 'local') {
-            throw new Error(
-                "[FAIL-CLOSED] Error de seguridad: STORAGE_PROVIDER='local' no está permitido en producción para evitar pérdida de datos efímeros."
-            );
+            // En producción, 'local' no es un error fatal sino una advertencia fuerte
+            degradedFeatures.push("STORAGE_PROVIDER='local' en producción — los archivos se perderán entre deploys. Configure 'vercel' o 's3'");
         }
         const hasAws = !!(
             process.env.AWS_ACCESS_KEY_ID &&
@@ -66,32 +69,48 @@ export function validateEnv() {
             process.env.AWS_BUCKET_NAME
         );
         const hasVercelBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
-        if (!hasAws && !hasVercelBlob) {
-            missingProductionVars.push('BLOB_READ_WRITE_TOKEN (o AWS S3 credentials)');
+        if (provider !== 'local' && !hasAws && !hasVercelBlob) {
+            degradedFeatures.push('Storage remoto (BLOB_READ_WRITE_TOKEN o AWS S3 credentials) — la subida de archivos dará error descriptivo');
         }
 
-        // SMTP (Solo si se habilita el envío de correos)
+        // SMTP — sin esto, los correos no se envían pero la app sigue funcionando
         const hasSmtpConfig = !!(
             process.env.SMTP_HOST ||
             process.env.SMTP_USER ||
             process.env.SMTP_PASSWORD ||
             process.env.SMTP_FROM_EMAIL
         );
-        if (hasSmtpConfig) {
-            if (!process.env.SMTP_HOST) missingProductionVars.push('SMTP_HOST');
-            if (!process.env.SMTP_USER) missingProductionVars.push('SMTP_USER');
-            if (!process.env.SMTP_PASSWORD) missingProductionVars.push('SMTP_PASSWORD');
-            if (!process.env.SMTP_FROM_EMAIL) missingProductionVars.push('SMTP_FROM_EMAIL');
+        if (!hasSmtpConfig) {
+            degradedFeatures.push('Correo transaccional (SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_FROM_EMAIL) — los correos no se enviarán');
+        } else {
+            // Si se configuró parcialmente, advertir sobre las faltantes
+            const partialSmtp: string[] = [];
+            if (!process.env.SMTP_HOST) partialSmtp.push('SMTP_HOST');
+            if (!process.env.SMTP_USER) partialSmtp.push('SMTP_USER');
+            if (!process.env.SMTP_PASSWORD) partialSmtp.push('SMTP_PASSWORD');
+            if (!process.env.SMTP_FROM_EMAIL) partialSmtp.push('SMTP_FROM_EMAIL');
+            if (partialSmtp.length > 0) {
+                degradedFeatures.push(`Correo SMTP parcialmente configurado — faltan: ${partialSmtp.join(', ')}`);
+            }
         }
 
-        // Sentry (Si feature flag está activo)
-        if (process.env.SENTRY_ENABLED === 'true' && !process.env.SENTRY_DSN) {
-            missingProductionVars.push('SENTRY_DSN');
+        // Sentry — sin esto, los errores se registran solo en stdout/stderr
+        if (!process.env.SENTRY_DSN) {
+            degradedFeatures.push('Sentry (SENTRY_DSN) — los errores se registran en logs locales');
         }
 
-        if (missingProductionVars.length > 0) {
+        // Emitir advertencias de degradación
+        if (degradedFeatures.length > 0) {
+            console.warn(
+                `[DEGRADACIÓN CONTROLADA] Las siguientes funcionalidades están deshabilitadas por falta de configuración:\n` +
+                degradedFeatures.map(f => `  ⚠ ${f}`).join('\n')
+            );
+        }
+
+        // Fallar solo por variables verdaderamente críticas
+        if (criticalMissing.length > 0) {
             throw new Error(
-                `[FAIL-CLOSED] Error de configuración de producción: Faltan las siguientes variables externas requeridas para el correcto funcionamiento: [ ${missingProductionVars.join(', ')} ].`
+                `[FAIL-CLOSED] Error de configuración de producción: Faltan las siguientes variables CRÍTICAS sin las cuales la aplicación no puede funcionar: [ ${criticalMissing.join(', ')} ].`
             );
         }
     }

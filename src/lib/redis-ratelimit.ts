@@ -72,14 +72,13 @@ export async function checkRateLimit(
     const config = LIMITS[action] || LIMITS.default;
     const key = `ratelimit:${action}:${ip}${empresaId ? `:${empresaId}` : ''}`;
 
-    if (isProd && (!url || !token)) {
-        throw new Error(
-            'Límite de tasa distribuido no configurado en producción (falta UPSTASH_REDIS_REST_URL o UPSTASH_REDIS_REST_TOKEN).'
-        );
-    }
-
     if (!url || !token) {
-        // Fallback local en desarrollo
+        // Fallback a limitación en memoria (no distribuida) si Redis no está configurado.
+        // En producción esto es subóptimo (cada instancia serverless tiene su propio contador),
+        // pero es preferible a denegar todas las peticiones o crashear.
+        if (isProd) {
+            console.warn('[RATE-LIMIT] Redis no configurado en producción — usando fallback en memoria local (no distribuido).');
+        }
         return checkInMemoryLimit(key, config);
     }
 

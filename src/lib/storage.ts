@@ -83,9 +83,10 @@ export class RemoteStorageProvider implements StorageProvider {
 
 export function getStorageProvider(): StorageProvider {
     const isProd = process.env.NODE_ENV === 'production';
-    const providerType = process.env.STORAGE_PROVIDER || (isProd ? 'remote' : 'local');
+    const providerType = process.env.STORAGE_PROVIDER || (isProd ? 'vercel' : 'local');
 
-    if (providerType === 'remote') {
+    // 'vercel', 'remote' y 's3' todos utilizan el proveedor remoto
+    if (providerType === 'vercel' || providerType === 'remote' || providerType === 's3') {
         return new RemoteStorageProvider();
     }
     return new LocalStorageProvider();
