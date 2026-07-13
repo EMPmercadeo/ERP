@@ -77,10 +77,10 @@ async function testRoles() {
     assertRejected(await deletePurchase('some-id'), 'deletePurchase (contador)');
 
     // 2. Bancos (Permitido para contador) - No debe dar error de rol
-    const resBank = await updateBankAccount('non-existent-id-triggering-db-not-found', {
+    const resBank = await updateBankAccount('some-id', {
         nombre: 'Test', banco: 'Test', numeroCuenta: '123', tipoCuenta: 'Ahorro', cuentaContableId: 'cc', saldoInicial: 0
     });
-    const errorMsgBank = resBank?.message || resBank?.error || '';
+    const errorMsgBank = (resBank as any)?.message || (resBank as any)?.error || '';
     const hasRoleError = errorMsgBank.includes('Acceso denegado') || errorMsgBank.includes('Permisos insuficientes');
     if (!hasRoleError) {
         console.log('💚 PASS: updateBankAccount (contador) no fue rechazada por rol (sino por otros errores de validación/datos).');
