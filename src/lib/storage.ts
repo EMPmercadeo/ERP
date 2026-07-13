@@ -14,7 +14,7 @@ export interface StorageProvider {
 }
 
 export class LocalStorageProvider implements StorageProvider {
-    async uploadFile(buffer: Buffer, filename: string, mimeType: string): Promise<string> {
+    async uploadFile(buffer: Buffer, filename: string, _mimeType: string): Promise<string> {
         const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products');
         await fs.mkdir(uploadDir, { recursive: true });
         const filepath = path.join(uploadDir, filename);
@@ -36,7 +36,7 @@ export class LocalStorageProvider implements StorageProvider {
 }
 
 export class RemoteStorageProvider implements StorageProvider {
-    async uploadFile(buffer: Buffer, filename: string, mimeType: string): Promise<string> {
+    async uploadFile(_buffer: Buffer, filename: string, _mimeType: string): Promise<string> {
         const hasAws = !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_BUCKET_NAME);
         const hasVercelBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
 
@@ -54,7 +54,7 @@ export class RemoteStorageProvider implements StorageProvider {
         return `https://${bucket}.s3.${region}.amazonaws.com/products/${filename}`;
     }
 
-    async deleteFile(filepathOrUrl: string): Promise<void> {
+    async deleteFile(_filepathOrUrl: string): Promise<void> {
         const hasAws = !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_BUCKET_NAME);
         const hasVercelBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
 

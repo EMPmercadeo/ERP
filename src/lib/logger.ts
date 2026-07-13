@@ -4,15 +4,34 @@ interface LogContext {
   userId?: string;
   empresaId?: string;
   requestId?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 class Logger {
-  private formatLog(level: LogLevel, message: string, context?: LogContext, error?: any) {
+  private redactSecrets(obj: unknown): unknown {
+    if (!obj || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(item => this.redactSecrets(item));
+
+    const sensitiveKeys = ['password', 'token', 'cookie', 'authorization', 'apikey', 'secret', 'key'];
+    const redacted: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+      const lowerKey = key.toLowerCase();
+      if (sensitiveKeys.some(s => lowerKey.includes(s))) {
+        redacted[key] = '[REDACTED]';
+      } else if (typeof value === 'object') {
+        redacted[key] = this.redactSecrets(value);
+      } else {
+        redacted[key] = value;
+      }
+    }
+    return redacted;
+  }
+
+  private formatLog(level: LogLevel, message: string, context?: LogContext, error?: unknown) {
     const timestamp = new Date().toISOString();
     const isProd = process.env.NODE_ENV === 'production';
 
-    const logPayload: any = {
+    const logPayload: Record<string, unknown> = {
       timestamp,
       level,
       message,
@@ -20,7 +39,8 @@ class Logger {
     };
 
     if (context) {
-      const { userId, empresaId, requestId, ...meta } = context;
+      const redactedContext = this.redactSecrets(context) as LogContext;
+      const { userId, empresaId, requestId, ...meta } = redactedContext;
       if (userId) logPayload.userId = userId;
       if (empresaId) logPayload.empresaId = empresaId;
       if (requestId) logPayload.requestId = requestId;
@@ -48,8 +68,9 @@ class Logger {
       };
 
       const color = colors[level] || colors.RESET;
-      const contextStr = context && Object.keys(context).length > 0 
-        ? ` | Context: ${JSON.stringify(context)}` 
+      const cleanContext = context ? (this.redactSecrets(context) as LogContext) : null;
+      const contextStr = cleanContext && Object.keys(cleanContext).length > 0 
+        ? ` | Context: ${JSON.stringify(cleanContext)}` 
         : '';
       const errorStr = error 
         ? `\n${colors.ERROR}${error instanceof Error ? error.stack : String(error)}${colors.RESET}` 
@@ -67,7 +88,7 @@ class Logger {
     console.warn(this.formatLog('WARN', message, context));
   }
 
-  error(message: string, error?: any, context?: LogContext) {
+  error(message: string, error?: unknown, context?: LogContext) {
     console.error(this.formatLog('ERROR', message, context, error));
   }
 
