@@ -112,6 +112,11 @@ async function getNextCreditNoteSequence(empresaId: string, sucursalId: string, 
 }
 
 export async function createCreditNote(prevState: unknown, formData: FormData) {
+    const { empresaId, userId, role } = await getTenantContext();
+    if (role !== 'admin' && role !== 'gerente' && role !== 'vendedor' && role !== 'contador') {
+        return { success: false, message: 'Acceso denegado. Permisos insuficientes.' };
+    }
+
     const rawItems = formData.get('items');
     let items: CreditNoteItemInput[] = [];
     if (rawItems) {
@@ -141,7 +146,6 @@ export async function createCreditNote(prevState: unknown, formData: FormData) {
 
     let redirectUrl = '/credit-notes';
     try {
-        const { empresaId, userId } = await getTenantContext();
         const { empresa, sucursal, caja } = await getEmpresaDefaults(empresaId);
 
         const hasRemainingDocs = await canCreateInvoice(empresaId);
