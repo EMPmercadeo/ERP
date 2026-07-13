@@ -39,7 +39,11 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
     }
 
     const { data } = validatedFields;
-    const { empresaId, userId } = await getTenantContext();
+    const { empresaId, userId, role } = await getTenantContext();
+
+    if (role !== 'admin' && role !== 'gerente') {
+        return { message: 'Acceso denegado. Permisos insuficientes.' };
+    }
 
     try {
         const proveedor = await prisma.proveedor.findFirst({
@@ -228,7 +232,10 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
 
 export async function deletePurchase(id: string) {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId, role } = await getTenantContext();
+        if (role !== 'admin' && role !== 'gerente') {
+            return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
+        }
         const compra = await prisma.compra.findFirst({
             where: { id, empresaId },
             include: { items: true }
@@ -281,7 +288,10 @@ export async function deletePurchase(id: string) {
 
 export async function anularPurchase(id: string, motivo?: string) {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId, role } = await getTenantContext();
+        if (role !== 'admin' && role !== 'gerente') {
+            return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
+        }
         const compra = await prisma.compra.findFirst({
             where: { id, empresaId },
             include: { items: true, pagos: true }

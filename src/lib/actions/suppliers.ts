@@ -35,7 +35,11 @@ export async function createSupplier(prevState: unknown, formData: FormData) {
     }
 
     const { data } = validatedFields;
-    const { empresaId } = await getTenantContext();
+    const { empresaId, role } = await getTenantContext();
+
+    if (role !== 'admin' && role !== 'gerente') {
+        return { message: 'Acceso denegado. Permisos insuficientes.' };
+    }
 
     try {
         await prisma.proveedor.create({
@@ -94,7 +98,11 @@ export async function updateSupplier(id: string, prevState: unknown, formData: F
     }
 
     const { data } = validatedFields;
-    const { empresaId } = await getTenantContext();
+    const { empresaId, role } = await getTenantContext();
+
+    if (role !== 'admin' && role !== 'gerente') {
+        return { message: 'Acceso denegado. Permisos insuficientes.' };
+    }
 
     try {
         const existing = await prisma.proveedor.findFirst({
@@ -134,7 +142,10 @@ export async function updateSupplier(id: string, prevState: unknown, formData: F
 
 export async function toggleSupplierStatus(id: string, nuevoEstado: string) {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId, role } = await getTenantContext();
+        if (role !== 'admin' && role !== 'gerente') {
+            return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
+        }
         const existing = await prisma.proveedor.findFirst({
             where: { id, empresaId }
         });
@@ -158,7 +169,10 @@ export async function toggleSupplierStatus(id: string, nuevoEstado: string) {
 
 export async function deleteSupplier(id: string) {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId, role } = await getTenantContext();
+        if (role !== 'admin' && role !== 'gerente') {
+            return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
+        }
         const existing = await prisma.proveedor.findFirst({
             where: { id, empresaId }
         });
@@ -193,7 +207,10 @@ export async function deleteSupplier(id: string) {
 
 export async function getSuppliersWithSummary() {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId, role } = await getTenantContext();
+        if (role !== 'admin' && role !== 'gerente') {
+            return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
+        }
 
         const suppliers = await prisma.proveedor.findMany({
             where: { empresaId },

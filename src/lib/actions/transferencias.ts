@@ -72,7 +72,10 @@ export async function createTransferencia(prevState: unknown, formData: FormData
     }
 
     const { data } = validatedFields;
-    const { empresaId, userId } = await getTenantContext();
+    const { empresaId, userId, role } = await getTenantContext();
+    if (role !== 'admin' && role !== 'gerente') {
+        return { message: 'Acceso denegado. Permisos insuficientes.' };
+    }
 
     try {
         const [origen, destino] = await Promise.all([
@@ -160,7 +163,10 @@ export async function createTransferencia(prevState: unknown, formData: FormData
 }
 
 export async function recibirTransferencia(id: string) {
-    const { empresaId, userId } = await getTenantContext();
+    const { empresaId, userId, role } = await getTenantContext();
+    if (role !== 'admin' && role !== 'gerente') {
+        return { success: false, message: 'Acceso denegado. Permisos insuficientes.' };
+    }
     try {
         const transferencia = await prisma.transferenciaBodega.findFirst({
             where: { id, empresaId },
@@ -209,7 +215,10 @@ export async function recibirTransferencia(id: string) {
 }
 
 export async function cancelarTransferencia(id: string) {
-    const { empresaId } = await getTenantContext();
+    const { empresaId, role } = await getTenantContext();
+    if (role !== 'admin' && role !== 'gerente') {
+        return { success: false, message: 'Acceso denegado. Permisos insuficientes.' };
+    }
     try {
         const transferencia = await prisma.transferenciaBodega.findFirst({
             where: { id, empresaId },

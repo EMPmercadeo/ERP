@@ -42,7 +42,11 @@ export async function createBankAccount(prevState: unknown, formData: FormData) 
     }
 
     const { data } = validatedFields;
-    const { empresaId } = await getTenantContext();
+    const { empresaId, role } = await getTenantContext();
+
+    if (role !== 'admin' && role !== 'gerente' && role !== 'contador') {
+        return { message: 'Acceso denegado. Permisos insuficientes.' };
+    }
 
     const cuentaContable = await prisma.planCuentas.findFirst({
         where: { id: data.cuentaContableId, empresaId, codigo: { startsWith: '1.1.01' } },
@@ -81,7 +85,10 @@ export async function updateBankAccount(id: string, data: {
     saldoInicial: number;
 }) {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId, role } = await getTenantContext();
+        if (role !== 'admin' && role !== 'gerente' && role !== 'contador') {
+            return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
+        }
         const existing = await prisma.cuentaBancaria.findFirst({ where: { id, empresaId } });
         if (!existing) {
             return { success: false, error: 'Cuenta bancaria no encontrada o acceso denegado.' };
@@ -130,7 +137,10 @@ export async function updateBankAccount(id: string, data: {
 
 export async function toggleBankAccountStatus(id: string, activa: boolean) {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId, role } = await getTenantContext();
+        if (role !== 'admin' && role !== 'gerente' && role !== 'contador') {
+            return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
+        }
         const existing = await prisma.cuentaBancaria.findFirst({ where: { id, empresaId } });
         if (!existing) {
             return { success: false, error: 'Cuenta bancaria no encontrada o acceso denegado.' };
@@ -148,7 +158,10 @@ export async function toggleBankAccountStatus(id: string, activa: boolean) {
 
 export async function deleteBankAccount(id: string) {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId, role } = await getTenantContext();
+        if (role !== 'admin' && role !== 'gerente' && role !== 'contador') {
+            return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
+        }
         const existing = await prisma.cuentaBancaria.findFirst({ where: { id, empresaId } });
         if (!existing) {
             return { success: false, error: 'Cuenta bancaria no encontrada o acceso denegado.' };
@@ -210,7 +223,10 @@ export async function importMovimientosBancarios(
     rows: Record<string, string>[]
 ) {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId, role } = await getTenantContext();
+        if (role !== 'admin' && role !== 'gerente' && role !== 'contador') {
+            return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
+        }
 
         const cuenta = await prisma.cuentaBancaria.findFirst({
             where: { id: cuentaBancariaId, empresaId },
@@ -400,7 +416,10 @@ export async function reconciliarMovimiento(
     asientoContableId: string
 ) {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId, role } = await getTenantContext();
+        if (role !== 'admin' && role !== 'gerente' && role !== 'contador') {
+            return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
+        }
 
         const cuenta = await prisma.cuentaBancaria.findFirst({
             where: { id: cuentaBancariaId, empresaId },
