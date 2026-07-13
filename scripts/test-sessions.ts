@@ -1,3 +1,6 @@
+// Must be first line — sets test environment before modules are evaluated
+process.env.NODE_ENV = 'test';
+
 import { getTenantContext } from '../src/lib/auth/context';
 import { prisma } from '../src/lib/db';
 import { adminAuth } from '../src/lib/firebase/admin';
@@ -37,53 +40,45 @@ async function runSessionTests() {
         }
     });
 
+    const originalVerifyCookie = adminAuth.verifySessionCookie;
+    const nextHeaders = require('next/headers');
+    const originalCookies = nextHeaders.cookies;
+
     try {
-        // --- TEST 1: Usuario Desactivado ---
-        console.log('\n🔍 TEST 1: Acceso con usuario desactivado (activo = false)...');
-        // Mockear el email resuelto de la sesión
-        (global as any).__mockTenantContext = null; // Desactivar el bypass directo de tenant context para que use resolveUsuarioPorEmail
-        
-        // Mockear cookies de next/headers para que devuelvan la cookie simulada
-        // En este test usaremos mock de global __mockTenantContext que simula la respuesta de resolveUsuarioPorEmail
-        // Pero para probar la lógica real de "!devUser.activo" de context.ts, podemos simular que el email es 'inactivo@test-sessions.com'
-        // Mocking the cookies/token verification:
-        const originalVerifyCookie = adminAuth.verifySessionCookie;
+        // --- TEST 1: Cookie Válida ---
+        console.log('\n🔍 TEST 1: Acceso con cookie de sesión válida...');
+        (global as any).__mockTenantContext = null;
+
         adminAuth.verifySessionCookie = async () => ({
-            email: 'inactivo@test-sessions.com',
+            email: 'activo@test-sessions.com',
             email_verified: true,
-            uid: 'mock-uid-inactivo'
+            uid: 'mock-uid-activo'
         } as any);
 
-        // Mock cookies() store
-        const nextHeaders = require('next/headers');
-        const originalCookies = nextHeaders.cookies;
         nextHeaders.cookies = async () => ({
             get: () => ({ value: 'valid-mock-cookie' })
         });
 
-        // Intentar obtener contexto (debería redirigir a /login?error=inactive)
-        let redirectedToLogin = false;
+        let contextOk = false;
         try {
-            await getTenantContext();
-        } catch (e: any) {
-            // Next.js redirect lanza un error especial con digest NEXT_REDIRECT
-            if (e.digest?.includes('NEXT_REDIRECT') && e.digest?.includes('inactive')) {
-                redirectedToLogin = true;
-            } else {
-                console.error('Error inesperado durante redirección:', e);
+            const ctx = await getTenantContext();
+            if (ctx.userId === userActivo.id && ctx.empresaId === empresa.id && ctx.role === 'vendedor') {
+                contextOk = true;
             }
+        } catch (e) {
+            console.error('Error al obtener contexto válido:', e);
         }
 
-        if (redirectedToLogin) {
-            console.log('💚 PASS: Acceso denegado y redirección correcta de usuario desactivado.');
+        if (contextOk) {
+            console.log('💚 PASS: Cookie válida decodificada y contexto de tenant resuelto correctamente.');
             passedCount++;
         } else {
-            console.error('❌ FAIL: No se bloqueó el acceso al usuario desactivado.');
+            console.error('❌ FAIL: No se pudo resolver el contexto con cookie válida.');
             failedCount++;
         }
 
         // --- TEST 2: Cookie Expirada ---
-        console.log('\n🔍 TEST 2: Acceso con cookie de sesión expirada / inválida...');
+        console.log('\n🔍 TEST 2: Acceso con cookie de sesión expirada...');
         adminAuth.verifySessionCookie = async () => {
             throw new Error('Firebase session cookie has expired.');
         };
@@ -92,7 +87,7 @@ async function runSessionTests() {
         try {
             await getTenantContext();
         } catch (e: any) {
-            if (e.digest?.includes('NEXT_REDIRECT')) {
+            if (e.digest?.includes('NEXT_REDIRECT') || e.message?.includes('NEXT_REDIRECT') || String(e).includes('NEXT_REDIRECT')) {
                 redirectedExpired = true;
             }
         }
@@ -105,34 +100,82 @@ async function runSessionTests() {
             failedCount++;
         }
 
-        // --- TEST 3: Token Revocado ---
-        console.log('\n🔍 TEST 3: Acceso con token de sesión revocado en Firebase...');
+        // --- TEST 3: Cookie Revocada ---
+        console.log('\n🔍 TEST 3: Acceso con cookie de sesión revocada en Firebase...');
         adminAuth.verifySessionCookie = async () => {
-            throw new Error('Firebase ID Token has been revoked.');
+            throw new Error('Firebase session cookie has been revoked.');
         };
 
         let redirectedRevoked = false;
         try {
             await getTenantContext();
         } catch (e: any) {
-            if (e.digest?.includes('NEXT_REDIRECT')) {
+            if (e.digest?.includes('NEXT_REDIRECT') || e.message?.includes('NEXT_REDIRECT') || String(e).includes('NEXT_REDIRECT')) {
                 redirectedRevoked = true;
             }
         }
 
         if (redirectedRevoked) {
-            console.log('💚 PASS: Redirección correcta a /login ante token revocado.');
+            console.log('💚 PASS: Redirección correcta a /login ante cookie revocada.');
             passedCount++;
         } else {
-            console.error('❌ FAIL: No se redirigió al usuario con token revocado.');
+            console.error('❌ FAIL: No se redirigió al usuario con cookie revocada.');
             failedCount++;
         }
 
+        // --- TEST 4: Usuario Inactivo ---
+        console.log('\n🔍 TEST 4: Acceso con usuario desactivado (activo = false)...');
+        adminAuth.verifySessionCookie = async () => ({
+            email: 'inactivo@test-sessions.com',
+            email_verified: true,
+            uid: 'mock-uid-inactivo'
+        } as any);
+
+        let redirectedInactive = false;
+        try {
+            await getTenantContext();
+        } catch (e: any) {
+            if (e.digest?.includes('NEXT_REDIRECT') && e.digest?.includes('inactive')) {
+                redirectedInactive = true;
+            }
+        }
+
+        if (redirectedInactive) {
+            console.log('💚 PASS: Acceso denegado y redirección correcta a /login?error=inactive.');
+            passedCount++;
+        } else {
+            console.error('❌ FAIL: No se bloqueó el acceso al usuario desactivado.');
+            failedCount++;
+        }
+
+        // --- TEST 5: Cookie Manipulada ---
+        console.log('\n🔍 TEST 5: Acceso con cookie manipulada / firma inválida...');
+        adminAuth.verifySessionCookie = async () => {
+            throw new Error('Decoding Firebase session cookie failed. The cookie is invalid.');
+        };
+
+        let redirectedManipulated = false;
+        try {
+            await getTenantContext();
+        } catch (e: any) {
+            if (e.digest?.includes('NEXT_REDIRECT') || e.message?.includes('NEXT_REDIRECT') || String(e).includes('NEXT_REDIRECT')) {
+                redirectedManipulated = true;
+            }
+        }
+
+        if (redirectedManipulated) {
+            console.log('💚 PASS: Redirección correcta a /login ante cookie manipulada.');
+            passedCount++;
+        } else {
+            console.error('❌ FAIL: No se redirigió al usuario con cookie manipulada.');
+            failedCount++;
+        }
+
+    } finally {
         // Restaurar mocks
         adminAuth.verifySessionCookie = originalVerifyCookie;
         nextHeaders.cookies = originalCookies;
 
-    } finally {
         // Limpieza de usuarios creados
         await prisma.usuario.deleteMany({
             where: { email: { in: ['activo@test-sessions.com', 'inactivo@test-sessions.com'] } }
