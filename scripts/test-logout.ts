@@ -1,5 +1,5 @@
 // Must be first line — sets test environment before modules are evaluated
-process.env.NODE_ENV = 'test';
+(process.env as any).NODE_ENV = 'test';
 
 import { deleteSessionEmail } from '../src/lib/actions/auth';
 import { adminAuth } from '../src/lib/firebase/admin';

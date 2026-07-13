@@ -1,5 +1,5 @@
 // Must be first line — sets test environment before modules are evaluated
-process.env.NODE_ENV = 'test';
+(process.env as any).NODE_ENV = 'test';
 
 import { LocalStorageProvider, RemoteStorageProvider, getStorageProvider } from '../src/lib/storage';
 import fs from 'fs/promises';

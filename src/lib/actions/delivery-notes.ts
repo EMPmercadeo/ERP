@@ -59,6 +59,11 @@ async function getDefaults(empresaId: string) {
 }
 
 export async function createDeliveryNote(prevState: unknown, formData: FormData) {
+    const { empresaId, userId, role } = await getTenantContext();
+    if (role !== 'admin' && role !== 'gerente' && role !== 'vendedor') {
+        return { message: 'Acceso denegado. Permisos insuficientes.' };
+    }
+
     const rawItems = formData.get('items');
     let items: unknown[] = [];
     if (rawItems) {
@@ -92,7 +97,6 @@ export async function createDeliveryNote(prevState: unknown, formData: FormData)
     }
 
     const { data } = validatedFields;
-    const { empresaId, userId } = await getTenantContext();
 
     try {
         const cliente = await prisma.cliente.findFirst({

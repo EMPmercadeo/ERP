@@ -1,5 +1,5 @@
 // Must be first line — sets test environment before modules are evaluated
-process.env.NODE_ENV = 'test';
+(process.env as any).NODE_ENV = 'test';
 
 import { getTenantContext } from '../src/lib/auth/context';
 import { prisma } from '../src/lib/db';

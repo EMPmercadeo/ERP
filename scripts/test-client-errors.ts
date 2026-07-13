@@ -1,5 +1,5 @@
 // Must be first line — sets test environment before modules are evaluated
-process.env.NODE_ENV = 'test';
+(process.env as any).NODE_ENV = 'test';
 
 import { POST } from '../src/app/api/client-errors/route';
 import { NextRequest } from 'next/server';

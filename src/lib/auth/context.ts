@@ -22,7 +22,11 @@ export interface TenantContext {
 }
 
 export const getTenantContext = cache(async (): Promise<TenantContext> => {
-    if ((global as any).__mockTenantContext) {
+    // ── TEST-ONLY BYPASS ─────────────────────────────────────────────────────
+    // This branch is compiled and active ONLY when NODE_ENV === 'test'.
+    // In 'production' and 'development' environments it is never entered,
+    // even if __mockTenantContext is set on global by an attacker.
+    if (process.env.NODE_ENV === 'test' && (global as any).__mockTenantContext) {
         return (global as any).__mockTenantContext;
     }
     // 1. Get User Identity from session cookie

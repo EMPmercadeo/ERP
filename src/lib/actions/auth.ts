@@ -86,24 +86,51 @@ export async function setSessionToken(idToken: string) {
     logger.info('Sesión de usuario iniciada correctamente', { email: decoded.email, uid: decoded.uid });
 }
 
-export async function deleteSessionEmail() {
+export async function deleteSessionEmail(): Promise<{ success: boolean; revoked: boolean }> {
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get('session_token')?.value;
+
+    // Always delete local cookies first — even if revocation fails the browser
+    // session is terminated immediately.
     cookieStore.delete('session_token');
     cookieStore.delete('session_email');
-    
-    if (sessionToken) {
-        try {
-            const decoded = await adminAuth.verifySessionCookie(sessionToken).catch(() => null);
-            if (decoded) {
-                logger.info('Sesión de usuario cerrada correctamente', { email: decoded.email, uid: decoded.uid });
-            } else {
-                logger.info('Sesión de usuario cerrada (token ya expirado o inválido)');
-            }
-        } catch {
-            logger.info('Sesión de usuario cerrada (error al decodificar para log)');
-        }
-    } else {
-        logger.info('Sesión de usuario cerrada (sin token activo)');
+
+    if (!sessionToken) {
+        logger.info('Sesión cerrada (sin token activo en cookie)');
+        return { success: true, revoked: false };
+    }
+
+    // NOTE: verifySessionCookie(token, true) checks that the token has NOT been
+    // revoked already. If the cookie itself was already revoked by a previous
+    // logout or password change, this throws — which is the correct outcome.
+    let uid: string | undefined;
+    let email: string | undefined;
+    try {
+        const decoded = await adminAuth.verifySessionCookie(sessionToken, true /* checkRevoked */);
+        uid = decoded.uid;
+        email = decoded.email;
+    } catch {
+        // The cookie is expired, tampered, or already revoked — nothing to do.
+        logger.info('Sesión cerrada (cookie ya expirada, revocada o inválida)');
+        return { success: true, revoked: false };
+    }
+
+    // Revoking refresh tokens invalidates ALL active sessions for this user
+    // across every device. This is intentional: a logout from any device
+    // should invalidate tokens globally to prevent session hijacking.
+    try {
+        await adminAuth.revokeRefreshTokens(uid);
+        logger.info('Sesión cerrada y refresh tokens revocados correctamente en Firebase', { email, uid });
+        return { success: true, revoked: true };
+    } catch (err) {
+        // Revocation failed — the cookie was deleted locally but Firebase tokens
+        // may still be valid until natural expiry (up to 1 hour for ID tokens).
+        logger.error(
+            'FALLO en revocación de refresh tokens — la sesión local fue cerrada pero los tokens de Firebase siguen activos',
+            err,
+            { email, uid }
+        );
+        // Do not expose internal Firebase error details to the caller.
+        return { success: true, revoked: false };
     }
 }

@@ -1,3 +1,6 @@
+// Must be first line — sets test environment before modules are evaluated
+(process.env as any).NODE_ENV = 'test';
+
 // Mock next/cache globally to avoid Invariant errors in command line scripts
 const nextCache = require('next/cache');
 nextCache.revalidatePath = () => {};

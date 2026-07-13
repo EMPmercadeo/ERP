@@ -1,3 +1,6 @@
+// Must be first line — sets test environment before modules are evaluated
+(process.env as any).NODE_ENV = 'test';
+
 import { prisma } from '../src/lib/db';
 import { uploadProductImage } from '../src/lib/actions/products';
 import fs from 'fs/promises';

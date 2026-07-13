@@ -1,3 +1,6 @@
+// Must be first line — sets test environment before modules are evaluated
+(process.env as any).NODE_ENV = 'test';
+
 import { createPurchase, deletePurchase, anularPurchase } from '../src/lib/actions/purchases';
 import { createSupplier, updateSupplier, toggleSupplierStatus, deleteSupplier, getSuppliersWithSummary } from '../src/lib/actions/suppliers';
 import { createBodega, updateBodega, deleteBodega } from '../src/lib/actions/bodegas';

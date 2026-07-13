@@ -8,7 +8,7 @@ const MAX_ERRORS_PER_MINUTE = 10; // Allow max 10 error logs per IP per minute t
 
 export async function POST(req: NextRequest) {
     // 1. Basic Rate Limiting
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.ip || 'anonymous-ip';
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || (req as any).ip || 'anonymous-ip';
     const now = Date.now();
     const rateData = rateLimitMap.get(ip);
 
