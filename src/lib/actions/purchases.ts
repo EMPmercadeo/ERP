@@ -147,15 +147,20 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
 
             const bodegaId = await resolverBodegaId(tx, empresaId, data.bodegaId ?? null);
 
+            // Pre-fetch product metadata to avoid N+1 queries in the loop
+            const productIds = processedItems.map(item => item.productoId).filter(Boolean) as string[];
+            const dbProducts = await tx.producto.findMany({
+                where: { id: { in: productIds }, empresaId },
+                select: { id: true, controlaLotes: true, unidadMedida: true }
+            });
+            const productsMap = new Map(dbProducts.map(p => [p.id, p]));
+
             // Update inventory stock and unit cost for linked products
             for (let i = 0; i < processedItems.length; i++) {
                 const item = processedItems[i];
                 const rawItem = data.items[i];
                 if (item.productoId) {
-                    const prod = await tx.producto.findFirst({
-                        where: { id: item.productoId, empresaId },
-                        select: { controlaLotes: true, unidadMedida: true }
-                    });
+                    const prod = productsMap.get(item.productoId);
 
                     // Los servicios (unidadMedida "SRV") no llevan inventario: solo se actualiza el
                     // costo unitario de referencia, sin tocar stock/bodega/lotes.

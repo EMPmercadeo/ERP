@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { crearPlanCuentasParaEmpresa } from '@/lib/contabilidad/planCuentasDefault';
 import { adminAuth } from '@/lib/firebase/admin';
 import { resolveUsuarioPorEmail } from '@/lib/auth/resolveUsuario';
+import { cache } from 'react';
 
 // Mock session retriever. In real usage, this might decode a JWT, check cookies, or call Firebase Admin.
 // We'll simulate getting the user email/id from headers or a mock "current user".
@@ -19,7 +20,7 @@ export interface TenantContext {
     emailVerified: boolean;
 }
 
-export async function getTenantContext(): Promise<TenantContext> {
+export const getTenantContext = cache(async (): Promise<TenantContext> => {
     // 1. Get User Identity from session cookie
     const cookieStore = await cookies();
     const sessionCookieValue = cookieStore.get('session_token')?.value;
@@ -154,7 +155,6 @@ export async function getTenantContext(): Promise<TenantContext> {
         }
     }
 
-    // 3. Return strict context
     return {
         userId: devUser.id, // Always the real user ID
         empresaId: activeEmpresaId,
@@ -162,4 +162,4 @@ export async function getTenantContext(): Promise<TenantContext> {
         isImpersonating,
         emailVerified
     };
-}
+});

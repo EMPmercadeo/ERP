@@ -457,6 +457,14 @@ export async function uploadProductImage(productId: string, formData: FormData) 
     try {
         const { empresaId } = await getTenantContext();
 
+        // 1. BOLA/IDOR Protection: Verify product exists and belongs to the active tenant
+        const product = await prisma.producto.findFirst({
+            where: { id: productId, empresaId }
+        });
+        if (!product) {
+            return { success: false, message: 'Producto no encontrado o acceso denegado.' };
+        }
+
         const file = formData.get('file') as File;
         if (!file) {
             return { success: false, message: 'No se recibió ningún archivo.' };
@@ -478,6 +486,30 @@ export async function uploadProductImage(productId: string, formData: FormData) 
         // Convert to Buffer
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
+
+        // 2. Content Injection/Polyglot File Protection: Validate image magic bytes
+        let isValidImage = false;
+        if (buffer.length >= 4) {
+            // JPEG: FF D8 FF
+            if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) {
+                isValidImage = true;
+            }
+            // PNG: 89 50 4E 47
+            else if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) {
+                isValidImage = true;
+            }
+            // WebP: RIFF (bytes 0-3) and WEBP (bytes 8-11)
+            else if (
+                buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 && // "RIFF"
+                buffer.length >= 12 &&
+                buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50   // "WEBP"
+            ) {
+                isValidImage = true;
+            }
+        }
+        if (!isValidImage) {
+            return { success: false, message: 'El archivo no es una imagen válida (JPEG, PNG o WebP).' };
+        }
 
         // Define file path
         const safeFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}${path.extname(file.name)}`;

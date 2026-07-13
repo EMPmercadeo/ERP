@@ -181,25 +181,36 @@ export async function createCreditNote(prevState: unknown, formData: FormData) {
         }, 0);
         const totalNeto = subtotal - totalDescuento + totalItbms;
 
-        // Resolve products
-        const processedItems = await Promise.all(items.map(async (item) => {
-            let producto = await prisma.producto.findFirst({
-                where: { id: item.productoId, empresaId }
-            });
+        // Resolve products in batch to eliminate N+1 queries
+        const productIds = Array.from(new Set(items.map(it => it.productoId).filter(Boolean)));
+        const dbProducts = await prisma.producto.findMany({
+            where: { id: { in: productIds }, empresaId }
+        });
+        const productsMap = new Map(dbProducts.map(p => [p.id, p]));
+
+        const defaultProduct = await prisma.producto.findFirst({ where: { empresaId } });
+        let defaultGenProduct: any = null;
+
+        const processedItems = [];
+        for (const item of items) {
+            let producto = productsMap.get(item.productoId);
             if (!producto) {
-                producto = await prisma.producto.findFirst({ where: { empresaId } });
+                producto = defaultProduct || undefined;
             }
             if (!producto) {
-                producto = await prisma.producto.create({
-                    data: {
-                        empresaId,
-                        codigoInterno: 'NC-GEN',
-                        descripcion: 'Ítem de Devolución / Nota de Crédito',
-                        costoUnitario: 0,
-                        precioVenta: 0,
-                        codigoTasaItbms: '00'
-                    }
-                });
+                if (!defaultGenProduct) {
+                    defaultGenProduct = await prisma.producto.create({
+                        data: {
+                            empresaId,
+                            codigoInterno: 'NC-GEN',
+                            descripcion: 'Ítem de Devolución / Nota de Crédito',
+                            costoUnitario: 0,
+                            precioVenta: 0,
+                            codigoTasaItbms: '00'
+                        }
+                    });
+                }
+                producto = defaultGenProduct;
             }
 
             const tasa = item.codigoTasaItbms === '01' ? 0.07 : item.codigoTasaItbms === '02' ? 0.10 : item.codigoTasaItbms === '03' ? 0.15 : 0;
@@ -208,9 +219,9 @@ export async function createCreditNote(prevState: unknown, formData: FormData) {
             const montoItbmsItem = montoNeto * tasa;
             const montoTotalItem = montoNeto + montoItbmsItem;
 
-            return {
-                productoId: producto.id,
-                descripcion: item.descripcion || producto.descripcion,
+            processedItems.push({
+                productoId: producto!.id,
+                descripcion: item.descripcion || producto!.descripcion,
                 cantidad: item.cantidad,
                 precioUnitario: item.precioUnitario,
                 costoUnitario: 0,
@@ -218,8 +229,8 @@ export async function createCreditNote(prevState: unknown, formData: FormData) {
                 codigoTasaItbms: item.codigoTasaItbms,
                 montoItbms: montoItbmsItem,
                 montoTotal: montoTotalItem
-            };
-        }));
+            });
+        }
 
         const creditNote = await prisma.factura.create({
             data: {

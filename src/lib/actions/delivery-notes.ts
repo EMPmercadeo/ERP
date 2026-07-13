@@ -192,11 +192,19 @@ export async function createDeliveryNote(prevState: unknown, formData: FormData)
             // If state is entregado, parcialmente entregado or despachado, decrease inventory stock & register Kardex movement
             const isDeliveredState = ['entregado', 'parcialmente_entregado', 'parcialmente entregado', 'despachado'].includes(finalEstado);
             if (isDeliveredState) {
+                // Pre-fetch product metadata to avoid N+1 queries in the loop
+                const productIds = processedItems.map(item => item.productoId).filter(Boolean) as string[];
+                const dbProducts = await tx.producto.findMany({
+                    where: { id: { in: productIds }, empresaId },
+                    select: { id: true, unidadMedida: true }
+                });
+                const productsMap = new Map(dbProducts.map(p => [p.id, p]));
+
                 for (const item of processedItems) {
                     if (item.productoId && item.cantidad > 0) {
                         // Los servicios (unidadMedida "SRV") no llevan inventario: no se descuenta
                         // stock ni se registra movimiento de Kardex para ellos.
-                        const prod = await tx.producto.findFirst({ where: { id: item.productoId }, select: { unidadMedida: true } });
+                        const prod = productsMap.get(item.productoId);
                         if (prod?.unidadMedida === 'SRV') continue;
 
                         await tx.producto.updateMany({
@@ -286,12 +294,20 @@ export async function updateDeliveryNoteStatus(id: string, nuevoEstado: string, 
             const wasDelivered = deliveredStates.includes(estadoAnterior);
             const isNowDelivered = deliveredStates.includes(nuevoEstado);
 
+            // Pre-fetch product metadata to avoid N+1 queries in the loops below
+            const productIds = albaran.items.map(item => item.productoId).filter(Boolean) as string[];
+            const dbProducts = await tx.producto.findMany({
+                where: { id: { in: productIds }, empresaId },
+                select: { id: true, unidadMedida: true }
+            });
+            const productsMap = new Map(dbProducts.map(p => [p.id, p]));
+
             if (!wasDelivered && isNowDelivered) {
                 // Deduct stock and log salida
                 for (const item of albaran.items) {
                     if (item.productoId && item.cantidad.toNumber() > 0) {
                         // Los servicios (unidadMedida "SRV") no llevan inventario.
-                        const prod = await tx.producto.findFirst({ where: { id: item.productoId }, select: { unidadMedida: true } });
+                        const prod = productsMap.get(item.productoId);
                         if (prod?.unidadMedida === 'SRV') continue;
 
                         await tx.producto.updateMany({
@@ -319,7 +335,7 @@ export async function updateDeliveryNoteStatus(id: string, nuevoEstado: string, 
             if (wasDelivered && nuevoEstado === 'anulado') {
                 for (const item of albaran.items) {
                     if (item.productoId && item.cantidad.toNumber() > 0) {
-                        const prod = await tx.producto.findFirst({ where: { id: item.productoId }, select: { unidadMedida: true } });
+                        const prod = productsMap.get(item.productoId);
                         if (prod?.unidadMedida === 'SRV') continue;
 
                         await tx.producto.updateMany({
@@ -477,9 +493,17 @@ export async function invoiceGroupedDeliveryNotes(albaranIds: string[]) {
                 // "ya descontados" que usan las otras dos funciones.
                 const stockYaDescontado = ['entregado', 'parcialmente_entregado', 'parcialmente entregado', 'despachado'].includes(alb.estado);
                 if (!stockYaDescontado) {
+                    // Pre-fetch product metadata to avoid N+1 queries in the loop
+                    const productIds = alb.items.map(item => item.productoId).filter(Boolean) as string[];
+                    const dbProducts = await tx.producto.findMany({
+                        where: { id: { in: productIds }, empresaId },
+                        select: { id: true, unidadMedida: true }
+                    });
+                    const productsMap = new Map(dbProducts.map(p => [p.id, p]));
+
                     for (const item of alb.items) {
                         if (item.productoId && item.cantidad.toNumber() > 0) {
-                            const prod = await tx.producto.findFirst({ where: { id: item.productoId }, select: { unidadMedida: true } });
+                            const prod = productsMap.get(item.productoId);
                             if (prod?.unidadMedida === 'SRV') continue;
 
                             await tx.producto.updateMany({
