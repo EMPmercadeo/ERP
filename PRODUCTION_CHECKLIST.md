@@ -28,3 +28,27 @@ Este documento contiene la lista obligatoria de verificaciones y pasos necesario
 ## 4. Despliegue en Vercel
 - [ ] **Upstash Redis Activado:** Verificar que el rate limit de peticiones API no se ejecuta en la memoria local de la función serverless (Upstash configurado).
 - [ ] **Storage Remoto:** Asegurar que `STORAGE_PROVIDER` está en `vercel` o `s3` y no en `local` (el disco efímero de las Serverless Functions borrará las imágenes).
+
+---
+
+## 5. Pasos exactos para pasar de "degradado" a "estricto" (antes de vender al público)
+Estado actual verificado en código (no solo en reportes): Redis y el storage remoto están
+implementados con degradación controlada (warning + fallback), no con bloqueo. Esto evita que
+la API se caiga hoy, pero significa que el rate limiting en producción **no es distribuido
+todavía** y que si alguien borra `BLOB_READ_WRITE_TOKEN` por error, las subidas fallarán en
+runtime en vez de al arrancar. Sigue este orden exacto en el panel de Vercel:
+
+1. Crear una base de datos Upstash Redis (REST) y copiar `UPSTASH_REDIS_REST_URL` +
+   `UPSTASH_REDIS_REST_TOKEN` en Vercel → Production.
+2. Confirmar `RATE_LIMIT_ENABLED=true` en Production.
+3. Hacer un redeploy y verificar en los logs de Vercel que ya NO aparece el mensaje
+   `[RATE-LIMIT] Redis no configurado en producción`.
+4. Solo entonces, activar `REQUIRE_DISTRIBUTED_RATE_LIMIT=true` en Production y volver a
+   desplegar. A partir de aquí, si Redis falla, la API bloqueará peticiones (429) en vez de
+   degradar silenciosamente — así que no lo actives sin haber confirmado el paso 3.
+5. Repetir el mismo patrón para storage: configurar `BLOB_READ_WRITE_TOKEN` (o las
+   credenciales de AWS S3 + `STORAGE_PROVIDER=s3`), confirmar con una subida de prueba real
+   de una imagen de producto, y solo entonces activar `REQUIRE_REMOTE_STORAGE=true`.
+6. No declares el sistema `APTO_PARA_PRODUCCIÓN` hasta completar los pasos 1-5 con
+   credenciales reales verificadas — mientras tanto el estado correcto sigue siendo
+   `DEPLOYED — PENDIENTE_CONFIGURACIÓN_EXTERNA`.

@@ -5,7 +5,7 @@
 ---
 
 ## 1. Resumen Ejecutivo
-Se ha llevado a cabo una auditoría técnica profunda y un proceso de hardening de seguridad en la aplicación ERP multiempresa de Panamá. Las vulnerabilidades críticas de aislamiento (IDOR), la inyección de bypasses en entornos productivos, y la fuga de datos de depuración han sido remediadas de forma estructural. El sistema está ahora listo para producción, condicionado únicamente a la introducción de las variables de entorno y credenciales reales del cliente en los proveedores externos correspondientes.
+Se ha llevado a cabo una auditoría técnica profunda y un proceso de hardening de seguridad en la aplicación ERP multiempresa de Panamá. Las vulnerabilidades críticas de aislamiento (IDOR), la inyección de bypasses en entornos productivos, y la fuga de datos de depuración han sido remediadas de forma estructural. **El sistema NO está "listo para producción" sin condiciones**: sigue pendiente configurar y probar con credenciales reales Firebase (cliente), Upstash Redis y almacenamiento remoto (ver sección 18), y activar `REQUIRE_DISTRIBUTED_RATE_LIMIT`/`REQUIRE_REMOTE_STORAGE` una vez configurados. El veredicto correcto mientras tanto es `DEPLOYED — PENDIENTE_CONFIGURACIÓN_EXTERNA` (sección 20), no "READY".
 
 ---
 
@@ -77,9 +77,9 @@ Las 25 migraciones estructuradas en la carpeta `prisma/migrations` han sido vali
 ---
 
 ## 10. Resultados Reales
-* **Tests de Seguridad:** `9/9 suites PASSED` sin fallos.
-* **Compilación de Producción:** Exitosa.
-* **Estado de Despliegue en Vercel:** **READY** (URL: [https://erp-drab-psi.vercel.app](https://erp-drab-psi.vercel.app)).
+* **Tests de Seguridad:** `9/9 suites PASSED` sin fallos (correr localmente para reverificar tras estos cambios: `npm run test:security`).
+* **Compilación de Producción:** Exitosa al momento de este reporte (recompilar y revalidar tras cada cambio de código, incluyendo el hardening descrito en este documento).
+* **Estado de Despliegue en Vercel:** `DEPLOYED — PENDIENTE_CONFIGURACIÓN_EXTERNA` (URL: [https://erp-drab-psi.vercel.app](https://erp-drab-psi.vercel.app)). No se usa "READY" como veredicto porque Firebase cliente, Redis y storage remoto seguían sin configurar/probar con credenciales reales al momento de este reporte.
 
 ---
 

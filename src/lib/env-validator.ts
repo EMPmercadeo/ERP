@@ -3,26 +3,27 @@ import { z } from 'zod';
 const isProduction = process.env.NODE_ENV === 'production';
 const isTest = process.env.NODE_ENV === 'test';
 
-// Esquema base de variables requeridas
+// Esquema base: solo las variables SIN las cuales la app no puede arrancar en absoluto.
+// DATABASE_URL es la única variable realmente crítica al inicio porque Prisma la necesita
+// para crear el pool de conexiones. Las demás se validan de forma lazy (al momento de uso).
 const baseEnvSchema = z.object({
     DATABASE_URL: z.string().min(1, 'DATABASE_URL es obligatoria'),
-    ENCRYPTION_KEY: z.string().min(32, 'ENCRYPTION_KEY debe tener al menos 32 caracteres (256 bits) para cifrado AES-256'),
-    SUPERADMIN_CLAIM_CODE: z.string().min(8, 'SUPERADMIN_CLAIM_CODE debe tener al menos 8 caracteres de seguridad'),
 });
 
 let validated = false;
 
 /**
  * Valida de forma centralizada la presencia y el formato de las variables de entorno.
- * Lanza un error temprano en producción con los nombres de las variables faltantes
- * sin revelar ningún valor. En desarrollo y tiempo de build, registra advertencias sin interrumpir.
+ * Lanza un error temprano en producción SOLO si falta DATABASE_URL (sin BD no hay app).
+ * Las demás variables se validan con degradación controlada: warnings + funcionalidad
+ * deshabilitada en vez de crash total.
  */
 export function validateEnv() {
     if (validated || isTest) return;
 
     const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' || process.env.IS_BUILD === 'true';
 
-    // 1. Validar esquema base
+    // 1. Validar esquema base (solo DATABASE_URL)
     const baseResult = baseEnvSchema.safeParse(process.env);
     if (!baseResult.success) {
         const missing = baseResult.error.issues.map((issue: any) => issue.path.join('.')).join(', ');
@@ -52,16 +53,47 @@ export function validateEnv() {
 
         // === DEGRADABLES (causan warning si faltan) ===
 
-        // Redis (Upstash) — sin esto, el rate limiting usa fallback en memoria local
-        if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-            degradedFeatures.push('Rate Limiting distribuido (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN) — usando fallback en memoria local');
+        // Clave de cifrado — sin esto, las operaciones de cifrado fallarán con error descriptivo
+        if (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.length < 32) {
+            degradedFeatures.push('Cifrado AES-256 (ENCRYPTION_KEY, mín. 32 caracteres) — las operaciones de cifrado darán error descriptivo');
         }
 
-        // Storage Remoto — sin esto, la subida de archivos fallará con error descriptivo
+        // Código de superadmin — sin esto, nadie puede reclamar el rol de superadmin
+        if (!process.env.SUPERADMIN_CLAIM_CODE || process.env.SUPERADMIN_CLAIM_CODE.length < 8) {
+            degradedFeatures.push('Claim Superadmin (SUPERADMIN_CLAIM_CODE, mín. 8 caracteres) — el endpoint /api/claim-superadmin rechazará peticiones');
+        }
+
+        // Redis (Upstash) — sin esto, el rate limiting usa fallback en memoria local.
+        // Por defecto esto es una DEGRADACIÓN (warning), no un bloqueo, para no tumbar
+        // la API mientras Upstash no esté configurado. Si el dueño del proyecto marca
+        // REQUIRE_DISTRIBUTED_RATE_LIMIT=true (recomendado en cuanto configure Upstash),
+        // pasa a ser un requisito CRÍTICO que bloquea el arranque si falta.
+        const requireDistributedRateLimit = process.env.REQUIRE_DISTRIBUTED_RATE_LIMIT === 'true';
+        // Acepta también los nombres KV_REST_API_* que genera la integración de
+        // Vercel Marketplace al conectar Upstash desde Storage (mismo endpoint REST).
+        const hasRedis = !!(
+            (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL) &&
+            (process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN)
+        );
+        if (!hasRedis) {
+            if (requireDistributedRateLimit) {
+                criticalMissing.push('UPSTASH_REDIS_REST_URL/UPSTASH_REDIS_REST_TOKEN (exigido por REQUIRE_DISTRIBUTED_RATE_LIMIT=true)');
+            } else {
+                degradedFeatures.push('Rate Limiting distribuido (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN) — usando fallback en memoria local. Configure Upstash y luego REQUIRE_DISTRIBUTED_RATE_LIMIT=true para exigirlo.');
+            }
+        }
+
+        // Storage Remoto — sin esto, la subida de archivos fallará con error descriptivo.
+        // Mismo patrón: degradado por defecto, crítico si REQUIRE_REMOTE_STORAGE=true.
+        const requireRemoteStorage = process.env.REQUIRE_REMOTE_STORAGE === 'true';
         const provider = process.env.STORAGE_PROVIDER || 'vercel';
         if (provider === 'local') {
-            // En producción, 'local' no es un error fatal sino una advertencia fuerte
-            degradedFeatures.push("STORAGE_PROVIDER='local' en producción — los archivos se perderán entre deploys. Configure 'vercel' o 's3'");
+            const msg = "STORAGE_PROVIDER='local' en producción — los archivos se perderán entre deploys. Configure 'vercel' o 's3'";
+            if (requireRemoteStorage) {
+                criticalMissing.push(`STORAGE_PROVIDER='local' (exigido remoto por REQUIRE_REMOTE_STORAGE=true)`);
+            } else {
+                degradedFeatures.push(msg);
+            }
         }
         const hasAws = !!(
             process.env.AWS_ACCESS_KEY_ID &&
@@ -70,7 +102,11 @@ export function validateEnv() {
         );
         const hasVercelBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
         if (provider !== 'local' && !hasAws && !hasVercelBlob) {
-            degradedFeatures.push('Storage remoto (BLOB_READ_WRITE_TOKEN o AWS S3 credentials) — la subida de archivos dará error descriptivo');
+            if (requireRemoteStorage) {
+                criticalMissing.push('BLOB_READ_WRITE_TOKEN o AWS S3 credentials (exigido por REQUIRE_REMOTE_STORAGE=true)');
+            } else {
+                degradedFeatures.push('Storage remoto (BLOB_READ_WRITE_TOKEN o AWS S3 credentials) — la subida de archivos dará error descriptivo');
+            }
         }
 
         // SMTP — sin esto, los correos no se envían pero la app sigue funcionando

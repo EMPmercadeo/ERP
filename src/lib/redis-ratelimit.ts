@@ -24,12 +24,41 @@ export interface RateLimitResult {
     reset: number;
 }
 
-// Fallback en memoria para desarrollo/test
+// Fallback en memoria para desarrollo/test/degradación controlada en producción.
 const localLimitMap = new Map<string, { count: number; lastReset: number }>();
+
+// Evita fuga de memoria: en una instancia serverless "warm" de larga vida, el mapa
+// de fallback crecería sin límite (una entrada por IP+acción+empresa nunca vista).
+// Barremos entradas ya expiradas cada cierto número de llamadas en vez de en cada
+// petición (para no penalizar latencia) y limitamos el tamaño máximo como tope duro.
+const MAX_MEMORY_MAP_ENTRIES = 20000;
+let callsSinceSweep = 0;
+
+function sweepExpiredEntries(nowMs: number) {
+    for (const [k, v] of localLimitMap) {
+        // Una entrada sin actividad por más de 10 minutos ya no es relevante para
+        // ninguna ventana de rate limit configurada (la más larga es 60s).
+        if (nowMs - v.lastReset > 10 * 60 * 1000) {
+            localLimitMap.delete(k);
+        }
+    }
+    // Salvaguarda dura: si aun así el mapa creciera demasiado (ataque de IPs
+    // distintas), lo vaciamos por completo antes de que consuma memoria del proceso.
+    if (localLimitMap.size > MAX_MEMORY_MAP_ENTRIES) {
+        localLimitMap.clear();
+    }
+}
 
 function checkInMemoryLimit(key: string, config: RateLimitConfig): RateLimitResult {
     const now = Date.now();
     const windowMs = config.windowSeconds * 1000;
+
+    callsSinceSweep++;
+    if (callsSinceSweep >= 500) {
+        callsSinceSweep = 0;
+        sweepExpiredEntries(now);
+    }
+
     const data = localLimitMap.get(key) || { count: 0, lastReset: now };
 
     if (now - data.lastReset > windowMs) {
@@ -53,7 +82,16 @@ function checkInMemoryLimit(key: string, config: RateLimitConfig): RateLimitResu
 
 /**
  * Verifica el límite de tasa usando Upstash Redis (REST pipeline) en producción.
- * Si no está configurado en producción, arroja un error (Fail-Closed).
+ *
+ * Comportamiento cuando Redis NO está configurado:
+ * - Por defecto (`REQUIRE_DISTRIBUTED_RATE_LIMIT` ausente o `false`): se degrada a un
+ *   contador en memoria local (no distribuido entre instancias serverless). No es el
+ *   estado ideal, pero evita que toda la API quede inutilizable mientras el dueño del
+ *   proyecto termina de configurar Upstash. Cada petición degradada se registra con
+ *   `console.warn` para que sea visible en los logs de Vercel.
+ * - Si `REQUIRE_DISTRIBUTED_RATE_LIMIT=true` (activarlo una vez Upstash esté
+ *   configurado y probado): falta de Redis en producción provoca Fail-Closed real
+ *   (bloquea la petición con 429) en vez de degradar silenciosamente.
  */
 export async function checkRateLimit(
     ip: string,
@@ -61,9 +99,13 @@ export async function checkRateLimit(
     empresaId?: string
 ): Promise<RateLimitResult> {
     const isProd = process.env.NODE_ENV === 'production';
-    const url = process.env.UPSTASH_REDIS_REST_URL;
-    const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+    // Acepta tanto los nombres "clásicos" de Upstash (UPSTASH_REDIS_REST_*) como los que
+    // genera la integración "Vercel Marketplace Database" (KV_REST_API_*) al conectar
+    // Upstash desde la pestaña Storage de Vercel — ambos apuntan al mismo endpoint REST.
+    const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
     const enabled = process.env.RATE_LIMIT_ENABLED !== 'false';
+    const requireDistributed = process.env.REQUIRE_DISTRIBUTED_RATE_LIMIT === 'true';
 
     if (!enabled) {
         return { success: true, limit: 9999, remaining: 9999, reset: Date.now() + 60000 };
@@ -73,11 +115,18 @@ export async function checkRateLimit(
     const key = `ratelimit:${action}:${ip}${empresaId ? `:${empresaId}` : ''}`;
 
     if (!url || !token) {
+        if (isProd && requireDistributed) {
+            // El dueño del proyecto marcó explícitamente que Redis distribuido es
+            // obligatorio en producción: sin credenciales, fallamos cerrado.
+            console.error('[RATE-LIMIT] REQUIRE_DISTRIBUTED_RATE_LIMIT=true pero Upstash Redis no está configurado — bloqueando petición (Fail-Closed).');
+            return { success: false, limit: config.limit, remaining: 0, reset: Date.now() + 60000 };
+        }
         // Fallback a limitación en memoria (no distribuida) si Redis no está configurado.
         // En producción esto es subóptimo (cada instancia serverless tiene su propio contador),
-        // pero es preferible a denegar todas las peticiones o crashear.
+        // pero es preferible a denegar todas las peticiones o crashear mientras no exista
+        // una decisión explícita del dueño del proyecto (ver REQUIRE_DISTRIBUTED_RATE_LIMIT).
         if (isProd) {
-            console.warn('[RATE-LIMIT] Redis no configurado en producción — usando fallback en memoria local (no distribuido).');
+            console.warn('[RATE-LIMIT] Redis no configurado en producción — usando fallback en memoria local (no distribuido). Configure UPSTASH_REDIS_REST_URL/TOKEN y REQUIRE_DISTRIBUTED_RATE_LIMIT=true para exigir Redis.');
         }
         return checkInMemoryLimit(key, config);
     }
