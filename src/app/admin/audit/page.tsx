@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export default function AdminAuditPage() {
     return (
         <ContentContainer className="py-8">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Auditoría</h1>
                     <p className="text-muted-foreground">Registro de actividades y seguridad</p>

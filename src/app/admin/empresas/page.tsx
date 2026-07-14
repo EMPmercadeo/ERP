@@ -23,7 +23,7 @@ export default async function CompaniesPage(props: PageProps) {
 
     return (
         <ContentContainer className="py-8">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Empresas</h1>
                     <p className="text-muted-foreground">Gestión de cuentas Multi-Tenant</p>

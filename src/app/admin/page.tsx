@@ -22,20 +22,20 @@ export default async function AdminDashboardPage() {
 
     return (
         <ContentContainer className="py-8 space-y-8">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Dashboard Super Admin</h1>
                     <p className="text-muted-foreground">Monitoreo global y gestión multi-tenant de ERP Panamá</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <Link href="/admin/cuotas-inactivas">
-                        <Button variant="outline">Saldo Inactivo</Button>
+                        <Button variant="outline" className="w-full sm:w-auto">Saldo Inactivo</Button>
                     </Link>
                     <Link href="/admin/empresas">
-                        <Button variant="outline">Ver Todas las Empresas</Button>
+                        <Button variant="outline" className="w-full sm:w-auto">Ver Todas las Empresas</Button>
                     </Link>
                     <Link href="/admin/users">
-                        <Button variant="outline">Ver Todos los Usuarios</Button>
+                        <Button variant="outline" className="w-full sm:w-auto">Ver Todos los Usuarios</Button>
                     </Link>
                 </div>
             </div>
