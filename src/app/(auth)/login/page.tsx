@@ -8,6 +8,9 @@ import { Alert } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/firebase/auth';
+import { auth } from '@/lib/firebase';
+import { signInWithCustomToken } from 'firebase/auth';
+import { startAuthentication, browserSupportsWebAuthn, WebAuthnError } from '@simplewebauthn/browser';
 
 type ModalType = 'soporte' | 'bio_info' | null;
 
@@ -77,12 +80,65 @@ export default function LoginPage() {
         }
     };
 
-    const handleBiometricLogin = () => {
-        // El login biométrico requiere verificación de challenge WebAuthn contra el
-        // servidor (no implementada todavía). Hasta que exista ese endpoint, no debe
-        // autenticar a nadie basado solo en un credential truthy del navegador.
+    const [isBiometricLoading, setIsBiometricLoading] = useState(false);
+
+    const handleBiometricLogin = async () => {
         setError('');
-        setActiveModal('bio_info');
+
+        if (!browserSupportsWebAuthn()) {
+            setActiveModal('bio_info');
+            return;
+        }
+
+        if (!email) {
+            setError('Escribe tu correo arriba primero, luego usa la huella/Face ID.');
+            return;
+        }
+
+        setIsBiometricLoading(true);
+        try {
+            // 1. Pedir opciones de autenticación al servidor (incluye el reto/challenge)
+            const optionsRes = await fetch('/api/auth/webauthn/login/options', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            const optionsJSON = await optionsRes.json();
+            if (!optionsRes.ok) {
+                throw new Error(optionsJSON?.error || 'No se pudo iniciar el login biométrico.');
+            }
+
+            // 2. Pedirle al dispositivo (huella/Face ID/llave de seguridad) que firme el reto
+            const assertion = await startAuthentication({ optionsJSON });
+
+            // 3. El servidor verifica la firma criptográfica y, si es válida, entrega un
+            //    Custom Token de Firebase para ese mismo usuario.
+            const verifyRes = await fetch('/api/auth/webauthn/login/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(assertion)
+            });
+            const verifyJSON = await verifyRes.json();
+            if (!verifyRes.ok || !verifyJSON.verified || !verifyJSON.customToken) {
+                throw new Error(verifyJSON?.error || 'No se pudo verificar tu identidad.');
+            }
+
+            // 4. Intercambiar el Custom Token por una sesión real de Firebase. El listener
+            //    onAuthStateChanged (en AuthProvider) toma esto desde aquí: crea la cookie
+            //    de sesión igual que el login por contraseña/Google y redirige al dashboard.
+            await signInWithCustomToken(auth, verifyJSON.customToken);
+        } catch (err) {
+            if (err instanceof WebAuthnError && err.code === 'ERROR_CEREMONY_ABORTED') {
+                // El usuario canceló el prompt del sistema operativo — no es un error real.
+            } else if (err instanceof Error && err.name === 'NotAllowedError') {
+                setError('No se completó la verificación biométrica en el dispositivo.');
+            } else {
+                console.error('Error en login biométrico:', err);
+                setError(err instanceof Error ? err.message : 'No se pudo iniciar sesión con biometría.');
+            }
+        } finally {
+            setIsBiometricLoading(false);
+        }
     };
 
     return (

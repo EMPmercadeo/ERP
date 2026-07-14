@@ -76,7 +76,16 @@ export async function connectPOS(providerSlug: string, credentials: {
         });
 
         revalidatePath('/settings');
-        return { success: true, message: `Conexión establecida exitosamente con ${providerName}.` };
+        // Antes decía "Conexión establecida exitosamente" sin haber verificado nada real
+        // contra el proveedor — cualquier credencial, válida o inventada, mostraba éxito.
+        // Todavía no existe un adaptador real por proveedor que valide las credenciales
+        // aquí (ver syncPOSProducts/Sales/Inventory más abajo), así que el mensaje ahora
+        // es honesto sobre lo que de verdad pasó: se guardaron las credenciales, pero la
+        // sincronización real con ${providerName} está pendiente de implementación.
+        return {
+            success: true,
+            message: `Credenciales de ${providerName} guardadas. La sincronización real con este proveedor todavía no está implementada — por ahora no se van a traer datos automáticamente.`
+        };
     } catch (error) {
         console.error('Connect POS error:', error);
         return { success: false, message: 'Error al conectar con el POS.' };
@@ -110,6 +119,43 @@ export async function disconnectPOS(providerSlug: string) {
     }
 }
 
+// Las tres funciones de sincronización de abajo (productos, ventas, inventario) antes
+// fabricaban un número aleatorio de "registros procesados" con Math.random() y siempre
+// guardaban status: 'success' — sin llamar nunca a la API real de Loyverse, Square,
+// WooCommerce o Shopify. Un dueño de negocio podía ver "37 productos actualizados" en el
+// log sin que un solo dato real se hubiera movido. Ahora responden honestamente que la
+// sincronización real todavía no está implementada para ningún proveedor, y lo dejan
+// registrado como tal en PosSyncLog (status: 'not_implemented') en vez de simular éxito.
+//
+// Para implementar la sincronización real de un proveedor específico (p. ej. Shopify o
+// WooCommerce, que tienen APIs REST públicas y bien documentadas) hace falta además:
+// 1. Agregar el campo de dominio/URL de tienda al formulario de conexión (hoy solo se
+//    piden apiKey/apiSecret/accessToken, insuficiente para Shopify/WooCommerce/Square).
+// 2. Implementar el cliente HTTP real por proveedor y el mapeo de su esquema de
+//    productos/ventas/inventario al modelo interno (Producto, Venta, MovimientoInventario).
+// 3. Probarlo contra una cuenta de prueba real de ese proveedor.
+
+async function logSyncNotImplemented(
+    empresaId: string,
+    integrationId: string,
+    providerName: string,
+    syncType: 'products' | 'sales' | 'inventory',
+    accionLabel: string
+) {
+    const message = `La sincronización real de ${accionLabel} con ${providerName} todavía no está implementada. No se procesó ningún dato.`;
+    const log = await prisma.posSyncLog.create({
+        data: {
+            empresaId,
+            posIntegrationId: integrationId,
+            syncType,
+            status: 'not_implemented',
+            message,
+            recordsProcessed: 0
+        }
+    });
+    return { success: false, message, log };
+}
+
 export async function syncPOSProducts(providerSlug: string) {
     try {
         const { empresaId } = await getTenantContext();
@@ -122,27 +168,7 @@ export async function syncPOSProducts(providerSlug: string) {
             return { success: false, message: 'POS no está activo o configurado.' };
         }
 
-        // Simulate syncing products
-        const processed = Math.floor(Math.random() * 25) + 5;
-        
-        const log = await prisma.posSyncLog.create({
-            data: {
-                empresaId,
-                posIntegrationId: integration.id,
-                syncType: 'products',
-                status: 'success',
-                message: `Sincronización de catálogo finalizada con éxito. ${processed} productos actualizados.`,
-                recordsProcessed: processed
-            }
-        });
-
-        await prisma.posIntegration.update({
-            where: { id: integration.id },
-            data: { lastSyncAt: new Date() }
-        });
-
-        revalidatePath('/settings');
-        return { success: true, message: log.message, log };
+        return await logSyncNotImplemented(empresaId, integration.id, integration.providerName, 'products', 'catálogo de productos');
     } catch (error) {
         console.error('Sync POS products error:', error);
         return { success: false, message: 'Error al sincronizar productos.' };
@@ -161,27 +187,7 @@ export async function syncPOSSales(providerSlug: string) {
             return { success: false, message: 'POS no está activo o configurado.' };
         }
 
-        // Simulate syncing sales and creating invoices
-        const processed = Math.floor(Math.random() * 8) + 1;
-        
-        const log = await prisma.posSyncLog.create({
-            data: {
-                empresaId,
-                posIntegrationId: integration.id,
-                syncType: 'sales',
-                status: 'success',
-                message: `Importación de ventas POS finalizada. ${processed} transacciones importadas.`,
-                recordsProcessed: processed
-            }
-        });
-
-        await prisma.posIntegration.update({
-            where: { id: integration.id },
-            data: { lastSyncAt: new Date() }
-        });
-
-        revalidatePath('/settings');
-        return { success: true, message: log.message, log };
+        return await logSyncNotImplemented(empresaId, integration.id, integration.providerName, 'sales', 'ventas');
     } catch (error) {
         console.error('Sync POS sales error:', error);
         return { success: false, message: 'Error al sincronizar ventas.' };
@@ -200,27 +206,7 @@ export async function syncPOSInventory(providerSlug: string) {
             return { success: false, message: 'POS no está activo o configurado.' };
         }
 
-        // Simulate syncing inventory
-        const processed = Math.floor(Math.random() * 45) + 10;
-        
-        const log = await prisma.posSyncLog.create({
-            data: {
-                empresaId,
-                posIntegrationId: integration.id,
-                syncType: 'inventory',
-                status: 'success',
-                message: `Conciliación de inventario POS finalizada. ${processed} stocks actualizados.`,
-                recordsProcessed: processed
-            }
-        });
-
-        await prisma.posIntegration.update({
-            where: { id: integration.id },
-            data: { lastSyncAt: new Date() }
-        });
-
-        revalidatePath('/settings');
-        return { success: true, message: log.message, log };
+        return await logSyncNotImplemented(empresaId, integration.id, integration.providerName, 'inventory', 'inventario');
     } catch (error) {
         console.error('Sync POS inventory error:', error);
         return { success: false, message: 'Error al sincronizar inventario.' };
