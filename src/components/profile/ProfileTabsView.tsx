@@ -65,8 +65,8 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
     // --- Passkeys (login biométrico real vía WebAuthn) ---
     type PasskeyCredential = {
         id: string;
-        nombre: string;
-        deviceType: string;
+        nombre: string | null;
+        deviceType: string | null;
         createdAt: Date;
         lastUsedAt: Date | null;
     };
@@ -474,7 +474,7 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                                                     <Smartphone className="h-4 w-4" />
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-sm font-medium truncate">{pk.nombre}</p>
+                                                    <p className="text-sm font-medium truncate">{pk.nombre || 'Dispositivo sin nombre'}</p>
                                                     <p className="text-xs text-muted-foreground">
                                                         Registrado el {new Date(pk.createdAt).toLocaleDateString('es-PA')}
                                                         {pk.lastUsedAt ? ` · Último uso: ${new Date(pk.lastUsedAt).toLocaleDateString('es-PA')}` : ''}
