@@ -155,3 +155,40 @@ export async function getProfileOverview() {
     }
 }
 
+// --- Passkeys / login biométrico (WebAuthn) ---
+// El registro y verificación criptográfica viven en las rutas API
+// (/api/auth/webauthn/register/*) porque necesitan leer/escribir la cookie httpOnly
+// del challenge. Aquí solo exponemos lo que la UI de perfil necesita: listar y borrar.
+
+export async function listWebAuthnCredentials() {
+    const { userId } = await getTenantContext();
+    const credenciales = await prisma.webAuthnCredential.findMany({
+        where: { usuarioId: userId },
+        orderBy: { createdAt: 'desc' },
+        select: {
+            id: true,
+            nombre: true,
+            deviceType: true,
+            createdAt: true,
+            lastUsedAt: true
+        }
+    });
+    return credenciales;
+}
+
+export async function deleteWebAuthnCredential(credentialId: string) {
+    try {
+        const { userId } = await getTenantContext();
+        const credencial = await prisma.webAuthnCredential.findUnique({ where: { id: credentialId } });
+        if (!credencial || credencial.usuarioId !== userId) {
+            return { success: false, message: 'No se encontró ese dispositivo.' };
+        }
+        await prisma.webAuthnCredential.delete({ where: { id: credentialId } });
+        revalidatePath('/profile');
+        return { success: true, message: 'Dispositivo eliminado. Ya no podrá usarse para iniciar sesión.' };
+    } catch (error) {
+        console.error('Error deleting WebAuthn credential:', error);
+        return { success: false, message: 'Error al eliminar el dispositivo.' };
+    }
+}
+

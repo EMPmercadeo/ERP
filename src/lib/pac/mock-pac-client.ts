@@ -1,5 +1,3 @@
-import crypto from 'crypto';
-
 // Mismo interruptor que src/lib/actions/billing-fe.ts. Antes este cliente SIEMPRE devolvía
 // un CUFE falso (sha256 de los datos + timestamp) sin importar el entorno, y las rutas de POS
 // (/api/pos/ventas y /api/pos/ventas/sync) lo trataban como una aceptación real de la DGI:
@@ -42,7 +40,19 @@ export interface PACEmisionResponse {
   fechaEmision: string;
 }
 
-export async function emitirFacturaPAC(payload: PACEmisionPayload): Promise<PACEmisionResponse> {
+// IMPORTANTE: esta función NUNCA debe fabricar un CUFE. Antes, cuando
+// PAC_INTEGRATION_ENABLED=true, generaba un CUFE falso (sha256 + timestamp) con el
+// formato real de la DGI y una URL real de dgi-fep.mef.gob.pa — es decir, en cuanto el
+// dueño del proyecto active el interruptor al contratar un PAC real, el POS habría
+// seguido timbrando facturas fiscales inventadas sin que nadie lo notara, mientras el
+// resto de la app (facturación normal, vía GenericoPACProvider) sí falla honestamente.
+// Ahora ambos caminos son consistentes: sin un proveedor PAC real implementado, esta
+// función SIEMPRE responde `success: false` con un mensaje claro de "no conectado".
+// Cuando se contrate un PAC real, implementa la llamada HTTP/SOAP real aquí (o mejor:
+// haz que este archivo delegue en `getPACProviderForEmpresa()` de
+// `src/lib/facturacion-electronica/factory.ts`, que es la misma fuente de verdad que ya
+// usa la facturación normal, para no mantener dos integraciones PAC por separado).
+export async function emitirFacturaPAC(_payload: PACEmisionPayload): Promise<PACEmisionResponse> {
   if (!PAC_INTEGRATION_ENABLED) {
     return {
       success: false,
@@ -51,30 +61,9 @@ export async function emitirFacturaPAC(payload: PACEmisionPayload): Promise<PACE
     };
   }
 
-  // Simular latencia de red al PAC
-  await new Promise((resolve) => setTimeout(resolve, 350));
-
-  try {
-    // Generación de CUFE real de 45 caracteres en formato hexadecimal tributario DGI
-    const baseHash = `${payload.empresaRuc}-${payload.tipoDocumento}-${payload.totales.total}-${Date.now()}`;
-    const hash = crypto.createHash('sha256').update(baseHash).digest('hex').toUpperCase().substring(0, 45);
-    const cufe = `FE01${hash.padEnd(41, '0').substring(0, 41)}`;
-
-    // URL de consulta de código QR del portal tributario DGI Panamá (dgi.mef.gob.pa)
-    const qrUrl = `https://dgi-fep.mef.gob.pa/Consultas/FacturasPorCUFE?cufe=${cufe}`;
-
-    return {
-      success: true,
-      cufe,
-      qrUrl,
-      numeroFiscal: `${payload.tipoDocumento === '01' ? 'FE' : 'BE'}-${Date.now().toString().slice(-8)}`,
-      fechaEmision: new Date().toISOString()
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Error en comunicación con PAC DGI',
-      fechaEmision: new Date().toISOString()
-    };
-  }
+  return {
+    success: false,
+    error: 'No hay un proveedor PAC real conectado todavía. Configura las credenciales del PAC en Configuración > Facturación Electrónica antes de timbrar ventas de POS.',
+    fechaEmision: new Date().toISOString()
+  };
 }

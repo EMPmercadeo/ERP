@@ -30,7 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { updateDgiSettings, updateCompanyPlan, updateIntegrationSettings, updateYappySettings } from '@/lib/actions/settings';
+import { updateDgiSettings, updateCompanyPlan, updateIntegrationSettings, updateYappySettings, testPACConnection } from '@/lib/actions/settings';
 import { purchaseDocumentBlock } from '@/lib/actions/billing';
 import { getPOSIntegrations, connectPOS, disconnectPOS, syncPOSProducts, syncPOSSales, syncPOSInventory } from '@/lib/actions/pos';
 import { UsersManagementTab } from '@/components/settings/UsersManagementTab';
@@ -418,9 +418,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
 
     const handleTestConnection = async () => {
         setEstadoConexion('probando');
-        // Simulate PAC/DGI API connection test
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
+
         // Validation logic
         if (!usuarioPac || !passwordPac) {
             setEstadoConexion('desconectado');
@@ -428,12 +426,21 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
             return;
         }
 
-        const isSuccess = Math.random() > 0.15; // 85% success rate for test simulation
-        setEstadoConexion(isSuccess ? 'conectado' : 'desconectado');
-        if (isSuccess) {
-            toast.success('Conexión con PAC y DGI establecida correctamente.');
-        } else {
-            toast.error('Error al conectar con el PAC. Verifique sus credenciales.');
+        // Antes esto era `Math.random() > 0.15` (85% de éxito simulado en el navegador,
+        // sin llamar a nada real). Ahora llama a testPACConnection(), que de verdad
+        // consulta el proveedor PAC configurado en el backend — mientras no haya un
+        // adaptador de PAC real implementado, reporta honestamente que no hay conexión.
+        try {
+            const res = await testPACConnection();
+            setEstadoConexion(res.success ? 'conectado' : 'desconectado');
+            if (res.success) {
+                toast.success(res.message);
+            } else {
+                toast.error(res.message);
+            }
+        } catch {
+            setEstadoConexion('desconectado');
+            toast.error('Error de conexión al probar el PAC.');
         }
     };
 

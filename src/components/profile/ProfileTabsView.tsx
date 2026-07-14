@@ -9,10 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { updatePersonalInfo, changePassword } from '@/lib/actions/profile';
+import { updatePersonalInfo, changePassword, listWebAuthnCredentials, deleteWebAuthnCredential } from '@/lib/actions/profile';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Lock, User as UserIcon, MailWarning, MailCheck, Building2, CreditCard, Shield, ArrowRight, FileText, CheckCircle2, History, Settings as SettingsIcon, HelpCircle, Users, FileClock } from 'lucide-react';
+import { Eye, EyeOff, Lock, User as UserIcon, MailWarning, MailCheck, Building2, CreditCard, Shield, ArrowRight, FileText, CheckCircle2, History, Settings as SettingsIcon, HelpCircle, Users, FileClock, Fingerprint, Trash2, Smartphone } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useCallback } from 'react';
+import { startRegistration, browserSupportsWebAuthn, WebAuthnError } from '@simplewebauthn/browser';
 
 export interface ProfileOverviewData {
     user: {
@@ -59,6 +61,87 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [isResendingVerification, setIsResendingVerification] = useState(false);
+
+    // --- Passkeys (login biométrico real vía WebAuthn) ---
+    type PasskeyCredential = {
+        id: string;
+        nombre: string | null;
+        deviceType: string | null;
+        createdAt: Date;
+        lastUsedAt: Date | null;
+    };
+    const [passkeys, setPasskeys] = useState<PasskeyCredential[]>([]);
+    const [isLoadingPasskeys, setIsLoadingPasskeys] = useState(true);
+    const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
+    const [webauthnSupported, setWebauthnSupported] = useState(true);
+
+    const loadPasskeys = useCallback(async () => {
+        try {
+            const data = await listWebAuthnCredentials();
+            setPasskeys(data);
+        } catch {
+            // Silencioso: si falla, simplemente se muestra la lista vacía.
+        } finally {
+            setIsLoadingPasskeys(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        setWebauthnSupported(browserSupportsWebAuthn());
+        loadPasskeys();
+    }, [loadPasskeys]);
+
+    const handleRegisterPasskey = async () => {
+        setIsRegisteringPasskey(true);
+        try {
+            const optionsRes = await fetch('/api/auth/webauthn/register/options', { method: 'POST' });
+            const optionsJSON = await optionsRes.json();
+            if (!optionsRes.ok) {
+                throw new Error(optionsJSON?.error || 'No se pudo iniciar el registro.');
+            }
+
+            const registrationResponse = await startRegistration({ optionsJSON });
+
+            const deviceName = typeof navigator !== 'undefined' && /iphone|ipad/i.test(navigator.userAgent)
+                ? 'iPhone/iPad'
+                : typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent)
+                    ? 'Android'
+                    : 'Este dispositivo';
+
+            const verifyRes = await fetch('/api/auth/webauthn/register/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...registrationResponse, nombre: deviceName })
+            });
+            const verifyJSON = await verifyRes.json();
+            if (!verifyRes.ok || !verifyJSON.verified) {
+                throw new Error(verifyJSON?.error || 'No se pudo verificar el dispositivo.');
+            }
+
+            toast.success('Dispositivo registrado. Ya puedes usar huella/Face ID para iniciar sesión.');
+            await loadPasskeys();
+        } catch (err) {
+            if (err instanceof WebAuthnError && err.code === 'ERROR_CEREMONY_ABORTED') {
+                // Cancelado por el usuario, no es un error real.
+            } else {
+                toast.error(err instanceof Error ? err.message : 'No se pudo registrar el dispositivo.');
+            }
+        } finally {
+            setIsRegisteringPasskey(false);
+        }
+    };
+
+    const handleDeletePasskey = async (id: string) => {
+        const previous = passkeys;
+        setPasskeys((prev) => prev.filter((p) => p.id !== id));
+        const result = await deleteWebAuthnCredential(id);
+        if (!result.success) {
+            toast.error(result.message);
+            setPasskeys(previous);
+        } else {
+            toast.success(result.message);
+        }
+    };
 
     const handleResendVerification = async () => {
         setIsResendingVerification(true);
@@ -359,6 +442,71 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                             </CardContent>
                         </Card>
                     </div>
+
+                    {/* Passkeys / Login Biométrico */}
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-center gap-2">
+                                <Fingerprint className="h-5 w-5 text-primary" />
+                                <CardTitle>Login Biométrico (Huella / Face ID)</CardTitle>
+                            </div>
+                            <CardDescription>
+                                Registra este dispositivo para iniciar sesión con huella, Face ID o Windows Hello, sin escribir tu contraseña.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {!webauthnSupported && (
+                                <p className="text-sm text-warning bg-warning-bg rounded-lg p-3 border border-warning/20">
+                                    Este navegador no soporta login biométrico (WebAuthn). Prueba desde Chrome, Safari o Edge actualizados.
+                                </p>
+                            )}
+
+                            {isLoadingPasskeys ? (
+                                <p className="text-sm text-muted-foreground">Cargando dispositivos...</p>
+                            ) : passkeys.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">Todavía no tienes ningún dispositivo registrado.</p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {passkeys.map((pk) => (
+                                        <div key={pk.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/40">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                                    <Smartphone className="h-4 w-4" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-medium truncate">{pk.nombre || 'Dispositivo sin nombre'}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Registrado el {new Date(pk.createdAt).toLocaleDateString('es-PA')}
+                                                        {pk.lastUsedAt ? ` · Último uso: ${new Date(pk.lastUsedAt).toLocaleDateString('es-PA')}` : ''}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-destructive hover:text-destructive shrink-0"
+                                                onClick={() => handleDeletePasskey(pk.id)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="flex justify-end pt-2">
+                                <Button
+                                    type="button"
+                                    onClick={handleRegisterPasskey}
+                                    disabled={isRegisteringPasskey || !webauthnSupported}
+                                >
+                                    <Fingerprint className="h-4 w-4 mr-2" />
+                                    {isRegisteringPasskey ? 'Registrando...' : 'Registrar este dispositivo'}
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
 
                 {/* TAB 2: MI EMPRESA */}

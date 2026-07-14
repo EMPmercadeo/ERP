@@ -183,8 +183,35 @@ model Usuario {
   transferenciasBodegaCreadas   TransferenciaBodega[]  @relation("TransferenciaBodegaCreador")
   transferenciasBodegaRecibidas TransferenciaBodega[]  @relation("TransferenciaBodegaReceptor")
   turnosCaja                  TurnoCaja[]
+  webauthnCredentials          WebAuthnCredential[]
 
   @@index([empresaId])
+}
+
+// Passkeys / login biométrico real (WebAuthn). Antes el botón de huella en el login solo
+// guardaba una bandera en localStorage sin validar nada en el servidor — un dispositivo
+// robado o un simple truco de DevTools bastaba para "iniciar sesión". Este modelo guarda
+// las credenciales WebAuthn reales (clave pública, no la huella/rostro en sí, que nunca
+// sale del dispositivo del usuario) para verificar cada inicio de sesión biométrico
+// contra criptografía real de clave pública/privada.
+model WebAuthnCredential {
+  id           String    @id @default(cuid())
+  usuarioId    String
+  // ID de la credencial en base64url, tal como lo genera el autenticador (huella/Face ID/llave de seguridad)
+  credentialId String    @unique
+  // Clave pública en bytes crudos — la clave privada NUNCA sale del dispositivo del usuario
+  publicKey    Bytes
+  // Contador anti-repetición: debe incrementar en cada uso; si no, puede indicar un clon
+  counter      BigInt    @default(0)
+  deviceType   String? // 'singleDevice' | 'multiDevice'
+  backedUp     Boolean   @default(false)
+  transports   String? // CSV: 'internal,hybrid,usb', etc.
+  nombre       String? // Etiqueta amigable para el usuario, ej. "iPhone de Juan"
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+  usuario      Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
 }
 
 model Cliente {

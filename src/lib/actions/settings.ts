@@ -5,6 +5,61 @@ import { revalidatePath } from 'next/cache';
 import { getTenantContext } from '@/lib/auth/context';
 import { encrypt } from '@/lib/utils/crypto';
 import { verifyPayPalSubscription } from '@/lib/services/paypalVerify';
+import { getPACProviderForEmpresa } from '@/lib/facturacion-electronica/factory';
+
+/**
+ * Prueba real de conexión con el PAC configurado para la empresa activa.
+ *
+ * Antes, el botón "Probar Conexión" en Configuración > Facturación Electrónica
+ * simulaba el resultado en el navegador con `Math.random() > 0.15` (85% de éxito falso),
+ * sin llamar nunca al backend ni a ningún PAC real — un usuario podía ver "Conexión
+ * establecida correctamente" con credenciales inventadas. Ahora esta función:
+ * 1. Verifica que la empresa tenga `ConfiguracionFacturacionElectronica` activa.
+ * 2. Obtiene el proveedor PAC real vía `getPACProviderForEmpresa()` (la misma fuente de
+ *    verdad que usa la emisión de facturas).
+ * 3. Intenta una operación real y liviana (`consultarTransaccion`) para confirmar que el
+ *    proveedor responde. Mientras no exista un adaptador de PAC real implementado
+ *    (`GenericoPACProvider`), esto siempre reporta honestamente que no hay conexión —
+ *    nunca un falso "conectado".
+ */
+export async function testPACConnection(): Promise<{ success: boolean; message: string }> {
+    try {
+        const { empresaId } = await getTenantContext();
+
+        const config = await prisma.configuracionFacturacionElectronica.findUnique({
+            where: { empresaId }
+        });
+
+        if (!config || !config.activo) {
+            return {
+                success: false,
+                message: 'Facturación electrónica no está activa para esta empresa. Guarda tus credenciales PAC y actívala primero.'
+            };
+        }
+
+        const pacProvider = await getPACProviderForEmpresa(empresaId);
+        if (!pacProvider) {
+            return { success: false, message: 'No se pudo obtener el proveedor PAC configurado.' };
+        }
+
+        try {
+            // Llamada de sondeo real: no crea ni modifica ninguna factura, solo confirma
+            // que el proveedor puede responder a una consulta.
+            await pacProvider.consultarTransaccion('conexion-test');
+            return { success: true, message: 'Conexión con el PAC establecida correctamente.' };
+        } catch (providerError) {
+            return {
+                success: false,
+                message: providerError instanceof Error
+                    ? providerError.message
+                    : 'El proveedor PAC no respondió. Verifique sus credenciales.'
+            };
+        }
+    } catch (error) {
+        console.error('Error en testPACConnection:', error);
+        return { success: false, message: 'Error interno al probar la conexión con el PAC.' };
+    }
+}
 
 export async function updateDgiSettings(empresaId: string, data: {
     razonSocial: string;
