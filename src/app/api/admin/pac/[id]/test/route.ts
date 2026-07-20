@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { requireSuperAdminApi } from '@/lib/auth/admin';
+import { GenericoPACProvider } from '@/lib/facturacion-electronica/providers/generico.provider';
 
+// Antes este endpoint fabricaba una latencia falsa (45-125ms) y declaraba "Conexión
+// establecida exitosamente" con solo comprobar que existieran credenciales guardadas y
+// pac.activo === true — nunca llamaba a ningún PAC real. Un super admin podía ver
+// "Certificados digitales vigentes" para un proveedor que nunca respondió nada. Ahora
+// intenta una operación real y liviana (consultarTransaccion) contra el proveedor
+// configurado; mientras no exista un adaptador de PAC real implementado
+// (GenericoPACProvider), esto siempre reporta honestamente que no hay conexión.
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireSuperAdminApi();
   if ('error' in auth) return auth.error;
@@ -17,26 +25,27 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const inicio = performance.now();
 
-    // Verificación real de conectividad o simulación exacta con latencia realista en desarrollo
     let ok = false;
     let mensaje = '';
     let statusHttp = 200;
 
-    try {
-      // Simulación en ambiente de pruebas o verificación de health check si existe URL real
-      await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 80) + 45)); // 45-125ms latencia simulada
-      if (pac.credenciales && pac.activo) {
+    if (!pac.activo || !pac.credenciales) {
+      mensaje = `El PAC '${pac.proveedor}' está inactivo o no tiene credenciales configuradas.`;
+      statusHttp = 503;
+    } else {
+      try {
+        // Sondeo real: no crea ni modifica ninguna factura, solo confirma que el
+        // proveedor puede responder. Con el adaptador Genérico actual esto siempre
+        // lanza "no implementado" — que es la verdad, no un simulacro.
+        const provider = new GenericoPACProvider(pac.credenciales);
+        await provider.consultarTransaccion('conexion-test');
         ok = true;
-        mensaje = `Conexión establecida exitosamente con el PAC '${pac.proveedor}' (${pac.ambiente}). Certificados digitales vigentes.`;
-      } else {
+        mensaje = `Conexión con el PAC '${pac.proveedor}' (${pac.ambiente}) establecida correctamente.`;
+      } catch (err) {
         ok = false;
-        mensaje = `Fallo en el PAC '${pac.proveedor}': Credenciales ausentes o servicio inactivo.`;
         statusHttp = 503;
+        mensaje = err instanceof Error ? err.message : `El PAC '${pac.proveedor}' no respondió.`;
       }
-    } catch (err) {
-      ok = false;
-      mensaje = err instanceof Error ? err.message : 'Error de conexión HTTP al servidor del PAC.';
-      statusHttp = 500;
     }
 
     const fin = performance.now();

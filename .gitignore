@@ -46,14 +46,8 @@ next-env.d.ts
 *.db
 *.db-journal
 
-.vercel
-.env*.local
-
 # local verification screenshots
 dashboard-after-*.png
-
-.vercel
-.env*
 
 # config local de asistentes IA (Claude Code / Cowork), no es parte del proyecto
 .claude/

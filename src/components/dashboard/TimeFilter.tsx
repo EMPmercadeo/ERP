@@ -94,7 +94,6 @@ export function TimeFilter({ className }: TimeFilterProps) {
         }
 
         const newUrl = `/dashboard?${params.toString()}`;
-        console.log('Applying filter:', newUrl);
         startTransition(() => {
             router.push(newUrl);
             router.refresh(); // Force server re-fetch
@@ -109,7 +108,6 @@ export function TimeFilter({ className }: TimeFilterProps) {
         params.delete('end');
 
         const newUrl = `/dashboard?${params.toString()}`;
-        console.log('Inline selecting filter:', newUrl);
         startTransition(() => {
             router.push(newUrl);
             router.refresh(); // Force server re-fetch

@@ -6,7 +6,9 @@ Evaluación consolidada de todo el codebase (`src/app`, `src/components`, `publi
 
 Método: 1 corrida de `detect.mjs --json src public` (determinístico) + 5 critiques completos con scoring Nielsen (Assessment A vía sub-agente aislado; Assessment B = filtrado del detector determinístico, sin sub-agente de browser) + 1 auditoría técnica de 5 dimensiones + 1 revisión liviana de 5 secciones secundarias.
 
-Fecha: 2026-07-12. No se aplicó ningún fix. No hay commit de código de producto asociado a este archivo.
+Fecha: 2026-07-12. No se aplicó ningún fix en el momento de esta redacción. No hay commit de código de producto asociado a este archivo.
+
+**Actualización 2026-07-13/14 — los 4 hallazgos P0 de abajo ya están corregidos en el código** (verificado leyendo los archivos actuales, no solo memoria): `window.alert()` fue reemplazado por los banners inline `avisoCarrito`/`avisoSync`/`avisoEscaneo` en `src/app/pos/page.tsx`; el escaneo de código de barras ahora agrega automáticamente al carrito (`useEffect` de match exacto + `handleCodigoBarrasDetectado`); `src/app/(dashboard)/invoices/[id]/page.tsx` ya usa `<StatusBadge>` de `status-badge.tsx` sin colores hardcodeados; y los errores del PAC se traducen con `humanizePacError()` (`src/lib/facturacion-electronica/pac-errors.ts`) tanto en `billing-fe.ts` como en `DgiActions.tsx`. El resto de los hallazgos (P1 en adelante) no se ha vuelto a verificar y puede seguir vigente.
 
 ---
 

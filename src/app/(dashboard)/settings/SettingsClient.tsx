@@ -211,7 +211,10 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
 
         const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
         if (!clientId) {
-            console.log("No PayPal Client ID configured, using simulation mode.");
+            // Sin Client ID de PayPal configurado no se puede renderizar el botón real de
+            // suscripción. El modal muestra un mensaje honesto en vez de un flujo simulado
+            // (ver verifyPayPalSubscription en src/lib/services/paypalVerify.ts: el servidor
+            // rechaza cualquier upgrade sin un ID de suscripción real de PayPal).
             return;
         }
 
@@ -598,38 +601,6 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
             setSelectedPlanForPay(planObj);
             setPaymentStep('details');
             setShowPaypalModal(true);
-        }
-    };
-
-    const executePayment = async () => {
-        if (!selectedPlanForPay) return;
-        setPaymentStep('simulating');
-        
-        try {
-            // Simulate connecting with PayPal and vaulting payment token
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            setIsPlanLoading(true);
-            const result = await updateCompanyPlan(company.id, selectedPlanForPay.id);
-            if (result.success) {
-                setCompany(prev => ({
-                    ...prev,
-                    planType: selectedPlanForPay.id,
-                    fiscalEnabled: selectedPlanForPay.id !== 'free',
-                    subscriptionStatus: 'active'
-                }));
-                setPaymentStep('success');
-                toast.success(`¡Suscripción al plan ${selectedPlanForPay.name} activada con éxito!`);
-                router.refresh();
-            } else {
-                toast.error(result.message);
-                setPaymentStep('details');
-            }
-        } catch {
-            toast.error('Error al procesar la suscripción con PayPal.');
-            setPaymentStep('details');
-        } finally {
-            setIsPlanLoading(false);
         }
     };
 
@@ -1973,18 +1944,10 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             )}
                                         </div>
                                     ) : (
-                                        <>
-                                            <div className="text-[10px] text-muted-foreground text-center">
-                                                Al presionar Pagar, se iniciará el proceso seguro de suscripción con PayPal Vault.
-                                            </div>
-                                            <button
-                                                onClick={executePayment}
-                                                className="w-full flex items-center justify-center gap-2 py-3 bg-paypal-yellow hover:bg-paypal-yellow-hover text-paypal-blue font-bold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-paypal-yellow"
-                                            >
-                                                <span className="italic font-extrabold text-lg">PayPal</span>
-                                                <span className="text-sm font-semibold tracking-wider">SUSCRIBIRSE (Simulado)</span>
-                                            </button>
-                                        </>
+                                        <div className="text-center text-xs text-muted-foreground bg-muted border rounded-lg p-4 space-y-1">
+                                            <p className="font-semibold text-foreground">El pago con PayPal no está disponible en este momento.</p>
+                                            <p>Contacta a soporte para activar tu plan manualmente.</p>
+                                        </div>
                                     )}
 
                                     <Button

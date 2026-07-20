@@ -20,7 +20,7 @@ Este documento lista y evalúa los riesgos de seguridad remanentes que requieren
 
 ## 3. Rate Limiting sin Upstash configurado (ACTIVO EN PRODUCCIÓN HOY)
 * **Riesgo:** `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` no están configurados en
-  producción (ver `REPORTE_VALIDACION_PRODUCCION.md`). El middleware recurre a un contador
+  producción (ver `docs/audits/REPORTE_VALIDACION_PRODUCCION.md`). El middleware recurre a un contador
   en memoria por instancia serverless — el límite real es más alto que el nominal y no hay
   protección de fuerza bruta verdaderamente distribuida en login, reseteo de contraseña, etc.
 * **Mitigación disponible pero NO activada:** se agregó la variable
