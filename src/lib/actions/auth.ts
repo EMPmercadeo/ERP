@@ -73,7 +73,10 @@ export async function setSessionToken(idToken: string) {
     if (!decoded.email) {
         throw new Error('El token no contiene un correo verificado.');
     }
-    const expiresIn = 60 * 60 * 24 * 7 * 1000; // 7 dias en ms
+    const expiresIn = 60 * 60 * 24 * 1000; // 24 horas en ms — la sesión se cierra sola pasado este tiempo,
+    // sin importar si el usuario estuvo activo (Firebase createSessionCookie no distingue
+    // "inactivo" de "en línea": es un vencimiento absoluto desde el login). El usuario
+    // simplemente vuelve a iniciar sesión (o con biometría, si ya registró un dispositivo).
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
     const cookieStore = await cookies();
     cookieStore.set('session_token', sessionCookie, {
