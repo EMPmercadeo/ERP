@@ -119,6 +119,27 @@ export function sugerirCompra(faltante: number, p: PresentacionProveedor): Suger
     };
 }
 
+/**
+ * El camino inverso de `sugerirCompra`: ya compraste N presentaciones, ¿cuánto entra al
+ * inventario y a qué costo por unidad?
+ *
+ * Es lo que cierra el círculo del stock. Comprar "2 × Paquete 100" tiene que sumar 200
+ * unidades, no 2 — si se registra la cantidad en paquetes, el inventario queda corto y
+ * todas las alertas de reabastecimiento pasan a mentir.
+ */
+export function convertirPresentacionAUnidades(
+    cantidadPresentaciones: number,
+    p: Pick<PresentacionProveedor, 'unidadesPorPresentacion' | 'precioPresentacion'>
+): { cantidadBase: number; costoPorUnidadBase: number } | null {
+    if (!Number.isFinite(cantidadPresentaciones) || cantidadPresentaciones <= 0) return null;
+    if (!Number.isFinite(p.unidadesPorPresentacion) || p.unidadesPorPresentacion <= 0) return null;
+
+    return {
+        cantidadBase: cantidadPresentaciones * p.unidadesPorPresentacion,
+        costoPorUnidadBase: p.precioPresentacion / p.unidadesPorPresentacion,
+    };
+}
+
 export interface ProveedorSugerido {
     proveedorInsumoId: string;
     proveedorId: string;

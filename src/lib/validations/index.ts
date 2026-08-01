@@ -89,6 +89,11 @@ export const PurchaseItemSchema = z.object({
     descuento: z.number().default(0),
     numeroLote: z.string().optional().nullable(),
     fechaVencimiento: z.string().optional().nullable(),
+    // Presentación del proveedor con la que se compró (ProveedorInsumo). `cantidad` y
+    // `costoUnitario` SIEMPRE viajan en la unidad base del producto — la conversión
+    // "2 paquetes de 100" -> 200 unidades se hace antes de enviar. Este id solo sirve
+    // para dejar registrado a qué precio se pagó esa presentación esta vez.
+    presentacionId: z.string().optional().nullable(),
 });
 
 export const PurchaseSchema = z.object({

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Plus, Trash2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { createPurchase } from '@/lib/actions/purchases';
+import { convertirPresentacionAUnidades } from '@/lib/services/reabastecimientoCore';
 import { ContentContainer } from '@/components/layout/Content';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +38,21 @@ interface ProductSimple {
     id: string;
     descripcion: string;
     costoUnitario: number;
+    unidadMedida?: string;
+}
+
+/**
+ * Presentación en la que un proveedor vende un producto ("Paquete 100 und", "Saco 5 kg").
+ * `unidadesPorPresentacion` es el puente entre cómo se compra y cómo se lleva el stock.
+ */
+interface PresentacionSimple {
+    id: string;
+    proveedorId: string;
+    productoId: string;
+    presentacion: string;
+    unidadesPorPresentacion: number;
+    precioPresentacion: number;
+    esPreferido: boolean;
 }
 
 interface BodegaSimple {
@@ -48,11 +64,28 @@ interface BodegaSimple {
 interface ItemRow {
     productoId: string;
     descripcion: string;
+    /** SIEMPRE en la unidad base del producto. Si se compró por presentación, ya viene convertida. */
     cantidad: number;
+    /** SIEMPRE por unidad base, nunca por presentación. */
     costoUnitario: number;
     descuento: number;
     codigoTasaItbms: string;
+    /** Presentación elegida. Vacío = se está capturando directo en unidades. */
+    presentacionId: string;
+    /** Cuántas presentaciones se compraron (2 paquetes). Solo se usa si hay presentacionId. */
+    cantidadPresentaciones: number;
 }
+
+const ITEM_VACIO: ItemRow = {
+    productoId: '',
+    descripcion: '',
+    cantidad: 1,
+    costoUnitario: 0,
+    descuento: 0,
+    codigoTasaItbms: '01',
+    presentacionId: '',
+    cantidadPresentaciones: 1,
+};
 
 function formatCurrency(value: number) {
     return new Intl.NumberFormat('es-PA', {
@@ -65,10 +98,12 @@ export function NewPurchaseForm({
     suppliers,
     products,
     bodegas = [],
+    presentaciones = [],
 }: {
     suppliers: SupplierSimple[];
     products: ProductSimple[];
     bodegas?: BodegaSimple[];
+    presentaciones?: PresentacionSimple[];
 }) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -81,20 +116,105 @@ export function NewPurchaseForm({
     const [observaciones, setObservaciones] = useState('');
     const [bodegaId, setBodegaId] = useState(bodegas[0]?.id || '');
 
-    const [items, setItems] = useState<ItemRow[]>([
-        { productoId: '', descripcion: '', cantidad: 1, costoUnitario: 0, descuento: 0, codigoTasaItbms: '01' }
-    ]);
+    const [items, setItems] = useState<ItemRow[]>([{ ...ITEM_VACIO }]);
+
+    /** Presentaciones que este proveedor vende de este producto. */
+    const presentacionesDe = (productoId: string) =>
+        presentaciones.filter((p) => p.productoId === productoId && p.proveedorId === proveedorId);
+
+    /**
+     * Aplica una presentación a una fila: la cantidad pasa a contarse en presentaciones y
+     * el sistema traduce a unidades base. Comprar "2 × Paquete 100" guarda 200 unidades con
+     * el costo por unidad correcto, que es justo lo que el inventario necesita para cuadrar.
+     */
+    const aplicarPresentacion = (fila: ItemRow, presentacionId: string, cantidadPresentaciones: number): ItemRow => {
+        const pres = presentaciones.find((p) => p.id === presentacionId);
+        const convertido = pres ? convertirPresentacionAUnidades(cantidadPresentaciones, pres) : null;
+
+        if (!pres) return { ...fila, presentacionId: '', cantidadPresentaciones };
+        // Cantidad inválida (0 o vacía mientras se escribe): se conserva la presentación
+        // elegida y solo se deja de convertir, para no borrarle la selección al usuario.
+        if (!convertido) return { ...fila, presentacionId, cantidadPresentaciones };
+
+        return {
+            ...fila,
+            presentacionId,
+            cantidadPresentaciones,
+            cantidad: convertido.cantidadBase,
+            costoUnitario: convertido.costoPorUnidadBase,
+        };
+    };
 
     const handleProductSelect = (index: number, prodId: string) => {
         const prod = products.find(p => p.id === prodId);
         const newItems = [...items];
-        newItems[index] = {
+        let fila: ItemRow = {
             ...newItems[index],
             productoId: prodId,
             descripcion: prod ? prod.descripcion : newItems[index].descripcion,
             costoUnitario: prod ? prod.costoUnitario : newItems[index].costoUnitario,
+            presentacionId: '',
         };
+
+        // Si este proveedor tiene una presentación preferida para el producto, se propone
+        // sola: es la forma en que realmente se compra, y evita el error de escribir "2"
+        // cuando en realidad entraron 200 unidades.
+        const disponibles = presentaciones.filter((p) => p.productoId === prodId && p.proveedorId === proveedorId);
+        const sugerida = disponibles.find((p) => p.esPreferido) ?? disponibles[0];
+        if (sugerida) {
+            fila = aplicarPresentacion(fila, sugerida.id, fila.cantidadPresentaciones || 1);
+        }
+
+        newItems[index] = fila;
         setItems(newItems);
+    };
+
+    const handlePresentacionSelect = (index: number, presentacionId: string) => {
+        const newItems = [...items];
+        newItems[index] = presentacionId
+            ? aplicarPresentacion(newItems[index], presentacionId, newItems[index].cantidadPresentaciones || 1)
+            : { ...newItems[index], presentacionId: '' };
+        setItems(newItems);
+    };
+
+    const handleCantidadPresentaciones = (index: number, cantidadPresentaciones: number) => {
+        const newItems = [...items];
+        newItems[index] = aplicarPresentacion(
+            newItems[index],
+            newItems[index].presentacionId,
+            cantidadPresentaciones
+        );
+        setItems(newItems);
+    };
+
+    /**
+     * Al cambiar de proveedor hay que soltar las presentaciones elegidas: pertenecen al
+     * proveedor anterior y dejarlas puestas mostraría un precio que este no ofrece.
+     * La cantidad en unidades ya capturada se respeta, solo se deja de contar en paquetes.
+     */
+    const handleProveedorChange = (nuevoProveedorId: string) => {
+        setProveedorId(nuevoProveedorId);
+        setItems((prev) =>
+            prev.map((fila) => {
+                const actual = presentaciones.find((p) => p.id === fila.presentacionId);
+                if (actual && actual.proveedorId === nuevoProveedorId) return fila;
+
+                // La fila queda sin presentación válida. Si el nuevo proveedor vende ese
+                // producto en alguna presentación, se propone la preferida: es el caso común
+                // de elegir el producto antes que el proveedor, y sin esto la fila se quedaría
+                // en unidades sueltas sin que nadie lo note.
+                const limpia = { ...fila, presentacionId: '' };
+                if (!fila.productoId) return limpia;
+
+                const disponibles = presentaciones.filter(
+                    (p) => p.productoId === fila.productoId && p.proveedorId === nuevoProveedorId
+                );
+                const sugerida = disponibles.find((p) => p.esPreferido) ?? disponibles[0];
+                return sugerida
+                    ? aplicarPresentacion(limpia, sugerida.id, limpia.cantidadPresentaciones || 1)
+                    : limpia;
+            })
+        );
     };
 
     const handleItemChange = (index: number, field: keyof ItemRow, value: ItemRow[keyof ItemRow]) => {
@@ -104,10 +224,7 @@ export function NewPurchaseForm({
     };
 
     const addItem = () => {
-        setItems([
-            ...items,
-            { productoId: '', descripcion: '', cantidad: 1, costoUnitario: 0, descuento: 0, codigoTasaItbms: '01' }
-        ]);
+        setItems([...items, { ...ITEM_VACIO }]);
     };
 
     const removeItem = (index: number) => {
@@ -157,7 +274,17 @@ export function NewPurchaseForm({
         formData.set('fechaVencimiento', fechaVencimiento);
         if (observaciones) formData.set('observaciones', observaciones);
         if (bodegas.length >= 2 && bodegaId) formData.set('bodegaId', bodegaId);
-        formData.set('items', JSON.stringify(items));
+        // `cantidadPresentaciones` es solo ayuda de captura: al servidor viaja la cantidad
+        // ya convertida a unidades base, que es la única que el inventario entiende.
+        formData.set(
+            'items',
+            JSON.stringify(
+                items.map(({ cantidadPresentaciones: _paquetes, ...resto }) => ({
+                    ...resto,
+                    presentacionId: resto.presentacionId || null,
+                }))
+            )
+        );
 
         try {
             const res = await createPurchase(null, formData);
@@ -203,7 +330,7 @@ export function NewPurchaseForm({
                     <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="md:col-span-2">
                             <Label htmlFor="proveedor">Proveedor *</Label>
-                            <Select value={proveedorId} onValueChange={setProveedorId}>
+                            <Select value={proveedorId} onValueChange={handleProveedorChange}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Seleccionar proveedor..." />
                                 </SelectTrigger>
@@ -282,8 +409,9 @@ export function NewPurchaseForm({
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-[200px]">Producto (Opcional)</TableHead>
-                                    <TableHead className="min-w-[200px]">Descripción / Gasto</TableHead>
-                                    <TableHead className="w-[90px]">Cant.</TableHead>
+                                    <TableHead className="min-w-[180px]">Descripción / Gasto</TableHead>
+                                    <TableHead className="w-[170px]">Presentación</TableHead>
+                                    <TableHead className="w-[110px]">Cant.</TableHead>
                                     <TableHead className="w-[120px]">Costo Unit.</TableHead>
                                     <TableHead className="w-[100px]">Desc.</TableHead>
                                     <TableHead className="w-[110px]">ITBMS</TableHead>
@@ -293,6 +421,10 @@ export function NewPurchaseForm({
                             </TableHeader>
                             <TableBody>
                                 {items.map((item, index) => {
+                                    const opcionesPresentacion = presentacionesDe(item.productoId);
+                                    const presentacionElegida = presentaciones.find((p) => p.id === item.presentacionId);
+                                    const unidadBase =
+                                        products.find((p) => p.id === item.productoId)?.unidadMedida || 'UND';
                                     const imp = item.cantidad * item.costoUnitario;
                                     const base = imp - (item.descuento || 0);
                                     const tasa = item.codigoTasaItbms === '01' ? 0.07 :
@@ -330,15 +462,72 @@ export function NewPurchaseForm({
                                                 />
                                             </TableCell>
                                             <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0.01"
-                                                    required
-                                                    className="h-9 text-xs"
-                                                    value={item.cantidad}
-                                                    onChange={(e) => handleItemChange(index, 'cantidad', parseFloat(e.target.value) || 0)}
-                                                />
+                                                {opcionesPresentacion.length > 0 ? (
+                                                    <Select
+                                                        value={item.presentacionId || 'unidad'}
+                                                        onValueChange={(val) =>
+                                                            handlePresentacionSelect(index, val === 'unidad' ? '' : val)
+                                                        }
+                                                    >
+                                                        <SelectTrigger className="h-9 text-xs">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="unidad">
+                                                                Por {unidadBase.toLowerCase()} (suelto)
+                                                            </SelectItem>
+                                                            {opcionesPresentacion.map((op) => (
+                                                                <SelectItem key={op.id} value={op.id}>
+                                                                    {op.presentacion} ({op.unidadesPorPresentacion}{' '}
+                                                                    {unidadBase.toLowerCase()})
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                ) : (
+                                                    <span className="text-[11px] text-muted-foreground">
+                                                        {item.productoId
+                                                            ? `Por ${unidadBase.toLowerCase()}`
+                                                            : '—'}
+                                                    </span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                {presentacionElegida ? (
+                                                    <>
+                                                        <Input
+                                                            type="number"
+                                                            step="1"
+                                                            min="1"
+                                                            required
+                                                            className="h-9 text-xs"
+                                                            aria-label="Cantidad de presentaciones"
+                                                            value={item.cantidadPresentaciones}
+                                                            onChange={(e) =>
+                                                                handleCantidadPresentaciones(
+                                                                    index,
+                                                                    parseFloat(e.target.value) || 0
+                                                                )
+                                                            }
+                                                        />
+                                                        {/* El número que de verdad entra al inventario, a la vista
+                                                            para que nadie tenga que confiar a ciegas en la conversión. */}
+                                                        <span className="block text-[10px] text-muted-foreground font-mono pt-0.5">
+                                                            = {item.cantidad.toLocaleString('es-PA')}{' '}
+                                                            {unidadBase.toLowerCase()}
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <Input
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0.01"
+                                                        required
+                                                        className="h-9 text-xs"
+                                                        value={item.cantidad}
+                                                        onChange={(e) => handleItemChange(index, 'cantidad', parseFloat(e.target.value) || 0)}
+                                                    />
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 <Input
@@ -350,6 +539,11 @@ export function NewPurchaseForm({
                                                     value={item.costoUnitario}
                                                     onChange={(e) => handleItemChange(index, 'costoUnitario', parseFloat(e.target.value) || 0)}
                                                 />
+                                                {presentacionElegida && (
+                                                    <span className="block text-[10px] text-muted-foreground font-mono pt-0.5">
+                                                        {formatCurrency(item.costoUnitario * presentacionElegida.unidadesPorPresentacion)} / {presentacionElegida.presentacion}
+                                                    </span>
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 <Input

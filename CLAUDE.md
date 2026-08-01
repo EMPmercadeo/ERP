@@ -80,6 +80,7 @@ Dos capas separadas a propósito — ver el comentario largo en `prisma/schema.p
 - **`src/lib/services/reabastecimientoCore.ts`** — cobertura, punto de reorden, sugerencia de compra y redacción del aviso. `reabastecimiento.ts` = capa Prisma.
 - El consumo diario sale **solo de ventas** (`FacturaItem` + `Venta.items` explotados por receta). No se mezcla con `MovimientoInventario` porque se contaría doble.
 - Descuento de insumos al vender: `invoiceCreation.ts` (dentro de su `descontarStock`, la receta manda sobre el kit) y `api/pos/ventas/route.ts` (`descontarStockVentaPos`). Ambos escriben `MovimientoInventario` con `concepto: 'consumo_receta'`.
+- **Compras en presentaciones**: en `/purchases/new` se elige "2 × Paquete 100" y el formulario convierte a 200 unidades base con `convertirPresentacionAUnidades` (en `reabastecimientoCore.ts`). Al servidor SIEMPRE viaja `cantidad`/`costoUnitario` en unidad base; `presentacionId` solo sirve para guardar `ultimoPrecio`/`ultimaCompraFecha` en `ProveedorInsumo`.
 - UI sin tocar el sidebar: pestaña **Receta e Insumos** en `/products/[id]`, pestaña **Suministros** en `/suppliers/[id]`, pestaña **Abastecimiento** en `/products?tab=abastecimiento`.
 - Pruebas del cálculo: `npx tsx scripts/test-recetas.ts` (no toca la base de datos).
 

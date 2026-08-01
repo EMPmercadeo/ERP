@@ -196,6 +196,34 @@ export async function createPurchase(prevState: unknown, formData: FormData) {
                             }
                         });
                     }
+
+                    // Si el ítem se compró usando una presentación registrada ("Saco 5 kg",
+                    // "Paquete 100 und"), se deja anotado a cuánto salió esta vez. Sirve para
+                    // que la sugerencia de reabastecimiento use un precio real y no uno viejo,
+                    // y para que se note cuando el proveedor sube el precio.
+                    if (rawItem.presentacionId) {
+                        const presentacion = await tx.proveedorInsumo.findFirst({
+                            where: {
+                                id: rawItem.presentacionId,
+                                empresaId,
+                                proveedorId: data.proveedorId,
+                                productoId: item.productoId,
+                            },
+                            select: { id: true, unidadesPorPresentacion: true },
+                        });
+
+                        if (presentacion) {
+                            const precioPagado =
+                                Number(item.costoUnitario) * Number(presentacion.unidadesPorPresentacion);
+                            await tx.proveedorInsumo.update({
+                                where: { id: presentacion.id },
+                                data: {
+                                    ultimoPrecio: precioPagado,
+                                    ultimaCompraFecha: new Date(`${data.fechaEmision}T12:00:00`),
+                                },
+                            });
+                        }
+                    }
                 }
             }
         });

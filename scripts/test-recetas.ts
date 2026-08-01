@@ -17,6 +17,7 @@ import {
 import {
     calcularCobertura,
     sugerirCompra,
+    convertirPresentacionAUnidades,
     redactarAviso,
 } from '../src/lib/services/reabastecimientoCore';
 
@@ -232,6 +233,28 @@ const conMinimo = sugerirCompra(1000, { unidadesPorPresentacion: 5000, precioPre
 check('se respeta el pedido mínimo del proveedor', conMinimo.presentaciones, 4);
 
 check('sin faltante no se sugiere compra', sugerirCompra(0, { unidadesPorPresentacion: 5000, precioPresentacion: 18, pedidoMinimo: 1 }), null);
+
+console.log('\n== Compra en presentaciones (el camino inverso) ==');
+
+// Ferretería: el proveedor vende el tornillo en paquetes de 100 a B/. 12.
+// Comprar 2 paquetes tiene que sumar 200 tornillos, no 2.
+const compraTornillos = convertirPresentacionAUnidades(2, { unidadesPorPresentacion: 100, precioPresentacion: 12 })!;
+check('2 paquetes de 100 entran como 200 unidades', compraTornillos.cantidadBase, 200);
+checkCerca('el costo por tornillo sale a 0.12', compraTornillos.costoPorUnidadBase, 0.12);
+
+// Y el mismo mecanismo para la harina, donde la unidad base son gramos.
+const compraHarina = convertirPresentacionAUnidades(6, { unidadesPorPresentacion: 5000, precioPresentacion: 18 })!;
+check('6 sacos de 5 kg entran como 30000 g', compraHarina.cantidadBase, 30000);
+checkCerca('el costo por gramo sale a 0.0036', compraHarina.costoPorUnidadBase, 0.0036);
+
+// Ida y vuelta: lo que sugiere comprar el motor, al registrarse, cubre el faltante.
+const sugerido = sugerirCompra(27000, { unidadesPorPresentacion: 5000, precioPresentacion: 18, pedidoMinimo: 1 })!;
+const registrado = convertirPresentacionAUnidades(sugerido.presentaciones, { unidadesPorPresentacion: 5000, precioPresentacion: 18 })!;
+check('lo sugerido y lo registrado coinciden', registrado.cantidadBase, sugerido.unidadesQueLlegan);
+check('y alcanza para cubrir el faltante', registrado.cantidadBase >= 27000, true);
+
+check('una cantidad en cero no convierte nada', convertirPresentacionAUnidades(0, { unidadesPorPresentacion: 100, precioPresentacion: 12 }), null);
+check('una presentación sin unidades no convierte nada', convertirPresentacionAUnidades(2, { unidadesPorPresentacion: 0, precioPresentacion: 12 }), null);
 
 console.log('\n== Aviso redactado ==');
 
