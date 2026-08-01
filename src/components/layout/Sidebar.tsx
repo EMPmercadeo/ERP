@@ -250,22 +250,30 @@ const handleSendFeedback = async (e: React.FormEvent) => {
         const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
         const Icon = item.icon;
 
+        // Design System v2 §7: ítem de 32px (antes 40px) y barra activa de 2px (antes 4px).
+        // Con 15 ítems en el menú, cada 8px de más por fila eran 120px de scroll; y la barra
+        // de 4px pesaba más que el propio texto del ítem activo.
         const linkContent = (
             <Link
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
                 className={cn(
-                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden',
+                    'flex h-8 items-center gap-2.5 rounded-md px-3 text-[13px] font-medium transition-colors relative overflow-hidden',
                     isActive
-                        ? 'bg-brand-1/10 text-brand-1 font-semibold'
-                        : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground'
                 )}
             >
                 {isActive && (
-                    <span className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-1 rounded-r" />
+                    <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r bg-sidebar-primary" />
                 )}
-                <Icon className={cn("h-5 w-5 shrink-0 transition-transform duration-200", isActive ? "scale-105 text-brand-1" : "text-sidebar-foreground/60")} />
-                {!isCollapsed && <span className="ml-1">{item.name}</span>}
+                <Icon
+                    className={cn(
+                        'h-4 w-4 shrink-0',
+                        isActive ? 'text-sidebar-primary' : 'text-muted-foreground'
+                    )}
+                />
+                {!isCollapsed && <span>{item.name}</span>}
             </Link>
         );
 
@@ -312,7 +320,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                 )}
             >
                 {/* Logo */}
-                <div className="flex h-16 items-center justify-between border-b border-sidebar-border/20 px-4 shrink-0">
+                <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4 shrink-0">
                     {!isCollapsed && (
                         <Link href="/dashboard" className="flex items-center gap-2">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-1">
@@ -378,7 +386,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                         </li>
                                     )}
                                     <div className="my-2 border-t border-sidebar-border" />
-                                    <div className={cn("mb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider", isCollapsed && "hidden")}>
+                                    <div className={cn("mb-1.5 px-3 label-caps", isCollapsed && "hidden")}>
                                         App
                                     </div>
                                 </>
@@ -393,13 +401,10 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                 if (items.length === 0) return null;
                                 return (
                                     <li key={group.label} className="pt-2">
-                                        <div className={cn(
-                                            "mb-1 px-3 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider",
-                                            isCollapsed && "hidden"
-                                        )}>
+                                        <div className={cn("mb-1 px-3 label-caps", isCollapsed && "hidden")}>
                                             {group.label}
                                         </div>
-                                        <ul className="space-y-1">
+                                        <ul className="space-y-0.5">
                                             {items.map((item) => (
                                                 <NavItem key={item.name} item={item} />
                                             ))}

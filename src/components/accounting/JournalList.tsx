@@ -214,16 +214,16 @@ export function JournalList({
         {/* Tabla de Asientos */}
         <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden">
           <Table>
-            <TableHeader className="bg-muted/50">
+            <TableHeader>
               <TableRow className="border-b border-border hover:bg-transparent">
                 <TableHead className="w-10"></TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Número</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Fecha</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Concepto</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Origen</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Debe</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Haber</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Usuario</TableHead>
+                <TableHead>Número</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Concepto</TableHead>
+                <TableHead>Origen</TableHead>
+                <TableHead className="text-right">Debe</TableHead>
+                <TableHead className="text-right">Haber</TableHead>
+                <TableHead>Usuario</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -283,11 +283,11 @@ export function JournalList({
                               <Table>
                                 <TableHeader className="bg-muted/40">
                                   <TableRow className="border-b border-border hover:bg-transparent">
-                                    <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider w-1/4">Código</TableHead>
-                                    <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider w-1/3">Cuenta</TableHead>
-                                    <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right w-1/6">Debe</TableHead>
-                                    <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right w-1/6">Haber</TableHead>
-                                    <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Descripción</TableHead>
+                                    <TableHead className="w-1/4">Código</TableHead>
+                                    <TableHead className="w-1/3">Cuenta</TableHead>
+                                    <TableHead className="text-right w-1/6">Debe</TableHead>
+                                    <TableHead className="text-right w-1/6">Haber</TableHead>
+                                    <TableHead>Descripción</TableHead>
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>

@@ -137,7 +137,7 @@ export function TransferList({
                 <Card className="border-border shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <Table>
-                            <TableHeader className="bg-muted/50">
+                            <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-[12%]">Número</TableHead>
                                     <TableHead className="w-[20%]">Origen</TableHead>

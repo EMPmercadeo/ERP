@@ -171,16 +171,16 @@ export function LedgerView({
             {/* Tabla de Movimientos */}
             <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden">
               <Table>
-                <TableHeader className="bg-muted/50">
+                <TableHeader>
                   <TableRow className="border-b border-border hover:bg-transparent">
-                    <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Fecha</TableHead>
-                    <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Asiento</TableHead>
-                    <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Concepto</TableHead>
-                    <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Origen</TableHead>
-                    <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Detalle/Descripción</TableHead>
-                    <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Debe</TableHead>
-                    <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Haber</TableHead>
-                    <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Saldo Acumulado</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Asiento</TableHead>
+                    <TableHead>Concepto</TableHead>
+                    <TableHead>Origen</TableHead>
+                    <TableHead>Detalle/Descripción</TableHead>
+                    <TableHead className="text-right">Debe</TableHead>
+                    <TableHead className="text-right">Haber</TableHead>
+                    <TableHead className="text-right">Saldo Acumulado</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

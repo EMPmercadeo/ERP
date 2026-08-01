@@ -273,24 +273,24 @@ export function ReceivablesList({
                             <Table className="border-b border-border">
                                 <TableHeader className="bg-muted border-b border-border">
                                     <TableRow className="hover:bg-transparent">
-                                        <TableHead className="h-10 font-bold text-foreground text-xs">
+                                        <TableHead>
                                             <Button variant="ghost" onClick={() => handleSort('numeroCompleto')} className="-ml-3 h-8 font-bold text-foreground hover:bg-transparent">
                                                 Documento
                                                 <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
                                             </Button>
                                         </TableHead>
-                                        <TableHead className="h-10 font-bold text-foreground text-xs">Cliente</TableHead>
-                                        <TableHead className="h-10 font-bold text-foreground text-xs">
+                                        <TableHead>Cliente</TableHead>
+                                        <TableHead>
                                             <Button variant="ghost" onClick={() => handleSort('fechaEmision')} className="-ml-3 h-8 font-bold text-foreground hover:bg-transparent">
                                                 Emisión
                                                 <ArrowUpDown className="ml-1.5 h-3.5 w-3.5" />
                                             </Button>
                                         </TableHead>
-                                        <TableHead className="h-10 font-bold text-foreground text-xs">Vencimiento</TableHead>
-                                        <TableHead className="h-10 font-bold text-foreground text-xs text-right">Total Neto</TableHead>
-                                        <TableHead className="h-10 font-bold text-foreground text-xs text-right">Saldo Pendiente</TableHead>
-                                        <TableHead className="h-10 font-bold text-foreground text-xs text-center">Estado</TableHead>
-                                        <TableHead className="h-10 w-24"></TableHead>
+                                        <TableHead>Vencimiento</TableHead>
+                                        <TableHead className="text-right">Total Neto</TableHead>
+                                        <TableHead className="text-right">Saldo Pendiente</TableHead>
+                                        <TableHead className="text-center">Estado</TableHead>
+                                        <TableHead className="w-24"></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>

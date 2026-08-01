@@ -47,7 +47,10 @@ export function PaginationBar({
     const to = Math.min(currentPage * pageSize, totalCount);
 
     return (
-        <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 bg-muted/30">
+        // Design System v2 §7: la paginación es el PIE de la tabla, no una barra suelta
+        // debajo. Mismos tokens que CardFooter (Superficie Sutil + borde superior) para que
+        // se lea como parte del mismo bloque.
+        <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 bg-surface-subtle border-t border-border">
             <div className="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-xs text-muted-foreground whitespace-nowrap overflow-hidden">
                 <span className="shrink-0">
                     {from}–{to} de {totalCount}
@@ -62,7 +65,7 @@ export function PaginationBar({
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                 {onPageSizeChange && (
                     <Select value={String(pageSize)} onValueChange={onPageSizeChange}>
-                        <SelectTrigger className="h-8 w-[58px] sm:w-[65px] text-xs rounded-lg px-2">
+                        <SelectTrigger className="h-8 w-[58px] sm:w-[65px] text-xs px-2">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="rounded-lg">
@@ -80,7 +83,7 @@ export function PaginationBar({
                         size="icon-sm"
                         onClick={() => onPageChange(currentPage - 1)}
                         disabled={currentPage <= 1}
-                        className="border-border rounded-lg sm:w-auto sm:h-8 sm:px-3"
+                        className="sm:w-auto sm:h-8 sm:px-3"
                     >
                         <ChevronLeft className="h-3.5 w-3.5 sm:mr-1 text-muted-foreground" />
                         <span className="hidden sm:inline text-xs font-semibold">Anterior</span>
@@ -90,7 +93,7 @@ export function PaginationBar({
                         size="icon-sm"
                         onClick={() => onPageChange(currentPage + 1)}
                         disabled={currentPage >= pageCount}
-                        className="border-border rounded-lg sm:w-auto sm:h-8 sm:px-3"
+                        className="sm:w-auto sm:h-8 sm:px-3"
                     >
                         <span className="hidden sm:inline text-xs font-semibold">Siguiente</span>
                         <ChevronRight className="h-3.5 w-3.5 sm:ml-1 text-muted-foreground" />

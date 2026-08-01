@@ -735,7 +735,7 @@ export function ProductList({
                                     {table.getHeaderGroups().map((headerGroup) => (
                                         <TableRow key={headerGroup.id} className="hover:bg-transparent">
                                             {headerGroup.headers.map((header) => (
-                                                <TableHead key={header.id} className="h-10 font-bold text-foreground text-xs">
+                                                <TableHead key={header.id}>
                                                     {header.isPlaceholder
                                                         ? null
                                                         : flexRender(

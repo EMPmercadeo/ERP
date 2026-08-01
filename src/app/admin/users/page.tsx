@@ -94,14 +94,14 @@ export default async function AdminUsersPage(props: PageProps) {
             {/* User List Card Container */}
             <div className="rounded-md border bg-card shadow overflow-hidden">
                 <Table>
-                    <TableHeader className="bg-muted/50">
+                    <TableHeader>
                         <TableRow>
-                            <TableHead className="font-semibold">Usuario</TableHead>
-                            <TableHead className="font-semibold">Rol Actual</TableHead>
-                            <TableHead className="font-semibold">Empresa Asociada</TableHead>
-                            <TableHead className="font-semibold">Fecha Registro</TableHead>
-                            <TableHead className="font-semibold">Último Acceso</TableHead>
-                            <TableHead className="text-right font-semibold pr-6">Acciones de Gestión</TableHead>
+                            <TableHead>Usuario</TableHead>
+                            <TableHead>Rol Actual</TableHead>
+                            <TableHead>Empresa Asociada</TableHead>
+                            <TableHead>Fecha Registro</TableHead>
+                            <TableHead>Último Acceso</TableHead>
+                            <TableHead className="text-right pr-6">Acciones de Gestión</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>

@@ -80,7 +80,7 @@ export default async function ExpiringProductsPage() {
                     <Card className="border-border shadow-sm overflow-hidden">
                         <div className="overflow-x-auto">
                             <Table>
-                                <TableHeader className="bg-muted/50">
+                                <TableHeader>
                                     <TableRow>
                                         <TableHead>Producto</TableHead>
                                         <TableHead>Bodega</TableHead>

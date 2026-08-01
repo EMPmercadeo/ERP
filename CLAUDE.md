@@ -105,7 +105,15 @@ Dos capas separadas a propósito — ver el comentario largo en `prisma/schema.p
 
 ### Design Context
 - **`PRODUCT.md`** — registro (brand), usuarios, propósito, personalidad de marca y principios de diseño.
-- **`DESIGN.md`** — sistema visual: paleta (azul `#073674`), tipografía Geist, componentes (botones, cards, status badges).
+- **`DESIGN.md`** — sistema visual **v2**: escala azul única (acción `brand-500`, identidad `brand-700`), tipografía Instrument Sans + JetBrains Mono, densidad alta (base 13.5px, botón 32px, radio máximo 8px), elevación de dos niveles subordinada al borde.
+  - Los nombres de token **no cambiaron** con la v2 (`bg-primary`, `border-border`, `bg-success-bg`...), solo su valor. `brand-1/2/3` siguen como alias; en código nuevo usar `brand-500`/`brand-600`.
+  - `StatusBadge` pasó de píldora con icono a tag rectangular con punto; la prop `showIcon` se conserva como no-op.
+  - `Card` ya no trae `py-6 gap-6`: el padding lo pone cada slot (header/content/footer).
+  - `npm run lint:colors` prohíbe hex fuera de `globals.css` — **incluso dentro de comentarios**.
+  - **La densidad de tabla vive en `src/components/ui/table.tsx`**, no en cada lista: cabecera 32px `.label-caps`, filas 44px. No repetir alto ni tipografía en los `TableHead` de cada componente — es lo que hacía que ninguna tabla midiera igual. Para cifras usar `TableCellNumeric`/`TableHeadNumeric`.
+  - El dashboard usa `components/dashboard/StatStrip.tsx` (una tira de cuatro celdas); `KpiCard.tsx` fue eliminado.
+  - El Topbar mide 56px: si cambia, hay que ajustar también `Content.tsx` (`calc(100dvh-3.5rem)`) y los `loading.tsx` de cada lista.
+  - Tabla de migración v1→v2 en `DESIGN.md` §7.
 - **`.impeccable/design.json`** — sidecar con snippets HTML/CSS de componentes para el panel de `/impeccable live`.
 - **`.impeccable/live/config.json`** — config de `/impeccable live` (inyecta en `src/app/layout.tsx`); CSP en `next.config.ts` ya tiene el allowance dev-only para `localhost:8400`.
 - **`SITEMAP.md`** — mapa de rutas (páginas + API) generado desde `src/app/`. Es un snapshot manual, no se regenera solo — si agregas rutas, regenéralo con Glob sobre `src/app/**/page.tsx` y `src/app/api/**/route.ts`.

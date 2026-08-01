@@ -3,10 +3,7 @@ import Link from 'next/link';
 import {
     DollarSign,
     FileText,
-    Clock,
     TrendingUp,
-    CheckCircle2,
-    AlertTriangle,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Topbar } from '@/components/layout/Topbar';
@@ -14,7 +11,7 @@ import { ContentContainer } from '@/components/layout/Content';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { RecentActivityTable } from '@/components/dashboard/RecentActivityTable';
 import { DgiStatusCard } from '@/components/dashboard/DgiStatusCard';
-import { KpiCard } from '@/components/dashboard/KpiCard';
+import { StatStrip } from '@/components/dashboard/StatStrip';
 import { TrendChart } from '@/components/dashboard/TrendChart';
 
 import { prisma } from '@/lib/db';
@@ -301,61 +298,58 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                     recentInvoices={recentInvoices}
                 />
 
-                {/* KPIs Row */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 lg:gap-4">
-                    <KpiCard
-                        title="Facturado"
-                        value={kpiData.ventas.value}
-                        change={kpiData.ventas.change}
-                        trend={kpiData.ventas.trend}
-                        icon={DollarSign}
-                        format="currency"
-                        variant="primary"
-                        sparkPoints={sparks.facturado}
-                        sparkColor="white"
-                        sparkId="spark-facturado"
-                        href="/invoices"
-                    />
-                    <KpiCard
-                        title="Cobrado"
-                        value={kpiData.cobrado.value}
-                        change={kpiData.cobrado.change}
-                        trend={kpiData.cobrado.trend}
-                        icon={CheckCircle2}
-                        format="currency"
-                        chipClass="bg-success-bg text-success"
-                        sparkPoints={sparks.cobrado}
-                        sparkColor="var(--success)"
-                        sparkId="spark-cobrado"
-                        href="/invoices?status=pagada"
-                    />
-                    <KpiCard
-                        title="Pendiente por Cobrar"
-                        value={kpiData.pendiente.value}
-                        change={kpiData.pendiente.change}
-                        trend={kpiData.pendiente.trend}
-                        icon={Clock}
-                        format="currency"
-                        chipClass="bg-warning-bg text-warning"
-                        sparkPoints={sparks.pendiente}
-                        sparkColor="var(--warning)"
-                        sparkId="spark-pendiente"
-                        href="/invoices?status=pendiente"
-                    />
-                    <KpiCard
-                        title="Vencido"
-                        value={kpiData.vencido.value}
-                        change={kpiData.vencido.change}
-                        trend={kpiData.vencido.trend}
-                        icon={AlertTriangle}
-                        format="currency"
-                        chipClass="bg-danger-bg text-danger"
-                        sparkPoints={sparks.vencido}
-                        sparkColor="var(--danger)"
-                        sparkId="spark-vencido"
-                        href="/invoices?status=vencida"
-                    />
-                </div>
+                {/* KPIs: una sola tira de cuatro celdas (Design System v2 §7).
+                    Las cuatro cifras son la misma magnitud vista desde cuatro ángulos y
+                    hay que compararlas entre sí; en cards separadas se leían como cuatro
+                    cosas distintas. */}
+                <StatStrip
+                    items={[
+                        {
+                            label: 'Facturado',
+                            value: kpiData.ventas.value,
+                            change: kpiData.ventas.change,
+                            trend: kpiData.ventas.trend,
+                            format: 'currency',
+                            tone: 'neutral',
+                            sparkPoints: sparks.facturado,
+                            sparkId: 'spark-facturado',
+                            href: '/invoices',
+                        },
+                        {
+                            label: 'Cobrado',
+                            value: kpiData.cobrado.value,
+                            change: kpiData.cobrado.change,
+                            trend: kpiData.cobrado.trend,
+                            format: 'currency',
+                            tone: 'success',
+                            sparkPoints: sparks.cobrado,
+                            sparkId: 'spark-cobrado',
+                            href: '/invoices?status=pagada',
+                        },
+                        {
+                            label: 'Pendiente por cobrar',
+                            value: kpiData.pendiente.value,
+                            change: kpiData.pendiente.change,
+                            trend: kpiData.pendiente.trend,
+                            format: 'currency',
+                            tone: 'warning',
+                            sparkPoints: sparks.pendiente,
+                            sparkId: 'spark-pendiente',
+                            href: '/invoices?status=pendiente',
+                        },
+                        {
+                            label: 'Vencido',
+                            value: kpiData.vencido.value,
+                            change: kpiData.vencido.change,
+                            trend: kpiData.vencido.trend,
+                            format: 'currency',
+                            tone: 'danger',
+                            sparkPoints: sparks.vencido,
+                            sparkId: 'spark-vencido',
+                            href: '/invoices?status=vencida',
+                        },
+                    ]}
+                />
 
                 {/* Trend + DGI Row */}
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 items-stretch">

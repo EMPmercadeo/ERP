@@ -115,7 +115,7 @@ export function WarehouseList({
                 <Card className="border-border shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <Table>
-                            <TableHeader className="bg-muted/50">
+                            <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-[10%]">Código</TableHead>
                                     <TableHead className="w-[30%]">Nombre</TableHead>

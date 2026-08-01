@@ -695,14 +695,14 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                             <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Historial de Salidas (Facturación Real)</h3>
                                             <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
                                                 <Table>
-                                                    <TableHeader className="bg-muted">
+                                                    <TableHeader>
                                                         <TableRow className="hover:bg-transparent">
-                                                            <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase">Factura</TableHead>
-                                                            <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase">Cliente</TableHead>
-                                                            <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase">Fecha</TableHead>
-                                                            <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase text-center">Cantidad</TableHead>
-                                                            <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase text-right">Precio</TableHead>
-                                                            <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase text-right pr-4">Total</TableHead>
+                                                            <TableHead>Factura</TableHead>
+                                                            <TableHead>Cliente</TableHead>
+                                                            <TableHead>Fecha</TableHead>
+                                                            <TableHead className="text-center">Cantidad</TableHead>
+                                                            <TableHead className="text-right">Precio</TableHead>
+                                                            <TableHead className="text-right pr-4">Total</TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
@@ -1306,13 +1306,13 @@ function KitTab({ productoId, initialEsKit }: { productoId: string; initialEsKit
 
                     <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
                         <Table>
-                            <TableHeader className="bg-muted">
+                            <TableHeader>
                                 <TableRow className="hover:bg-transparent">
-                                    <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase">Componente</TableHead>
-                                    <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase text-center w-28">Cantidad</TableHead>
-                                    <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase text-right">Costo Unit.</TableHead>
-                                    <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase text-right">Subtotal</TableHead>
-                                    <TableHead className="h-9 w-10"></TableHead>
+                                    <TableHead>Componente</TableHead>
+                                    <TableHead className="text-center w-28">Cantidad</TableHead>
+                                    <TableHead className="text-right">Costo Unit.</TableHead>
+                                    <TableHead className="text-right">Subtotal</TableHead>
+                                    <TableHead className="w-10"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>

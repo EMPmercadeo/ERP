@@ -87,7 +87,7 @@ export function QuoteItemsTable({ items, onUpdate }: QuoteItemsTableProps) {
         <div className="space-y-4">
             <div className="rounded-md border">
                 <Table>
-                    <TableHeader className="bg-muted/50">
+                    <TableHeader>
                         <TableRow>
                             <TableHead className="w-[120px]">SKU</TableHead>
                             <TableHead className="min-w-[200px]">Descripción</TableHead>

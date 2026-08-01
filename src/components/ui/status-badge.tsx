@@ -1,190 +1,94 @@
 import * as React from "react"
-import { Badge, badgeVariants } from "./badge"
-import { CheckCircle2, Clock, XCircle, AlertCircle, Ban, Loader2, FileEdit, HelpCircle, Send } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { type VariantProps } from "class-variance-authority"
 
-// DGI Invoice statuses
-// "local" = empresa sin facturación electrónica activa (fiscalEnabled=false): la factura es
-// válida localmente pero nunca se envía a la DGI. crearFacturaCompleta() (invoiceCreation.ts)
-// ya escribía este valor para ese caso, pero no estaba en este tipo — el badge caía siempre
-// en "Desconocido" para cualquier empresa sin PAC configurado.
+// Design System v2 — Status tag (componente de firma)
+//
+// Cambia respecto a la v1:
+// - rectángulo `rounded-sm` (4px) en vez de píldora `rounded-full`
+// - alto 20px (h-5), padding 0 8px, 11px/600
+// - punto cuadrado de 5px en vez de icono Lucide; se elimina `animate-spin`
+// - se elimina `min-w-[118px]`: la columna se alinea porque la celda lo hace,
+//   no porque el badge tenga ancho fijo
+//
+// Motivo: cinco píldoras coloreadas por fila competían con las cifras; el icono era
+// redundante con el color y la etiqueta, y el spinner llamaba la atención sobre un
+// estado transitorio que el usuario no puede accionar.
+
 type DgiStatus = "aceptada" | "pendiente" | "rechazada" | "procesando" | "anulada" | "borrador" | "local"
-
-// Payment statuses
 type PaymentStatus = "pagada" | "pendiente" | "parcial" | "vencida"
-
-// Combined status type
 type Status = DgiStatus | PaymentStatus
 
-const statusConfig: Record<string, {
-    label: string
-    variant: VariantProps<typeof badgeVariants>["variant"]
-    icon: React.ElementType
-}> = {
-    // DGI statuses
-    aceptada: {
-        label: "Aceptada",
-        variant: "success",
-        icon: CheckCircle2,
-    },
-    pendiente: {
-        label: "Pendiente",
-        variant: "warning",
-        icon: Clock,
-    },
-    rechazada: {
-        label: "Rechazada",
-        variant: "destructive",
-        icon: XCircle,
-    },
-    procesando: {
-        label: "Procesando",
-        variant: "info",
-        icon: Loader2,
-    },
-    anulada: {
-        label: "Anulada",
-        variant: "neutral",
-        icon: Ban,
-    },
-    borrador: {
-        label: "Borrador",
-        variant: "neutral",
-        icon: FileEdit,
-    },
-    local: {
-        label: "Local (sin DGI)",
-        variant: "neutral",
-        icon: FileEdit,
-    },
-    // Payment statuses
-    pagada: {
-        label: "Pagada",
-        variant: "success",
-        icon: CheckCircle2,
-    },
-    parcial: {
-        label: "Pago Parcial",
-        variant: "warning",
-        icon: AlertCircle,
-    },
-    vencida: {
-        label: "Vencida",
-        variant: "destructive",
-        icon: AlertCircle,
-    },
-    // Client statuses
-    activo: {
-        label: "Activo",
-        variant: "success",
-        icon: CheckCircle2,
-    },
-    moroso: {
-        label: "Moroso",
-        variant: "warning",
-        icon: Clock,
-    },
-    bloqueado: {
-        label: "Bloqueado",
-        variant: "destructive",
-        icon: XCircle,
-    },
-    // Quote statuses
-    enviada: {
-        label: "Enviada",
-        variant: "info",
-        icon: Send,
-    },
-    // Order / Delivery statuses
-    en_proceso: {
-        label: "En Proceso",
-        variant: "info",
-        icon: Loader2,
-    },
-    entregado: {
-        label: "Entregado",
-        variant: "success",
-        icon: CheckCircle2,
-    },
-    parcialmente_entregado: {
-        label: "Parcialmente Entregado",
-        variant: "warning",
-        icon: Clock,
-    },
-    "parcialmente entregado": {
-        label: "Parcialmente Entregado",
-        variant: "warning",
-        icon: Clock,
-    },
-    facturado: {
-        label: "Facturado",
-        variant: "success",
-        icon: CheckCircle2,
-    },
+type Tone = "success" | "warning" | "info" | "danger" | "neutral"
+
+const toneClass: Record<Tone, string> = {
+  success: "bg-success-bg text-success",
+  warning: "bg-warning-bg text-warning",
+  info: "bg-info-bg text-info",
+  danger: "bg-danger-bg text-danger",
+  neutral: "bg-secondary text-muted-foreground",
 }
 
-const statusClassMap: Record<string, string> = {
-    // DGI statuses
-    aceptada: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
-    pendiente: "bg-warning-bg text-warning border-transparent hover:bg-warning-bg/90",
-    rechazada: "bg-danger-bg text-danger border-transparent hover:bg-danger-bg/90",
-    procesando: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
-    anulada: "bg-secondary text-muted-foreground border-border hover:bg-secondary/90",
-    borrador: "bg-secondary text-muted-foreground border-border hover:bg-secondary/90",
-    local: "bg-secondary text-muted-foreground border-border hover:bg-secondary/90",
-    // Payment statuses
-    pagada: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
-    parcial: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
-    vencida: "bg-danger-bg text-danger border-transparent hover:bg-danger-bg/90",
-    // Client statuses
-    activo: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
-    moroso: "bg-warning-bg text-warning border-transparent hover:bg-warning-bg/90",
-    bloqueado: "bg-danger-bg text-danger border-transparent hover:bg-danger-bg/90",
-    // Quote statuses
-    enviada: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
-    // Order / Delivery statuses
-    en_proceso: "bg-info-bg text-info border-transparent hover:bg-info-bg/90",
-    entregado: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
-    parcialmente_entregado: "bg-warning-bg text-warning border-transparent hover:bg-warning-bg/90",
-    "parcialmente entregado": "bg-warning-bg text-warning border-transparent hover:bg-warning-bg/90",
-    facturado: "bg-success-bg text-success border-transparent hover:bg-success-bg/90",
+// El punto de "advertencia" usa --warning-dot: el ámbar oscuro del texto da contraste AA,
+// pero como punto de 5px se lee apagado, así que el punto lleva un tono más vivo.
+const dotClass: Partial<Record<Tone, string>> = {
+  warning: "bg-warning-dot",
 }
 
-// Fallback for unknown statuses
-const fallbackConfig = {
-    label: "Desconocido",
-    variant: "neutral" as const,
-    icon: HelpCircle,
+const statusConfig: Record<string, { label: string; tone: Tone }> = {
+  // DGI
+  aceptada: { label: "Aceptada", tone: "success" },
+  pendiente: { label: "Pendiente", tone: "warning" },
+  rechazada: { label: "Rechazada", tone: "danger" },
+  procesando: { label: "Procesando", tone: "info" },
+  anulada: { label: "Anulada", tone: "neutral" },
+  borrador: { label: "Borrador", tone: "neutral" },
+  local: { label: "Local (sin DGI)", tone: "neutral" },
+  // Pago
+  pagada: { label: "Pagada", tone: "success" },
+  parcial: { label: "Parcial", tone: "info" },
+  vencida: { label: "Vencida", tone: "danger" },
+  // Cliente
+  activo: { label: "Activo", tone: "success" },
+  moroso: { label: "En mora", tone: "warning" },
+  bloqueado: { label: "Bloqueado", tone: "danger" },
+  // Cotización
+  enviada: { label: "Enviada", tone: "info" },
+  // Pedido / entrega
+  en_proceso: { label: "En proceso", tone: "info" },
+  entregado: { label: "Entregado", tone: "success" },
+  parcialmente_entregado: { label: "Parcialmente entregado", tone: "warning" },
+  "parcialmente entregado": { label: "Parcialmente entregado", tone: "warning" },
+  facturado: { label: "Facturado", tone: "success" },
 }
 
-export interface StatusBadgeProps extends Omit<React.ComponentProps<typeof Badge>, "variant"> {
-    status: Status | string
-    showIcon?: boolean
+const fallbackConfig = { label: "Desconocido", tone: "neutral" as Tone }
+
+export interface StatusBadgeProps extends React.ComponentProps<"span"> {
+  status: Status | string
+  /** @deprecated v2 no usa iconos en los tags; se conserva para no romper llamadas existentes. */
+  showIcon?: boolean
 }
 
-function StatusBadge({
-    status,
-    showIcon = true,
-    className,
-    ...props
-}: StatusBadgeProps) {
-    const config = statusConfig[status] || fallbackConfig
-    const Icon = config.icon
-    const colorClass = statusClassMap[status] || "bg-secondary text-muted-foreground border-border hover:bg-secondary/90"
+function StatusBadge({ status, showIcon, className, ...props }: StatusBadgeProps) {
+  const config = statusConfig[status] || fallbackConfig
 
-    return (
-        <Badge
-            variant={config.variant}
-            className={cn("min-w-[118px] justify-center font-semibold gap-1.5 py-1 px-3 rounded-full text-xs transition-colors", colorClass, className)}
-            {...props}
-        >
-            {showIcon && (
-                <Icon className={cn("h-3.5 w-3.5 shrink-0", status === "procesando" && "animate-spin")} />
-            )}
-            {config.label}
-        </Badge>
-    )
+  return (
+    <span
+      data-slot="status-badge"
+      className={cn(
+        "inline-flex items-center gap-1.5 h-5 px-2 rounded-sm text-[11px] font-semibold leading-none whitespace-nowrap",
+        toneClass[config.tone],
+        className
+      )}
+      {...props}
+    >
+      <span
+        aria-hidden="true"
+        className={cn("size-[5px] rounded-[1px] shrink-0", dotClass[config.tone] || "bg-current")}
+      />
+      {config.label}
+    </span>
+  )
 }
 
 export { StatusBadge, statusConfig }

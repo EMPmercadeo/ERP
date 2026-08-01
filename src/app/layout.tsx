@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Instrument_Sans, JetBrains_Mono } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 
-const geistSans = Geist({
+// Design System v2 — solo cambia la familia tipográfica.
+// Los nombres de variable CSS (--font-geist-sans / --font-geist-mono) se conservan a
+// propósito: globals.css y las utilidades font-sans / font-mono los usan, así que
+// cambiar solo la familia evita tocar decenas de componentes.
+const geistSans = Instrument_Sans({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
+const geistMono = JetBrains_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {

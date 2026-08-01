@@ -129,14 +129,14 @@ export function TrialBalanceView({
         {/* Tabla de Balance de Comprobación */}
         <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden">
           <Table>
-            <TableHeader className="bg-muted/50">
+            <TableHeader>
               <TableRow className="border-b border-border hover:bg-transparent">
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Código</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Cuenta</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tipo</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Naturaleza</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Saldo Deudor</TableHead>
-                <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Saldo Acreedor</TableHead>
+                <TableHead>Código</TableHead>
+                <TableHead>Cuenta</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Naturaleza</TableHead>
+                <TableHead className="text-right">Saldo Deudor</TableHead>
+                <TableHead className="text-right">Saldo Acreedor</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

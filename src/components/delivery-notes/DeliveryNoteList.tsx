@@ -289,15 +289,15 @@ export function DeliveryNoteList({
                                             checked={selectedIds.length > 0 && selectedIds.length === filteredNotes.filter(n => n.estado !== 'facturado' && !n.factura).length}
                                         />
                                     </TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground">Número</TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground">Cliente</TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground">Fecha de emisión</TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground">Fecha de entrega</TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground">Items</TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground">Estado</TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground">Factura asociada</TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground text-right">Total</TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground text-right">Acciones</TableHead>
+                                    <TableHead>Número</TableHead>
+                                    <TableHead>Cliente</TableHead>
+                                    <TableHead>Fecha de emisión</TableHead>
+                                    <TableHead>Fecha de entrega</TableHead>
+                                    <TableHead>Items</TableHead>
+                                    <TableHead>Estado</TableHead>
+                                    <TableHead>Factura asociada</TableHead>
+                                    <TableHead className="text-right">Total</TableHead>
+                                    <TableHead className="text-right">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>

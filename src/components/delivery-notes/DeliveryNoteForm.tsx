@@ -378,7 +378,7 @@ export function DeliveryNoteForm({ clients, products, quotes, users }: FormProps
                             {/* Items table */}
                             <div className="rounded-md border overflow-hidden mt-4">
                                 <Table>
-                                    <TableHeader className="bg-muted/50">
+                                    <TableHeader>
                                         <TableRow>
                                             <TableHead>Descripción</TableHead>
                                             <TableHead className="text-right w-32">Cant. Solicitada</TableHead>

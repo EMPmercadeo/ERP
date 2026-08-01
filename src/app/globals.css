@@ -3,20 +3,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* 
- * ERP Panamá - Design System Tokens
- * 
- * Brand Colors:
- * - brand1: #073674 (Primary Blue)
- * - brand2: #052550 (Primary Blue Dark)
- * - white: #FFFFFF
- * - light2: #F4F7FA (Background Light)
- * - light3: #DEE4ED (Border/Muted)
- * - dark1: #172436 (Text Primary)
- * - dark2: #2D3D53 (Text Secondary)
- * - dark3: #47576B (Text Muted)
- * 
- * PROHIBIDO: No usar hex hardcode fuera de este archivo
+/*
+ * ERP Panamá — Design System v2
+ *
+ * Escala azul (una sola familia):
+ * - brand-900: #071E3D (Bóveda)          - brand-600: #12509E (acción presionada / enlace)
+ * - brand-800: #0C2E5E (totales)         - brand-500: #1B6BD6 (ACCIÓN)
+ * - brand-700: #073674 (ancla, logo/PDF) - brand-300: #4E9BF5 (indicador sobre navy)
+ * - brand-100: #DCE8FA                   - brand-50:  #F0F5FD
+ *
+ * Ver DESIGN.md §7 para la tabla de migración v1 → v2.
+ * PROHIBIDO: No usar hex hardcode fuera de este archivo.
  */
 
 @theme {
@@ -43,25 +40,38 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Custom Brand Colors */
-  --color-brand-1: #073674;
-  --color-brand-2: #052550;
-  --color-brand-3: #001835;
-  --color-brand-bg-blue: #002855;
-  --color-brand-bg-blue-hover: #001f42;
-  --color-brand-bg-blue-hover-dark: #001d3f;
-  --color-brand-light: #0056b3;
-  --color-brand-medium: #004899;
-  --color-brand-dark: #003366;
+  /* Custom Brand Colors — escala azul v2 */
+  --color-brand-900: #071E3D;
+  --color-brand-800: #0C2E5E;
+  --color-brand-700: #073674;
+  --color-brand-600: #12509E;
+  --color-brand-500: #1B6BD6;
+  --color-brand-300: #4E9BF5;
+  --color-brand-100: #DCE8FA;
+  --color-brand-50: #F0F5FD;
+
+  /* Alias de compatibilidad con la v1 (no usar en código nuevo) */
+  --color-brand-1: #1B6BD6;
+  --color-brand-2: #0C2E5E;
+  --color-brand-3: #071E3D;
+  --color-brand-bg-blue: #0C2E5E;
+  --color-brand-bg-blue-hover: #071E3D;
+  --color-brand-bg-blue-hover-dark: #071E3D;
+  --color-brand-light: #4E9BF5;
+  --color-brand-medium: #1B6BD6;
+  --color-brand-dark: #12509E;
+
   --color-paypal-yellow: #FFC439;
   --color-paypal-yellow-hover: #F2BA36;
   --color-paypal-blue: #003087;
-  --color-info-light: #2a9bdb;
+
   --color-surface: var(--surface);
   --color-surface-light: var(--surface-light);
+  --color-surface-subtle: var(--surface-subtle);
   --color-surface-muted: var(--surface-muted);
 
   /* Status Colors */
@@ -69,6 +79,7 @@
   --color-success-bg: var(--success-bg);
   --color-warning: var(--warning);
   --color-warning-bg: var(--warning-bg);
+  --color-warning-dot: var(--warning-dot);
   --color-info: var(--info);
   --color-info-bg: var(--info-bg);
   --color-danger: var(--danger);
@@ -91,168 +102,133 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Radius */
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  /* Radius — v2 aprieta la escala: 8px es el máximo */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  --radius-2xl: 8px;
+  --radius-3xl: 8px;
+  --radius-4xl: 8px;
 }
 
 :root {
-  --radius: 0.5rem;
+  --radius: 0.375rem;
+  /* 6px */
 
-  /* Status Tokens */
-  --success: #15a378;
-  --success-bg: #e9f8f1;
-  --warning: #e0901f;
-  --warning-bg: #fcf2db;
-  --info: #4178e6;
-  --info-bg: #edf2fe;
-  --danger: #ec6a64;
-  --danger-bg: #fdeeec;
+  /* Status Tokens — oscurecidos para llegar a 4.5:1 sobre su propio fondo */
+  --success: #12805C;
+  --success-bg: #E7F5EF;
+  --warning: #8A5700;
+  --warning-bg: #FBF0DC;
+  --warning-dot: #C98A16;
+  --info: #12509E;
+  --info-bg: #E8F0FD;
+  --danger: #B4262B;
+  --danger-bg: #FCEDEC;
 
   /* Background & Surface */
-  --background: #F3F4F6;
-  /* light gray for contrast */
-  --foreground: #172436;
-  /* dark1 */
+  --background: #F7F8FB;
+  --foreground: #101A2B;
   --surface: #FFFFFF;
-  --surface-light: #F4F7FA;
-  /* light2 */
-  --surface-muted: #DEE4ED;
-  /* light3 */
+  --surface-subtle: #FBFCFD;
+  /* cabecera de tabla, pie de paginación */
+  --surface-light: #EDF1F7;
+  --surface-muted: #E7EAF0;
 
   /* Card */
   --card: #FFFFFF;
-  --card-foreground: #172436;
-  /* dark1 */
+  --card-foreground: #101A2B;
 
   /* Popover */
   --popover: #FFFFFF;
-  --popover-foreground: #172436;
-  /* dark1 */
+  --popover-foreground: #101A2B;
 
-  /* Primary - Brand Blue */
-  --primary: #073674;
-  /* brand1 */
+  /* Primary — azul de acción */
+  --primary: #1B6BD6;
   --primary-foreground: #FFFFFF;
 
   /* Secondary */
-  --secondary: #F4F7FA;
-  /* light2 */
-  --secondary-foreground: #172436;
-  /* dark1 */
+  --secondary: #EDF1F7;
+  --secondary-foreground: #101A2B;
 
   /* Muted */
-  --muted: #DEE4ED;
-  /* light3 */
-  --muted-foreground: #47576B;
-  /* dark3 */
+  --muted: #EDF1F7;
+  --muted-foreground: #6D7A8C;
 
   /* Accent */
-  --accent: #F4F7FA;
-  /* light2 */
-  --accent-foreground: #073674;
-  /* brand1 */
+  --accent: #F0F5FD;
+  --accent-foreground: #12509E;
 
   /* Destructive */
-  --destructive: #DC2626;
+  --destructive: #B4262B;
 
   /* Border & Input */
-  --border: #DEE4ED;
-  /* light3 */
-  --input: #DEE4ED;
-  /* light3 */
-  --ring: #073674;
-  /* brand1 */
+  --border: #E7EAF0;
+  --border-soft: #F2F4F8;
+  /* separador entre filas de tabla */
+  --input: #D5DAE4;
+  --ring: #1B6BD6;
 
-  /* Charts */
-  --chart-1: #073674;
-  /* brand1 */
-  --chart-2: #10B981;
-  /* success green */
-  --chart-3: #F59E0B;
-  /* warning amber */
-  --chart-4: #8B5CF6;
-  /* purple */
-  --chart-5: #EC4899;
-  /* pink */
+  /* Charts — solo dos series por gráfico */
+  --chart-1: #1B6BD6;
+  --chart-2: #12805C;
+  --chart-3: #C98A16;
+  --chart-4: #12509E;
+  --chart-5: #B4262B;
 
-  /* Sidebar - White theme as requested */
+  /* Sidebar — se mantiene blanco */
   --sidebar: #FFFFFF;
-  --sidebar-foreground: #172436;
-  /* dark1 */
-  --sidebar-primary: #073674;
-  /* brand1 */
+  --sidebar-foreground: #414D61;
+  --sidebar-primary: #12509E;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F3F4F6;
-  /* light gray hover */
-  --sidebar-accent-foreground: #172436;
-  --sidebar-border: transparent;
-  /* No visible border for cleaner look */
-  --sidebar-ring: #073674;
-  /* brand1 */
+  --sidebar-accent: #F0F5FD;
+  --sidebar-accent-foreground: #12509E;
+  --sidebar-border: #E7EAF0;
+  --sidebar-ring: #1B6BD6;
 }
 
-/* Dark mode support (optional, for future) */
 .dark {
-  --background: #172436;
-  /* dark1 */
+  --background: #0B1523;
   --foreground: #FFFFFF;
-  --surface: #2D3D53;
-  /* dark2 */
-  --surface-light: #172436;
-  /* dark1 */
-  --surface-muted: #47576B;
-  /* dark3 */
+  --surface: #16202F;
+  --surface-subtle: #101A2B;
+  --surface-light: #101A2B;
+  --surface-muted: #2A3648;
 
-  --card: #2D3D53;
-  /* dark2 */
+  --card: #16202F;
   --card-foreground: #FFFFFF;
 
-  --popover: #2D3D53;
-  /* dark2 */
+  --popover: #16202F;
   --popover-foreground: #FFFFFF;
 
-  --primary: #4A90D9;
-  /* lighter brand for contrast */
-  --primary-foreground: #172436;
+  --primary: #4E9BF5;
+  --primary-foreground: #071E3D;
 
-  --secondary: #47576B;
-  /* dark3 */
+  --secondary: #2A3648;
   --secondary-foreground: #FFFFFF;
 
-  --muted: #47576B;
-  /* dark3 */
-  --muted-foreground: #DEE4ED;
-  /* light3 */
+  --muted: #2A3648;
+  --muted-foreground: #A9B4C4;
 
-  --accent: #47576B;
-  /* dark3 */
-  --accent-foreground: #4A90D9;
+  --accent: #17335A;
+  --accent-foreground: #8FBEF9;
 
-  --destructive: #F87171;
+  --destructive: #E5787C;
 
-  --border: #47576B;
-  /* dark3 */
-  --input: #47576B;
-  /* dark3 */
-  --ring: #4A90D9;
+  --border: #2A3648;
+  --border-soft: #202B3C;
+  --input: #2A3648;
+  --ring: #4E9BF5;
 
-  --sidebar: #052550;
-  /* brand2 */
-  --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #4A90D9;
+  --sidebar: #071E3D;
+  --sidebar-foreground: rgba(255, 255, 255, 0.70);
+  --sidebar-primary: #4E9BF5;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #073674;
-  /* brand1 */
+  --sidebar-accent: rgba(255, 255, 255, 0.10);
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #073674;
-  /* brand1 */
-  --sidebar-ring: #4A90D9;
+  --sidebar-border: rgba(255, 255, 255, 0.10);
+  --sidebar-ring: #4E9BF5;
 }
 
 @layer base {
@@ -267,43 +243,54 @@
        computar overflow-y como "auto" en ambos ejes, lo que rompe todo `position: sticky` del
        sitio (headers, tablas). "clip" evita el scroll horizontal sin ese efecto colateral. */
     overflow-x: clip;
+    font-size: 13.5px;
   }
 
-  /* Typography defaults */
+  /* Typography defaults — v2 baja de tamaño y sube de precisión */
   h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
-    @apply font-semibold tracking-tight;
+    @apply font-semibold;
+    letter-spacing: -0.01em;
   }
 
   h1 {
-    @apply text-3xl;
+    font-size: 20px;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
   }
 
   h2 {
-    @apply text-2xl;
+    font-size: 17px;
+    line-height: 1.25;
   }
 
   h3 {
-    @apply text-xl;
+    font-size: 14px;
+    line-height: 1.3;
+  }
+
+  /* Regla del Mono para Datos: toda cifra alineada y comparable */
+  .tabular,
+  td .font-mono,
+  th .font-mono {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-/* Scroll ancla suave para navegación con anclas (#seccion), respetando reduced-motion */
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
   }
 }
 
-/* Scrollbar styling for desktop */
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: var(--muted) transparent;
+    scrollbar-color: var(--surface-muted) transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -316,32 +303,40 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: var(--muted);
+    background-color: var(--surface-muted);
     border-radius: 3px;
   }
 
-  /* Content max-width utility */
   .content-container {
-    @apply mx-auto w-full max-w-[2000px] px-4 md:px-6;
+    @apply mx-auto w-full max-w-[1400px] px-4 md:px-6;
   }
 
-  /* Responsive padding */
   @media (max-width: 768px) {
     .content-container {
       @apply px-4;
     }
   }
 
-  /* Premium Design Taste Utilities */
   .transition-premium {
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
+  /* Elevación v2 — dos niveles, el borde siempre va primero.
+     Regla del Borde Primero: ninguna superficie se separa del fondo con sombra sola. */
   .shadow-premium {
-    box-shadow: 0 4px 20px -2px rgba(7, 54, 116, 0.04), 0 2px 6px -1px rgba(7, 54, 116, 0.02);
+    box-shadow: 0 1px 2px rgba(16, 26, 43, 0.04);
   }
 
   .shadow-premium-hover {
-    box-shadow: 0 10px 30px -4px rgba(7, 54, 116, 0.08), 0 4px 12px -2px rgba(7, 54, 116, 0.03);
+    box-shadow: 0 4px 12px rgba(16, 26, 43, 0.07);
+  }
+
+  /* Etiqueta de columna / KPI */
+  .label-caps {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
   }
 }

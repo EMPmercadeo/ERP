@@ -400,27 +400,27 @@ export function RecetaTab({
 
                     <div className="border border-border rounded-xl overflow-x-auto bg-card shadow-sm">
                         <Table>
-                            <TableHeader className="bg-muted">
+                            <TableHeader>
                                 <TableRow className="hover:bg-transparent">
-                                    <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase">
+                                    <TableHead>
                                         Insumo
                                     </TableHead>
-                                    <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase text-center w-28">
+                                    <TableHead className="text-center w-28">
                                         Por lote
                                     </TableHead>
-                                    <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase text-center w-24">
+                                    <TableHead className="text-center w-24">
                                         Merma %
                                     </TableHead>
-                                    <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase text-right">
+                                    <TableHead className="text-right">
                                         Por unidad
                                     </TableHead>
-                                    <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase text-right">
+                                    <TableHead className="text-right">
                                         Alcanza para
                                     </TableHead>
-                                    <TableHead className="h-9 text-foreground font-bold text-[10px] uppercase text-center w-24">
+                                    <TableHead className="text-center w-24">
                                         Opcional
                                     </TableHead>
-                                    <TableHead className="h-9 w-10"></TableHead>
+                                    <TableHead className="w-10"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>

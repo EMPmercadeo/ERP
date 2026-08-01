@@ -69,8 +69,11 @@ const getInitials = (name: string) => {
 };
 
 const ITEMS_PER_PAGE = 5;
-const HEAD_CLASS = 'h-auto bg-surface-light px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground';
-const CELL_CLASS = 'px-4 py-3.5 align-middle';
+// La cabecera y el alto de fila los pone ahora la primitiva de tabla (Design System v2
+// §7). Aquí solo queda el padding horizontal, que es más generoso porque esta tabla vive
+// dentro de una card del dashboard y no a ancho completo.
+const HEAD_CLASS = 'px-4';
+const CELL_CLASS = 'px-4 align-middle';
 
 export function RecentActivityTable({ invoices }: RecentActivityTableProps) {
     const [currentPage, setCurrentPage] = useState(1);

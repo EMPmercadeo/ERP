@@ -161,11 +161,11 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
                     </CardHeader>
                     <CardContent className="p-0 max-h-60 overflow-y-auto">
                         <Table>
-                            <TableHeader className="bg-muted/50">
+                            <TableHeader>
                                 <TableRow>
-                                    <TableHead className="text-xs">Operación</TableHead>
-                                    <TableHead className="text-xs">Resultado</TableHead>
-                                    <TableHead className="text-xs text-right">Fecha</TableHead>
+                                    <TableHead>Operación</TableHead>
+                                    <TableHead>Resultado</TableHead>
+                                    <TableHead className="text-right">Fecha</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>

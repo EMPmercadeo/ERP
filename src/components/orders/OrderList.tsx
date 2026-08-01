@@ -149,13 +149,13 @@ export function OrderList({
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-muted/75">
-                                    <TableHead className="font-semibold text-muted-foreground">Número</TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground">Cliente</TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground">Emisión</TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground">Entrega Estimada</TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground text-right">Total Neto</TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground">Estado</TableHead>
-                                    <TableHead className="font-semibold text-muted-foreground text-right">Acciones</TableHead>
+                                    <TableHead>Número</TableHead>
+                                    <TableHead>Cliente</TableHead>
+                                    <TableHead>Emisión</TableHead>
+                                    <TableHead>Entrega Estimada</TableHead>
+                                    <TableHead className="text-right">Total Neto</TableHead>
+                                    <TableHead>Estado</TableHead>
+                                    <TableHead className="text-right">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>

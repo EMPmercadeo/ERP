@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ListPageLoading() {
     return (
         <div className="space-y-4">
-            <div className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-surface px-4 lg:px-6">
+            <div className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-surface px-4 lg:px-6">
                 <Skeleton className="h-6 w-32" />
                 <div className="flex-1" />
                 <Skeleton className="h-9 w-9 rounded-full" />

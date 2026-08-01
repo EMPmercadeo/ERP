@@ -171,7 +171,7 @@ export function PurchaseList({
                     {/* Desktop Table */}
                     <div className="hidden md:block rounded-md border overflow-hidden">
                         <Table>
-                            <TableHeader className="bg-muted/50">
+                            <TableHeader>
                                 <TableRow>
                                     <TableHead>Factura No.</TableHead>
                                     <TableHead>Proveedor</TableHead>
