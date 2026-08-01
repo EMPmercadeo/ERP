@@ -68,6 +68,10 @@ export interface ProductData {
     precioVenta: number;
     codigoTasaItbms: string;
     stockActual: number;
+    /** Producto que se fabrica con receta: no lleva stock propio. */
+    esElaborado?: boolean;
+    /** Unidades que se pueden producir con los insumos que quedan. null si no aplica. */
+    unidadesProducibles?: number | null;
     activo: boolean;
     unidadMedida: string;
     imagenUrl?: string | null;
@@ -334,7 +338,11 @@ export function ProductList({
             accessorKey: 'stockActual',
             header: () => <div className="text-center">Stock</div>,
             cell: ({ row }) => {
-                const stock = row.getValue('stockActual') as number;
+                // En un elaborado el número que importa no es su stockActual (que nadie
+                // actualiza) sino cuántas unidades alcanzan a salir con los insumos que quedan.
+                const stock = row.original.esElaborado
+                    ? (row.original.unidadesProducibles ?? 0)
+                    : (row.getValue('stockActual') as number);
                 if (row.original.unidadMedida === 'SRV') {
                     return (
                         <div className="text-center">
@@ -830,17 +838,17 @@ export function ProductList({
                                                             <Badge className="bg-info/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
                                                                 Servicio
                                                             </Badge>
-                                                        ) : product.stockActual <= 0 ? (
+                                                        ) : (product.esElaborado ? (product.unidadesProducibles ?? 0) : product.stockActual) <= 0 ? (
                                                             <Badge className="bg-danger/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
                                                                 Agotado
                                                             </Badge>
-                                                        ) : product.stockActual < 10 ? (
+                                                        ) : (product.esElaborado ? (product.unidadesProducibles ?? 0) : product.stockActual) < 10 ? (
                                                             <Badge className="bg-warning/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
-                                                                {product.stockActual} uds
+                                                                {product.esElaborado ? product.unidadesProducibles ?? 0 : product.stockActual} uds
                                                             </Badge>
                                                         ) : (
                                                             <Badge className="bg-success/90 text-white text-[9px] font-bold px-1.5 py-0.5 border-transparent shadow-sm">
-                                                                {product.stockActual} uds
+                                                                {product.esElaborado ? product.unidadesProducibles ?? 0 : product.stockActual} uds
                                                             </Badge>
                                                         )}
                                                     </span>

@@ -6,7 +6,68 @@ import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { emitirFacturaPAC } from '@/lib/pac/mock-pac-client';
 import { getTenantContext } from '@/lib/auth/context';
 import { verificarPinAutorizacion, obtenerTopeDescuentoSinAutorizacion } from '@/lib/services/discountAuth';
+import { cargarRecetas, explotarReceta, RecetaCiclicaError } from '@/lib/services/recetas';
 import { z } from 'zod';
+
+/**
+ * Descuenta el inventario de una venta del POS respetando las recetas: un producto
+ * elaborado (una pizza) no baja su propio stock, baja el de los insumos que consume.
+ *
+ * Mismo criterio que la facturación (src/lib/services/invoiceCreation.ts) para que el
+ * inventario quede igual sin importar por dónde se vendió. Cada línea se protege por
+ * separado: un error de stock no debe tumbar una venta ya cobrada y ya emitida.
+ */
+async function descontarStockVentaPos(
+  empresaId: string,
+  ventaId: string,
+  items: { productoId: string; cantidad: number }[]
+) {
+  const recetas = await cargarRecetas(empresaId);
+
+  for (const it of items) {
+    try {
+      const receta = recetas.get(it.productoId);
+
+      if (receta && receta.descuentaAutomatico && receta.insumos.length > 0) {
+        let consumo;
+        try {
+          consumo = explotarReceta(it.productoId, it.cantidad, recetas);
+        } catch (error) {
+          if (!(error instanceof RecetaCiclicaError)) throw error;
+          console.error(`Receta circular en venta POS ${ventaId}, producto ${it.productoId}:`, error.message);
+          continue;
+        }
+
+        for (const [insumoId, cantidadExacta] of consumo) {
+          const cantidad = Math.round(cantidadExacta);
+          if (cantidad <= 0) continue;
+          await prisma.producto.updateMany({
+            where: { id: insumoId, empresaId, unidadMedida: { not: 'SRV' } },
+            data: { stockActual: { decrement: cantidad } }
+          });
+          await prisma.movimientoInventario.create({
+            data: {
+              empresaId,
+              productoId: insumoId,
+              tipo: 'salida',
+              cantidad,
+              concepto: 'consumo_receta',
+              referenciaId: ventaId
+            }
+          });
+        }
+        continue;
+      }
+
+      await prisma.producto.updateMany({
+        where: { id: it.productoId, empresaId, unidadMedida: { not: 'SRV' } },
+        data: { stockActual: { decrement: it.cantidad } }
+      });
+    } catch (stockErr) {
+      console.error(`Error descontando stock producto ${it.productoId} venta ${ventaId}:`, stockErr);
+    }
+  }
+}
 
 const VentaSchema = z.object({
   cuentaId: z.string().optional(),
@@ -187,16 +248,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (offline || !cuenta) {
-      for (const it of items) {
-        try {
-          await prisma.producto.updateMany({
-            where: { id: it.productoId, unidadMedida: { not: 'SRV' } },
-            data: { stockActual: { decrement: it.cantidad } }
-          });
-        } catch (stockErr) {
-          console.error(`Error descontando stock (offline) producto ${it.productoId} venta ${venta.id}:`, stockErr);
-        }
-      }
+      await descontarStockVentaPos(empresaId, venta.id, items);
 
       return NextResponse.json({
         success: true,
@@ -281,16 +333,7 @@ export async function POST(request: NextRequest) {
         });
       });
 
-      for (const it of items) {
-        try {
-          await prisma.producto.updateMany({
-            where: { id: it.productoId, unidadMedida: { not: 'SRV' } },
-            data: { stockActual: { decrement: it.cantidad } }
-          });
-        } catch (stockErr) {
-          console.error(`Error descontando stock (online) producto ${it.productoId} venta ${venta.id}:`, stockErr);
-        }
-      }
+      await descontarStockVentaPos(empresaId, venta.id, items);
 
       await registrarLogAuditoria({
         adminId: userId,

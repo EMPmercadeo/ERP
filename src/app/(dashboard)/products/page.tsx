@@ -2,7 +2,9 @@ import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 import { Topbar } from '@/components/layout/Topbar';
 import { ProductList } from '@/components/products/ProductList';
+import { ProductsPageTabs } from '@/components/products/ProductsPageTabs';
 import { getTenantContext } from '@/lib/auth/context';
+import { calcularDisponibilidades } from '@/lib/services/recetas';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +20,7 @@ interface PageProps {
         stockStatus?: string;
         unidad?: string;
         categoriaId?: string;
+        tab?: string;
     }>;
 }
 
@@ -96,6 +99,14 @@ export default async function ProductsPage(props: PageProps) {
         prisma.producto.count({ where })
     ]);
 
+    // Un producto elaborado no lleva stock propio: cuántas unidades hay se deriva de los
+    // insumos que le quedan (ver src/lib/services/recetas.ts). Se calcula aquí para que el
+    // listado muestre el número real y no un stockActual que nadie está actualizando.
+    const idsElaborados = products.filter(p => p.esElaborado).map(p => p.id);
+    const disponibilidades = idsElaborados.length > 0
+        ? await calcularDisponibilidades(empresaId, idsElaborados)
+        : new Map();
+
     const formattedProducts = products.map(p => ({
         id: p.id,
         codigoInterno: p.codigoInterno,
@@ -104,6 +115,8 @@ export default async function ProductsPage(props: PageProps) {
         precioVenta: p.precioVenta.toNumber(),
         codigoTasaItbms: p.codigoTasaItbms,
         stockActual: p.stockActual,
+        esElaborado: p.esElaborado,
+        unidadesProducibles: disponibilidades.get(p.id)?.unidadesPosibles ?? null,
         activo: p.activo,
         unidadMedida: p.unidadMedida,
         imagenUrl: p.imagenUrl,
@@ -118,6 +131,7 @@ export default async function ProductsPage(props: PageProps) {
     return (
         <>
             <Topbar title="Productos" />
+            <ProductsPageTabs initialTab={searchParams.tab ?? 'catalogo'}>
             <ProductList 
                 initialData={formattedProducts}
                 pageCount={pageCount}
@@ -133,6 +147,7 @@ export default async function ProductsPage(props: PageProps) {
                 initialUnidad={unidad}
                 initialCategoriaId={categoriaId}
             />
+            </ProductsPageTabs>
         </>
     );
 }

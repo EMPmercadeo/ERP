@@ -87,6 +87,9 @@ model Empresa {
   transferenciasBodega      TransferenciaBodega[]
   turnosCaja                TurnoCaja[]
   yappyOrdenes              YappyOrden[]
+  proveedorInsumos          ProveedorInsumo[]
+  recetas                   Receta[]
+  recetaInsumos             RecetaInsumo[]
 
   @@index([createdAt])
 }
@@ -262,6 +265,17 @@ model Producto {
   stockMinimo      Int                    @default(0)
   controlaLotes    Boolean                @default(false)
   esKit            Boolean                @default(false)
+  // Producto que se fabrica consumiendo insumos (tiene Receta activa). Su stock
+  // disponible NO se lleva en stockActual: se deriva de los insumos que le quedan
+  // (ver src/lib/services/recetas.ts). Excluyente con esKit.
+  esElaborado      Boolean                @default(false)
+  // Materia prima / insumo: se compra y se consume, pero normalmente no se vende
+  // suelto. Solo cambia como se presenta en el catalogo y el POS.
+  esInsumo         Boolean                @default(false)
+  // Cuantos dias de consumo se quieren mantener en stock por encima del tiempo de
+  // entrega del proveedor (colchon de seguridad) antes de disparar la alerta de
+  // reabastecimiento. Si es null se usa el valor por defecto del motor (3 dias).
+  diasCoberturaObjetivo Int?
   // Descuento individual (%) preaprobado por el dueño para este producto puntual — se
   // sugiere automáticamente en POS/Facturación, sin necesitar autorización de admin.
   descuentoPorcentaje Decimal             @default(0)
@@ -283,6 +297,9 @@ model Producto {
   kitInfo          ProductoKit?
   componenteDeKit  ProductoKitComponente[] @relation("ProductoComoComponente")
   transferenciaBodegaItems TransferenciaBodegaItem[]
+  receta           Receta?                @relation("ProductoConReceta")
+  usadoEnRecetas   RecetaInsumo[]         @relation("ProductoComoInsumo")
+  presentacionesProveedor ProveedorInsumo[] @relation("InsumoDeProveedor")
 
   @@unique([empresaId, codigoInterno])
   @@index([empresaId])
@@ -599,6 +616,7 @@ model Proveedor {
   empresa         Empresa         @relation(fields: [empresaId], references: [id])
   compras         Compra[]
   pagos           PagoProveedor[]
+  insumos         ProveedorInsumo[]
 
   @@unique([empresaId, ruc])
   @@index([empresaId])
@@ -1451,4 +1469,146 @@ model YappyOrden {
   confirmadoAt  DateTime?
 
   @@index([empresaId, estado])
+}
+
+// ---------------------------------------------------------------------------
+// INSUMOS, RECETAS Y REABASTECIMIENTO
+//
+// Resuelve el caso clasico de un negocio que transforma materia prima antes de
+// vender: "el proveedor me vende un saco de 5 kg de harina, con eso salen 50
+// bolas de masa, una pizza mediana usa 1 bola y una familiar 2; si facturo 40
+// medianas me quedan 10 bolas y hay que reabastecer".
+//
+// Se modela en dos capas separadas a proposito, para que ninguna mienta:
+//
+//   1. ProveedorInsumo  -> como COMPRO el insumo. El proveedor vende en
+//      presentaciones ("Saco 5 kg") y el ERP guarda el stock en la unidad base
+//      del Producto (gramos, unidades, ml...). `unidadesPorPresentacion` es el
+//      factor de conversion entre ambas (1 saco = 5000 g).
+//
+//   2. Receta / RecetaInsumo -> como CONSUMO el insumo. Un producto elaborado
+//      declara que insumos gasta por lote y cuantas unidades rinde ese lote.
+//      El rendimiento NO se guarda como dato suelto: se deriva de la receta
+//      (5000 g / 50 bolas = 100 g por bola), asi nunca queda desincronizado.
+//
+// Las recetas son recursivas (Pizza Mediana -> Bola de masa -> Harina) y se
+// explotan en src/lib/services/recetas.ts con guarda anti-ciclos.
+//
+// Diferencia con ProductoKit (que ya existia): un KIT es un combo comercial de
+// productos que tambien se venden por separado (se factura el combo, se
+// descuentan los hijos). Una RECETA es transformacion: los insumos no se venden,
+// se consumen. Un producto no puede ser kit y elaborado a la vez.
+// ---------------------------------------------------------------------------
+
+// Presentacion en la que un proveedor concreto vende un insumo concreto.
+// Un mismo insumo puede tener varias (distintos proveedores, o el mismo
+// proveedor con saco de 5 kg y de 25 kg); solo una puede ser `esPreferido`.
+model ProveedorInsumo {
+  id          String @id @default(cuid())
+  empresaId   String
+  proveedorId String
+  productoId  String // el insumo (ej. Harina)
+
+  // SKU o codigo con el que el proveedor identifica el articulo, para pedirlo.
+  codigoProveedor String?
+
+  // Como lo vende el proveedor: "Saco 5 kg", "Caja 24 und", "Bidon 20 L".
+  presentacion String
+
+  // Cuantas unidades BASE del Producto entrega una presentacion. Si el stock de
+  // Harina se lleva en gramos, un saco de 5 kg son 5000. Es el unico factor de
+  // conversion del sistema: comprar 1 presentacion suma esto al stockActual.
+  unidadesPorPresentacion Decimal
+
+  // Precio de UNA presentacion completa (no de la unidad base).
+  precioPresentacion Decimal
+
+  // Dias que tarda este proveedor en entregar. Alimenta el punto de reorden:
+  // hay que pedir antes de que la cobertura caiga por debajo de este plazo.
+  diasEntrega Int @default(0)
+
+  // Cantidad minima de presentaciones por pedido (algunos venden por caja de 10).
+  pedidoMinimo Int @default(1)
+
+  // El proveedor por defecto que se usa para las sugerencias de compra.
+  esPreferido Boolean @default(false)
+  activo      Boolean @default(true)
+
+  // Ultima vez que se compro a este proveedor, para mostrar contexto y detectar
+  // precios viejos sin tener que recorrer todas las compras.
+  ultimoPrecio       Decimal?
+  ultimaCompraFecha  DateTime?
+
+  notas     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa   Empresa   @relation(fields: [empresaId], references: [id])
+  proveedor Proveedor @relation(fields: [proveedorId], references: [id], onDelete: Cascade)
+  producto  Producto  @relation("InsumoDeProveedor", fields: [productoId], references: [id], onDelete: Cascade)
+
+  @@unique([proveedorId, productoId, presentacion])
+  @@index([empresaId])
+  @@index([empresaId, productoId])
+  @@index([productoId, esPreferido])
+}
+
+// Receta de un producto elaborado. `rendimiento` es cuantas unidades del
+// producto salen de UN lote; los RecetaInsumo son lo que gasta ese lote.
+// Consumo por unidad = insumo.cantidad / receta.rendimiento.
+model Receta {
+  id         String @id @default(cuid())
+  empresaId  String
+  productoId String @unique
+
+  // Unidades del producto que produce un lote completo de esta receta.
+  // Ej: la receta de "Bola de masa" gasta 5000 g de harina y rinde 50 bolas.
+  rendimiento Decimal @default(1)
+
+  // Si es true, al facturar/vender se descuentan los insumos automaticamente y
+  // NO se toca el stock propio del producto elaborado (su disponibilidad se
+  // deriva de los insumos). Si es false, la receta solo sirve para proyectar y
+  // avisar: el stock se maneja a mano como cualquier otro producto.
+  descuentaAutomatico Boolean @default(true)
+
+  activo    Boolean  @default(true)
+  notas     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa  Empresa        @relation(fields: [empresaId], references: [id])
+  producto Producto       @relation("ProductoConReceta", fields: [productoId], references: [id], onDelete: Cascade)
+  insumos  RecetaInsumo[]
+
+  @@index([empresaId])
+}
+
+model RecetaInsumo {
+  id        String @id @default(cuid())
+  empresaId String
+  recetaId  String
+  insumoId  String
+
+  // Cantidad del insumo, en la unidad base del insumo, que consume UN LOTE
+  // completo de la receta (no una unidad).
+  cantidad Decimal
+
+  // Merma esperada en % (0-100): desperdicio, evaporacion, recortes. El consumo
+  // real se calcula como cantidad * (1 + merma/100).
+  merma Decimal @default(0)
+
+  // Un insumo opcional (ej. topping extra) no bloquea la produccion cuando falta:
+  // se descuenta si hay, pero no limita cuantas unidades se pueden producir.
+  opcional Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa Empresa  @relation(fields: [empresaId], references: [id])
+  receta  Receta   @relation(fields: [recetaId], references: [id], onDelete: Cascade)
+  insumo  Producto @relation("ProductoComoInsumo", fields: [insumoId], references: [id], onDelete: Restrict)
+
+  @@unique([recetaId, insumoId])
+  @@index([empresaId])
+  @@index([insumoId])
 }

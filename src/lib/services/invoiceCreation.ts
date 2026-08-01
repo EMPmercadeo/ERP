@@ -4,6 +4,7 @@ import { resolverBodegaId, moverInventarioBodega } from '@/lib/actions/bodegas';
 import { canCreateInvoice, incrementDocumentUsage } from '@/lib/actions/billing';
 import { generarAsientoFactura, generarAsientoCobro, generarAsientoCostoVenta } from '@/lib/contabilidad/asientos';
 import { obtenerTopeDescuentoSinAutorizacion, verificarPinAutorizacion } from '@/lib/services/discountAuth';
+import { cargarRecetas, explotarReceta, RecetaCiclicaError, type MapaRecetas } from '@/lib/services/recetas';
 
 interface ProductoConCosto {
     id: string;
@@ -293,12 +294,52 @@ export async function crearFacturaCompleta(params: CrearFacturaCompletaParams) {
 
         const bodegaId = await resolverBodegaId(tx, empresa.id, params.bodegaId ?? null);
 
+        // Grafo de recetas de la empresa. Se carga una sola vez por factura: un producto
+        // elaborado (una pizza) no descuenta su propio stock, descuenta los insumos que
+        // consume, bajando por todas las recetas intermedias hasta la materia prima.
+        const recetas: MapaRecetas = await cargarRecetas(empresa.id, tx);
+
         const descontarStock = async (
             prodId: string,
             cantidad: number,
             esKit: boolean,
             kitInfo: ProductoConCosto['kitInfo']
         ): Promise<void> => {
+            // La receta manda sobre todo lo demás: si el producto se fabrica, lo que sale
+            // del inventario son sus insumos, nunca él mismo.
+            const receta = recetas.get(prodId);
+            if (receta && receta.descuentaAutomatico && receta.insumos.length > 0) {
+                let consumo;
+                try {
+                    consumo = explotarReceta(prodId, cantidad, recetas);
+                } catch (error) {
+                    if (!(error instanceof RecetaCiclicaError)) throw error;
+                    // Con una receta circular no se puede saber qué descontar. Se deja pasar
+                    // la venta (el cliente ya está en el mostrador) y se registra el problema.
+                    console.error(`Receta circular al facturar el producto ${prodId}:`, error.message);
+                    return;
+                }
+
+                for (const [insumoId, cantidadExacta] of consumo) {
+                    // Se redondea una sola vez sobre el consumo total de la línea, no por
+                    // unidad, para no arrastrar el error de redondeo en cada pizza.
+                    const cantidadInsumo = Math.round(cantidadExacta);
+                    if (cantidadInsumo <= 0) continue;
+                    await descontarStock(insumoId, cantidadInsumo, false, null);
+                    await tx.movimientoInventario.create({
+                        data: {
+                            empresaId: empresa.id,
+                            productoId: insumoId,
+                            tipo: 'salida',
+                            cantidad: cantidadInsumo,
+                            concepto: 'consumo_receta',
+                            referenciaId: nuevaFactura.id
+                        }
+                    });
+                }
+                return;
+            }
+
             if (esKit && kitInfo && kitInfo.activo) {
                 for (const comp of kitInfo.componentes) {
                     const compProd = comp.productoComponente;

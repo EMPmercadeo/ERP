@@ -60,6 +60,8 @@ import {
     formatearMoneda,
     formatearPorcentaje
 } from '@/lib/utils/fiscal';
+import { RecetaTab } from '@/components/products/RecetaTab';
+import { PresentacionesInsumo } from '@/components/suministros/PresentacionesInsumo';
 
 const initialState = {
     message: '',
@@ -367,6 +369,9 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                             </TabsTrigger>
                                             <TabsTrigger value="kit" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-card data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
                                                 Kit
+                                            </TabsTrigger>
+                                            <TabsTrigger value="receta" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-card data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
+                                                Receta e Insumos
                                             </TabsTrigger>
                                             <TabsTrigger value="multimedia" className="text-xs font-bold text-muted-foreground rounded-md px-3.5 py-1.5 shrink-0 data-[state=active]:bg-card data-[state=active]:text-brand-1 data-[state=active]:shadow-sm">
                                                 Multimedia
@@ -733,6 +738,32 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                     {/* TAB: KIT / PRODUCTO COMPUESTO */}
                                     <TabsContent value="kit" forceMount className="mt-4 space-y-4 outline-none data-[state=inactive]:hidden">
                                         <KitTab productoId={product.id} initialEsKit={product.esKit} />
+                                    </TabsContent>
+
+                                    {/* TAB: RECETA E INSUMOS
+                                        Las dos caras del mismo producto en un solo lugar: qué consume cuando se
+                                        fabrica (receta) y dónde se compra cuando es materia prima (proveedores).
+                                        Sin forceMount a propósito: no contiene campos del <form> de producto y
+                                        montarlo siempre dispararía sus consultas en cada visita a la ficha. */}
+                                    <TabsContent value="receta" className="mt-4 space-y-6 outline-none">
+                                        {/* Se pasan los valores del formulario en vivo (no los guardados) para
+                                            que el margen se recalcule mientras se cambia el precio. */}
+                                        <RecetaTab
+                                            productoId={product.id}
+                                            unidadProducto={unidadMedida}
+                                            precioVenta={parseFloat(precioVenta) || 0}
+                                        />
+
+                                        <div className="space-y-2 pt-2 border-t border-border">
+                                            <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider pt-3">
+                                                Dónde comprar este insumo
+                                            </h3>
+                                            <PresentacionesInsumo
+                                                modo="producto"
+                                                productoId={product.id}
+                                                unidadProducto={unidadMedida}
+                                            />
+                                        </div>
                                     </TabsContent>
 
                                     {/* TAB 4: MULTIMEDIA */}

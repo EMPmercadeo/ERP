@@ -68,6 +68,21 @@ Plans: `free` → `emprendedor` → `negocio` → `pro` → `empresa`. Stored as
 - ITBMS (VAT) codes: `"00"` = exempt, `"01"` = 7%, `"02"` = 10%, `"03"` = 15%
 - Document sequence managed via `Secuencia` model (atomic transaction in `getNextSequence`)
 
+### Insumos, recetas y reabastecimiento (Fase 1)
+Dos capas separadas a propósito — ver el comentario largo en `prisma/schema.prisma`:
+
+1. **`ProveedorInsumo`** — cómo se COMPRA. El proveedor vende en presentaciones ("Saco 5 kg") y `unidadesPorPresentacion` convierte a la unidad base del `Producto` (5000 si la harina se lleva en gramos). Solo una presentación por insumo puede ser `esPreferido`.
+2. **`Receta` / `RecetaInsumo`** — cómo se CONSUME. Los insumos se declaran **por lote**, y `Receta.rendimiento` dice cuántas unidades salen de ese lote. El consumo por unidad se deriva (`cantidad / rendimiento`), nunca se guarda suelto.
+
+`Receta.descuentaAutomatico = true` ⇒ producto **elaborado virtual**: NO lleva stock propio, su disponibilidad se calcula desde los insumos. En `false` lleva stock propio y la receta solo proyecta. Nunca hay dos números representando lo mismo.
+
+- **`src/lib/services/recetasCore.ts`** — aritmética pura, sin imports. `explotarReceta` aplana recursivamente (pizza → bola → harina) sumando insumos compartidos entre ramas, con guarda anti-ciclos (`RecetaCiclicaError`). `recetas.ts` = capa Prisma encima.
+- **`src/lib/services/reabastecimientoCore.ts`** — cobertura, punto de reorden, sugerencia de compra y redacción del aviso. `reabastecimiento.ts` = capa Prisma.
+- El consumo diario sale **solo de ventas** (`FacturaItem` + `Venta.items` explotados por receta). No se mezcla con `MovimientoInventario` porque se contaría doble.
+- Descuento de insumos al vender: `invoiceCreation.ts` (dentro de su `descontarStock`, la receta manda sobre el kit) y `api/pos/ventas/route.ts` (`descontarStockVentaPos`). Ambos escriben `MovimientoInventario` con `concepto: 'consumo_receta'`.
+- UI sin tocar el sidebar: pestaña **Receta e Insumos** en `/products/[id]`, pestaña **Suministros** en `/suppliers/[id]`, pestaña **Abastecimiento** en `/products?tab=abastecimiento`.
+- Pruebas del cálculo: `npx tsx scripts/test-recetas.ts` (no toca la base de datos).
+
 ### Key Invariants
 - **Never query without `empresaId`** — data leaks between tenants
 - **`design-review-package/`** — frozen UI snapshot, never edit

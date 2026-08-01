@@ -2,12 +2,13 @@
 
 import { prisma } from '@/lib/db';
 import { getTenantContext } from '@/lib/auth/context';
+import { generarAlertasReabastecimiento } from '@/lib/services/reabastecimiento';
 
 export type NotificacionSeveridad = 'info' | 'warning' | 'critical';
 
 export interface Notificacion {
     id: string;
-    tipo: 'facturas_vencidas' | 'facturas_dgi_error' | 'stock_bajo' | 'plan_limite';
+    tipo: 'facturas_vencidas' | 'facturas_dgi_error' | 'stock_bajo' | 'plan_limite' | 'reabastecimiento';
     titulo: string;
     mensaje: string;
     href: string;
@@ -105,6 +106,40 @@ export async function getNotificaciones(): Promise<Notificacion[]> {
                 count: usados,
             });
         }
+    }
+
+    // Reabastecimiento de insumos: solo se calcula si la empresa realmente usa recetas o
+    // tiene insumos marcados. Es el único aviso que proyecta hacia adelante (cuánto dura
+    // lo que queda) en vez de mirar solo el stock mínimo, así que se deja de último y se
+    // salta por completo para las empresas que no usan el módulo.
+    try {
+        const usaInsumos = await prisma.producto.count({
+            where: { empresaId, activo: true, OR: [{ esInsumo: true }, { esElaborado: true }] },
+        });
+
+        if (usaInsumos > 0) {
+            const alertas = await generarAlertasReabastecimiento(empresaId);
+            const urgentes = alertas.filter((a) => a.severidad === 'agotado' || a.severidad === 'critico');
+
+            if (urgentes.length > 0) {
+                const primera = urgentes[0];
+                notificaciones.push({
+                    id: 'reabastecimiento',
+                    tipo: 'reabastecimiento',
+                    titulo: 'Hay que reabastecer insumos',
+                    mensaje:
+                        urgentes.length === 1
+                            ? primera.mensaje
+                            : `${primera.mensaje} Y ${urgentes.length - 1} insumo${urgentes.length - 1 === 1 ? '' : 's'} más en la misma situación.`,
+                    href: '/products?tab=abastecimiento',
+                    severidad: urgentes.some((a) => a.severidad === 'agotado') ? 'critical' : 'warning',
+                    count: urgentes.length,
+                });
+            }
+        }
+    } catch (error) {
+        // Un fallo calculando la proyección no debe dejar al usuario sin el resto de avisos.
+        console.error('Error calculando alertas de reabastecimiento:', error);
     }
 
     return notificaciones;

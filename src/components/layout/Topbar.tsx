@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Bell, Search, LogOut, AlertTriangle, AlertCircle, PackageX, Gauge, CheckCheck } from 'lucide-react';
+import { Bell, Search, LogOut, AlertTriangle, AlertCircle, PackageX, Gauge, CheckCheck, PackageSearch } from 'lucide-react';
 
 import { useAuth } from '@/lib/firebase/auth';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,7 @@ const ICONO_POR_TIPO: Record<Notificacion['tipo'], typeof AlertTriangle> = {
     facturas_dgi_error: AlertCircle,
     stock_bajo: PackageX,
     plan_limite: Gauge,
+    reabastecimiento: PackageSearch,
 };
 
 export function Topbar({ title, children }: TopbarProps) {

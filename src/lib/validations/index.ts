@@ -182,3 +182,48 @@ export const TurnoCajaCierreSchema = z.object({
     montoContadoCierre: z.coerce.number().min(0, { message: "El monto contado no puede ser negativo" }),
     observaciones: z.string().max(500).optional().or(z.literal('')),
 });
+
+// ---------------------------------------------------------------------------
+// Insumos, recetas y reabastecimiento
+// ---------------------------------------------------------------------------
+
+// Presentación en la que un proveedor vende un insumo. `unidadesPorPresentacion` es el
+// factor de conversión entre lo que vende el proveedor y la unidad base con la que el
+// ERP lleva el stock (un saco de 5 kg son 5000 si la harina se cuenta en gramos).
+export const ProveedorInsumoSchema = z.object({
+    proveedorId: z.string().min(1, { message: "Selecciona el proveedor" }),
+    productoId: z.string().min(1, { message: "Selecciona el insumo" }),
+    codigoProveedor: z.string().max(60).optional().or(z.literal('')),
+    presentacion: z.string().min(1, { message: "Describe la presentación (ej. Saco 5 kg)" }).max(120),
+    unidadesPorPresentacion: z.coerce.number().positive({ message: "Debe ser mayor a 0" }),
+    precioPresentacion: z.coerce.number().min(0, { message: "El precio no puede ser negativo" }),
+    diasEntrega: z.coerce.number().int().min(0).max(365).default(0),
+    pedidoMinimo: z.coerce.number().int().min(1, { message: "El pedido mínimo es al menos 1" }).default(1),
+    esPreferido: z.boolean().default(false),
+    activo: z.boolean().default(true),
+    notas: z.string().max(500).optional().or(z.literal('')),
+});
+
+export const RecetaInsumoSchema = z.object({
+    insumoId: z.string().min(1, { message: "Selecciona el insumo" }),
+    cantidad: z.coerce.number().positive({ message: "La cantidad debe ser mayor a 0" }),
+    merma: z.coerce.number().min(0).max(99, { message: "La merma debe estar entre 0 y 99%" }).default(0),
+    opcional: z.boolean().default(false),
+});
+
+// `rendimiento` son las unidades que salen de un lote completo de la receta: los insumos
+// se declaran por lote, no por unidad, porque así es como el negocio los mide de verdad
+// ("con 5 kg de harina me salen 50 bolas").
+export const RecetaSchema = z.object({
+    rendimiento: z.coerce.number().positive({ message: "El rendimiento debe ser mayor a 0" }),
+    descuentaAutomatico: z.boolean().default(true),
+    activo: z.boolean().default(true),
+    notas: z.string().max(500).optional().or(z.literal('')),
+    insumos: z.array(RecetaInsumoSchema).min(1, { message: "Agrega al menos un insumo a la receta" }),
+}).refine(
+    (data) => new Set(data.insumos.map((i) => i.insumoId)).size === data.insumos.length,
+    { message: "Hay un insumo repetido en la receta", path: ["insumos"] }
+).refine(
+    (data) => data.insumos.some((i) => !i.opcional),
+    { message: "La receta necesita al menos un insumo obligatorio", path: ["insumos"] }
+);

@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { NewPaymentModal } from '@/components/purchases/NewPaymentModal';
+import { PresentacionesInsumo } from '@/components/suministros/PresentacionesInsumo';
 
 interface SupplierDetailProps {
     supplier: {
@@ -93,8 +94,8 @@ function formatDate(dateStr: string) {
 }
 
 export function SupplierDetailClient({ supplier, purchases, payments, initialTab }: SupplierDetailProps) {
-    const [activeTab, setActiveTab] = useState<'info' | 'purchases' | 'payments' | 'statement'>(
-        (initialTab === 'purchases' || initialTab === 'payments' || initialTab === 'statement') ? initialTab : 'info'
+    const [activeTab, setActiveTab] = useState<'info' | 'purchases' | 'payments' | 'statement' | 'suministros'>(
+        (initialTab === 'purchases' || initialTab === 'payments' || initialTab === 'statement' || initialTab === 'suministros') ? initialTab : 'info'
     );
 
     // Calculate metrics dynamically
@@ -221,11 +222,12 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                         </Card>
                     </div>
 
-                    {/* Tabs */}
-                    <div className="flex gap-2 border-b">
+                    {/* Tabs. Con 5 pestañas ya no caben en una fila en móvil: se deja scroll
+                        horizontal y shrink-0 en cada botón en vez de apretarlas o cortarlas. */}
+                    <div className="flex gap-2 border-b overflow-x-auto whitespace-nowrap">
                         <button
                             onClick={() => setActiveTab('info')}
-                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'info'
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors shrink-0 ${activeTab === 'info'
                                 ? 'border-primary text-primary'
                                 : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
@@ -234,7 +236,7 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                         </button>
                         <button
                             onClick={() => setActiveTab('purchases')}
-                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'purchases'
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors shrink-0 ${activeTab === 'purchases'
                                 ? 'border-primary text-primary'
                                 : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
@@ -243,7 +245,7 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                         </button>
                         <button
                             onClick={() => setActiveTab('payments')}
-                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'payments'
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors shrink-0 ${activeTab === 'payments'
                                 ? 'border-primary text-primary'
                                 : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
@@ -252,12 +254,21 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                         </button>
                         <button
                             onClick={() => setActiveTab('statement')}
-                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'statement'
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors shrink-0 ${activeTab === 'statement'
                                 ? 'border-primary text-primary'
                                 : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
                         >
                             Estado de Cuenta
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('suministros')}
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors shrink-0 ${activeTab === 'suministros'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                                }`}
+                        >
+                            Suministros
                         </button>
                     </div>
 
@@ -510,6 +521,24 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                                         )}
                                     </TableBody>
                                 </Table>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Suministros: qué insumos vende este proveedor, en qué presentación y
+                        cuánto rinde cada una. Es lo que le permite al ERP sugerir cuánto
+                        pedirle cuando un insumo se acerca a su punto de reorden. */}
+                    {activeTab === 'suministros' && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Insumos que vende este proveedor</CardTitle>
+                                <CardDescription>
+                                    Presentaciones, precios y tiempos de entrega. Con esto el sistema calcula solo
+                                    cuánto pedir y cuánto va a costar cuando algo se está acabando.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <PresentacionesInsumo modo="proveedor" proveedorId={supplier.id} />
                             </CardContent>
                         </Card>
                     )}
