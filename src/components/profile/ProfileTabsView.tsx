@@ -220,7 +220,7 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
     ];
 
     return (
-        <div className="mx-auto max-w-5xl space-y-6 sm:space-y-8">
+        <div className="w-full space-y-6 sm:space-y-8">
             {/* Super Admin Banner */}
             {effectiveRole === 'super_admin' && (
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-warning/30 bg-warning-bg shadow-sm text-warning">
