@@ -62,7 +62,7 @@ const topNavigation = [
 
 // Navegación agrupada por flujo de trabajo (Ventas → Compras/Inventario → Finanzas)
 // en vez de una lista plana, para que el usuario ubique cada módulo más rápido.
-const navigationGroups: { label: string; items: { name: string; href: string; icon: LucideIcon }[] }[] = [
+const navigationGroups: { label: string; collapsible?: boolean; items: { name: string; href: string; icon: LucideIcon }[] }[] = [
     {
         label: 'Ventas',
         items: [
@@ -76,6 +76,7 @@ const navigationGroups: { label: string; items: { name: string; href: string; ic
     },
     {
         label: 'Compras e Inventario',
+        collapsible: true,
         items: [
             { name: 'Proveedores', href: '/suppliers', icon: Building2 },
             { name: 'Compras', href: '/purchases', icon: ShoppingCart },
@@ -85,6 +86,7 @@ const navigationGroups: { label: string; items: { name: string; href: string; ic
     },
     {
         label: 'Finanzas',
+        collapsible: true,
         items: [
             { name: 'Bancos', href: '/bank-accounts', icon: Landmark },
             { name: 'Reportes', href: '/reports', icon: BarChart3 },
@@ -92,6 +94,7 @@ const navigationGroups: { label: string; items: { name: string; href: string; ic
     },
     {
         label: 'RRHH & Planilla',
+        collapsible: true,
         items: [
             { name: 'Colaboradores y Fichas', href: '/rrhh/empleados', icon: UserCheck },
             { name: 'Ausencias y Permisos', href: '/rrhh/ausencias', icon: CalendarDays },
@@ -124,6 +127,20 @@ export function Sidebar() {
     // sola cuando el superadmin está navegando dentro de /admin.
     const [adminOpen, setAdminOpen] = useState(false);
 
+    // Grupos secundarios (Compras e Inventario, Finanzas, RRHH & Planilla) colapsados por
+    // defecto para no saturar la barra con 15 enlaces sueltos — mismo patrón que Admin
+    // Console. Cada uno se abre solo la primera vez que el usuario navega a una de sus
+    // rutas, y luego queda abierto (no se vuelve a cerrar solo al cambiar de página).
+    const [openGroupLabels, setOpenGroupLabels] = useState<Set<string>>(new Set());
+    const toggleGroup = (label: string) => {
+        setOpenGroupLabels((prev) => {
+            const next = new Set(prev);
+            if (next.has(label)) next.delete(label);
+            else next.add(label);
+            return next;
+        });
+    };
+
     // Profile menu states
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [submenu, setSubmenu] = useState<'main' | 'languages' | 'terms'>('main');
@@ -151,6 +168,26 @@ export function Sidebar() {
     // Abrir la consola de admin automáticamente si ya estamos en una ruta /admin.
     useEffect(() => {
         if (pathname.startsWith('/admin')) setAdminOpen(true);
+    }, [pathname]);
+
+    // Abrir automáticamente el grupo colapsable que contiene la ruta actual, para no
+    // dejar al usuario "perdido" dentro de una sección cerrada.
+    useEffect(() => {
+        setOpenGroupLabels((prev) => {
+            let changed = false;
+            const next = new Set(prev);
+            navigationGroups.forEach((group) => {
+                if (!group.collapsible || next.has(group.label)) return;
+                const isActiveGroup = group.items.some(
+                    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
+                );
+                if (isActiveGroup) {
+                    next.add(group.label);
+                    changed = true;
+                }
+            });
+            return changed ? next : prev;
+        });
     }, [pathname]);
 
     // Fetch user details including planType
@@ -399,16 +436,43 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                             {navigationGroups.map((group) => {
                                 const items = group.items.filter((item) => mostrarItem(item.href));
                                 if (items.length === 0) return null;
+
+                                // Barra colapsada a solo iconos, o grupo que no es colapsable
+                                // (Ventas): se muestra igual que siempre, sin acordeón.
+                                if (!group.collapsible || isCollapsed) {
+                                    return (
+                                        <li key={group.label} className="pt-2">
+                                            <div className={cn("mb-1 px-3 label-caps", isCollapsed && "hidden")}>
+                                                {group.label}
+                                            </div>
+                                            <ul className="space-y-0.5">
+                                                {items.map((item) => (
+                                                    <NavItem key={item.name} item={item} />
+                                                ))}
+                                            </ul>
+                                        </li>
+                                    );
+                                }
+
+                                const isGroupOpen = openGroupLabels.has(group.label);
                                 return (
                                     <li key={group.label} className="pt-2">
-                                        <div className={cn("mb-1 px-3 label-caps", isCollapsed && "hidden")}>
-                                            {group.label}
-                                        </div>
-                                        <ul className="space-y-0.5">
-                                            {items.map((item) => (
-                                                <NavItem key={item.name} item={item} />
-                                            ))}
-                                        </ul>
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleGroup(group.label)}
+                                            aria-expanded={isGroupOpen}
+                                            className="w-full flex items-center justify-between gap-2 rounded-md px-3 py-1 text-left label-caps hover:bg-sidebar-accent/40 hover:text-sidebar-accent-foreground transition-colors"
+                                        >
+                                            <span>{group.label}</span>
+                                            <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200", isGroupOpen && "rotate-180")} />
+                                        </button>
+                                        {isGroupOpen && (
+                                            <ul className="mt-1 space-y-0.5">
+                                                {items.map((item) => (
+                                                    <NavItem key={item.name} item={item} />
+                                                ))}
+                                            </ul>
+                                        )}
                                     </li>
                                 );
                             })}
