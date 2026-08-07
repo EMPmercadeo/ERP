@@ -36,7 +36,13 @@ function getAdminAuth(): Auth {
 // inicialización (y el error si falta la variable) solo ocurre en el primer uso real,
 // dentro de una petición HTTP.
 export const adminAuth: Auth = new Proxy({} as Auth, {
-  get(_target, prop, _receiver) {
+  get(target, prop, receiver) {
+    // Permite que las pruebas sustituyan temporalmente métodos del proxy sin
+    // inicializar ni modificar la instancia real de Firebase Admin.
+    if (Reflect.has(target as object, prop)) {
+      return Reflect.get(target as object, prop, receiver);
+    }
+
     const instance = getAdminAuth();
     const value = Reflect.get(instance as object, prop, instance);
     return typeof value === 'function' ? value.bind(instance) : value;
