@@ -31,7 +31,7 @@ interface User {
   name: string;
   email: string;
   avatar?: string;
-  role: 'admin' | 'vendedor' | 'contador';
+  role: 'admin' | 'gerente' | 'vendedor' | 'contador' | 'salonero';
 }
 
 interface UserState {

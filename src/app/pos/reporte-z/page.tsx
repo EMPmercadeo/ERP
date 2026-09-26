@@ -1,9 +1,14 @@
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { getTenantContext } from '@/lib/auth/context';
-import { generarReporteZ, listarTurnosRecientes } from '@/lib/services/reporteZ';
+import { generarReporteZ, listarTurnosRecientes, type ReporteZ } from '@/lib/services/reporteZ';
 import { Button } from '@/components/ui/button';
 import { PrintButton } from './PrintButton';
+import { prisma } from '@/lib/db';
+import { fechaAnterior, fechaPanama } from '@/lib/pos/fechaNegocio';
+import { redirect } from 'next/navigation';
+import { CerrarZButton } from './CerrarZButton';
+import { CerrarTurnoAdmin } from './CerrarTurnoAdmin';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,27 +21,32 @@ export default async function ReporteZPage({
     searchParams: Promise<{ turnoId?: string; fecha?: string }>;
 }) {
     let empresaId: string;
+    let role: string;
     try {
-        ({ empresaId } = await getTenantContext());
+        ({ empresaId, role } = await getTenantContext());
     } catch (err: unknown) {
         if (err && typeof err === 'object' && 'digest' in err && String((err as { digest?: unknown }).digest).startsWith('NEXT_REDIRECT')) {
             throw err;
         }
         throw new Error('No se pudo verificar la sesión.');
     }
+    if (!['admin', 'super_admin'].includes(role)) redirect('/pos/mesas');
 
     const sp = await searchParams;
+    const fechaSeleccionada = sp.fecha || fechaPanama();
+    const cierre = !sp.turnoId ? await prisma.cierreZDiario.findUnique({ where: { empresaId_fecha: { empresaId, fecha: fechaSeleccionada } }, select: { id: true, createdAt: true } }) : null;
     const [reporte, turnos] = await Promise.all([
-        generarReporteZ({ empresaId, turnoId: sp.turnoId, fecha: sp.fecha }),
+        cierre
+            ? prisma.cierreZDiario.findUnique({ where: { id: cierre.id }, select: { resumen: true } }).then(c => c?.resumen as unknown as ReporteZ | null)
+            : generarReporteZ({ empresaId, turnoId: sp.turnoId, fecha: fechaSeleccionada }),
         listarTurnosRecientes(empresaId, 20),
     ]);
 
-    const hoy = new Date();
-    const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+    const hoyStr = fechaPanama();
 
     return (
         <div className="mx-auto max-w-3xl p-4 sm:p-8 space-y-6">
-            <div className="flex items-center justify-between print:hidden">
+            <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
                 <Button variant="ghost" asChild className="-ml-2">
                     <Link href="/pos" className="flex items-center text-muted-foreground hover:text-foreground">
                         <ChevronLeft className="mr-1 h-4 w-4" />
@@ -46,6 +56,9 @@ export default async function ReporteZPage({
                 <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" asChild>
                         <Link href={`/pos/reporte-z?fecha=${hoyStr}`}>Cierre diario de hoy</Link>
+                    </Button>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href={`/pos/reporte-z?fecha=${fechaAnterior(hoyStr)}`}>Día anterior</Link>
                     </Button>
                     {reporte && <PrintButton />}
                 </div>
@@ -57,6 +70,9 @@ export default async function ReporteZPage({
                 </div>
             ) : (
                 <div className="rounded-xl border bg-card p-6 space-y-6">
+                    {reporte.tipo === 'diario' && <div className="print:hidden rounded-md border border-border bg-muted/30 p-3 text-sm">
+                        {cierre ? <p className="font-medium">Cierre Z del {fechaSeleccionada} registrado el {fmt(cierre.createdAt.toISOString())}.</p> : <div className="flex flex-wrap items-center justify-between gap-2"><p>Pendiente: registra el cierre Z al terminar la jornada.</p><CerrarZButton fecha={fechaSeleccionada} /></div>}
+                    </div>}
                     {/* Encabezado */}
                     <div className="text-center border-b pb-4">
                         <h1 className="text-xl font-bold tracking-tight">
@@ -90,7 +106,7 @@ export default async function ReporteZPage({
                     )}
 
                     {/* Documentos */}
-                    <div className="grid grid-cols-4 gap-2 text-center">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                         <div className="rounded-lg border p-3">
                             <div className="text-lg font-bold">{reporte.documentos.emitidos}</div>
                             <div className="text-[11px] text-muted-foreground">Ventas</div>
@@ -193,6 +209,7 @@ export default async function ReporteZPage({
                                         {t.estado}
                                     </span>
                                 </Link>
+                                {t.estado === 'abierto' && <div className="px-2 pb-2"><CerrarTurnoAdmin turnoId={t.id} cajero={t.cajero} /></div>}
                             </li>
                         ))}
                     </ul>

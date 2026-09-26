@@ -14,24 +14,30 @@ export async function POST(request: NextRequest) {
   try {
     let empresaId: string;
     let userId: string;
+    let role: string;
     try {
-      ({ empresaId, userId } = await getTenantContext());
+      ({ empresaId, userId, role } = await getTenantContext());
     } catch {
       return NextResponse.json({ error: 'Debes iniciar sesión para cerrar un turno de caja.' }, { status: 401 });
     }
+    if (!['admin', 'super_admin', 'gerente', 'vendedor', 'salonero'].includes(role)) return NextResponse.json({ error: 'Sin permiso para cerrar caja.' }, { status: 403 });
 
     const body = await request.json().catch(() => ({}));
+    const turnoId = typeof body.turnoId === 'string' ? body.turnoId : null;
+    if (turnoId && !['admin', 'super_admin'].includes(role)) return NextResponse.json({ error: 'Solo el administrador puede cerrar el turno de otro usuario.' }, { status: 403 });
     const parsed = TurnoCajaCierreSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
 
     const turno = await prisma.turnoCaja.findFirst({
-      where: { empresaId, usuarioId: userId, estado: 'abierto' }
+      where: { empresaId, ...(turnoId ? { id: turnoId } : { usuarioId: userId }), estado: 'abierto' }
     });
     if (!turno) {
       return NextResponse.json({ error: 'No tienes ningún turno de caja abierto para cerrar.' }, { status: 404 });
     }
+    const mesasAbiertas = await prisma.sesionMesa.count({ where: { empresaId, saloneroId: turno.usuarioId, estado: 'abierta' } });
+    if (mesasAbiertas) return NextResponse.json({ error: 'Cobra y cierra tus mesas antes de cerrar el turno.' }, { status: 409 });
 
     const ventasEfectivo = await prisma.venta.aggregate({
       where: {
@@ -70,7 +76,9 @@ export async function POST(request: NextRequest) {
         totalEfectivoVentas,
         montoEsperadoCierre,
         montoContadoCierre: parsed.data.montoContadoCierre,
-        diferencia
+        diferencia,
+        cerradoPor: userId,
+        cajeroId: turno.usuarioId
       },
       ip: request.headers.get('x-forwarded-for') || '127.0.0.1'
     });

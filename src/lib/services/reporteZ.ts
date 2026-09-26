@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { fechaPanama, rangoDiaPanama } from '@/lib/pos/fechaNegocio';
 
 /**
  * Reporte Z / Cierre diario del POS
@@ -89,7 +90,7 @@ export async function generarReporteZ(params: {
     let desde: Date;
     let hasta: Date;
     let turnoInfo: ReporteZ['turno'] | undefined;
-    let ventasWhere: { empresaId: string; turnoCajaId?: string; createdAt?: { gte: Date; lte: Date } };
+    let ventasWhere: { empresaId: string; turnoCajaId?: string; createdAt?: { gte: Date; lt: Date } };
 
     if (params.turnoId) {
         const turno = await prisma.turnoCaja.findFirst({
@@ -117,11 +118,12 @@ export async function generarReporteZ(params: {
         ventasWhere = { empresaId, turnoCajaId: turno.id };
     } else {
         tipo = 'diario';
-        const base = params.fecha ? new Date(`${params.fecha}T00:00:00`) : new Date();
-        if (isNaN(base.getTime())) return null;
-        desde = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 0, 0, 0, 0);
-        hasta = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 23, 59, 59, 999);
-        ventasWhere = { empresaId, createdAt: { gte: desde, lte: hasta } };
+        try {
+            const rango = rangoDiaPanama(params.fecha || fechaPanama());
+            desde = rango.desde;
+            hasta = rango.hasta;
+        } catch { return null; }
+        ventasWhere = { empresaId, createdAt: { gte: desde, lt: hasta } };
     }
 
     const ventas = await prisma.venta.findMany({

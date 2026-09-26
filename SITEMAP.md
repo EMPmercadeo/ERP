@@ -23,7 +23,7 @@ Generado a partir de la estructura real de `src/app/` (Next.js App Router). Refe
 | Notas de entrega | `/delivery-notes`, `/delivery-notes/new`, `/delivery-notes/[id]` |
 | Pedidos | `/orders` |
 | Compras | `/purchases`, `/purchases/new` |
-| POS | `/pos` |
+| POS y restaurante | `/pos`, `/pos/mesas`, `/pos/reporte-z` |
 | Cuentas por cobrar | `/receivables` |
 | Inventario/bodegas | `/warehouses` |
 | Bancos | `/bank-accounts`, `/bank-accounts/[id]`, `/bank-accounts/[id]/reconcile` |
@@ -45,6 +45,10 @@ Generado a partir de la estructura real de `src/app/` (Next.js App Router). Refe
 - `GET/POST /api/quotes`
 - `GET /api/customers/search`
 - `GET /api/products/search`
+- `GET/POST /api/pos/mesas`, `GET/PATCH /api/pos/mesas/[id]` — mesas y pedidos
+- `PATCH /api/pos/configuracion-cierre` — hora de cierre del negocio
+- `GET /api/pos/reporte-z`, `POST /api/pos/reporte-z/cerrar` — vista y registro del cierre diario
+- `GET /api/cron/alertas-operativas` — alertas cada 15 minutos con `CRON_SECRET`
 
 ## API pública v1 (facturación electrónica DGI — ver CLAUDE.md para el detalle de los dos sistemas DGI paralelos)
 

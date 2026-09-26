@@ -12,15 +12,16 @@
  * puedeVerRuta()/puedeAutorizarDescuentos() también del lado servidor.
  */
 
-export type AppRole = 'admin' | 'gerente' | 'contador' | 'vendedor';
+export type AppRole = 'admin' | 'gerente' | 'contador' | 'vendedor' | 'salonero';
 
-export const ASSIGNABLE_ROLES: AppRole[] = ['admin', 'gerente', 'contador', 'vendedor'];
+export const ASSIGNABLE_ROLES: AppRole[] = ['admin', 'gerente', 'contador', 'vendedor', 'salonero'];
 
 export const ROLE_LABELS: Record<AppRole, string> = {
   admin: 'Administrador (Dueño)',
   gerente: 'Gerente',
   contador: 'Contador',
   vendedor: 'Vendedor',
+  salonero: 'Salonero',
 };
 
 export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
@@ -28,6 +29,7 @@ export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   gerente: 'Como el dueño, pero pensado para un encargado de confianza. Puede autorizar descuentos especiales con su PIN.',
   contador: 'Ve Planilla/RRHH, Facturas, Reportes y Bancos. No ve Ventas (POS) ni Compras.',
   vendedor: 'Ve Ventas (POS, Cotizaciones, Pedidos, Facturas, Clientes) y el catálogo de Productos (inventario). No ve Compras, Finanzas ni RRHH.',
+  salonero: 'Atiende y cobra únicamente las mesas que abre. El administrador puede supervisarlas.',
 };
 
 // Roles que pueden autorizar con su propio PIN un descuento que excede el tope normal.
@@ -37,7 +39,8 @@ export const ROLES_AUTORIZAN_DESCUENTOS: AppRole[] = ['admin', 'gerente'];
 // Si una ruta no aparece aquí, se considera neutra (dashboard, perfil, configuración,
 // ayuda) y cualquier usuario autenticado de la empresa puede verla.
 export const RUTA_ROLES: Record<string, AppRole[]> = {
-  '/pos': ['admin', 'gerente', 'vendedor'],
+  '/pos': ['admin', 'gerente', 'vendedor', 'salonero'],
+  '/pos/mesas': ['admin', 'salonero'],
   '/quotes': ['admin', 'gerente', 'vendedor'],
   '/orders': ['admin', 'gerente', 'vendedor'],
   '/delivery-notes': ['admin', 'gerente', 'vendedor'],

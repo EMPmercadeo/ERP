@@ -3,73 +3,15 @@ import { prisma } from '@/lib/db';
 import type { Prisma } from '@prisma/client';
 import { paginar } from '@/lib/paginar';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
-import { emitirFacturaPAC } from '@/lib/pac/mock-pac-client';
+import { emitirFacturaPAC, type PACEmisionResponse } from '@/lib/pac/mock-pac-client';
 import { getTenantContext } from '@/lib/auth/context';
 import { verificarPinAutorizacion, obtenerTopeDescuentoSinAutorizacion } from '@/lib/services/discountAuth';
-import { cargarRecetas, explotarReceta, RecetaCiclicaError } from '@/lib/services/recetas';
+import { descontarStockVentaPos } from '@/lib/services/ventaPosStock';
 import { z } from 'zod';
-
-/**
- * Descuenta el inventario de una venta del POS respetando las recetas: un producto
- * elaborado (una pizza) no baja su propio stock, baja el de los insumos que consume.
- *
- * Mismo criterio que la facturación (src/lib/services/invoiceCreation.ts) para que el
- * inventario quede igual sin importar por dónde se vendió. Cada línea se protege por
- * separado: un error de stock no debe tumbar una venta ya cobrada y ya emitida.
- */
-async function descontarStockVentaPos(
-  empresaId: string,
-  ventaId: string,
-  items: { productoId: string; cantidad: number }[]
-) {
-  const recetas = await cargarRecetas(empresaId);
-
-  for (const it of items) {
-    try {
-      const receta = recetas.get(it.productoId);
-
-      if (receta && receta.descuentaAutomatico && receta.insumos.length > 0) {
-        let consumo;
-        try {
-          consumo = explotarReceta(it.productoId, it.cantidad, recetas);
-        } catch (error) {
-          if (!(error instanceof RecetaCiclicaError)) throw error;
-          console.error(`Receta circular en venta POS ${ventaId}, producto ${it.productoId}:`, error.message);
-          continue;
-        }
-
-        for (const [insumoId, cantidadExacta] of consumo) {
-          const cantidad = Math.round(cantidadExacta);
-          if (cantidad <= 0) continue;
-          await prisma.producto.updateMany({
-            where: { id: insumoId, empresaId, unidadMedida: { not: 'SRV' } },
-            data: { stockActual: { decrement: cantidad } }
-          });
-          await prisma.movimientoInventario.create({
-            data: {
-              empresaId,
-              productoId: insumoId,
-              tipo: 'salida',
-              cantidad,
-              concepto: 'consumo_receta',
-              referenciaId: ventaId
-            }
-          });
-        }
-        continue;
-      }
-
-      await prisma.producto.updateMany({
-        where: { id: it.productoId, empresaId, unidadMedida: { not: 'SRV' } },
-        data: { stockActual: { decrement: it.cantidad } }
-      });
-    } catch (stockErr) {
-      console.error(`Error descontando stock producto ${it.productoId} venta ${ventaId}:`, stockErr);
-    }
-  }
-}
+import { fechaPanama } from '@/lib/pos/fechaNegocio';
 
 const VentaSchema = z.object({
+  mesaSesionId: z.string().optional(),
   cuentaId: z.string().optional(),
   tipoDoc: z.enum(['01', '02']),
   clienteRuc: z.string().optional(),
@@ -100,15 +42,17 @@ const VentaSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     let empresaId: string;
+    let role: string;
     try {
-      ({ empresaId } = await getTenantContext());
+      ({ empresaId, role } = await getTenantContext());
     } catch {
       return NextResponse.json({ error: 'Debes iniciar sesion para ver las ventas del POS.' }, { status: 401 });
     }
+    if (!['admin', 'super_admin', 'gerente', 'vendedor'].includes(role)) return NextResponse.json({ error: 'Sin permiso para ver las ventas del POS.' }, { status: 403 });
 
     const { searchParams } = new URL(request.url);
     const cursor = searchParams.get('cursor');
-    const take = parseInt(searchParams.get('take') || '20', 10);
+    const take = Math.min(100, Math.max(1, parseInt(searchParams.get('take') || '20', 10) || 20));
     const estado = searchParams.get('estado');
 
     const where: Prisma.VentaWhereInput = { empresaId };
@@ -132,11 +76,13 @@ export async function POST(request: NextRequest) {
   try {
     let empresaId: string;
     let userId: string;
+    let role: string;
     try {
-      ({ empresaId, userId } = await getTenantContext());
+      ({ empresaId, userId, role } = await getTenantContext());
     } catch {
       return NextResponse.json({ error: 'Debes iniciar sesion para registrar ventas en el POS.' }, { status: 401 });
     }
+    if (!['admin', 'super_admin', 'gerente', 'vendedor', 'salonero'].includes(role)) return NextResponse.json({ error: 'Sin permiso para registrar ventas del POS.' }, { status: 403 });
 
     // Bloqueo real de "no vender sin turno abierto": se verifica siempre en el servidor,
     // nunca se confia en que la UI ya mostro la pantalla de apertura. Un turno cerrado o
@@ -151,6 +97,8 @@ export async function POST(request: NextRequest) {
         requiereTurno: true
       }, { status: 403 });
     }
+    const cierreFirmado = await prisma.cierreZDiario.findUnique({ where: { empresaId_fecha: { empresaId, fecha: fechaPanama() } }, select: { id: true } });
+    if (cierreFirmado) return NextResponse.json({ error: 'El cierre Z de hoy ya fue registrado. No se permiten más ventas en esta jornada.' }, { status: 409 });
 
     const body = await request.json();
     const parseResult = VentaSchema.safeParse(body);
@@ -158,7 +106,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: parseResult.error.issues[0].message }, { status: 400 });
     }
 
-    const { cuentaId, tipoDoc, clienteRuc, items, metodoPago, referenciaPago, offline, autorizacion } = parseResult.data;
+    const { cuentaId, tipoDoc, clienteRuc, metodoPago, referenciaPago, offline, autorizacion, mesaSesionId } = parseResult.data;
+    if (role === 'salonero' && !mesaSesionId) return NextResponse.json({ error: 'Los saloneros registran ventas desde una mesa asignada.' }, { status: 403 });
+    const items = parseResult.data.items;
+    let sesionMesa: { id: string; version: number } | null = null;
+    if (mesaSesionId) {
+      if (!['admin', 'super_admin', 'salonero'].includes(role)) return NextResponse.json({ error: 'Solo el salonero asignado o el administrador pueden cobrar una mesa.' }, { status: 403 });
+      if (offline) return NextResponse.json({ error: 'El cobro de mesa requiere conexión al servidor.' }, { status: 400 });
+      const sesion = await prisma.sesionMesa.findFirst({
+        where: { id: mesaSesionId, empresaId, estado: 'abierta', ...(['admin', 'super_admin'].includes(role) ? {} : { saloneroId: userId }) },
+      });
+      if (!sesion) return NextResponse.json({ error: 'Solo quien abrió la mesa o el administrador puede cobrarla.' }, { status: 403 });
+      const guardados = sesion.items;
+      if (!Array.isArray(guardados) || guardados.length === 0 || JSON.stringify(guardados) !== JSON.stringify(items)) {
+        return NextResponse.json({ error: 'El pedido cambió. Recarga la mesa antes de cobrar.' }, { status: 409 });
+      }
+      sesionMesa = { id: sesion.id, version: sesion.version };
+    }
+    if (new Set(items.map(i => i.productoId)).size !== items.length) {
+      return NextResponse.json({ error: 'La venta contiene productos repetidos.' }, { status: 400 });
+    }
+    const productosActuales = await prisma.producto.findMany({
+      where: { empresaId, id: { in: items.map(i => i.productoId) } },
+      select: { id: true, descripcion: true, precioVenta: true, codigoTasaItbms: true, stockActual: true, unidadMedida: true, esElaborado: true, activo: true },
+    });
+    if (productosActuales.length !== items.length) return NextResponse.json({ error: 'Hay productos que ya no existen.' }, { status: 409 });
+    for (const item of items) {
+      const p = productosActuales.find(p => p.id === item.productoId)!;
+      if (p.unidadMedida !== 'SRV' && !p.esElaborado && p.stockActual < item.cantidad) {
+        return NextResponse.json({ error: `Stock insuficiente: ${p.descripcion}.` }, { status: 409 });
+      }
+      if (!mesaSesionId) {
+        const tasa = p.codigoTasaItbms === '01' ? 7 : p.codigoTasaItbms === '02' ? 10 : p.codigoTasaItbms === '03' ? 15 : 0;
+        if (!p.activo || item.descripcion !== p.descripcion || Math.abs(item.precioUnitario - Number(p.precioVenta)) > 0.0001 || item.itbmsPorcentaje !== tasa) {
+          return NextResponse.json({ error: `El producto ${p.descripcion} cambió. Actualiza el carrito antes de cobrar.` }, { status: 409 });
+        }
+      }
+    }
 
     const maxDescuentoSolicitado = Math.max(0, ...items.map(it => it.descuentoPorcentaje || 0));
     let autorizadoPor: { id: string; nombre: string; rol: string } | null = null;
@@ -212,8 +196,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const venta = await prisma.venta.create({
-      data: {
+    const ventaData: Prisma.VentaUncheckedCreateInput = {
         empresaId,
         cuentaId: cuenta?.id || null,
         turnoCajaId: turnoActivo.id,
@@ -227,8 +210,30 @@ export async function POST(request: NextRequest) {
         referenciaPago: referenciaPago || null,
         estado: offline ? 'LOCAL' : 'EN_COLA',
         contingencia: !!offline
+      };
+    let venta;
+    if (sesionMesa) {
+      const s = sesionMesa;
+      try {
+        venta = await prisma.$transaction(async tx => {
+          const actualizada = await tx.sesionMesa.updateMany({
+            where: { id: s.id, empresaId, estado: 'abierta', version: s.version },
+            data: { estado: 'cerrada', cerradaAt: new Date(), version: { increment: 1 } },
+          });
+          if (!actualizada.count) throw new Error('La mesa cambió durante el cobro. Recarga la mesa.');
+          const creada = await tx.venta.create({ data: ventaData });
+          await tx.sesionMesa.update({ where: { id: s.id }, data: { ventaId: creada.id } });
+          return creada;
+        });
+      } catch (error) {
+        return NextResponse.json({ error: error instanceof Error ? error.message : 'No se pudo cobrar la mesa.' }, { status: 409 });
       }
-    });
+    } else {
+      venta = await prisma.venta.create({ data: ventaData });
+    }
+    if (sesionMesa) {
+      await prisma.alertaOperativa.updateMany({ where: { empresaId, clave: `mesa:${sesionMesa.id}` }, data: { resueltaAt: new Date() } });
+    }
 
     if (autorizadoPor) {
       await registrarLogAuditoria({
@@ -279,7 +284,11 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    const resPAC = await emitirFacturaPAC(payloadFE);
+    const resPAC: PACEmisionResponse = await emitirFacturaPAC(payloadFE).catch(error => ({
+      success: false,
+      error: error instanceof Error ? error.message : 'El PAC no respondió.',
+      fechaEmision: new Date().toISOString(),
+    }));
 
     if (resPAC.success && resPAC.cufe) {
       const cufe = resPAC.cufe;
@@ -355,6 +364,10 @@ export async function POST(request: NextRequest) {
         where: { id: venta.id },
         data: { estado: 'RECHAZADA', contingencia: true }
       });
+
+      // El pago ya se registró, aunque la autorización fiscal quedó pendiente.
+      // La retransmisión PAC no descuenta inventario; hacerlo aquí evita ventas sin consumo.
+      await descontarStockVentaPos(empresaId, venta.id, items);
 
       return NextResponse.json({
         success: true,

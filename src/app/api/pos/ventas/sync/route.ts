@@ -5,6 +5,7 @@ import { emitirFacturaPAC } from '@/lib/pac/mock-pac-client';
 import { registrarLogAuditoria } from '@/lib/auditoria-superadmin';
 import { getTenantContext } from '@/lib/auth/context';
 import { obtenerTopeDescuentoSinAutorizacion } from '@/lib/services/discountAuth';
+import { descontarStockVentaPos } from '@/lib/services/ventaPosStock';
 
 interface VentaItemJson {
   productoId?: string;
@@ -33,16 +34,29 @@ interface VentaOfflineQueueItem {
   referenciaPago?: string;
 }
 
+export async function GET() {
+  try {
+    const { empresaId, role } = await getTenantContext();
+    if (!['admin', 'super_admin', 'gerente', 'vendedor'].includes(role)) return NextResponse.json({ error: 'Sin permiso.' }, { status: 403 });
+    const pendientes = await prisma.venta.count({ where: { empresaId, estado: { in: ['LOCAL', 'EN_COLA', 'RECHAZADA'] } } });
+    return NextResponse.json({ pendientes });
+  } catch {
+    return NextResponse.json({ error: 'No se pudo consultar la cola PAC.' }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // empresaId ya no se lee del body -- se deriva de la sesion, igual que en /api/pos/ventas.
     let empresaId: string;
     let userId: string;
+    let role: string;
     try {
-      ({ empresaId, userId } = await getTenantContext());
+      ({ empresaId, userId, role } = await getTenantContext());
     } catch {
       return NextResponse.json({ error: 'Debes iniciar sesion para sincronizar la cola del POS.' }, { status: 401 });
     }
+    if (!['admin', 'super_admin', 'gerente', 'vendedor'].includes(role)) return NextResponse.json({ error: 'Sin permiso para sincronizar ventas del POS.' }, { status: 403 });
 
     const body = await request.json();
     const { ventasQueue } = body; // ventas locales o IDs en cola
@@ -62,12 +76,29 @@ export async function POST(request: NextRequest) {
     if (ventasQueue && Array.isArray(ventasQueue) && ventasQueue.length > 0) {
       // Si vienen de IndexedDB y aun no existian en postgres, crearlas
       for (const itemLocal of ventasQueue as VentaOfflineQueueItem[]) {
-        if (!itemLocal.id?.startsWith('sync-')) {
-          const vDB = await prisma.venta.findFirst({ where: { id: itemLocal.id } });
-          // Si la venta ya existe pero pertenece a otra empresa, la ignoramos por completo:
-          // nunca se debe poder tocar (ni re-encolar) una venta ajena via este endpoint.
-          if (vDB && vDB.empresaId !== empresaId) continue;
-          if (vDB && vDB.estado === 'AUTORIZADA') continue;
+        const vDB = itemLocal.id ? await prisma.venta.findUnique({ where: { id: itemLocal.id } }) : null;
+        // Nunca cambiar la empresa ni reencolar una venta finalizada o anulada.
+        if (vDB && (vDB.empresaId !== empresaId || !['LOCAL', 'EN_COLA', 'RECHAZADA'].includes(vDB.estado))) continue;
+        if (!vDB) {
+          if (!itemLocal.id?.startsWith('sync-') || !['01', '02'].includes(itemLocal.tipoDoc ?? '') ||
+              !['EFECTIVO', 'TARJETA', 'YAPPY', 'TRANSFERENCIA', 'MIXTO'].includes(itemLocal.metodoPago ?? '') ||
+              !Array.isArray(itemLocal.items) || itemLocal.items.length === 0 || itemLocal.items.length > 50 ||
+              new Set(itemLocal.items.map(i => i.productoId)).size !== itemLocal.items.length) {
+            return NextResponse.json({ error: 'La cola contiene una venta inválida. Revisa los datos antes de sincronizar.' }, { status: 400 });
+          }
+          if (['TARJETA', 'YAPPY'].includes(itemLocal.metodoPago ?? '') && !itemLocal.referenciaPago?.trim()) {
+            return NextResponse.json({ error: 'Falta la referencia de pago de una venta en la cola.' }, { status: 400 });
+          }
+          const productos = await prisma.producto.findMany({ where: { empresaId, id: { in: itemLocal.items.map(i => i.productoId!) } }, select: { id: true, descripcion: true, precioVenta: true, codigoTasaItbms: true } });
+          if (productos.length !== itemLocal.items.length || itemLocal.items.some(i => {
+            const p = productos.find(p => p.id === i.productoId);
+            const tasa = p?.codigoTasaItbms === '01' ? 7 : p?.codigoTasaItbms === '02' ? 10 : p?.codigoTasaItbms === '03' ? 15 : 0;
+            return !p || !Number.isFinite(i.cantidad) || (i.cantidad ?? 0) <= 0 ||
+              !Number.isFinite(i.precioUnitario) || Math.abs((i.precioUnitario ?? 0) - Number(p.precioVenta)) > 0.0001 ||
+              i.descripcion !== p.descripcion || i.itbmsPorcentaje !== tasa;
+          })) {
+            return NextResponse.json({ error: 'El precio o impuesto de una venta offline no coincide con el catálogo actual. Revísala antes de sincronizar.' }, { status: 409 });
+          }
         }
 
         // El turno de caja declarado por el cliente solo se acepta si de verdad pertenece a
@@ -76,30 +107,33 @@ export async function POST(request: NextRequest) {
         let turnoCajaId: string | null = null;
         if (itemLocal.turnoCajaId) {
           const turno = await prisma.turnoCaja.findFirst({
-            where: { id: itemLocal.turnoCajaId, empresaId }
+            where: { id: itemLocal.turnoCajaId, empresaId, usuarioId: userId }
           });
           if (turno) turnoCajaId = turno.id;
         }
 
-        const v = await prisma.venta.upsert({
-          where: { id: itemLocal.id || 'new-' + Math.random() },
-          update: { estado: 'EN_COLA', empresaId },
-          create: {
-            empresaId,
-            cuentaId: cuenta.id,
-            turnoCajaId,
-            tipoDoc: itemLocal.tipoDoc || '02',
-            clienteRuc: itemLocal.clienteRuc || 'CF',
-            items: (itemLocal.items || []) as unknown as Prisma.InputJsonValue,
-            subtotal: itemLocal.subtotal || 0,
-            itbms: itemLocal.itbms || 0,
-            total: itemLocal.total || 0,
-            metodoPago: itemLocal.metodoPago || 'EFECTIVO',
-            referenciaPago: itemLocal.referenciaPago || null,
-            estado: 'EN_COLA',
-            contingencia: true
+        if (!vDB && !turnoCajaId) return NextResponse.json({ error: 'La venta offline no tiene un turno válido de este usuario.' }, { status: 409 });
+        let v;
+        if (vDB) {
+          const actualizado = await prisma.venta.updateMany({ where: { id: vDB.id, empresaId, estado: { in: ['LOCAL', 'EN_COLA', 'RECHAZADA'] } }, data: { estado: 'EN_COLA' } });
+          if (!actualizado.count) continue;
+          v = await prisma.venta.findUniqueOrThrow({ where: { id: vDB.id } });
+        } else {
+          try {
+            v = await prisma.venta.create({ data: {
+              id: itemLocal.id!, empresaId, cuentaId: cuenta.id, turnoCajaId,
+              tipoDoc: itemLocal.tipoDoc!, clienteRuc: itemLocal.clienteRuc || 'CF',
+              items: itemLocal.items as unknown as Prisma.InputJsonValue,
+              subtotal: itemLocal.subtotal || 0, itbms: itemLocal.itbms || 0,
+              total: itemLocal.total || 0, metodoPago: itemLocal.metodoPago!,
+              referenciaPago: itemLocal.referenciaPago || null, estado: 'EN_COLA', contingencia: true,
+            } });
+          } catch (error) {
+            if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') continue;
+            throw error;
           }
-        });
+          await descontarStockVentaPos(empresaId, v.id, itemLocal.items!.map(i => ({ productoId: i.productoId!, cantidad: i.cantidad! })));
+        }
         ventasParaSync.push(v);
       }
     } else {
@@ -178,7 +212,7 @@ export async function POST(request: NextRequest) {
           descripcion: i.descripcion || 'Producto POS',
           cantidad: i.cantidad || 1,
           precioUnitario: Number(((i.precioUnitario || 1) * (1 - (i.descuentoPorcentaje || 0) / 100)).toFixed(4)),
-          tasaItbms: i.itbmsPorcentaje === 7 ? '01' : '00'
+          tasaItbms: i.itbmsPorcentaje === 7 ? '01' : i.itbmsPorcentaje === 10 ? '02' : i.itbmsPorcentaje === 15 ? '03' : '00'
         })),
         totales: {
           subtotal: Number(subtotalReal.toFixed(2)),
@@ -260,6 +294,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: `Retransmision finalizada. Autorizadas: ${autorizadas}, Fallidas o en espera: ${fallidas}`,
+      autorizadas,
+      fallidas,
       resultados
     });
   } catch (error) {

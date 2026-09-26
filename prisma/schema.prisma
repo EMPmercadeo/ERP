@@ -48,6 +48,11 @@ model Empresa {
   yappySecretKey            String?
   yappyAmbiente             String                   @default("pruebas") // pruebas | produccion
   yappyDomain               String?
+  horaCierreNegocio         String                   @default("22:00") // HH:mm, America/Panama
+  mesasRestaurante          MesaRestaurante[]
+  sesionesMesa              SesionMesa[]
+  cierresZ                  CierreZDiario[]
+  alertasOperativas         AlertaOperativa[]
   cajas                     Caja[]
   clientes                  Cliente[]
   cotizaciones              Cotizacion[]
@@ -186,6 +191,8 @@ model Usuario {
   transferenciasBodegaCreadas   TransferenciaBodega[]  @relation("TransferenciaBodegaCreador")
   transferenciasBodegaRecibidas TransferenciaBodega[]  @relation("TransferenciaBodegaReceptor")
   turnosCaja                  TurnoCaja[]
+  sesionesMesa                SesionMesa[]
+  cierresZ                    CierreZDiario[]
   webauthnCredentials          WebAuthnCredential[]
 
   @@index([empresaId])
@@ -1418,6 +1425,7 @@ model Venta {
   cuenta        Cuenta?    @relation(fields: [cuentaId], references: [id])
   turnoCajaId   String?
   turnoCaja     TurnoCaja? @relation(fields: [turnoCajaId], references: [id])
+  sesionMesa    SesionMesa? @relation("VentaMesa")
   cufe          String?    @unique
   tipoDoc       String   // 01 factura | 02 boleta
   clienteRuc    String?
@@ -1439,6 +1447,68 @@ model Venta {
   @@index([cuentaId, createdAt])
   @@index([estado, createdAt])
   @@index([turnoCajaId])
+}
+
+model MesaRestaurante {
+  id        String @id @default(cuid())
+  empresaId String
+  nombre    String
+  activa    Boolean @default(true)
+  createdAt DateTime @default(now())
+  empresa   Empresa @relation(fields: [empresaId], references: [id])
+  sesiones  SesionMesa[]
+
+  @@unique([empresaId, nombre])
+  @@index([empresaId])
+}
+
+model SesionMesa {
+  id          String @id @default(cuid())
+  empresaId   String
+  mesaId      String
+  saloneroId  String
+  tipo        String @default("normal") // normal | reserva | evento
+  estado      String @default("abierta") // abierta | cerrada
+  items       Json @default("[]")
+  version     Int @default(0)
+  abiertaAt   DateTime @default(now())
+  cerradaAt   DateTime?
+  ventaId     String? @unique
+  empresa     Empresa @relation(fields: [empresaId], references: [id])
+  mesa        MesaRestaurante @relation(fields: [mesaId], references: [id])
+  salonero    Usuario @relation(fields: [saloneroId], references: [id])
+  venta       Venta? @relation("VentaMesa", fields: [ventaId], references: [id])
+
+  @@index([empresaId, estado, abiertaAt])
+  @@index([mesaId, estado])
+}
+
+model CierreZDiario {
+  id        String @id @default(cuid())
+  empresaId String
+  fecha     String // YYYY-MM-DD, America/Panama
+  usuarioId String
+  resumen   Json
+  createdAt DateTime @default(now())
+  empresa   Empresa @relation(fields: [empresaId], references: [id])
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@unique([empresaId, fecha])
+}
+
+model AlertaOperativa {
+  id        String @id @default(cuid())
+  empresaId String
+  clave     String
+  tipo      String
+  mensaje   String
+  createdAt DateTime @default(now())
+  enviadaAt DateTime?
+  resueltaAt DateTime?
+  empresa   Empresa @relation(fields: [empresaId], references: [id])
+
+  @@unique([empresaId, clave])
+  @@index([empresaId, createdAt])
 }
 
 model ConfiguracionWoo {

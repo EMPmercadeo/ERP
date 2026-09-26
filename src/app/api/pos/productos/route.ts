@@ -35,6 +35,7 @@ export async function GET(_request: NextRequest) {
         codigoTasaItbms: p.codigoTasaItbms,
         stockActual: p.stockActual,
         unidadMedida: p.unidadMedida,
+        esElaborado: p.esElaborado,
         // Descuento sugerido preaprobado por el dueño: el individual del producto manda
         // sobre el de su categoría si ambos están configurados.
         descuentoSugerido: Number(p.descuentoPorcentaje) > 0

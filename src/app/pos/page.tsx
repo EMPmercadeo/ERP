@@ -141,6 +141,7 @@ export default function POSMultiDispositivoPage() {
   const [showContingenciaConfirm, setShowContingenciaConfirm] = useState(false);
   const [showVaciarCarritoConfirm, setShowVaciarCarritoConfirm] = useState(false);
   const [colaLocal, setColaLocal] = useState<VentaOfflineQueueItem[]>([]);
+  const [pendientesPAC, setPendientesPAC] = useState(0);
   const [sincronizando, setSincronizando] = useState(false);
 
   // Modal Pago
@@ -258,6 +259,7 @@ export default function POSMultiDispositivoPage() {
 
     cargarProductos();
     cargarTurno();
+    fetch('/api/pos/ventas/sync').then(res => res.ok ? res.json() : { pendientes: 0 }).then(data => setPendientesPAC(data.pendientes ?? 0)).catch(() => {});
     setSoportaSerial(haySoporteSerial());
     fetch('/api/pos/yappy/estado')
       .then(res => res.ok ? res.json() : { disponible: false })
@@ -441,7 +443,7 @@ export default function POSMultiDispositivoPage() {
       return;
     }
     const existe = carrito.find(it => it.productoId === p.id);
-    const itbmsPorcentaje = p.codigoTasaItbms === '01' ? 7 : 0;
+    const itbmsPorcentaje = p.codigoTasaItbms === '01' ? 7 : p.codigoTasaItbms === '02' ? 10 : p.codigoTasaItbms === '03' ? 15 : 0;
 
     if (existe) {
       if (!esServicio && existe.cantidad + 1 > p.stockActual) {
@@ -617,11 +619,15 @@ export default function POSMultiDispositivoPage() {
           // Actualizar stock local con el resultado del backend
           cargarProductos();
           cargarTurno();
+          if (data.warning) {
+            setPendientesPAC(n => n + 1);
+            setAvisoSync({ tipo: 'error', mensaje: data.warning });
+          }
 
           setReciboVenta({
-            numero: data.venta?.id ? `DGI-${data.venta.id.slice(-8).toUpperCase()}` : 'DGI-POS-001',
+            numero: data.venta?.id ? `POS-${data.venta.id.slice(-8).toUpperCase()}` : 'POS-PENDIENTE',
             fecha: new Date().toLocaleString('es-PA'),
-            tipo: tipoDoc === '01' ? 'FACTURA ELECTRÓNICA (01)' : 'BOLETA ELECTRÓNICA (02)',
+            tipo: data.cufe ? (tipoDoc === '01' ? 'FACTURA ELECTRÓNICA (01)' : 'BOLETA ELECTRÓNICA (02)') : 'COMPROBANTE DE VENTA · PENDIENTE PAC',
             cliente: clienteRuc || 'Consumidor Final',
             items: carrito,
             subtotal,
@@ -631,10 +637,10 @@ export default function POSMultiDispositivoPage() {
             referenciaPago: referenciaPago.trim() || undefined,
             efectivoRecibido: Number(efectivoRecibido) || total,
             vuelto: Math.max(0, vuelto),
-            cufe: data.cufe || data.venta?.cufe || 'FE019999999000000000000000001000010001111111111',
+            cufe: data.cufe || data.venta?.cufe || undefined,
             cafUrl: data.cafUrl,
-            contingencia: false,
-            mensajeLegal: 'Autorizado y certificado por PAC DGI. Consulte su factura electrónica por CUFE o código QR en el portal tributario.'
+            contingencia: !data.cufe,
+            mensajeLegal: data.cufe ? 'Autorizado y certificado por PAC DGI. Consulte su factura electrónica por CUFE o código QR en el portal tributario.' : 'Pago registrado. Documento fiscal pendiente de autorización PAC; no es una factura fiscal autorizada.'
           });
 
           if (metodoPago === 'EFECTIVO') intentarAbrirCajon();
@@ -651,7 +657,7 @@ export default function POSMultiDispositivoPage() {
   };
 
   const retransmitirColaAlPAC = async () => {
-    if (colaLocal.length === 0) return;
+    if (colaLocal.length === 0 && pendientesPAC === 0) return;
     setSincronizando(true);
     setAvisoSync(null);
     try {
@@ -664,9 +670,11 @@ export default function POSMultiDispositivoPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setAvisoSync({ tipo: 'success', mensaje: data.message || 'Ventas retransmitidas correctamente.' });
+        setAvisoSync({ tipo: data.fallidas > 0 ? 'error' : 'success', mensaje: data.message || 'Ventas retransmitidas correctamente.' });
         setColaLocal([]);
         localStorage.removeItem('pos_ventas_queue');
+        const pendienteRes = await fetch('/api/pos/ventas/sync');
+        if (pendienteRes.ok) setPendientesPAC((await pendienteRes.json()).pendientes ?? 0);
         cargarProductos();
       } else {
         setAvisoSync({ tipo: 'error', mensaje: 'Error al retransmitir: ' + (data.error || 'Error desconocido.') });
@@ -746,26 +754,26 @@ export default function POSMultiDispositivoPage() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans select-none overflow-x-hidden">
       {/* Topbar POS Pantalla Completa */}
-      <header className="h-16 border-b border-border bg-card px-4 flex items-center justify-between shadow-premium sticky top-0 z-30">
+      <header className="min-h-16 border-b border-border bg-card px-3 py-2 sm:px-4 flex flex-wrap items-center justify-between gap-2 shadow-premium sticky top-0 z-30">
         <div className="flex items-center gap-3">
           <Store className="h-7 w-7 text-primary" />
           <div>
             <h1 className="text-base font-bold text-foreground tracking-wide leading-none">Punto de Venta (POS)</h1>
-            <p className="text-[11px] text-muted-foreground font-mono">ERP Panamá &bull; Facturación electrónica DGI</p>
+            <p className="hidden sm:block text-[11px] text-muted-foreground font-mono">ERP Panamá &bull; Facturación electrónica DGI</p>
           </div>
         </div>
 
         {/* Indicadores en Tiempo Real y Acciones Rápidas */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
           {/* Turno de Caja Activo */}
           {turnoActivo && (
             <button
               onClick={abrirModalCierreTurno}
               title="Cerrar turno de caja"
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border bg-secondary text-foreground border-border hover:border-primary"
+              className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-full text-xs font-bold transition-all border bg-secondary text-foreground border-border hover:border-primary"
             >
               <Wallet className="h-4 w-4 text-primary" />
-              Turno abierto (${turnoActivo.montoInicial.toFixed(2)} inicial)
+              <span className="sm:hidden">Turno</span><span className="hidden sm:inline">Turno abierto (${turnoActivo.montoInicial.toFixed(2)} inicial)</span>
               <LogOut className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           )}
@@ -780,7 +788,7 @@ export default function POSMultiDispositivoPage() {
             }`}
           >
             {!isOnline || contingenciaForzada ? <WifiOff className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
-            {!isOnline ? 'OFFLINE (Contingencia DGI)' : contingenciaForzada ? 'MODO CONTINGENCIA FORZADA' : 'EN LÍNEA (PAC DGI)'}
+            <span className="sr-only sm:not-sr-only">{!isOnline ? 'OFFLINE (Contingencia DGI)' : contingenciaForzada ? 'MODO CONTINGENCIA FORZADA' : 'EN LÍNEA (PAC DGI)'}</span>
           </button>
 
           {/* Impresora térmica / cajón de dinero (Web Serial, solo Chrome/Edge desktop y Android;
@@ -800,14 +808,14 @@ export default function POSMultiDispositivoPage() {
           )}
 
           {/* Cola Offline Sincronización */}
-          {colaLocal.length > 0 && (
+          {colaLocal.length + pendientesPAC > 0 && (
             <Button
               onClick={retransmitirColaAlPAC}
               disabled={sincronizando || !isOnline}
               className="bg-warning hover:bg-warning/90 text-white font-bold text-xs h-9 px-3 shadow-premium"
             >
               <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${sincronizando ? 'animate-spin' : ''}`} />
-              {sincronizando ? 'Retransmitiendo...' : `Retransmitir Cola PAC (${colaLocal.length})`}
+              <span className="sm:hidden">Cola ({colaLocal.length + pendientesPAC})</span><span className="hidden sm:inline">{sincronizando ? 'Retransmitiendo...' : `Retransmitir Cola PAC (${colaLocal.length + pendientesPAC})`}</span>
             </Button>
           )}
         </div>
@@ -830,17 +838,17 @@ export default function POSMultiDispositivoPage() {
       )}
 
       {/* Grid Principal Responsive (Touch-First PWA) */}
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 overflow-hidden">
+      <main className="flex-1 grid grid-cols-1 content-start auto-rows-max lg:grid-cols-12 lg:content-stretch lg:auto-rows-auto gap-3 p-2 sm:gap-4 sm:p-4 lg:overflow-hidden">
         {/* PANEL IZQUIERDO: CATÁLOGO DE PRODUCTOS (8 COLUMNAS EN DESKTOP) */}
-        <div className="lg:col-span-8 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-6rem)] pr-1">
+        <div className="lg:col-span-8 min-w-0 flex flex-col gap-4 lg:overflow-y-auto lg:max-h-[calc(100dvh-6rem)] lg:pr-1">
           {/* Barra de Búsqueda y Filtror */}
-          <div className="flex items-center gap-3 bg-card p-3 rounded-lg border border-border shadow-premium">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3 bg-card p-3 rounded-lg border border-border shadow-premium">
             <Search className="h-5 w-5 text-muted-foreground ml-1 flex-shrink-0" />
             <Input
               placeholder="Buscar producto por SKU, nombre o código de barras..."
               value={buscar}
               onChange={(e) => setBuscar(e.target.value)}
-              className="text-sm h-11"
+              className="min-w-0 flex-1 text-sm h-11"
             />
             {buscar && (
               <Button size="sm" variant="ghost" onClick={() => setBuscar('')} className="text-muted-foreground hover:text-foreground">
@@ -931,7 +939,7 @@ export default function POSMultiDispositivoPage() {
         </div>
 
         {/* PANEL DERECHO: CARRITO Y TICKET DE VENTA (4 COLUMNAS EN DESKTOP) */}
-        <div className="lg:col-span-4 bg-card rounded-xl border border-border flex flex-col h-[calc(100vh-6rem)] shadow-premium overflow-hidden">
+        <div className="lg:col-span-4 min-w-0 bg-card rounded-xl border border-border flex flex-col lg:h-[calc(100dvh-6rem)] shadow-premium overflow-hidden">
           {/* Header Carrito */}
           <div className="p-4 border-b border-border bg-secondary flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -1148,7 +1156,7 @@ export default function POSMultiDispositivoPage() {
               {/* Selector de Métodos de Pago Pluggable */}
               <div>
                 <label className="font-semibold text-foreground block mb-2">Método de Pago:</label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
                     type="button"
                     onClick={() => setMetodoPago('EFECTIVO')}

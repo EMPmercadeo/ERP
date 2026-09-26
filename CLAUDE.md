@@ -89,6 +89,9 @@ Dos capas separadas a propósito — ver el comentario largo en `prisma/schema.p
 - **`design-review-package/`** — frozen UI snapshot, never edit
 - `src/middleware.ts` handles CORS + rate limiting (120 req/min) for all `/api/*` routes
 - Monetary values in Prisma are `Decimal` — call `.toNumber()` before sending to client components
+- Restaurante: `MesaRestaurante` es el catálogo; `SesionMesa` guarda pedido, salonero y venta final. Solo su salonero o admin pueden leer/modificar/cobrar la sesión. La mesa se cierra en la misma transacción que crea la `Venta` POS, con control de versión y un índice parcial único para una sesión abierta por mesa. No cerrar una sesión por otra ruta.
+- Cierre Z: `CierreZDiario` guarda una copia inmutable del reporte por empresa y fecha panameña. `/api/pos/reporte-z/cerrar` exige admin y turnos/mesas cerrados; nuevas ventas del día se bloquean después de registrarlo. `horaCierreNegocio` es HH:mm de Panamá y el cron cada 15 minutos `/api/cron/alertas-operativas` requiere `CRON_SECRET`.
+- El cliente PAC actual (`src/lib/pac/mock-pac-client.ts`) siempre devuelve `success: false`: una venta cobrada puede quedar fiscalmente pendiente. Nunca mostrar CUFE de ejemplo como autorización real.
 - `DgiStatus` union type lives in `src/components/ui/status-badge.tsx` — import from there, don't redefine
 
 ### Front-end Patterns
@@ -117,3 +120,13 @@ Dos capas separadas a propósito — ver el comentario largo en `prisma/schema.p
 - **`.impeccable/design.json`** — sidecar con snippets HTML/CSS de componentes para el panel de `/impeccable live`.
 - **`.impeccable/live/config.json`** — config de `/impeccable live` (inyecta en `src/app/layout.tsx`); CSP en `next.config.ts` ya tiene el allowance dev-only para `localhost:8400`.
 - **`SITEMAP.md`** — mapa de rutas (páginas + API) generado desde `src/app/`. Es un snapshot manual, no se regenera solo — si agregas rutas, regenéralo con Glob sobre `src/app/**/page.tsx` y `src/app/api/**/route.ts`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
