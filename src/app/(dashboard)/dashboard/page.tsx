@@ -15,6 +15,7 @@ import { StatStrip } from '@/components/dashboard/StatStrip';
 import { TrendChart } from '@/components/dashboard/TrendChart';
 
 import { prisma } from '@/lib/db';
+import type { Prisma } from '@prisma/client';
 import { subHours, subDays, subMonths, startOfDay, endOfDay, parseISO } from 'date-fns';
 import { getTenantContext } from '@/lib/auth/context';
 import type { DgiStatus } from '@/components/ui/status-badge';
@@ -70,7 +71,16 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
             where: whereDate,
             take: 20,
             orderBy: { fechaEmision: 'desc' },
-            include: { cliente: { select: { razonSocial: true, ruc: true, dv: true } } }
+            select: {
+                id: true,
+                numeroCompleto: true,
+                fechaEmision: true,
+                fechaVencimiento: true,
+                totalNeto: true,
+                saldoPendiente: true,
+                estadoDgi: true,
+                cliente: { select: { razonSocial: true, ruc: true, dv: true } }
+            }
         }),
         prisma.factura.groupBy({
             by: ['estadoDgi'],
@@ -97,8 +107,7 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
                 saldoPendiente: { gt: 0 },
                 estadoDgi: { not: 'anulada' }
             }
-        }),
-        prisma.factura.count({ where: whereDate })
+        })
     ]);
 
     // 2. Fetch Previous Data for Trends
@@ -132,66 +141,72 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
     ]);
 
     // 3. Last 6 months trend & sparks calculation
-    const trendMonths: { mes: string; start: Date; end: Date }[] = [];
+    const trendMonths: { mes: string; year: number; month: number }[] = [];
     const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
     for (let i = 5; i >= 0; i--) {
         const d = subMonths(now, i);
-        const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
-        const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
         trendMonths.push({
             mes: monthNames[d.getMonth()],
-            start: startOfMonth,
-            end: endOfMonth
+            year: d.getFullYear(),
+            month: d.getMonth() + 1
         });
     }
 
-    const trendDataAndSparks = await Promise.all(
-        trendMonths.map(async (m) => {
-            const [salesAgg, paymentsAgg, pendingAgg, overdueAgg] = await Promise.all([
-                prisma.factura.aggregate({
-                    _sum: { totalNeto: true },
-                    where: {
-                        empresaId,
-                        fechaEmision: { gte: m.start, lte: m.end },
-                        estadoDgi: { not: 'anulada' }
-                    }
-                }),
-                prisma.pago.aggregate({
-                    _sum: { monto: true },
-                    where: {
-                        empresaId,
-                        fechaPago: { gte: m.start, lte: m.end }
-                    }
-                }),
-                prisma.factura.aggregate({
-                    _sum: { saldoPendiente: true },
-                    where: {
-                        empresaId,
-                        fechaEmision: { gte: m.start, lte: m.end },
-                        estadoDgi: { not: 'anulada' }
-                    }
-                }),
-                prisma.factura.aggregate({
-                    _sum: { saldoPendiente: true },
-                    where: {
-                        empresaId,
-                        fechaEmision: { gte: m.start, lte: m.end },
-                        fechaVencimiento: { lt: now },
-                        saldoPendiente: { gt: 0 },
-                        estadoDgi: { not: 'anulada' }
-                    }
-                })
-            ]);
-
-            return {
-                mes: m.mes,
-                facturado: Number(salesAgg._sum.totalNeto || 0),
-                cobrado: Number(paymentsAgg._sum.monto || 0),
-                pendiente: Number(pendingAgg._sum.saldoPendiente || 0),
-                vencido: Number(overdueAgg._sum.saldoPendiente || 0)
-            };
-        })
-    );
+    type MonthlyInvoiceTotals = {
+        year: number;
+        month: number;
+        facturado: Prisma.Decimal;
+        pendiente: Prisma.Decimal;
+        vencido: Prisma.Decimal;
+    };
+    type MonthlyPaymentTotals = {
+        year: number;
+        month: number;
+        cobrado: Prisma.Decimal;
+    };
+    const firstMonth = trendMonths[0];
+    const trendStart = new Date(firstMonth.year, firstMonth.month - 1, 1);
+    // Agrupar en PostgreSQL evita 24 consultas simultáneas en un pool de tres conexiones.
+    const [monthlyInvoices, monthlyPayments] = await Promise.all([
+        prisma.$queryRaw<MonthlyInvoiceTotals[]>`
+            SELECT EXTRACT(YEAR FROM "fechaEmision")::int AS year,
+                   EXTRACT(MONTH FROM "fechaEmision")::int AS month,
+                   SUM("totalNeto") AS facturado,
+                   SUM("saldoPendiente") AS pendiente,
+                   SUM(CASE WHEN "fechaVencimiento" < ${now} AND "saldoPendiente" > 0
+                            THEN "saldoPendiente" ELSE 0 END) AS vencido
+            FROM "Factura"
+            WHERE "empresaId" = ${empresaId}
+              AND "fechaEmision" >= ${trendStart}
+              AND "fechaEmision" <= ${now}
+              AND "estadoDgi" <> 'anulada'
+            GROUP BY 1, 2
+        `,
+        prisma.$queryRaw<MonthlyPaymentTotals[]>`
+            SELECT EXTRACT(YEAR FROM "fechaPago")::int AS year,
+                   EXTRACT(MONTH FROM "fechaPago")::int AS month,
+                   SUM("monto") AS cobrado
+            FROM "Pago"
+            WHERE "empresaId" = ${empresaId}
+              AND "fechaPago" >= ${trendStart}
+              AND "fechaPago" <= ${now}
+            GROUP BY 1, 2
+        `
+    ]);
+    const invoiceByMonth = new Map(monthlyInvoices.map(row => [`${row.year}-${row.month}`, row]));
+    const paymentByMonth = new Map(monthlyPayments.map(row => [`${row.year}-${row.month}`, row]));
+    const trendDataAndSparks = trendMonths.map(m => {
+        const key = `${m.year}-${m.month}`;
+        const invoices = invoiceByMonth.get(key);
+        const payments = paymentByMonth.get(key);
+        return {
+            mes: m.mes,
+            facturado: Number(invoices?.facturado || 0),
+            cobrado: Number(payments?.cobrado || 0),
+            pendiente: Number(invoices?.pendiente || 0),
+            vencido: Number(invoices?.vencido || 0)
+        };
+    });
 
     const trendData = trendDataAndSparks.map(d => ({
         mes: d.mes,

@@ -42,9 +42,9 @@ export default function DashboardError({
                 <p className="text-sm text-danger mb-2">
                     Ocurrió un error inesperado al cargar esta sección del panel.
                 </p>
-                {process.env.NODE_ENV === 'development' && error?.digest && (
+                {error?.digest && (
                     <p className="text-xs text-danger/80 mb-4">
-                        Código de error: <code className="bg-danger-bg/80 px-1 py-0.5 rounded">{error.digest}</code>
+                        Referencia del error: <code className="bg-danger-bg/80 px-1 py-0.5 rounded">{error.digest}</code>
                     </p>
                 )}
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
