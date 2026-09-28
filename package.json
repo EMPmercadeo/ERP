@@ -6,7 +6,7 @@
     "postinstall": "prisma generate",
     "predev": "prisma generate",
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && next build --webpack",
+    "build": "prisma generate && node scripts/recover-restaurante-migration.cjs && prisma migrate deploy && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "lint:colors": "npx tsx scripts/lint-colors.ts",
