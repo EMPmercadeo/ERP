@@ -23,7 +23,7 @@ Generado a partir de la estructura real de `src/app/` (Next.js App Router). Refe
 | Notas de entrega | `/delivery-notes`, `/delivery-notes/new`, `/delivery-notes/[id]` |
 | Pedidos | `/orders` |
 | Compras | `/purchases`, `/purchases/new` |
-| POS y restaurante | `/pos`, `/pos/mesas`, `/pos/reporte-z` |
+| POS y restaurante | `/pos` (mostrador y salón en una pantalla), `/pos/reporte-z` |
 | Cuentas por cobrar | `/receivables` |
 | Inventario/bodegas | `/warehouses` |
 | Bancos | `/bank-accounts`, `/bank-accounts/[id]`, `/bank-accounts/[id]/reconcile` |

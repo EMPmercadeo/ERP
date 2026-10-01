@@ -30,7 +30,7 @@ export default async function ReporteZPage({
         }
         throw new Error('No se pudo verificar la sesión.');
     }
-    if (!['admin', 'super_admin'].includes(role)) redirect('/pos/mesas');
+    if (!['admin', 'super_admin'].includes(role)) redirect('/pos');
 
     const sp = await searchParams;
     const fechaSeleccionada = sp.fecha || fechaPanama();

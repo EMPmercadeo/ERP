@@ -105,7 +105,7 @@ export function BottomNavigation() {
     const mainItems = [
         { name: 'Inicio', href: '/dashboard', icon: LayoutDashboard },
         { name: 'Facturas', href: '/invoices', icon: FileText },
-        { name: role === 'salonero' ? 'Mesas' : 'POS', href: role === 'salonero' ? '/pos/mesas' : '/pos', icon: ShoppingCart },
+        { name: 'POS', href: '/pos', icon: ShoppingCart },
         { name: 'Clientes', href: '/clients', icon: Users },
     ].filter((item) => mostrarItem(item.href));
 
@@ -118,7 +118,6 @@ export function BottomNavigation() {
             titulo: 'Módulos Principales',
             items: [
                 { name: 'Productos', href: '/products', icon: Package },
-                { name: 'Mesas restaurante', href: '/pos/mesas', icon: ShoppingCart },
                 { name: 'Cotizaciones', href: '/quotes', icon: FileText },
                 { name: 'Pedidos', href: '/orders', icon: ClipboardList },
                 { name: 'Notas de Entrega', href: '/delivery-notes', icon: Truck },

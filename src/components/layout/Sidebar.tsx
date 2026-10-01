@@ -67,7 +67,6 @@ const navigationGroups: { label: string; collapsible?: boolean; items: { name: s
         label: 'Ventas',
         items: [
             { name: 'Punto de Venta (POS)', href: '/pos', icon: Store },
-            { name: 'Mesas restaurante', href: '/pos/mesas', icon: Store },
             { name: 'Cotizaciones', href: '/quotes', icon: FileText },
             { name: 'Pedidos', href: '/orders', icon: ClipboardList },
             { name: 'Notas de Entrega', href: '/delivery-notes', icon: Truck },
@@ -227,7 +226,7 @@ export function Sidebar() {
     // defecto para no parpadear el menú — igual que con isSuperAdmin, esto es solo UI: la
     // autorización real de cada módulo restringido se revalida server-side (API routes /
     // páginas), nunca solo aquí.
-    const mostrarItem = (href: string) => role === 'salonero' && href === '/pos' ? false : (role ? puedeVerRuta(role, href) : true);
+    const mostrarItem = (href: string) => role ? puedeVerRuta(role, href) : true;
 
     const handleLogout = async () => {
         try {
