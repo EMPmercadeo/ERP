@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { ReceiptText, Store, UtensilsCrossed } from 'lucide-react';
+import { ArrowLeft, ReceiptText, Store, UtensilsCrossed } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const MostradorPOS = dynamic(() => import('./MostradorPOS'), {
@@ -58,9 +58,18 @@ export default function POSWorkspace({
     <div className="min-h-dvh bg-background text-foreground">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 px-3 py-3 sm:px-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
-          <div className="min-w-0">
-            <p className="label-caps text-muted-foreground">Ventas / Operación</p>
-            <h1 className="text-xl font-semibold tracking-tight">Punto de venta</h1>
+          <div className="flex min-w-0 items-center gap-3">
+            <Link
+              href="/dashboard"
+              aria-label="Volver al inicio"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            </Link>
+            <div className="min-w-0">
+              <p className="label-caps text-muted-foreground">Ventas / Operación</p>
+              <h1 className="text-xl font-semibold tracking-tight">Punto de venta</h1>
+            </div>
           </div>
           <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
             {puedeSalon && puedeMostrador && (
