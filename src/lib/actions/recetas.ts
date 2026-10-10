@@ -11,7 +11,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
-import { getTenantContext } from '@/lib/auth/context';
+import { getTenantContext, requireAuth } from '@/lib/auth/context';
 import { RecetaSchema } from '@/lib/validations';
 import {
     cargarRecetas,
@@ -201,7 +201,7 @@ export async function guardarReceta(
     }
 ): Promise<ResultadoAccion> {
     try {
-        const { empresaId, role } = await getTenantContext();
+        const { empresaId, role } = await requireAuth();
         if (!ROLES_EDICION.includes(role)) {
             return { success: false, error: 'No tienes permiso para editar recetas.' };
         }
@@ -314,7 +314,7 @@ export async function guardarReceta(
 
 export async function eliminarReceta(productoId: string): Promise<ResultadoAccion> {
     try {
-        const { empresaId, role } = await getTenantContext();
+        const { empresaId, role } = await requireAuth();
         if (!ROLES_EDICION.includes(role)) {
             return { success: false, error: 'No tienes permiso para eliminar recetas.' };
         }

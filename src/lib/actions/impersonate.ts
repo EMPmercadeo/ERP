@@ -2,11 +2,11 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getTenantContext } from '@/lib/auth/context';
+import { requireAuth } from '@/lib/auth/context';
 import { prisma } from '@/lib/db';
 
 export async function startImpersonation(targetEmpresaId: string) {
-    const ctx = await getTenantContext();
+    const ctx = await requireAuth();
 
     // STRICT SECURITY: Only Super Admin can impersonate
     if (ctx.role !== 'super_admin') {

@@ -19,6 +19,7 @@ export const dynamic = 'force-dynamic';
  * mapeo de status ('E'/'R'/'C'/'X') y el algoritmo de hash están copiados literalmente de la
  * documentación oficial.
  */
+// oxlint-disable-next-line react-doctor/nextjs-no-side-effect-in-get-handler -- Waived with evidence: Banco General Yappy Comercial IPN specification mandates GET webhook with HMAC-SHA256 validation
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

@@ -194,18 +194,16 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
         toast.promise(
             deleteProductImage(imageId).then((res) => {
                 if (res.success) {
-                    setImages(prev => {
-                        const next = prev.filter(i => i.id !== imageId);
-                        if (img.isPrimary && next.length > 0) {
-                            next[0].isPrimary = true;
-                            setImagenUrl(next[0].imageUrl);
-                            setActivePreviewUrl(next[0].imageUrl);
-                        } else if (next.length === 0) {
-                            setImagenUrl('');
-                            setActivePreviewUrl('');
-                        }
-                        return next;
-                    });
+                    const next = images.filter(i => i.id !== imageId);
+                    if (img.isPrimary && next.length > 0) {
+                        next[0] = { ...next[0], isPrimary: true };
+                        setImagenUrl(next[0].imageUrl);
+                        setActivePreviewUrl(next[0].imageUrl);
+                    } else if (next.length === 0) {
+                        setImagenUrl('');
+                        setActivePreviewUrl('');
+                    }
+                    setImages(next);
                     return 'Imagen eliminada.';
                 } else {
                     throw new Error(res.message || 'Error al eliminar la imagen.');

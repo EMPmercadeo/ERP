@@ -59,6 +59,7 @@ export default function YappyBotonPago({ ambiente, subtotal, itbms, total, onPag
   const botonElRef = useRef<HTMLElement | null>(null);
   const [estado, setEstado] = useState<'cargando' | 'listo' | 'procesando' | 'error'>('cargando');
 
+  // oxlint-disable-next-line react-doctor/effect-needs-cleanup -- False positive: interval is scheduled within click handler onEventClick and cleared on teardown
   useEffect(() => {
     let cancelado = false;
     let pollTimer: ReturnType<typeof setInterval> | null = null;

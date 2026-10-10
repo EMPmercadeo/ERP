@@ -3,13 +3,13 @@
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { hash, compare } from 'bcryptjs';
-import { getTenantContext } from '@/lib/auth/context';
+import { getTenantContext, requireAuth } from '@/lib/auth/context';
 
 export async function updatePersonalInfo(email: string, formData: FormData) {
     const name = formData.get('fullName') as string;
 
     try {
-        const ctx = await getTenantContext();
+        const ctx = await requireAuth();
         const loggedInUser = await prisma.usuario.findUnique({
             where: { id: ctx.userId }
         });
@@ -33,6 +33,7 @@ export async function updatePersonalInfo(email: string, formData: FormData) {
 }
 
 export async function changePassword(email: string, formData: FormData) {
+    const ctx = await requireAuth();
     const currentPassword = formData.get('currentPassword') as string;
     const newPassword = formData.get('newPassword') as string;
     const confirmPassword = formData.get('confirmPassword') as string;
@@ -50,7 +51,6 @@ export async function changePassword(email: string, formData: FormData) {
     }
 
     try {
-        const ctx = await getTenantContext();
         const loggedInUser = await prisma.usuario.findUnique({
             where: { id: ctx.userId }
         });
@@ -178,7 +178,7 @@ export async function listWebAuthnCredentials() {
 
 export async function deleteWebAuthnCredential(credentialId: string) {
     try {
-        const { userId } = await getTenantContext();
+        const { userId } = await requireAuth();
         const credencial = await prisma.webAuthnCredential.findUnique({ where: { id: credentialId } });
         if (!credencial || credencial.usuarioId !== userId) {
             return { success: false, message: 'No se encontró ese dispositivo.' };

@@ -180,3 +180,5 @@ export const getTenantContext = cache(async (): Promise<TenantContext> => {
         requestId
     };
 });
+
+export const requireAuth = getTenantContext;

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
-import { getTenantContext } from '@/lib/auth/context';
+import { getTenantContext, requireAuth } from '@/lib/auth/context';
 
 const DOC_TYPE_PEDIDO = 'PED';
 
@@ -56,6 +56,7 @@ async function getDefaults(empresaId: string) {
 }
 
 export async function createSalesOrder(prevState: unknown, formData: FormData) {
+    const { empresaId, userId } = await requireAuth();
     const rawItems = formData.get('items');
     let items: {
         productoId: string;
@@ -80,8 +81,6 @@ export async function createSalesOrder(prevState: unknown, formData: FormData) {
     if (!clienteId || !items || items.length === 0) {
         return { message: 'Cliente e ítems son requeridos.' };
     }
-
-    const { empresaId, userId } = await getTenantContext();
 
     try {
         const cliente = await prisma.cliente.findFirst({
@@ -185,7 +184,7 @@ export async function updateSalesOrderStatus(id: string, estado: string) {
 }
 
 export async function convertQuoteToOrder(quoteId: string) {
-    const { empresaId, userId } = await getTenantContext();
+    const { empresaId, userId } = await requireAuth();
     try {
         const cotizacion = await prisma.cotizacion.findFirst({
             where: { id: quoteId, empresaId },

@@ -2,10 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
-import { getTenantContext } from '@/lib/auth/context';
+import { getTenantContext, requireAuth } from '@/lib/auth/context';
 
 export async function getKitDeProducto(productoId: string) {
-    const { empresaId } = await getTenantContext();
+    const { empresaId } = await requireAuth();
 
     const kit = await prisma.productoKit.findUnique({
         where: { productoId },
@@ -62,25 +62,25 @@ export async function crearOActualizarKit(
     productoId: string,
     componentes: { productoComponenteId: string; cantidad: number }[]
 ) {
+    if (!componentes || componentes.length === 0) {
+        return { success: false, error: 'Debes agregar al menos un componente al kit.' };
+    }
+
+    if (componentes.some((c) => c.productoComponenteId === productoId)) {
+        return { success: false, error: 'Un producto no puede ser componente de sí mismo.' };
+    }
+
+    if (componentes.some((c) => !Number.isFinite(c.cantidad) || c.cantidad <= 0)) {
+        return { success: false, error: 'La cantidad de cada componente debe ser mayor a 0.' };
+    }
+
+    const uniqueIds = new Set(componentes.map((c) => c.productoComponenteId));
+    if (uniqueIds.size !== componentes.length) {
+        return { success: false, error: 'No puedes agregar el mismo componente más de una vez.' };
+    }
+
     try {
-        const { empresaId } = await getTenantContext();
-
-        if (!componentes || componentes.length === 0) {
-            return { success: false, error: 'Debes agregar al menos un componente al kit.' };
-        }
-
-        if (componentes.some((c) => c.productoComponenteId === productoId)) {
-            return { success: false, error: 'Un producto no puede ser componente de sí mismo.' };
-        }
-
-        if (componentes.some((c) => !Number.isFinite(c.cantidad) || c.cantidad <= 0)) {
-            return { success: false, error: 'La cantidad de cada componente debe ser mayor a 0.' };
-        }
-
-        const uniqueIds = new Set(componentes.map((c) => c.productoComponenteId));
-        if (uniqueIds.size !== componentes.length) {
-            return { success: false, error: 'No puedes agregar el mismo componente más de una vez.' };
-        }
+        const { empresaId } = await requireAuth();
 
         const producto = await prisma.producto.findFirst({ where: { id: productoId, empresaId } });
         if (!producto) {
@@ -149,7 +149,7 @@ export async function crearOActualizarKit(
 
 export async function desactivarKit(productoId: string) {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId } = await requireAuth();
 
         const producto = await prisma.producto.findFirst({ where: { id: productoId, empresaId } });
         if (!producto) {

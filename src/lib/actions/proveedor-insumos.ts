@@ -11,7 +11,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
-import { getTenantContext } from '@/lib/auth/context';
+import { getTenantContext, requireAuth } from '@/lib/auth/context';
 import { ProveedorInsumoSchema } from '@/lib/validations';
 import { cargarRecetas, consumoPorUnidad, RecetaCiclicaError } from '@/lib/services/recetas';
 import { generarAlertasReabastecimiento, type AlertaReabastecimiento } from '@/lib/services/reabastecimiento';
@@ -184,7 +184,7 @@ export async function guardarPresentacionProveedor(
     entrada: EntradaPresentacion
 ): Promise<ResultadoAccion> {
     try {
-        const { empresaId, role } = await getTenantContext();
+        const { empresaId, role } = await requireAuth();
         if (!ROLES_EDICION.includes(role)) {
             return { success: false, error: 'No tienes permiso para editar el catálogo de suministro.' };
         }
@@ -276,7 +276,7 @@ export async function guardarPresentacionProveedor(
 
 export async function eliminarPresentacionProveedor(id: string): Promise<ResultadoAccion> {
     try {
-        const { empresaId, role } = await getTenantContext();
+        const { empresaId, role } = await requireAuth();
         if (!ROLES_EDICION.includes(role)) {
             return { success: false, error: 'No tienes permiso para editar el catálogo de suministro.' };
         }

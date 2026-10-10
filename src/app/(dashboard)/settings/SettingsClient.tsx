@@ -231,7 +231,11 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
         const scriptId = 'paypal-sdk-script';
         let script = document.getElementById(scriptId) as HTMLScriptElement;
 
+        let timeoutId: NodeJS.Timeout | null = null;
+        let isCancelled = false;
+
         const initButtons = () => {
+            if (isCancelled) return;
             const paypal = (window as WindowWithPayPal).paypal;
             if (!paypal) return;
             setIsPaypalSdkLoaded(true);
@@ -299,8 +303,13 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
             };
             document.body.appendChild(script);
         } else {
-            setTimeout(initButtons, 100);
+            timeoutId = setTimeout(initButtons, 100);
         }
+
+        return () => {
+            isCancelled = true;
+            if (timeoutId) clearTimeout(timeoutId);
+        };
     }, [showPaypalModal, selectedPlanForPay, company.id, router]);
 
 

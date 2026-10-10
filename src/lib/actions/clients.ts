@@ -4,9 +4,10 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { ClientSchema } from '@/lib/validations';
-import { getTenantContext } from '@/lib/auth/context';
+import { requireAuth } from '@/lib/auth/context';
 
 export async function createClient(prevState: unknown, formData: FormData) {
+    const { empresaId } = await requireAuth();
     const rawData = {
         tipoRuc: formData.get('tipoRuc'),
         ruc: formData.get('ruc'),
@@ -30,7 +31,6 @@ export async function createClient(prevState: unknown, formData: FormData) {
     }
 
     const { data } = validatedFields;
-    const { empresaId } = await getTenantContext();
 
     try {
         await prisma.cliente.create({
@@ -61,6 +61,7 @@ export async function createClient(prevState: unknown, formData: FormData) {
 }
 
 export async function updateClient(id: string, prevState: unknown, formData: FormData) {
+    const { empresaId } = await requireAuth();
     const rawData = {
         tipoRuc: formData.get('tipoRuc'),
         ruc: formData.get('ruc'),
@@ -84,7 +85,6 @@ export async function updateClient(id: string, prevState: unknown, formData: For
     }
 
     const { data } = validatedFields;
-    const { empresaId } = await getTenantContext();
 
     try {
         const existing = await prisma.cliente.findFirst({
@@ -124,7 +124,7 @@ export async function updateClient(id: string, prevState: unknown, formData: For
 
 export async function deleteClient(id: string) {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId } = await requireAuth();
         const existing = await prisma.cliente.findFirst({
             where: { id, empresaId }
         });
@@ -177,6 +177,7 @@ export async function createClientQuick(input: {
     diasCredito?: string | null;
     descuentoEspecial?: string | null;
 }) {
+    const { empresaId } = await requireAuth();
     const validated = ClientSchema.safeParse({
         tipoRuc: input.tipoRuc,
         ruc: input.ruc,
@@ -198,7 +199,6 @@ export async function createClientQuick(input: {
     }
 
     const { data } = validated;
-    const { empresaId } = await getTenantContext();
 
     try {
         const cliente = await prisma.cliente.create({

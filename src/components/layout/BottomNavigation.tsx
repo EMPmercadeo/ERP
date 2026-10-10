@@ -34,6 +34,19 @@ import { useAuth } from '@/lib/firebase/auth';
 import { getCurrentUserWithPlan } from '@/lib/actions/auth';
 import { puedeVerRuta } from '@/lib/permissions';
 
+function MenuRow({ name, href, icon: Icon }: { name: string; href: string; icon: typeof Package }) {
+    return (
+        <Link
+            href={href}
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-foreground hover:bg-accent active:bg-accent transition-colors"
+        >
+            <Icon className="h-4.5 w-4.5 text-brand-1 shrink-0" />
+            <span className="flex-1">{name}</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+        </Link>
+    );
+}
+
 export function BottomNavigation() {
     const pathname = usePathname();
     const router = useRouter();
@@ -164,17 +177,6 @@ export function BottomNavigation() {
     };
 
     const planLabel = getPlanLabel(userPlan);
-
-    const MenuRow = ({ name, href, icon: Icon }: { name: string; href: string; icon: typeof Package }) => (
-        <Link
-            href={href}
-            className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-foreground hover:bg-accent active:bg-accent transition-colors"
-        >
-            <Icon className="h-4.5 w-4.5 text-brand-1 shrink-0" />
-            <span className="flex-1">{name}</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-        </Link>
-    );
 
     return (
         <>

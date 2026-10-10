@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
-import { getTenantContext } from '@/lib/auth/context';
+import { getTenantContext, requireAuth } from '@/lib/auth/context';
 import { canCreateInvoice, incrementDocumentUsage } from '@/lib/actions/billing';
 import { getEmpresaDefaults } from '@/lib/services/invoiceCreation';
 
@@ -112,7 +112,7 @@ async function getNextCreditNoteSequence(empresaId: string, sucursalId: string, 
 }
 
 export async function createCreditNote(prevState: unknown, formData: FormData) {
-    const { empresaId, userId, role } = await getTenantContext();
+    const { empresaId, userId, role } = await requireAuth();
     if (role !== 'admin' && role !== 'gerente' && role !== 'vendedor' && role !== 'contador') {
         return { success: false, message: 'Acceso denegado. Permisos insuficientes.' };
     }

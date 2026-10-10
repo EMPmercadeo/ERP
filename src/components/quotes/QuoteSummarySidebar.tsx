@@ -120,6 +120,7 @@ export function QuoteSummarySidebar({
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         } catch (error) {
             console.error('Error generating PDF:', error);
             alert('Error al generar PDF');

@@ -117,6 +117,57 @@ const adminNavigation = [
 
 // Configuración and Ayuda are now rendered within the user profile popover
 
+interface NavItemProps {
+    item: { name: string; href: string; icon: LucideIcon };
+    pathname: string;
+    isCollapsed: boolean;
+    onItemClick: () => void;
+}
+
+function NavItem({ item, pathname, isCollapsed, onItemClick }: NavItemProps) {
+    const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+    const Icon = item.icon;
+
+    const linkContent = (
+        <Link
+            href={item.href}
+            onClick={onItemClick}
+            className={cn(
+                'flex h-8 items-center gap-2.5 rounded-md px-3 text-[13px] font-medium transition-colors relative overflow-hidden',
+                isActive
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground'
+            )}
+        >
+            {isActive && (
+                <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r bg-sidebar-primary" />
+            )}
+            <Icon
+                className={cn(
+                    'h-4 w-4 shrink-0',
+                    isActive ? 'text-sidebar-primary' : 'text-muted-foreground'
+                )}
+            />
+            {!isCollapsed && <span>{item.name}</span>}
+        </Link>
+    );
+
+    if (isCollapsed) {
+        return (
+            <li>
+                <Tooltip>
+                    <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                    <TooltipContent side="right" className="bg-sidebar text-sidebar-foreground">
+                        {item.name}
+                    </TooltipContent>
+                </Tooltip>
+            </li>
+        );
+    }
+
+    return <li>{linkContent}</li>;
+}
+
 export function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
@@ -283,52 +334,15 @@ const handleSendFeedback = async (e: React.FormEvent) => {
         }
     };
 
-    const NavItem = ({ item }: { item: { name: string; href: string; icon: LucideIcon } }) => {
-        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-        const Icon = item.icon;
-
-        // Design System v2 §7: ítem de 32px (antes 40px) y barra activa de 2px (antes 4px).
-        // Con 15 ítems en el menú, cada 8px de más por fila eran 120px de scroll; y la barra
-        // de 4px pesaba más que el propio texto del ítem activo.
-        const linkContent = (
-            <Link
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                    'flex h-8 items-center gap-2.5 rounded-md px-3 text-[13px] font-medium transition-colors relative overflow-hidden',
-                    isActive
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
-                        : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground'
-                )}
-            >
-                {isActive && (
-                    <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r bg-sidebar-primary" />
-                )}
-                <Icon
-                    className={cn(
-                        'h-4 w-4 shrink-0',
-                        isActive ? 'text-sidebar-primary' : 'text-muted-foreground'
-                    )}
-                />
-                {!isCollapsed && <span>{item.name}</span>}
-            </Link>
-        );
-
-        if (isCollapsed) {
-            return (
-                <li key={item.name}>
-                    <Tooltip>
-                        <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                        <TooltipContent side="right" className="bg-sidebar text-sidebar-foreground">
-                            {item.name}
-                        </TooltipContent>
-                    </Tooltip>
-                </li>
-            );
-        }
-
-        return <li key={item.name}>{linkContent}</li>;
-    };
+    const renderNavItem = (item: { name: string; href: string; icon: LucideIcon }) => (
+        <NavItem
+            key={item.name}
+            item={item}
+            pathname={pathname}
+            isCollapsed={isCollapsed}
+            onItemClick={() => setMobileOpen(false)}
+        />
+    );
 
     const initials = userName
         ? userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -394,9 +408,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                     {isCollapsed ? (
                                         // Barra colapsada (solo iconos): mostramos los accesos admin
                                         // directos con su tooltip, igual que antes.
-                                        adminNavigation.map((item) => (
-                                            <NavItem key={item.name} item={item} />
-                                        ))
+                                        adminNavigation.map(renderNavItem)
                                     ) : (
                                         // Barra expandida: una sola sección "Admin Console" que se
                                         // despliega, para no saturar la barra con 9 enlaces sueltos.
@@ -415,9 +427,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                             </button>
                                             {adminOpen && (
                                                 <ul className="mt-1 space-y-1 border-l border-sidebar-border/40 ml-4 pl-1">
-                                                    {adminNavigation.map((item) => (
-                                                        <NavItem key={item.name} item={item} />
-                                                    ))}
+                                                    {adminNavigation.map(renderNavItem)}
                                                 </ul>
                                             )}
                                         </li>
@@ -429,9 +439,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                 </>
                             )}
 
-                            {topNavigation.map((item) => (
-                                <NavItem key={item.name} item={item} />
-                            ))}
+                            {topNavigation.map(renderNavItem)}
 
                             {navigationGroups.map((group) => {
                                 const items = group.items.filter((item) => mostrarItem(item.href));
@@ -446,9 +454,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                                 {group.label}
                                             </div>
                                             <ul className="space-y-0.5">
-                                                {items.map((item) => (
-                                                    <NavItem key={item.name} item={item} />
-                                                ))}
+                                                {items.map(renderNavItem)}
                                             </ul>
                                         </li>
                                     );
@@ -468,9 +474,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                         </button>
                                         {isGroupOpen && (
                                             <ul className="mt-1 space-y-0.5">
-                                                {items.map((item) => (
-                                                    <NavItem key={item.name} item={item} />
-                                                ))}
+                                                {items.map(renderNavItem)}
                                             </ul>
                                         )}
                                     </li>

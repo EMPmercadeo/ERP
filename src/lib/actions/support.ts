@@ -1,11 +1,11 @@
 'use server';
 
 import { prisma } from '@/lib/db';
-import { getTenantContext } from '@/lib/auth/context';
+import { requireAuth } from '@/lib/auth/context';
 
 export async function createSupportTicket(subject: string, message: string) {
     try {
-        const { userId, empresaId } = await getTenantContext();
+        const { userId, empresaId } = await requireAuth();
 
         const ticket = await prisma.auditoria.create({
             data: {
@@ -31,7 +31,7 @@ export async function createSupportTicket(subject: string, message: string) {
 
 export async function submitFeedback(text: string) {
     try {
-        const { userId, empresaId } = await getTenantContext();
+        const { userId, empresaId } = await requireAuth();
 
         const feedback = await prisma.auditoria.create({
             data: {

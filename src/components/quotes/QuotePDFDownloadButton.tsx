@@ -93,6 +93,7 @@ export function QuotePDFDownloadButton({ quote }: { quote: QuoteData }) {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
 
         } catch (error) {
             console.error(error);

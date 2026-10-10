@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/db';
-import { getTenantContext } from '@/lib/auth/context';
+import { getTenantContext, requireAuth } from '@/lib/auth/context';
 import { revalidatePath } from 'next/cache';
 import { hash } from 'bcryptjs';
 import { ASSIGNABLE_ROLES, ROLES_AUTORIZAN_DESCUENTOS, type AppRole } from '@/lib/permissions';
@@ -123,7 +123,7 @@ export async function updateCompanyUserRole(userId: string, rol: string, activo:
 }
 
 export async function setMyDiscountPin(pin: string) {
-    const ctx = await getTenantContext();
+    const ctx = await requireAuth();
     if (!ROLES_AUTORIZAN_DESCUENTOS.includes(ctx.role as AppRole) && ctx.role !== 'admin') {
         return { success: false, error: 'Tu rol no puede autorizar descuentos, así que no necesita un PIN.' };
     }

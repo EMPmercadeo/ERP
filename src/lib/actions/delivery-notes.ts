@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { getTenantContext } from '@/lib/auth/context';
+import { getTenantContext, requireAuth } from '@/lib/auth/context';
 import { DeliveryNoteSchema } from '@/lib/validations';
 
 const DOC_TYPE_ALBARAN = 'ALB';
@@ -59,7 +59,7 @@ async function getDefaults(empresaId: string) {
 }
 
 export async function createDeliveryNote(prevState: unknown, formData: FormData) {
-    const { empresaId, userId, role } = await getTenantContext();
+    const { empresaId, userId, role } = await requireAuth();
     if (role !== 'admin' && role !== 'gerente' && role !== 'vendedor') {
         return { message: 'Acceso denegado. Permisos insuficientes.' };
     }
@@ -374,11 +374,10 @@ export async function updateDeliveryNoteStatus(id: string, nuevoEstado: string, 
 }
 
 export async function invoiceGroupedDeliveryNotes(albaranIds: string[]) {
+    const { empresaId, userId } = await requireAuth();
     if (!albaranIds || albaranIds.length === 0) {
         return { success: false, message: 'Selecciona al menos un documento de entrega para facturar.' };
     }
-
-    const { empresaId, userId } = await getTenantContext();
 
     try {
         const albaranes = await prisma.albaranVenta.findMany({

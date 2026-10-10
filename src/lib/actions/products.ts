@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 import { ProductSchema } from '@/lib/validations';
-import { getTenantContext } from '@/lib/auth/context';
+import { getTenantContext, requireAuth } from '@/lib/auth/context';
 import fs from 'fs/promises';
 import path from 'path';
 import { getStorageProvider } from '@/lib/storage';
@@ -689,7 +689,7 @@ export async function setProductImagePrimary(imageId: string) {
 
 export async function updateProductImageOrder(imagesOrder: { id: string, sortOrder: number }[]) {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId } = await requireAuth();
 
         await prisma.$transaction(
             imagesOrder.map((item) =>
