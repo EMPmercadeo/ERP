@@ -72,8 +72,19 @@ export default function LoginPage() {
         } catch (err: unknown) {
             const error = err as { code?: string; message?: string };
             console.error('Google Login Error:', error);
-            if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
-                setError('No se pudo conectar con Google. Intenta de nuevo.');
+            if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+                // El usuario cerró la ventana emergente
+            } else if (error.code === 'auth/unauthorized-domain') {
+                setError('Dominio no autorizado en Firebase. Añade el dominio actual en Firebase Console > Authentication > Settings > Authorized domains.');
+            } else if (error.code === 'auth/operation-not-allowed') {
+                setError('El inicio de sesión con Google no está habilitado en Firebase Console > Authentication > Sign-in method.');
+            } else if (error.code === 'auth/popup-blocked') {
+                setError('El navegador bloqueó la ventana emergente. Permite ventanas emergentes para este sitio e intenta de nuevo.');
+            } else if (error.code === 'auth/internal-error') {
+                setError('Error interno de Firebase (auth/internal-error). Verifica que en Firebase Console esté configurado el correo de asistencia.');
+            } else {
+                const detalle = error.message || error.code;
+                setError(detalle ? `No se pudo conectar con Google: ${detalle}` : 'No se pudo conectar con Google. Intenta de nuevo.');
             }
         } finally {
             setIsGoogleLoading(false);
