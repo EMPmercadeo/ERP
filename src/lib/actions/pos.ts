@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
-import { getTenantContext } from '@/lib/auth/context';
+import { requireAuth } from '@/lib/auth/context';
 import { encrypt } from '@/lib/utils/crypto';
 import { canUsePOSIntegration } from '@/lib/actions/billing';
 
@@ -15,9 +15,8 @@ export async function connectPOS(providerSlug: string, credentials: {
     syncSales?: boolean;
     syncInventory?: boolean;
 }) {
+    const { empresaId } = await requireAuth();
     try {
-        const { empresaId } = await getTenantContext();
-
         // 1. Check plan limit
         const allowed = await canUsePOSIntegration(empresaId);
         if (!allowed) {
@@ -93,9 +92,8 @@ export async function connectPOS(providerSlug: string, credentials: {
 }
 
 export async function disconnectPOS(providerSlug: string) {
+    const { empresaId } = await requireAuth();
     try {
-        const { empresaId } = await getTenantContext();
-
         const integration = await prisma.posIntegration.findFirst({
             where: { empresaId, providerSlug }
         });
@@ -157,9 +155,8 @@ async function logSyncNotImplemented(
 }
 
 export async function syncPOSProducts(providerSlug: string) {
+    const { empresaId } = await requireAuth();
     try {
-        const { empresaId } = await getTenantContext();
-
         const integration = await prisma.posIntegration.findFirst({
             where: { empresaId, providerSlug }
         });
@@ -176,9 +173,8 @@ export async function syncPOSProducts(providerSlug: string) {
 }
 
 export async function syncPOSSales(providerSlug: string) {
+    const { empresaId } = await requireAuth();
     try {
-        const { empresaId } = await getTenantContext();
-
         const integration = await prisma.posIntegration.findFirst({
             where: { empresaId, providerSlug }
         });
@@ -195,9 +191,8 @@ export async function syncPOSSales(providerSlug: string) {
 }
 
 export async function syncPOSInventory(providerSlug: string) {
+    const { empresaId } = await requireAuth();
     try {
-        const { empresaId } = await getTenantContext();
-
         const integration = await prisma.posIntegration.findFirst({
             where: { empresaId, providerSlug }
         });
@@ -214,9 +209,8 @@ export async function syncPOSInventory(providerSlug: string) {
 }
 
 export async function getPOSIntegrations() {
+    const { empresaId } = await requireAuth();
     try {
-        const { empresaId } = await getTenantContext();
-
         return await prisma.posIntegration.findMany({
             where: { empresaId },
             include: {

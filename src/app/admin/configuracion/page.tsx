@@ -49,6 +49,10 @@ export default function SuperadminConfiguracionPage() {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/configuracion');
+      if (!res.ok) {
+        toast.error('Error al cargar configuración');
+        return;
+      }
       const data = await res.json();
       if (data.plataforma) setPlataforma(data.plataforma);
       if (data.smtp) {
@@ -70,6 +74,7 @@ export default function SuperadminConfiguracionPage() {
 
   const handleGuardarSMTP = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (guardando) return;
     setGuardando(true);
     try {
       const res = await fetch('/api/admin/configuracion', {
@@ -77,13 +82,14 @@ export default function SuperadminConfiguracionPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ smtp })
       });
-      const data = await res.json();
-      if (res.ok) {
-        toast.success(data.message || 'Configuración SMTP actualizada y encriptada.');
-        cargarConfig();
-      } else {
-        toast.error(data.error || 'Error al guardar SMTP');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(errorData.error || 'Error al guardar SMTP');
+        return;
       }
+      const data = await res.json();
+      toast.success(data.message || 'Configuración SMTP actualizada y encriptada.');
+      cargarConfig();
     } catch {
       toast.error('Fallo en la comunicación al guardar SMTP');
     } finally {
@@ -92,6 +98,7 @@ export default function SuperadminConfiguracionPage() {
   };
 
   const handleProbarSMTP = async () => {
+    if (probandoSmtp) return;
     if (!correoPrueba) {
       toast.error('Indica un correo para la prueba en el campo inferior.');
       return;
@@ -103,12 +110,13 @@ export default function SuperadminConfiguracionPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ destinatario: correoPrueba })
       });
-      const data = await res.json();
-      if (res.ok) {
-        toast.success(data.message || '¡Correo de prueba enviado con éxito!');
-      } else {
-        toast.error(data.error || 'Fallo en la prueba de servidor saliente SMTP');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(errorData.error || 'Fallo en la prueba de servidor saliente SMTP');
+        return;
       }
+      const data = await res.json();
+      toast.success(data.message || '¡Correo de prueba enviado con éxito!');
     } catch {
       toast.error('Error al conectar para prueba SMTP');
     } finally {

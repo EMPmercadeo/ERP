@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, createContext, useContext, useCallback } from 'react';
+import { useState, useEffect, useRef, createContext, useContext, useCallback, useMemo } from 'react';
 import { getCurrentUser, setSessionToken, deleteSessionEmail, getUserRole } from '@/lib/actions/auth';
 import {
     User,
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [authError, setAuthError] = useState<string | null>(null);
     const initializedRef = useRef(false);
 
-    const clearError = () => setAuthError(null);
+    const clearError = useCallback(() => setAuthError(null), []);
 
     // Stable mock user – created once, never triggers re-renders
     const mockUserRef = useRef<User | null>((process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_FALLBACK === 'true') ? {
@@ -190,7 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => unsubscribe();
     }, []); // Empty deps – runs once
 
-    const signInWithGoogle = async () => {
+    const signInWithGoogle = useCallback(async () => {
         try {
             const res = await signInWithPopup(auth, googleProvider);
             if (res.user?.email) {
@@ -206,9 +206,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
             throw error;
         }
-    };
+    }, []);
 
-    const signInWithEmail = async (email: string, password: string) => {
+    const signInWithEmail = useCallback(async (email: string, password: string) => {
         try {
             const cred = await signInWithEmailAndPassword(auth, email, password);
             const idToken = await cred.user.getIdToken();
@@ -253,9 +253,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error('Error signing in with email:', error);
             throw error;
         }
-    };
+    }, []);
 
-    const signUpWithEmail = async (email: string, password: string) => {
+    const signUpWithEmail = useCallback(async (email: string, password: string) => {
         try {
             const cred = await createUserWithEmailAndPassword(auth, email, password);
             const idToken = await cred.user.getIdToken();
@@ -272,9 +272,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error('Error signing up:', error);
             throw error;
         }
-    };
+    }, []);
 
-    const signOut = async () => {
+    const signOut = useCallback(async () => {
         try {
             await firebaseSignOut(auth);
             mockUserRef.current = null;
@@ -285,36 +285,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error('Error signing out:', error);
             throw error;
         }
-    };
+    }, []);
 
-    const resetPassword = async (email: string) => {
+    const resetPassword = useCallback(async (email: string) => {
         const { sendPasswordResetEmail } = await import('firebase/auth');
         await sendPasswordResetEmail(auth, email);
-    };
+    }, []);
 
-    const resendVerificationEmail = async () => {
+    const resendVerificationEmail = useCallback(async () => {
         if (!auth.currentUser) {
             throw new Error('No hay una sesión activa de Firebase.');
         }
         await firebaseSendEmailVerification(auth.currentUser);
-    };
+    }, []);
+
+    const value = useMemo(() => ({
+        user,
+        loading,
+        role,
+        error: authError,
+        clearError,
+        signInWithGoogle,
+        signInWithEmail,
+        signUpWithEmail,
+        signOut,
+        resetPassword,
+        refreshUser,
+        resendVerificationEmail,
+        isEmailVerified: user?.emailVerified ?? false
+    }), [
+        user,
+        loading,
+        role,
+        authError,
+        clearError,
+        signInWithGoogle,
+        signInWithEmail,
+        signUpWithEmail,
+        signOut,
+        resetPassword,
+        refreshUser,
+        resendVerificationEmail
+    ]);
 
     return (
-        <AuthContext.Provider value={{
-            user,
-            loading,
-            role,
-            error: authError,
-            clearError,
-            signInWithGoogle,
-            signInWithEmail,
-            signUpWithEmail,
-            signOut,
-            resetPassword,
-            refreshUser,
-            resendVerificationEmail,
-            isEmailVerified: user?.emailVerified ?? false
-        }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );

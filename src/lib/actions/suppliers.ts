@@ -5,11 +5,11 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 import { SupplierSchema } from '@/lib/validations';
-import { getTenantContext } from '@/lib/auth/context';
+import { requireAuth } from '@/lib/auth/context';
 import { sendEmail } from '@/lib/email/mailer';
 
 export async function createSupplier(prevState: unknown, formData: FormData) {
-    const { empresaId, role } = await getTenantContext();
+    const { empresaId, role } = await requireAuth();
     if (role !== 'admin' && role !== 'gerente') {
         return { message: 'Acceso denegado. Permisos insuficientes.' };
     }
@@ -72,7 +72,7 @@ export async function createSupplier(prevState: unknown, formData: FormData) {
 }
 
 export async function updateSupplier(id: string, prevState: unknown, formData: FormData) {
-    const { empresaId, role } = await getTenantContext();
+    const { empresaId, role } = await requireAuth();
     if (role !== 'admin' && role !== 'gerente') {
         return { message: 'Acceso denegado. Permisos insuficientes.' };
     }
@@ -141,11 +141,11 @@ export async function updateSupplier(id: string, prevState: unknown, formData: F
 }
 
 export async function toggleSupplierStatus(id: string, nuevoEstado: string) {
+    const { empresaId, role } = await requireAuth();
+    if (role !== 'admin' && role !== 'gerente') {
+        return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
+    }
     try {
-        const { empresaId, role } = await getTenantContext();
-        if (role !== 'admin' && role !== 'gerente') {
-            return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
-        }
         const existing = await prisma.proveedor.findFirst({
             where: { id, empresaId }
         });
@@ -168,11 +168,11 @@ export async function toggleSupplierStatus(id: string, nuevoEstado: string) {
 }
 
 export async function deleteSupplier(id: string) {
+    const { empresaId, role } = await requireAuth();
+    if (role !== 'admin' && role !== 'gerente') {
+        return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
+    }
     try {
-        const { empresaId, role } = await getTenantContext();
-        if (role !== 'admin' && role !== 'gerente') {
-            return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
-        }
         const existing = await prisma.proveedor.findFirst({
             where: { id, empresaId }
         });
@@ -206,11 +206,11 @@ export async function deleteSupplier(id: string) {
 }
 
 export async function getSuppliersWithSummary() {
+    const { empresaId, role } = await requireAuth();
+    if (role !== 'admin' && role !== 'gerente') {
+        return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
+    }
     try {
-        const { empresaId, role } = await getTenantContext();
-        if (role !== 'admin' && role !== 'gerente') {
-            return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
-        }
 
         const suppliers = await prisma.proveedor.findMany({
             where: { empresaId },
@@ -307,8 +307,8 @@ export async function updateSupplierInline(id: string, data: {
     condicionPago?: string;
     limiteCredito?: number;
 }) {
+    const { empresaId } = await requireAuth();
     try {
-        const { empresaId } = await getTenantContext();
         const existing = await prisma.proveedor.findFirst({
             where: { id, empresaId }
         });
@@ -357,8 +357,8 @@ export async function updateSupplierInline(id: string, data: {
 }
 
 export async function sendSupplierEmailAction(id: string, email: string, tipo: 'estado_cuenta' | 'orden_compra') {
+    const { empresaId, emailVerified } = await requireAuth();
     try {
-        const { empresaId, emailVerified } = await getTenantContext();
 
         // No permitir que una cuenta sin verificar dispare envíos de correo en nombre
         // de la empresa (phishing/spam desde cuentas recién creadas y no confirmadas).

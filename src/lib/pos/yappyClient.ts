@@ -54,8 +54,13 @@ export async function validarComercioYappy(cred: YappyCredenciales): Promise<{ t
     })
   });
 
+  if (!res.ok) {
+    const errorData = (await res.json().catch(() => null)) as ValidarComercioResponse | null;
+    throw new Error(errorData?.status?.description || 'Yappy rechazó la validación del comercio.');
+  }
+
   const data = (await res.json().catch(() => null)) as ValidarComercioResponse | null;
-  if (!res.ok || !data?.body?.token) {
+  if (!data?.body?.token) {
     throw new Error(data?.status?.description || 'Yappy rechazó la validación del comercio.');
   }
   return { token: data.body.token };
@@ -110,8 +115,13 @@ export async function crearOrdenYappy(
     })
   });
 
+  if (!res.ok) {
+    const errorData = (await res.json().catch(() => null)) as CrearOrdenResponse | null;
+    throw new Error(errorData?.status?.description || 'Yappy rechazó la creación de la orden.');
+  }
+
   const data = (await res.json().catch(() => null)) as CrearOrdenResponse | null;
-  if (!res.ok || !data?.body?.transactionId) {
+  if (!data?.body?.transactionId) {
     throw new Error(data?.status?.description || 'Yappy rechazó la creación de la orden.');
   }
   return data.body;

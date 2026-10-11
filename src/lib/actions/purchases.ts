@@ -6,7 +6,7 @@ import { prisma } from '@/lib/db';
 import { PurchaseSchema } from '@/lib/validations';
 import { getTenantContext } from '@/lib/auth/context';
 import { generarAsientoCompra } from '@/lib/contabilidad/asientos';
-import { resolverBodegaId, moverInventarioBodega } from './bodegas';
+import { resolverBodegaId, moverInventarioBodega } from '@/lib/services/bodegaOperations';
 
 export async function createPurchase(prevState: unknown, formData: FormData) {
     const { empresaId, userId, role } = await getTenantContext();

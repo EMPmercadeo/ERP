@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
+import { requireAuth } from '@/lib/auth/context';
 
 import { revalidatePath } from 'next/cache';
 
@@ -11,8 +12,7 @@ export async function getTenants(
     pageSize: number = 20
 ) {
     // 1. Verify Super Admin Access
-    const { getTenantContext } = await import('@/lib/auth/context');
-    const ctx = await getTenantContext();
+    const ctx = await requireAuth();
 
     if (ctx.role !== 'super_admin') {
         throw new Error('Unauthorized');
@@ -77,8 +77,7 @@ export async function getGlobalUsers(
     page: number = 1,
     pageSize: number = 10
 ) {
-    const { getTenantContext } = await import('@/lib/auth/context');
-    const ctx = await getTenantContext();
+    const ctx = await requireAuth();
 
     if (ctx.role !== 'super_admin') {
         throw new Error('Unauthorized');
@@ -147,8 +146,7 @@ export async function getGlobalUsers(
 }
 
 export async function updateUserStatusAndRole(targetUserId: string, rol: string, activo: boolean) {
-    const { getTenantContext } = await import('@/lib/auth/context');
-    const ctx = await getTenantContext();
+    const ctx = await requireAuth();
 
     if (ctx.role !== 'super_admin') {
         throw new Error('Unauthorized');
@@ -175,8 +173,7 @@ export async function updateUserStatusAndRole(targetUserId: string, rol: string,
  * ciclo de vida de la cuenta/suscripción (a diferencia de Sucursal o Caja que usan un booleano `activa`).
  */
 export async function toggleTenantStatus(empresaId: string) {
-    const { getTenantContext } = await import('@/lib/auth/context');
-    const ctx = await getTenantContext();
+    const ctx = await requireAuth();
 
     if (ctx.role !== 'super_admin') {
         throw new Error('Unauthorized');
@@ -211,8 +208,7 @@ export async function toggleTenantStatus(empresaId: string) {
 }
 
 export async function getTenantById(empresaId: string) {
-    const { getTenantContext } = await import('@/lib/auth/context');
-    const ctx = await getTenantContext();
+    const ctx = await requireAuth();
 
     if (ctx.role !== 'super_admin') {
         throw new Error('Unauthorized');
@@ -288,8 +284,7 @@ export async function updateTenant(
         planType?: string;
     }
 ) {
-    const { getTenantContext } = await import('@/lib/auth/context');
-    const ctx = await getTenantContext();
+    const ctx = await requireAuth();
 
     if (ctx.role !== 'super_admin') {
         throw new Error('Unauthorized');

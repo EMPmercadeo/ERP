@@ -64,7 +64,7 @@ export default function EmpleadosRRHHPage() {
   const [cargo, setCargo] = useState('');
   const [salarioBase, setSalarioBase] = useState('850');
   const [tipoContrato, setTipoContrato] = useState('INDEFINIDO');
-  const [fechaIngreso, setFechaIngreso] = useState(new Date().toISOString().split('T')[0]);
+  const [fechaIngreso, setFechaIngreso] = useState(() => new Date().toISOString().split('T')[0]);
   // Estos 3 alimentan la calculadora de Planilla (módulo Payroll) — antes esa calculadora
   // usaba colaboradores inventados porque no existía forma de capturar estos datos.
   const [departamento, setDepartamento] = useState('General');
@@ -125,6 +125,7 @@ export default function EmpleadosRRHHPage() {
 
   const handleCrearEmpleado = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (guardando) return;
     setErrorModal('');
     setGuardando(true);
     try {
@@ -144,8 +145,8 @@ export default function EmpleadosRRHHPage() {
         })
       });
 
-      const data = await res.json();
       if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
         setErrorModal(data.error || 'Error al guardar colaborador');
       } else {
         setShowModal(false);

@@ -315,8 +315,12 @@ export default function MostradorPOS({
     setCargandoTurno(true);
     try {
       const res = await fetch('/api/pos/turno');
+      if (!res.ok) {
+        setTurnoActivo(null);
+        return;
+      }
       const data = await res.json().catch(() => ({ turno: null }));
-      setTurnoActivo(res.ok ? (data.turno || null) : null);
+      setTurnoActivo(data?.turno || null);
     } catch {
       setTurnoActivo(null);
     } finally {
@@ -344,12 +348,13 @@ export default function MostradorPOS({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ montoInicial: monto })
       });
-      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
         setErrorTurno(data.error || 'No se pudo abrir el turno de caja.');
         // Si el servidor dice que ya hay uno abierto, sincronizamos el estado con ese turno.
         if (data.turno) setTurnoActivo(data.turno);
       } else {
+        const data = await res.json().catch(() => ({}));
         setTurnoActivo(data.turno);
         setMontoInicialTurno('');
       }
@@ -365,8 +370,12 @@ export default function MostradorPOS({
     setMontoContadoCierre('');
     try {
       const res = await fetch('/api/pos/turno');
+      if (!res.ok) {
+        setResumenCierreTurno(null);
+        return;
+      }
       const data = await res.json().catch(() => ({}));
-      if (res.ok && data.resumen) setResumenCierreTurno(data.resumen);
+      if (data.resumen) setResumenCierreTurno(data.resumen);
     } catch {
       setResumenCierreTurno(null);
     }
@@ -385,10 +394,11 @@ export default function MostradorPOS({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ montoContadoCierre: Number(montoContadoCierre) })
       });
-      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
         setErrorTurno(data.error || 'No se pudo cerrar el turno de caja.');
       } else {
+        const data = await res.json().catch(() => ({}));
         setTurnoRecienCerrado({
           id: data.turno.id,
           montoEsperadoCierre: data.turno.montoEsperadoCierre,
@@ -411,28 +421,29 @@ export default function MostradorPOS({
       // El catálogo se scopea a la empresa de la sesión actual en el servidor
       // (getTenantContext), no por un empresaId que mande el cliente.
       const res = await fetch('/api/pos/productos');
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        const lista = (data.items || []).map((p: ProductoPOSRaw) => ({
-          id: p.id,
-          codigoInterno: p.codigoInterno || 'SKU-01',
-          codigoBarras: p.codigoBarras,
-          descripcion: p.descripcion || 'Producto',
-          precioVenta: Number(p.precioVenta ?? 0),
-          codigoTasaItbms: p.codigoTasaItbms || '00',
-          stockActual: p.stockActual ?? 0,
-          unidadMedida: p.unidadMedida || 'UND',
-          descuentoSugerido: Number(p.descuentoSugerido ?? 0)
-        }));
-        setProductos(lista);
-        if (lista.length === 0) {
-          setErrorCatalogo('No tienes productos activos todavía. Agrega productos en el módulo Productos para poder venderlos aquí.');
-        } else {
-          setErrorCatalogo('');
-        }
-      } else {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
         setProductos([]);
         setErrorCatalogo(data.error || 'No se pudo cargar el catálogo de productos.');
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      const lista = (data.items || []).map((p: ProductoPOSRaw) => ({
+        id: p.id,
+        codigoInterno: p.codigoInterno || 'SKU-01',
+        codigoBarras: p.codigoBarras,
+        descripcion: p.descripcion || 'Producto',
+        precioVenta: Number(p.precioVenta ?? 0),
+        codigoTasaItbms: p.codigoTasaItbms || '00',
+        stockActual: p.stockActual ?? 0,
+        unidadMedida: p.unidadMedida || 'UND',
+        descuentoSugerido: Number(p.descuentoSugerido ?? 0)
+      }));
+      setProductos(lista);
+      if (lista.length === 0) {
+        setErrorCatalogo('No tienes productos activos todavía. Agrega productos en el módulo Productos para poder venderlos aquí.');
+      } else {
+        setErrorCatalogo('');
       }
     } catch {
       setProductos([]);
@@ -609,9 +620,9 @@ export default function MostradorPOS({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        const data = await res.json();
 
         if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
           if (data.requiereTurno) {
             // El servidor es la fuente de verdad: si de todos modos rechazó por no tener un
             // turno abierto (se cerró en otra pestaña, expiró, etc.), sincronizamos el estado.
@@ -627,6 +638,7 @@ export default function MostradorPOS({
             setErrorPago(data.error || 'Error en la autorización PAC');
           }
         } else {
+          const data = await res.json();
           // Actualizar stock local con el resultado del backend
           cargarProductos();
           cargarTurno();
@@ -679,16 +691,20 @@ export default function MostradorPOS({
           ventasQueue: colaLocal
         })
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setAvisoSync({ tipo: 'error', mensaje: 'Error al retransmitir: ' + (data.error || 'Error desconocido.') });
+      } else {
+        const data = await res.json();
         setAvisoSync({ tipo: data.fallidas > 0 ? 'error' : 'success', mensaje: data.message || 'Ventas retransmitidas correctamente.' });
         setColaLocal([]);
         localStorage.removeItem('pos_ventas_queue');
         const pendienteRes = await fetch('/api/pos/ventas/sync');
-        if (pendienteRes.ok) setPendientesPAC((await pendienteRes.json()).pendientes ?? 0);
+        if (pendienteRes.ok) {
+          const pendData = await pendienteRes.json().catch(() => ({ pendientes: 0 }));
+          setPendientesPAC(pendData.pendientes ?? 0);
+        }
         cargarProductos();
-      } else {
-        setAvisoSync({ tipo: 'error', mensaje: 'Error al retransmitir: ' + (data.error || 'Error desconocido.') });
       }
     } catch {
       setAvisoSync({ tipo: 'error', mensaje: 'Error de conexión con el servidor PAC.' });

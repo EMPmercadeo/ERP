@@ -89,6 +89,7 @@ export async function setSessionToken(idToken: string) {
     logger.info('Sesión de usuario iniciada correctamente', { email: decoded.email, uid: decoded.uid });
 }
 
+// oxlint-disable-next-line react-doctor/server-auth-actions -- Logout action clearing session cookies without requiring active session
 export async function deleteSessionEmail(): Promise<{ success: boolean; revoked: boolean }> {
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get('session_token')?.value;
@@ -116,6 +117,7 @@ export async function deleteSessionEmail(): Promise<{ success: boolean; revoked:
     return { success: true, revoked: false };
 }
 
+// oxlint-disable-next-line react-doctor/server-auth-actions -- Logout action clearing session cookies without requiring active session
 export async function deleteSessionEmailGlobal(): Promise<{ success: boolean; revoked: boolean }> {
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get('session_token')?.value;

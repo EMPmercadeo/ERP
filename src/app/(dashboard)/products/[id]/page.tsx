@@ -134,17 +134,17 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
     const [descripcionLarga, setDescripcionLarga] = useState(product.descripcionLarga || '');
     const [codigoTasaItbms, setCodigoTasaItbms] = useState(product.codigoTasaItbms || '01');
     const [unidadMedida, setUnidadMedida] = useState(product.unidadMedida || 'UND');
-    const [costoUnitario, setCostoUnitario] = useState(product.costoUnitario ? product.costoUnitario.toString() : '0');
-    const [precioVenta, setPrecioVenta] = useState(product.precioVenta ? product.precioVenta.toString() : '0');
-    const [stockActual, setStockActual] = useState(product.stockActual?.toString() || '0');
-    const [stockMinimo, setStockMinimo] = useState(product.stockMinimo?.toString() || '0');
+    const [costoUnitario, setCostoUnitario] = useState(() => product.costoUnitario ? product.costoUnitario.toString() : '0');
+    const [precioVenta, setPrecioVenta] = useState(() => product.precioVenta ? product.precioVenta.toString() : '0');
+    const [stockActual, setStockActual] = useState(() => product.stockActual?.toString() || '0');
+    const [stockMinimo, setStockMinimo] = useState(() => product.stockMinimo?.toString() || '0');
     const [activo, setActivo] = useState(product.activo ? 'true' : 'false');
     const [controlaLotes, setControlaLotes] = useState(product.controlaLotes ? 'true' : 'false');
     const [imagenUrl, setImagenUrl] = useState(product.imagenUrl || '');
     const [images, setImages] = useState(product.productImages || []);
     const [activePreviewUrl, setActivePreviewUrl] = useState(product.imagenUrl || '');
     const [categoriaId, setCategoriaId] = useState(product.categoriaId || 'none');
-    const [descuentoPorcentaje, setDescuentoPorcentaje] = useState(product.descuentoPorcentaje?.toString() || '0');
+    const [descuentoPorcentaje, setDescuentoPorcentaje] = useState(() => product.descuentoPorcentaje?.toString() || '0');
     const [categorias, setCategorias] = useState<{ id: string; nombre: string; descuentoPorcentaje: number }[]>([]);
 
     useEffect(() => {

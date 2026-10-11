@@ -48,8 +48,8 @@ export default function AusenciasPage() {
   const [showModal, setShowModal] = useState(false);
   const [empleadoId, setEmpleadoId] = useState('');
   const [tipo, setTipo] = useState('VACACIONES');
-  const [desde, setDesde] = useState(new Date().toISOString().split('T')[0]);
-  const [hasta, setHasta] = useState(new Date().toISOString().split('T')[0]);
+  const [desde, setDesde] = useState(() => new Date().toISOString().split('T')[0]);
+  const [hasta, setHasta] = useState(() => new Date().toISOString().split('T')[0]);
   const [docUrl, setDocUrl] = useState('');
   const [nota, setNota] = useState('');
   const [guardando, setGuardando] = useState(false);
@@ -87,6 +87,7 @@ export default function AusenciasPage() {
 
   const handleCrearAusencia = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (guardando) return;
     setErrorModal('');
     setGuardando(true);
     try {
@@ -103,8 +104,8 @@ export default function AusenciasPage() {
         })
       });
 
-      const data = await res.json();
       if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
         setErrorModal(data.error || 'Error al registrar solicitud');
       } else {
         setShowModal(false);

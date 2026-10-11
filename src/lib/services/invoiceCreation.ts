@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { resolverBodegaId, moverInventarioBodega } from '@/lib/actions/bodegas';
+import { resolverBodegaId, moverInventarioBodega } from '@/lib/services/bodegaOperations';
 import { canCreateInvoice, incrementDocumentUsage } from '@/lib/actions/billing';
 import { generarAsientoFactura, generarAsientoCobro, generarAsientoCostoVenta } from '@/lib/contabilidad/asientos';
 import { obtenerTopeDescuentoSinAutorizacion, verificarPinAutorizacion } from '@/lib/services/discountAuth';

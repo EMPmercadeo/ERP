@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { getTenantContext } from '@/lib/auth/context';
 import { TransferenciaBodegaSchema } from '@/lib/validations';
-import { moverInventarioBodega } from '@/lib/actions/bodegas';
+import { moverInventarioBodega } from '@/lib/services/bodegaOperations';
 
 export async function getTransferencias() {
     const { empresaId } = await getTenantContext();

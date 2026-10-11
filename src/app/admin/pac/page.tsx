@@ -35,6 +35,10 @@ export default function SuperadminPACPage() {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/pac');
+      if (!res.ok) {
+        toast.error('Error al cargar configuración PAC');
+        return;
+      }
       const data = await res.json();
       setPacs(Array.isArray(data) ? data : []);
     } catch {
@@ -52,8 +56,13 @@ export default function SuperadminPACPage() {
     setTestingId(id);
     try {
       const res = await fetch(`/api/admin/pac/${id}/test`, { method: 'POST' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(`Fallo: ${err.mensaje || 'Error de PAC'}`);
+        return;
+      }
       const data = await res.json();
-      if (res.ok && data.success) {
+      if (data.success) {
         toast.success(`Conexión OK (${data.latenciaMs}ms): ${data.mensaje}`);
       } else {
         toast.error(`Fallo (${data.latenciaMs || 0}ms): ${data.mensaje || 'Error de PAC'}`);
@@ -100,6 +109,7 @@ export default function SuperadminPACPage() {
 
   const handleGuardarPAC = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (guardando) return;
     if (!proveedor.trim() || !credenciales.trim()) {
       toast.error('Proveedor y credenciales son obligatorios.');
       return;

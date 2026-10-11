@@ -282,10 +282,12 @@ export async function getSalesTrend(filters: ReportFilters, groupBy: 'day' | 'we
         return format(startOfMonth(d), 'yyyy-MM');
     };
 
+    const pointMap = new Map(points.map(pt => [pt.sortKey, pt]));
+
     // Populate facturado
     for (const inv of invoices) {
         const key = getPointKey(inv.fechaEmision);
-        const pt = points.find(p => p.sortKey === key);
+        const pt = pointMap.get(key);
         if (pt) {
             const val = Number(inv.totalNeto);
             if (inv.tipoDocumento === 'NC') {
@@ -299,7 +301,7 @@ export async function getSalesTrend(filters: ReportFilters, groupBy: 'day' | 'we
     // Populate cobrado
     for (const p of payments) {
         const key = getPointKey(p.fechaPago);
-        const pt = points.find(p => p.sortKey === key);
+        const pt = pointMap.get(key);
         if (pt) {
             pt.cobrado += Number(p.monto);
         }

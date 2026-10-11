@@ -81,9 +81,11 @@ async function ImpersonationWrapper() {
     return null;
   }
 
-  const { getTenantContext } = await import('@/lib/auth/context');
-  const { prisma } = await import('@/lib/db');
-  const { ImpersonationBanner } = await import('@/components/layout/ImpersonationBanner');
+  const [{ getTenantContext }, { prisma }, { ImpersonationBanner }] = await Promise.all([
+    import('@/lib/auth/context'),
+    import('@/lib/db'),
+    import('@/components/layout/ImpersonationBanner'),
+  ]);
 
   let tenantName: string | null = null;
   try {

@@ -72,8 +72,11 @@ export default function YappyBotonPago({ ambiente, subtotal, itbms, total, onPag
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ subtotal, itbms, total })
         });
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.error || 'No se pudo crear la orden de cobro con Yappy.');
+        }
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'No se pudo crear la orden de cobro con Yappy.');
 
         // Best-effort: le pasamos al web component el resultado de crear la orden mediante un
         // CustomEvent -- ver advertencia arriba, esto necesita verificarse con credenciales
@@ -91,6 +94,7 @@ export default function YappyBotonPago({ ambiente, subtotal, itbms, total, onPag
           if (cancelado) { if (pollTimer) clearInterval(pollTimer); return; }
           try {
             const r = await fetch(`/api/pos/yappy/consultar?orderId=${encodeURIComponent(data.orderId)}`);
+            if (!r.ok) return;
             const d = await r.json();
             if (d.estado === 'EJECUTADO') {
               if (pollTimer) clearInterval(pollTimer);

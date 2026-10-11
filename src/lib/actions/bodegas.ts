@@ -1,13 +1,12 @@
 'use server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { getTenantContext } from '@/lib/auth/context';
+import { requireAuth } from '@/lib/auth/context';
 import { WarehouseSchema } from '@/lib/validations';
 
 export async function getBodegas() {
-    const { empresaId } = await getTenantContext();
+    const { empresaId } = await requireAuth();
     return prisma.bodega.findMany({
         where: { empresaId },
         include: { sucursal: true },
@@ -16,7 +15,7 @@ export async function getBodegas() {
 }
 
 export async function createBodega(prevState: unknown, formData: FormData) {
-    const { empresaId, role } = await getTenantContext();
+    const { empresaId, role } = await requireAuth();
     if (role !== 'admin' && role !== 'gerente') {
         return { message: 'Acceso denegado. Permisos insuficientes.' };
     }
@@ -74,7 +73,7 @@ export async function createBodega(prevState: unknown, formData: FormData) {
 }
 
 export async function updateBodega(id: string, prevState: unknown, formData: FormData) {
-    const { empresaId, role } = await getTenantContext();
+    const { empresaId, role } = await requireAuth();
     if (role !== 'admin' && role !== 'gerente') {
         return { message: 'Acceso denegado. Permisos insuficientes.' };
     }
@@ -144,11 +143,11 @@ export async function updateBodega(id: string, prevState: unknown, formData: For
 }
 
 export async function deleteBodega(id: string) {
+    const { empresaId, role } = await requireAuth();
+    if (role !== 'admin' && role !== 'gerente') {
+        return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
+    }
     try {
-        const { empresaId, role } = await getTenantContext();
-        if (role !== 'admin' && role !== 'gerente') {
-            return { success: false, error: 'Acceso denegado. Permisos insuficientes.' };
-        }
         const existing = await prisma.bodega.findFirst({
             where: { id, empresaId }
         });
@@ -182,25 +181,3 @@ export async function deleteBodega(id: string) {
         return { success: false, error: 'Error al eliminar la bodega.' };
     }
 }
-
-// Resuelve qué bodega usar: valida la sugerida si viene, o cae a la primera bodega de la empresa.
-export async function resolverBodegaId(tx: Prisma.TransactionClient, empresaId: string, bodegaIdSugerido?: string | null): Promise<string> {
-    if (bodegaIdSugerido) {
-        const valida = await tx.bodega.findFirst({ where: { id: bodegaIdSugerido, empresaId, activa: true } });
-        if (valida) return valida.id;
-    }
-    const principal = await tx.bodega.findFirst({ where: { empresaId, activa: true }, orderBy: { codigo: 'asc' } });
-    if (!principal) {
-        throw new Error('La empresa no tiene ninguna bodega configurada.');
-    }
-    return principal.id;
-}
-
-async function moverInventarioBodega(tx: Prisma.TransactionClient, params: { empresaId: string; bodegaId: string; productoId: string; delta: number }) {
-    await tx.inventarioBodega.upsert({
-        where: { bodegaId_productoId: { bodegaId: params.bodegaId, productoId: params.productoId } },
-        create: { empresaId: params.empresaId, bodegaId: params.bodegaId, productoId: params.productoId, cantidad: params.delta },
-        update: { cantidad: { increment: params.delta } },
-    });
-}
-export { moverInventarioBodega };

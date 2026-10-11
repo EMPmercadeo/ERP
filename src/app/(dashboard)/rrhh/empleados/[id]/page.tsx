@@ -83,7 +83,7 @@ export default function FichaColaboradorPage() {
   const [actaTipo, setActaTipo] = useState('AMONESTACION_ESCRITA');
   const [actaFalta, setActaFalta] = useState('Ausentismo e Incumplimiento de Horario');
   const [actaDesc, setActaDesc] = useState('');
-  const [actaFecha, setActaFecha] = useState(new Date().toISOString().split('T')[0]);
+  const [actaFecha, setActaFecha] = useState(() => new Date().toISOString().split('T')[0]);
   const [actaEvidencia, setActaEvidencia] = useState('');
   const [guardandoActa, setGuardandoActa] = useState(false);
 
@@ -113,6 +113,7 @@ export default function FichaColaboradorPage() {
 
   const handleCrearActa = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (guardandoActa) return;
     setGuardandoActa(true);
     try {
       const res = await fetch(`/api/rrhh/expediente/${id}`, {

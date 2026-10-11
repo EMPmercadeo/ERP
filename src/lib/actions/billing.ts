@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/db';
+import { requireAuth } from '@/lib/auth/context';
 import { revalidatePath } from 'next/cache';
 
 async function getOrInitializeUsage(companyId: string) {
@@ -72,21 +73,25 @@ async function getOrInitializeUsage(companyId: string) {
 }
 
 export async function canCreateInvoice(companyId: string): Promise<boolean> {
+    await requireAuth();
     const usage = await getOrInitializeUsage(companyId);
     return usage.usedDocuments < (usage.includedLimit + usage.extraDocumentsPurchased);
 }
 
 export async function canCreateCreditNote(companyId: string): Promise<boolean> {
+    await requireAuth();
     const usage = await getOrInitializeUsage(companyId);
     return usage.usedDocuments < (usage.includedLimit + usage.extraDocumentsPurchased);
 }
 
 export async function canCreateDebitNote(companyId: string): Promise<boolean> {
+    await requireAuth();
     const usage = await getOrInitializeUsage(companyId);
     return usage.usedDocuments < (usage.includedLimit + usage.extraDocumentsPurchased);
 }
 
 export async function canAddUser(companyId: string): Promise<boolean> {
+    await requireAuth();
     const company = await prisma.empresa.findUnique({
         where: { id: companyId },
         include: {
@@ -121,6 +126,7 @@ export async function canAddUser(companyId: string): Promise<boolean> {
 }
 
 export async function canUsePOSIntegration(companyId: string): Promise<boolean> {
+    await requireAuth();
     const company = await prisma.empresa.findUnique({
         where: { id: companyId }
     });
@@ -133,6 +139,7 @@ export async function canUploadProductImage(): Promise<boolean> {
 }
 
 export async function incrementDocumentUsage(companyId: string) {
+    await requireAuth();
     // Asegura que exista el registro del mes (crea con used=0 si no existe).
     const usage = await getOrInitializeUsage(companyId);
 
@@ -153,6 +160,7 @@ export async function incrementDocumentUsage(companyId: string) {
 }
 
 export async function purchaseDocumentBlock(companyId: string, blockSize: number) {
+    await requireAuth();
     try {
         const usage = await getOrInitializeUsage(companyId);
 
@@ -197,5 +205,6 @@ export async function purchaseDocumentBlock(companyId: string, blockSize: number
 }
 
 export async function getDocumentUsage(companyId: string) {
+    await requireAuth();
     return await getOrInitializeUsage(companyId);
 }

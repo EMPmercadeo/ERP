@@ -109,7 +109,7 @@ export function NewPurchaseForm({
     const [loading, setLoading] = useState(false);
     const [proveedorId, setProveedorId] = useState('');
     const [numeroFactura, setNumeroFactura] = useState('');
-    const [fechaEmision, setFechaEmision] = useState(new Date().toISOString().split('T')[0]);
+    const [fechaEmision, setFechaEmision] = useState(() => new Date().toISOString().split('T')[0]);
     const [fechaVencimiento, setFechaVencimiento] = useState(
         () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     );

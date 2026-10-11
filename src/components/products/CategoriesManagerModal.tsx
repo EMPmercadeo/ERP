@@ -41,6 +41,7 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
         setLoading(true);
         try {
             const res = await fetch('/api/categories');
+            if (!res.ok) throw new Error('Error al cargar');
             const data = await res.json().catch(() => ({ items: [] }));
             const items = data.items || [];
             setCategorias(items);
@@ -53,12 +54,33 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
     };
 
     useEffect(() => {
-        if (open) cargar();
+        let active = true;
+        if (open) {
+            setLoading(true);
+            fetch('/api/categories')
+                .then(async (res) => {
+                    if (!res.ok) throw new Error('Error al cargar');
+                    const data = await res.json().catch(() => ({ items: [] }));
+                    if (active) {
+                        const items = data.items || [];
+                        setCategorias(items);
+                        onChanged(items);
+                    }
+                })
+                .catch(() => {
+                    if (active) toast.error('Error al cargar categorías.');
+                })
+                .finally(() => {
+                    if (active) setLoading(false);
+                });
+        }
+        return () => { active = false; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
     const handleCrear = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (creando) return;
         if (!nombre.trim()) return;
         setCreando(true);
         try {
@@ -67,13 +89,13 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ nombre: nombre.trim(), descuentoPorcentaje: parseFloat(descuento) || 0 })
             });
-            const data = await res.json();
             if (res.ok) {
                 toast.success(`Categoría "${nombre}" creada.`);
                 setNombre('');
                 setDescuento('0');
                 cargar();
             } else {
+                const data = await res.json().catch(() => ({}));
                 toast.error(data.error || 'No se pudo crear la categoría.');
             }
         } catch {
@@ -90,6 +112,7 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
     };
 
     const guardarEdicion = async (id: string) => {
+        if (guardando) return;
         setGuardando(true);
         try {
             const res = await fetch(`/api/categories/${id}`, {
@@ -97,12 +120,12 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ nombre: editNombre.trim(), descuentoPorcentaje: parseFloat(editDescuento) || 0 })
             });
-            const data = await res.json();
             if (res.ok) {
                 toast.success('Categoría actualizada.');
                 setEditandoId(null);
                 cargar();
             } else {
+                const data = await res.json().catch(() => ({}));
                 toast.error(data.error || 'No se pudo actualizar la categoría.');
             }
         } catch {
@@ -116,11 +139,11 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
         if (!confirm(`¿Eliminar la categoría "${cat.nombre}"? Los productos que la tengan asignada quedarán sin categoría.`)) return;
         try {
             const res = await fetch(`/api/categories/${cat.id}`, { method: 'DELETE' });
-            const data = await res.json().catch(() => ({}));
             if (res.ok) {
                 toast.success('Categoría eliminada.');
                 cargar();
             } else {
+                const data = await res.json().catch(() => ({}));
                 toast.error(data.error || 'No se pudo eliminar la categoría.');
             }
         } catch {

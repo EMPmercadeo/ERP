@@ -131,8 +131,9 @@ export async function POST(request: NextRequest) {
       select: { id: true, descripcion: true, precioVenta: true, codigoTasaItbms: true, stockActual: true, unidadMedida: true, esElaborado: true, activo: true },
     });
     if (productosActuales.length !== items.length) return NextResponse.json({ error: 'Hay productos que ya no existen.' }, { status: 409 });
+    const productosMap = new Map(productosActuales.map(p => [p.id, p]));
     for (const item of items) {
-      const p = productosActuales.find(p => p.id === item.productoId)!;
+      const p = productosMap.get(item.productoId)!;
       if (p.unidadMedida !== 'SRV' && !p.esElaborado && p.stockActual < item.cantidad) {
         return NextResponse.json({ error: `Stock insuficiente: ${p.descripcion}.` }, { status: 409 });
       }

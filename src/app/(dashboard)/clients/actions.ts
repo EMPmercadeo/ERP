@@ -2,14 +2,14 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
-import { getTenantContext } from '@/lib/auth/context';
+import { requireAuth } from '@/lib/auth/context';
 
 // Antes esta función resolvía la empresa con prisma.empresa.findFirst() en vez de leer la
 // sesión — cualquier importación (de cualquier usuario, de cualquier empresa) se pegaba
 // siempre a la primera fila de la tabla Empresa, mezclando clientes entre tenants distintos.
 export async function importClients(clients: Record<string, string>[]) {
     try {
-        const { empresaId } = await getTenantContext();
+        const { empresaId } = await requireAuth();
 
         let createdCount = 0;
         const errors: string[] = [];

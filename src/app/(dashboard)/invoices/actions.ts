@@ -2,14 +2,14 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
-import { getTenantContext } from '@/lib/auth/context';
+import { requireAuth } from '@/lib/auth/context';
 
 // Antes esta función resolvía la empresa con prisma.empresa.findFirst() en vez de leer la
 // sesión — cualquier importación se pegaba siempre a la primera fila de la tabla Empresa,
 // mezclando facturas entre tenants distintos. Ahora empresaId sale de getTenantContext().
 export async function importInvoices(invoices: Record<string, string>[]) {
     try {
-        const { empresaId, userId } = await getTenantContext();
+        const { empresaId, userId } = await requireAuth();
         const sucursal = await prisma.sucursal.findFirst({ where: { empresaId } });
         const caja = await prisma.caja.findFirst({ where: { sucursalId: sucursal?.id } });
         const usuario = await prisma.usuario.findFirst({ where: { id: userId, empresaId } });

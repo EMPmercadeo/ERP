@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
-import { getTenantContext } from '@/lib/auth/context';
+import { requireAuth } from '@/lib/auth/context';
 import { encrypt } from '@/lib/utils/crypto';
 import { verifyPayPalSubscription } from '@/lib/services/paypalVerify';
 import { getPACProviderForEmpresa } from '@/lib/facturacion-electronica/factory';
@@ -23,9 +23,8 @@ import { getPACProviderForEmpresa } from '@/lib/facturacion-electronica/factory'
  *    nunca un falso "conectado".
  */
 export async function testPACConnection(): Promise<{ success: boolean; message: string }> {
+    const { empresaId } = await requireAuth();
     try {
-        const { empresaId } = await getTenantContext();
-
         const config = await prisma.configuracionFacturacionElectronica.findUnique({
             where: { empresaId }
         });
@@ -70,11 +69,11 @@ export async function updateDgiSettings(empresaId: string, data: {
     passwordPac?: string;
     ambienteDgi?: string;
 }) {
+    const { empresaId: authEmpresaId } = await requireAuth();
+    if (authEmpresaId !== empresaId) {
+        return { success: false, message: 'Acceso denegado. No está autorizado para modificar esta empresa.' };
+    }
     try {
-        const { empresaId: authEmpresaId } = await getTenantContext();
-        if (authEmpresaId !== empresaId) {
-            return { success: false, message: 'Acceso denegado. No está autorizado para modificar esta empresa.' };
-        }
 
         // Fetch current plan to check if they attempt to set production
         const empresa = await prisma.empresa.findUnique({
@@ -142,11 +141,11 @@ export async function updateDgiSettings(empresaId: string, data: {
 }
 
 export async function updateCompanyPlan(empresaId: string, planType: string, paypalSubscriptionId?: string) {
+    const { empresaId: authEmpresaId } = await requireAuth();
+    if (authEmpresaId !== empresaId) {
+        return { success: false, message: 'Acceso denegado. No está autorizado para modificar esta empresa.' };
+    }
     try {
-        const { empresaId: authEmpresaId } = await getTenantContext();
-        if (authEmpresaId !== empresaId) {
-            return { success: false, message: 'Acceso denegado. No está autorizado para modificar esta empresa.' };
-        }
 
         if (!['free', 'basic', 'pro', 'enterprise'].includes(planType)) {
             return { success: false, message: 'Plan no válido.' };
@@ -227,11 +226,11 @@ export async function updateIntegrationSettings(empresaId: string, data: {
     webhookUrl?: string;
     webhookToken?: string;
 }) {
+    const { empresaId: authEmpresaId } = await requireAuth();
+    if (authEmpresaId !== empresaId) {
+        return { success: false, message: 'Acceso denegado. No está autorizado para modificar esta empresa.' };
+    }
     try {
-        const { empresaId: authEmpresaId } = await getTenantContext();
-        if (authEmpresaId !== empresaId) {
-            return { success: false, message: 'Acceso denegado. No está autorizado para modificar esta empresa.' };
-        }
 
         await prisma.empresa.update({
             where: { id: empresaId },
@@ -266,11 +265,11 @@ export async function updateYappySettings(empresaId: string, data: {
     yappyAmbiente?: string;
     yappyEnabled: boolean;
 }) {
+    const { empresaId: authEmpresaId } = await requireAuth();
+    if (authEmpresaId !== empresaId) {
+        return { success: false, message: 'Acceso denegado. No está autorizado para modificar esta empresa.' };
+    }
     try {
-        const { empresaId: authEmpresaId } = await getTenantContext();
-        if (authEmpresaId !== empresaId) {
-            return { success: false, message: 'Acceso denegado. No está autorizado para modificar esta empresa.' };
-        }
 
         const empresa = await prisma.empresa.findUnique({ where: { id: empresaId } });
         if (!empresa) {

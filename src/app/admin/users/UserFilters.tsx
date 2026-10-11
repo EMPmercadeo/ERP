@@ -17,7 +17,7 @@ export function UserFilters() {
     const searchParams = useSearchParams();
     const [isPending, startTransition] = useTransition();
 
-    const [search, setSearch] = useState(searchParams.get('search') || '');
+    const [search, setSearch] = useState(() => searchParams.get('search') || '');
 
     const updateFilters = (key: string, value: string) => {
         const params = new URLSearchParams(searchParams.toString());

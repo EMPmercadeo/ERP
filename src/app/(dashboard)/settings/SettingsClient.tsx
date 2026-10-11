@@ -527,6 +527,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
 
     const handleGuardarWooCredenciales = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (wooGuardando) return;
         setWooGuardando(true);
         try {
             const cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
@@ -541,12 +542,13 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                     activo: wooActivo
                 })
             });
-            const data = await res.json();
-            if (res.ok) {
-                toast.success(data.message);
-            } else {
-                toast.error(data.error || 'Error al guardar credenciales de WooCommerce.');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                toast.error(errorData.error || 'Error al guardar credenciales de WooCommerce.');
+                return;
             }
+            const data = await res.json();
+            toast.success(data.message);
         } catch {
             toast.error('Error de conexión al guardar credenciales de WooCommerce.');
         } finally {

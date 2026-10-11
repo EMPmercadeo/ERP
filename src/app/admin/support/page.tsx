@@ -50,6 +50,10 @@ export default function SuperadminSoportePage() {
       if (filtroPrioridad !== 'all') url.searchParams.set('prioridad', filtroPrioridad);
 
       const res = await fetch(url.toString());
+      if (!res.ok) {
+        toast.error('Error al cargar tickets de soporte');
+        return;
+      }
       const data = await res.json();
       setTickets(data?.items || []);
     } catch {
@@ -67,6 +71,10 @@ export default function SuperadminSoportePage() {
     setLoadingDetalle(true);
     try {
       const res = await fetch(`/api/admin/soporte/${id}`);
+      if (!res.ok) {
+        toast.error('No se pudo abrir el detalle del ticket');
+        return;
+      }
       const data = await res.json();
       setSelectedTicket(data);
       setNuevoEstado(data.estado);
@@ -79,6 +87,7 @@ export default function SuperadminSoportePage() {
 
   const handleResponder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (enviandoRespuesta) return;
     if (!selectedTicket || !mensajeRespuesta.trim()) return;
     setEnviandoRespuesta(true);
     try {
@@ -90,15 +99,16 @@ export default function SuperadminSoportePage() {
           cambiarEstado: nuevoEstado
         })
       });
-      const data = await res.json();
-      if (res.ok) {
-        toast.success('Respuesta enviada y notificada por correo al cliente');
-        setMensajeRespuesta('');
-        abrirDetalle(selectedTicket.id);
-        cargarTickets();
-      } else {
-        toast.error(data.error || 'Error al enviar respuesta');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(errorData.error || 'Error al enviar respuesta');
+        return;
       }
+      const data = await res.json();
+      toast.success('Respuesta enviada y notificada por correo al cliente');
+      setMensajeRespuesta('');
+      abrirDetalle(selectedTicket.id);
+      cargarTickets();
     } catch {
       toast.error('Fallo al conectar con el servidor');
     } finally {

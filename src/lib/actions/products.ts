@@ -2,17 +2,18 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { after } from 'next/server';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 import { ProductSchema } from '@/lib/validations';
-import { getTenantContext, requireAuth } from '@/lib/auth/context';
+import { requireAuth } from '@/lib/auth/context';
 import fs from 'fs/promises';
 import path from 'path';
 import { getStorageProvider } from '@/lib/storage';
 import { logger } from '@/lib/logger';
 
 export async function createProduct(prevState: unknown, formData: FormData) {
-    const { empresaId, userId } = await getTenantContext();
+    const { empresaId, userId } = await requireAuth();
 
     const rawData = {
         codigoInterno: formData.get('codigoInterno'),
@@ -113,7 +114,7 @@ export async function createProduct(prevState: unknown, formData: FormData) {
 }
 
 export async function updateProduct(id: string, prevState: unknown, formData: FormData) {
-    const { empresaId, userId } = await getTenantContext();
+    const { empresaId, userId } = await requireAuth();
 
     const rawData = {
         codigoInterno: formData.get('codigoInterno'),
@@ -235,8 +236,8 @@ export async function updateProduct(id: string, prevState: unknown, formData: Fo
 }
 
 export async function getProduct(id: string) {
+    const { empresaId } = await requireAuth();
     try {
-        const { empresaId } = await getTenantContext();
         const product = await prisma.producto.findFirst({
             where: { id, empresaId },
             include: {
@@ -321,8 +322,8 @@ export async function getProduct(id: string) {
 }
 
 export async function deleteProduct(id: string) {
+    const { empresaId, userId } = await requireAuth();
     try {
-        const { empresaId, userId } = await getTenantContext();
 
         // 1. Verify product ownership
         const product = await prisma.producto.findFirst({
@@ -396,8 +397,8 @@ export async function getProductsForExport(filters: {
     tax?: string;
     stockStatus?: string;
 }) {
+    const { empresaId } = await requireAuth();
     try {
-        const { empresaId } = await getTenantContext();
 
         const where: Prisma.ProductoWhereInput = {
             empresaId
@@ -456,8 +457,8 @@ export async function getProductsForExport(filters: {
 }
 
 export async function uploadProductImage(productId: string, formData: FormData) {
+    const { empresaId, userId, requestId } = await requireAuth();
     try {
-        const { empresaId, userId, requestId } = await getTenantContext();
         logger.info('Iniciando subida de imagen de producto', { productId, empresaId, userId, requestId });
 
         // 1. BOLA/IDOR Protection: Verify product exists and belongs to the active tenant
@@ -580,8 +581,8 @@ export async function uploadProductImage(productId: string, formData: FormData) 
 }
 
 export async function deleteProductImage(imageId: string) {
+    const { empresaId } = await requireAuth();
     try {
-        const { empresaId } = await getTenantContext();
 
         // Find image and verify ownership
         const image = await prisma.productImage.findFirst({
@@ -626,13 +627,16 @@ export async function deleteProductImage(imageId: string) {
             }
         });
 
-        // Try to delete file from disk
+        // Try to delete file from disk asynchronously without blocking the response
         if (image.storagePath) {
-            try {
-                await fs.unlink(image.storagePath);
-            } catch (err) {
-                console.warn('Could not delete physical image file:', err);
-            }
+            const storagePath = image.storagePath;
+            after(async () => {
+                try {
+                    await fs.unlink(storagePath);
+                } catch (err) {
+                    console.warn('Could not delete physical image file:', err);
+                }
+            });
         }
 
         revalidatePath('/products');
@@ -645,8 +649,8 @@ export async function deleteProductImage(imageId: string) {
 }
 
 export async function setProductImagePrimary(imageId: string) {
+    const { empresaId } = await requireAuth();
     try {
-        const { empresaId } = await getTenantContext();
 
         const image = await prisma.productImage.findFirst({
             where: { id: imageId, empresaId }

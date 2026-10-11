@@ -6,7 +6,7 @@ import { after } from 'next/server';
 import { prisma } from '@/lib/db';
 import { InvoiceSchema } from '@/lib/validations';
 
-import { getTenantContext } from '@/lib/auth/context';
+import { requireAuth } from '@/lib/auth/context';
 import { generarAsientoCobro } from '@/lib/contabilidad/asientos';
 import { timbrarFacturaDGI } from './billing-fe';
 import { dispatchWebhookEvent } from '@/lib/integrations/webhooks';
@@ -20,6 +20,8 @@ import { crearFacturaCompleta, FacturaCreationError } from '@/lib/services/invoi
 const PAC_INTEGRATION_ENABLED = process.env.PAC_INTEGRATION_ENABLED === 'true';
 
 export async function createInvoice(prevState: unknown, formData: FormData) {
+    const { empresaId, userId } = await requireAuth();
+
     const rawItems = formData.get('items');
     let items: unknown[] = [];
     if (rawItems) {
@@ -51,7 +53,6 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
 
     let redirectUrl = '/invoices';
     try {
-        const { empresaId, userId } = await getTenantContext();
         const metodoPago = (formData.get('metodoPago') as string) || undefined;
 
         const invoice = await crearFacturaCompleta({
@@ -116,8 +117,8 @@ export async function createInvoice(prevState: unknown, formData: FormData) {
 }
 
 export async function voidInvoice(id: string) {
+    const { empresaId } = await requireAuth();
     try {
-        const { empresaId } = await getTenantContext();
         const invoice = await prisma.factura.findFirst({
             where: { id, empresaId }
         });
@@ -152,8 +153,8 @@ export async function recordInvoicePayment(
     method: string,
     reference?: string
 ) {
+    const { empresaId, userId } = await requireAuth();
     try {
-        const { empresaId, userId } = await getTenantContext();
 
         const result = await prisma.$transaction(async (tx) => {
             // Find invoice
@@ -277,8 +278,8 @@ export async function createInvoicePOS(rawData: {
         codigoTasaItbms: string;
     }[];
 }) {
+    const { empresaId, userId } = await requireAuth();
     try {
-        const { empresaId, userId } = await getTenantContext();
 
         const invoice = await crearFacturaCompleta({
             empresaId,

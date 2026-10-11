@@ -189,8 +189,11 @@ export default function MesasClient({ active = true }: { active?: boolean }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error ?? 'No se pudo guardar.');
+      }
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'No se pudo guardar.');
       await cargar();
       return data;
     } catch (e) {
@@ -206,6 +209,7 @@ export default function MesasClient({ active = true }: { active?: boolean }) {
     const data = await enviar(`/api/pos/mesas/${mesaId}`, 'PATCH', { accion: 'abrir', tipo });
     if (data) {
       const res = await fetch(`/api/pos/mesas/${mesaId}`);
+      if (!res.ok) return;
       const detalle = await res.json();
       setSesion(detalle.sesion);
       setDraft([]);

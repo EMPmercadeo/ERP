@@ -39,6 +39,7 @@ export default function SuperadminCorreosPage() {
   const [asunto, setAsunto] = useState('');
   const [cuerpoHtml, setCuerpoHtml] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [guardandoPlantilla, setGuardandoPlantilla] = useState(false);
 
   // Form states para nueva plantilla
   const [nuevaClave, setNuevaClave] = useState('');
@@ -49,8 +50,8 @@ export default function SuperadminCorreosPage() {
     setLoading(true);
     try {
       const [resC, resP] = await Promise.all([
-        fetch('/api/admin/correos').then(r => r.json()),
-        fetch('/api/admin/correos/plantillas').then(r => r.json())
+        fetch('/api/admin/correos').then(r => r.ok ? r.json() : { items: [] }),
+        fetch('/api/admin/correos/plantillas').then(r => r.ok ? r.json() : [])
       ]);
       setCorreos(resC?.items || []);
       setPlantillas(Array.isArray(resP) ? resP : []);
@@ -68,6 +69,7 @@ export default function SuperadminCorreosPage() {
 
   const handleEnviar = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (enviando) return;
     if (!asunto.trim() || !cuerpoHtml.trim()) {
       toast.error('Por favor completa el asunto y el contenido HTML del correo.');
       return;
@@ -85,17 +87,18 @@ export default function SuperadminCorreosPage() {
           cuerpoHtml
         })
       });
-      const data = await res.json();
-      if (res.ok) {
-        toast.success(data.message || 'Correos enviados exitosamente');
-        setAsunto('');
-        setCuerpoHtml('');
-        setCorreoDestino('');
-        cargarDatos();
-        setActiveTab('historial');
-      } else {
-        toast.error(data.error || 'Fallo en el envío masivo');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(errorData.error || 'Fallo en el envío masivo');
+        return;
       }
+      const data = await res.json();
+      toast.success(data.message || 'Correos enviados exitosamente');
+      setAsunto('');
+      setCuerpoHtml('');
+      setCorreoDestino('');
+      cargarDatos();
+      setActiveTab('historial');
     } catch {
       toast.error('Error de conexión con el servidor de correo');
     } finally {
@@ -105,10 +108,12 @@ export default function SuperadminCorreosPage() {
 
   const handleCrearPlantilla = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (guardandoPlantilla) return;
     if (!nuevaClave.trim() || !nuevoAsunto.trim() || !nuevoCuerpo.trim()) {
       toast.error('Completa todos los campos para la plantilla.');
       return;
     }
+    setGuardandoPlantilla(true);
     try {
       const res = await fetch('/api/admin/correos/plantillas', {
         method: 'POST',
@@ -120,18 +125,21 @@ export default function SuperadminCorreosPage() {
           activa: true
         })
       });
-      const data = await res.json();
-      if (res.ok) {
-        toast.success('Plantilla creada correctamente.');
-        setNuevaClave('');
-        setNuevoAsunto('');
-        setNuevoCuerpo('');
-        cargarDatos();
-      } else {
-        toast.error(data.error || 'No se pudo guardar la plantilla');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(errorData.error || 'No se pudo guardar la plantilla');
+        return;
       }
+      const data = await res.json();
+      toast.success('Plantilla creada correctamente.');
+      setNuevaClave('');
+      setNuevoAsunto('');
+      setNuevoCuerpo('');
+      cargarDatos();
     } catch {
       toast.error('Error al guardar plantilla.');
+    } finally {
+      setGuardandoPlantilla(false);
     }
   };
 

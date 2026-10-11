@@ -2,14 +2,14 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
-import { getTenantContext } from '@/lib/auth/context';
+import { requireAuth } from '@/lib/auth/context';
 
 // Antes esta función resolvía la empresa con prisma.empresa.findFirst() en vez de leer la
 // sesión — cualquier importación se pegaba siempre a la primera fila de la tabla Empresa,
 // mezclando cotizaciones entre tenants distintos. Ahora empresaId sale de getTenantContext().
 export async function importQuotes(quotes: Record<string, string>[]) {
     try {
-        const { empresaId, userId } = await getTenantContext();
+        const { empresaId, userId } = await requireAuth();
         const sucursal = await prisma.sucursal.findFirst({ where: { empresaId } });
         const caja = await prisma.caja.findFirst({ where: { sucursalId: sucursal?.id } }); // Quotes linked to box/branch? Yes per schema
         const usuario = await prisma.usuario.findFirst({ where: { id: userId, empresaId } });
@@ -108,9 +108,8 @@ export async function importQuotes(quotes: Record<string, string>[]) {
 // cambiar el estado de la cotización de OTRA empresa con solo adivinar/observar su id
 // (IDOR). Ahora el update solo afecta filas que además coincidan con empresaId de la sesión.
 export async function updateQuoteStatus(id: string, status: string) {
+    const { empresaId } = await requireAuth();
     try {
-        const { empresaId } = await getTenantContext();
-
         const { count } = await prisma.cotizacion.updateMany({
             where: { id, empresaId },
             data: { estado: status }

@@ -56,7 +56,7 @@ export function EditClientForm({ client }: EditClientFormProps) {
         return match ? match[0] : '30';
     };
     
-    const [diasCredito, setDiasCredito] = useState(parseDiasCredito(client.condicionPago));
+    const [diasCredito, setDiasCredito] = useState(() => parseDiasCredito(client.condicionPago));
 
     return (
         <>

@@ -2,7 +2,7 @@
 
 import { Prisma } from '@prisma/client';
 import { prisma } from '../db';
-import { getTenantContext } from '../auth/context';
+import { requireAuth } from '../auth/context';
 import { getPACProviderForEmpresa } from '../facturacion-electronica/factory';
 import { mapFacturaToDTO } from '../facturacion-electronica/mappers';
 import { humanizePacError } from '../facturacion-electronica/pac-errors';
@@ -22,12 +22,11 @@ function getErrorMessage(e: unknown): string {
 const PAC_INTEGRATION_ENABLED = process.env.PAC_INTEGRATION_ENABLED === 'true';
 
 export async function timbrarFacturaDGI(facturaId: string) {
+  const { empresaId } = await requireAuth();
+  if (!PAC_INTEGRATION_ENABLED) {
+    return { success: false, message: 'La integración con el PAC todavía no está habilitada en este entorno.' };
+  }
   try {
-    if (!PAC_INTEGRATION_ENABLED) {
-      return { success: false, message: 'La integración con el PAC todavía no está habilitada en este entorno.' };
-    }
-
-    const { empresaId } = await getTenantContext();
 
     // 1. Cargar factura con todas las relaciones necesarias
     const factura = await prisma.factura.findFirst({
@@ -126,16 +125,15 @@ export async function timbrarFacturaDGI(facturaId: string) {
 }
 
 export async function anularFacturaDGI(facturaId: string, motivo: string) {
+  const { empresaId } = await requireAuth();
+  if (!PAC_INTEGRATION_ENABLED) {
+    return { success: false, message: 'La integración con el PAC todavía no está habilitada en este entorno.' };
+  }
+
+  if (!motivo || motivo.trim().length < 5) {
+    return { success: false, message: 'El motivo de anulación debe tener al menos 5 caracteres.' };
+  }
   try {
-    if (!PAC_INTEGRATION_ENABLED) {
-      return { success: false, message: 'La integración con el PAC todavía no está habilitada en este entorno.' };
-    }
-
-    const { empresaId } = await getTenantContext();
-
-    if (!motivo || motivo.trim().length < 5) {
-      return { success: false, message: 'El motivo de anulación debe tener al menos 5 caracteres.' };
-    }
 
     // 1. Cargar factura
     const factura = await prisma.factura.findFirst({
@@ -207,8 +205,8 @@ export async function anularFacturaDGI(facturaId: string, motivo: string) {
 }
 
 export async function consultarTransaccionDGI(facturaId: string) {
+  const { empresaId } = await requireAuth();
   try {
-    const { empresaId } = await getTenantContext();
 
     const factura = await prisma.factura.findFirst({
       where: { id: facturaId, empresaId }
@@ -251,8 +249,8 @@ export async function consultarTransaccionDGI(facturaId: string) {
 }
 
 export async function obtenerLogsPAC(facturaId: string) {
+  const { empresaId } = await requireAuth();
   try {
-    const { empresaId } = await getTenantContext();
     return await prisma.facturaPACLog.findMany({
       where: { facturaId, empresaId },
       orderBy: { createdAt: 'desc' }
@@ -271,8 +269,8 @@ export async function guardarConfiguracionFE(data: {
   credencial: string;
   activo: boolean;
 }) {
+  const { empresaId } = await requireAuth();
   try {
-    const { empresaId } = await getTenantContext();
 
     const credencialCifrada = data.credencial ? encrypt(data.credencial) : '';
 
@@ -314,8 +312,8 @@ export async function guardarConfiguracionFE(data: {
 }
 
 export async function obtenerConfiguracionFE() {
+  const { empresaId } = await requireAuth();
   try {
-    const { empresaId } = await getTenantContext();
     const config = await prisma.configuracionFacturacionElectronica.findUnique({
       where: { empresaId }
     });
