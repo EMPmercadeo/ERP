@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -35,11 +35,13 @@ export interface OrderData {
     };
 }
 
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
+
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+    return currencyFormatter.format(value);
 }
 
 export function OrderList({
@@ -61,9 +63,8 @@ export function OrderList({
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    const [orders, setOrders] = useState<OrderData[]>(initialData);
+    const [statusOverrides, setStatusOverrides] = useState<Record<string, string>>(() => ({}));
     const [searchTerm, setSearchTerm] = useState(initialSearch);
-    const [isMounted, setIsMounted] = useState(false);
 
     const createQueryString = useCallback((params: Record<string, string | null>) => {
         const newParams = new URLSearchParams(searchParams.toString());
@@ -77,33 +78,31 @@ export function OrderList({
         return newParams.toString();
     }, [searchParams]);
 
-    /* eslint-disable react-hooks/exhaustive-deps -- ejecutarse solo cuando cambia searchTerm para evitar loop */
+    const createQueryStringRef = useRef(createQueryString);
+    useEffect(() => {
+        createQueryStringRef.current = createQueryString;
+    });
+
     useEffect(() => {
         const timer = setTimeout(() => {
             const currentSearch = searchParams.get('search') || '';
             if (searchTerm !== currentSearch) {
-                const query = createQueryString({ search: searchTerm || null, page: '1' });
+                const query = createQueryStringRef.current({ search: searchTerm || null, page: '1' });
                 router.push(`${pathname}?${query}`);
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [searchTerm]);
-    /* eslint-enable react-hooks/exhaustive-deps */
+    }, [searchTerm, pathname, router, searchParams]);
 
-    useEffect(() => {
-        setIsMounted(true);
-        setOrders(initialData);
-    }, [initialData]);
-
-    if (!isMounted) return null;
-
+    const orders = initialData.map((o) => (statusOverrides[o.id] ? { ...o, estado: statusOverrides[o.id] } : o));
     const filteredOrders = orders;
 
     const handleStatusChange = async (id: string, newStatus: string) => {
         const res = await updateSalesOrderStatus(id, newStatus);
         if (res.success) {
             toast.success(`Estado actualizado a ${newStatus}`);
-            setOrders(orders.map(o => o.id === id ? { ...o, estado: newStatus } : o));
+            setStatusOverrides((prev) => ({ ...prev, [id]: newStatus }));
+            router.refresh();
         } else {
             toast.error(res.message || 'Error al actualizar estado');
         }

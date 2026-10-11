@@ -130,30 +130,32 @@ export async function crearFacturaCompleta(params: CrearFacturaCompletaParams) {
         throw new FacturaCreationError('La factura debe contener al menos un ítem.');
     }
 
-    const { empresa, sucursal, caja } = await getEmpresaDefaults(empresaId);
-
-    const client = await prisma.cliente.findFirst({
-        where: { id: clienteId, empresaId }
-    });
-    if (!client) {
-        throw new FacturaCreationError('El cliente seleccionado no pertenece a tu empresa o no existe.');
-    }
-
     const productIds = Array.from(new Set(items.map((item) => item.productoId)));
-    const products = await prisma.producto.findMany({
-        where: { id: { in: productIds }, empresaId },
-        include: {
-            kitInfo: {
-                include: {
-                    componentes: {
-                        include: {
-                            productoComponente: true
+
+    const [{ empresa, sucursal, caja }, client, products] = await Promise.all([
+        getEmpresaDefaults(empresaId),
+        prisma.cliente.findFirst({
+            where: { id: clienteId, empresaId }
+        }),
+        prisma.producto.findMany({
+            where: { id: { in: productIds }, empresaId },
+            include: {
+                kitInfo: {
+                    include: {
+                        componentes: {
+                            include: {
+                                productoComponente: true
+                            }
                         }
                     }
                 }
             }
-        }
-    });
+        })
+    ]);
+
+    if (!client) {
+        throw new FacturaCreationError('El cliente seleccionado no pertenece a tu empresa o no existe.');
+    }
     if (products.length !== productIds.length) {
         throw new FacturaCreationError('Uno o más productos seleccionados no pertenecen a tu empresa o no existen.');
     }
@@ -292,12 +294,11 @@ export async function crearFacturaCompleta(params: CrearFacturaCompletaParams) {
             costoTotal: costoVentaTotal
         });
 
-        const bodegaId = await resolverBodegaId(tx, empresa.id, params.bodegaId ?? null);
-
-        // Grafo de recetas de la empresa. Se carga una sola vez por factura: un producto
-        // elaborado (una pizza) no descuenta su propio stock, descuenta los insumos que
-        // consume, bajando por todas las recetas intermedias hasta la materia prima.
-        const recetas: MapaRecetas = await cargarRecetas(empresa.id, tx);
+        // Grafo de recetas de la empresa y resolución de bodega en paralelo
+        const [bodegaId, recetas]: [string, MapaRecetas] = await Promise.all([
+            resolverBodegaId(tx, empresa.id, params.bodegaId ?? null),
+            cargarRecetas(empresa.id, tx)
+        ]);
 
         const descontarStock = async (
             prodId: string,

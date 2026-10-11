@@ -47,7 +47,7 @@ export function EditClientForm({ client }: EditClientFormProps) {
     const updateClientWithId = updateClient.bind(null, client.id);
     const [state, formAction] = useFormState(updateClientWithId, initialState);
     
-    const [tipoRuc, setTipoRuc] = useState(client.tipoRuc);
+    const [tipoRuc, setTipoRuc] = useState(() => client.tipoRuc);
     
     // Parse diasCredito from condicionPago (e.g., "Contado" -> "0", "Crédito 30" -> "30")
     const parseDiasCredito = (condicion: string) => {
@@ -92,11 +92,11 @@ export function EditClientForm({ client }: EditClientFormProps) {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="edit-client-tipoRuc" className="block text-sm font-medium text-foreground mb-1">
                                             Tipo de RUC
                                         </label>
                                         <Select name="tipoRuc" value={tipoRuc} onValueChange={setTipoRuc}>
-                                            <SelectTrigger>
+                                            <SelectTrigger id="edit-client-tipoRuc">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -110,10 +110,11 @@ export function EditClientForm({ client }: EditClientFormProps) {
 
                                     <div className="grid grid-cols-3 gap-3">
                                         <div className="col-span-2">
-                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                            <label htmlFor="edit-client-ruc" className="block text-sm font-medium text-foreground mb-1">
                                                 RUC
                                             </label>
                                             <Input
+                                                id="edit-client-ruc"
                                                 name="ruc"
                                                 defaultValue={client.ruc}
                                                 required
@@ -122,10 +123,11 @@ export function EditClientForm({ client }: EditClientFormProps) {
                                             {state?.errors?.ruc && <p className="text-xs text-destructive mt-1">{state.errors.ruc[0]}</p>}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                            <label htmlFor="edit-client-dv" className="block text-sm font-medium text-foreground mb-1">
                                                 DV
                                             </label>
                                             <Input
+                                                id="edit-client-dv"
                                                 name="dv"
                                                 defaultValue={client.dv}
                                                 maxLength={2}
@@ -134,10 +136,11 @@ export function EditClientForm({ client }: EditClientFormProps) {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="edit-client-razonSocial" className="block text-sm font-medium text-foreground mb-1">
                                             Razón Social / Nombre
                                         </label>
                                         <Input
+                                            id="edit-client-razonSocial"
                                             name="razonSocial"
                                             defaultValue={client.razonSocial}
                                             required
@@ -147,10 +150,11 @@ export function EditClientForm({ client }: EditClientFormProps) {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="edit-client-direccion" className="block text-sm font-medium text-foreground mb-1">
                                             Dirección
                                         </label>
                                         <Input
+                                            id="edit-client-direccion"
                                             name="direccion"
                                             defaultValue={client.direccion}
                                         />
@@ -166,10 +170,11 @@ export function EditClientForm({ client }: EditClientFormProps) {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="edit-client-email" className="block text-sm font-medium text-foreground mb-1">
                                             Correo Electrónico
                                         </label>
                                         <Input
+                                            id="edit-client-email"
                                             name="email"
                                             type="email"
                                             defaultValue={client.email}
@@ -177,20 +182,22 @@ export function EditClientForm({ client }: EditClientFormProps) {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="edit-client-telefono" className="block text-sm font-medium text-foreground mb-1">
                                             Teléfono
                                         </label>
                                         <Input
+                                            id="edit-client-telefono"
                                             name="telefono"
                                             defaultValue={client.telefono}
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="edit-client-limiteCredito" className="block text-sm font-medium text-foreground mb-1">
                                             Límite de Crédito (USD)
                                         </label>
                                         <Input
+                                            id="edit-client-limiteCredito"
                                             name="limiteCredito"
                                             type="number"
                                             defaultValue={client.limiteCredito}
@@ -200,11 +207,11 @@ export function EditClientForm({ client }: EditClientFormProps) {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="edit-client-diasCredito" className="block text-sm font-medium text-foreground mb-1">
                                             Días de Crédito
                                         </label>
                                         <Select name="diasCredito" value={diasCredito} onValueChange={setDiasCredito}>
-                                            <SelectTrigger>
+                                            <SelectTrigger id="edit-client-diasCredito">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -219,10 +226,11 @@ export function EditClientForm({ client }: EditClientFormProps) {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="edit-client-descuentoEspecial" className="block text-sm font-medium text-foreground mb-1">
                                             Descuento Especial (%)
                                         </label>
                                         <Input
+                                            id="edit-client-descuentoEspecial"
                                             name="descuentoEspecial"
                                             type="number"
                                             defaultValue={client.descuentoEspecial}

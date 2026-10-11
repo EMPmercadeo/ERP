@@ -123,9 +123,13 @@ export default function EmpleadosRRHHPage() {
     buscarDesdeInicio();
   }, [buscarDesdeInicio]);
 
+  const guardandoRef = useRef(false);
+  const devengandoRef = useRef(false);
+
   const handleCrearEmpleado = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (guardando) return;
+    if (guardandoRef.current || guardando) return;
+    guardandoRef.current = true;
     setErrorModal('');
     setGuardando(true);
     try {
@@ -158,12 +162,15 @@ export default function EmpleadosRRHHPage() {
     } catch {
       setErrorModal('Error de conexión con el servidor');
     } finally {
+      guardandoRef.current = false;
       setGuardando(false);
     }
   };
 
   const aplicarDevengoMasivo = async () => {
+    if (devengandoRef.current) return;
     if (!confirm('¿Desea aplicar el devengo mensual de vacaciones (+2.73 días según Ley Panamá) a todos los colaboradores activos?')) return;
+    devengandoRef.current = true;
     try {
       const res = await fetch('/api/rrhh/vacaciones/devengo', {
         method: 'POST',
@@ -178,6 +185,8 @@ export default function EmpleadosRRHHPage() {
       }
     } catch {
       alert('Error al ejecutar devengo');
+    } finally {
+      devengandoRef.current = false;
     }
   };
 
@@ -239,19 +248,19 @@ export default function EmpleadosRRHHPage() {
                 <div className="flex bg-muted p-1 rounded-md border border-border">
                   <button
                     onClick={() => setFiltroEstado('activo')}
-                    className={`px-3 py-1 text-xs rounded transition-all ${filtroEstado === 'activo' ? 'bg-brand-1 text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`px-3 py-1 text-xs rounded transition-colors ${filtroEstado === 'activo' ? 'bg-brand-1 text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     Activos
                   </button>
                   <button
                     onClick={() => setFiltroEstado('inactivo')}
-                    className={`px-3 py-1 text-xs rounded transition-all ${filtroEstado === 'inactivo' ? 'bg-brand-1 text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`px-3 py-1 text-xs rounded transition-colors ${filtroEstado === 'inactivo' ? 'bg-brand-1 text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     Bajas
                   </button>
                   <button
                     onClick={() => setFiltroEstado('all')}
-                    className={`px-3 py-1 text-xs rounded transition-all ${filtroEstado === 'all' ? 'bg-brand-1 text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`px-3 py-1 text-xs rounded transition-colors ${filtroEstado === 'all' ? 'bg-brand-1 text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     Todos
                   </button>
@@ -388,8 +397,9 @@ export default function EmpleadosRRHHPage() {
                   </div>
                 )}
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground block mb-1">Nombre Completo:</label>
+                  <label htmlFor="nuevoEmpleadoNombre" className="text-xs font-semibold text-muted-foreground block mb-1">Nombre Completo:</label>
                   <Input
+                    id="nuevoEmpleadoNombre"
                     required
                     placeholder="Ej. Juan Carlos Pérez"
                     value={nombre}
@@ -399,8 +409,9 @@ export default function EmpleadosRRHHPage() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-semibold text-muted-foreground block mb-1">Cédula / Pasaporte:</label>
+                    <label htmlFor="nuevoEmpleadoCedula" className="text-xs font-semibold text-muted-foreground block mb-1">Cédula / Pasaporte:</label>
                     <Input
+                      id="nuevoEmpleadoCedula"
                       required
                       placeholder="8-123-4567"
                       value={cedula}
@@ -409,8 +420,9 @@ export default function EmpleadosRRHHPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-muted-foreground block mb-1">Salario Base Mensual ($):</label>
+                    <label htmlFor="nuevoEmpleadoSalario" className="text-xs font-semibold text-muted-foreground block mb-1">Salario Base Mensual ($):</label>
                     <Input
+                      id="nuevoEmpleadoSalario"
                       required
                       type="number"
                       step="0.01"
@@ -422,8 +434,9 @@ export default function EmpleadosRRHHPage() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-semibold text-muted-foreground block mb-1">Cargo / Puesto:</label>
+                    <label htmlFor="nuevoEmpleadoCargo" className="text-xs font-semibold text-muted-foreground block mb-1">Cargo / Puesto:</label>
                     <Input
+                      id="nuevoEmpleadoCargo"
                       required
                       placeholder="Ej. Contador, Vendedor"
                       value={cargo}
@@ -432,8 +445,9 @@ export default function EmpleadosRRHHPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-muted-foreground block mb-1">Tipo de Contrato:</label>
+                    <label htmlFor="nuevoEmpleadoContrato" className="text-xs font-semibold text-muted-foreground block mb-1">Tipo de Contrato:</label>
                     <select
+                      id="nuevoEmpleadoContrato"
                       value={tipoContrato}
                       onChange={(e) => setTipoContrato(e.target.value)}
                       className="w-full bg-muted/50 border border-border rounded-md text-sm text-foreground px-3 py-2 h-10 focus:outline-none focus:ring-1 focus:ring-brand-1 focus:border-brand-1"
@@ -445,8 +459,9 @@ export default function EmpleadosRRHHPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground block mb-1">Fecha de Ingreso:</label>
+                  <label htmlFor="nuevoEmpleadoFechaIngreso" className="text-xs font-semibold text-muted-foreground block mb-1">Fecha de Ingreso:</label>
                   <Input
+                    id="nuevoEmpleadoFechaIngreso"
                     required
                     type="date"
                     value={fechaIngreso}
@@ -460,8 +475,9 @@ export default function EmpleadosRRHHPage() {
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs font-semibold text-muted-foreground block mb-1">Departamento:</label>
+                      <label htmlFor="nuevoEmpleadoDepartamento" className="text-xs font-semibold text-muted-foreground block mb-1">Departamento:</label>
                       <Input
+                        id="nuevoEmpleadoDepartamento"
                         placeholder="Ej. Ventas, Administración"
                         value={departamento}
                         onChange={(e) => setDepartamento(e.target.value)}
@@ -469,8 +485,9 @@ export default function EmpleadosRRHHPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-muted-foreground block mb-1">Frecuencia de Pago:</label>
+                      <label htmlFor="nuevoEmpleadoFrecuencia" className="text-xs font-semibold text-muted-foreground block mb-1">Frecuencia de Pago:</label>
                       <select
+                        id="nuevoEmpleadoFrecuencia"
                         value={frecuenciaPago}
                         onChange={(e) => setFrecuenciaPago(e.target.value)}
                         className="w-full bg-muted/50 border border-border rounded-md text-sm text-foreground px-3 py-2 h-10 focus:outline-none focus:ring-1 focus:ring-brand-1 focus:border-brand-1"
@@ -482,8 +499,9 @@ export default function EmpleadosRRHHPage() {
                     </div>
                   </div>
                   <div className="mt-3">
-                    <label className="text-xs font-semibold text-muted-foreground block mb-1">Tasa de Riesgos Profesionales:</label>
+                    <label htmlFor="nuevoEmpleadoRiesgo" className="text-xs font-semibold text-muted-foreground block mb-1">Tasa de Riesgos Profesionales:</label>
                     <select
+                      id="nuevoEmpleadoRiesgo"
                       value={tasaRiesgo}
                       onChange={(e) => setTasaRiesgo(e.target.value)}
                       className="w-full bg-muted/50 border border-border rounded-md text-sm text-foreground px-3 py-2 h-10 focus:outline-none focus:ring-1 focus:ring-brand-1 focus:border-brand-1"

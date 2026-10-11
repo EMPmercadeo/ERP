@@ -190,7 +190,7 @@ export function BottomNavigation() {
                             key={item.name}
                             href={item.href}
                             className={cn(
-                                "flex flex-col items-center justify-center py-1 px-3 rounded-lg text-muted-foreground transition-all",
+                                "flex flex-col items-center justify-center py-1 px-3 rounded-lg text-muted-foreground transition-colors",
                                 isActive ? "text-brand-1 font-bold scale-105" : "hover:text-foreground active:scale-95"
                             )}
                         >
@@ -204,7 +204,7 @@ export function BottomNavigation() {
                 <button
                     onClick={() => setIsMenuOpen(true)}
                     className={cn(
-                        "flex flex-col items-center justify-center py-1 px-3 rounded-lg text-muted-foreground transition-all",
+                        "flex flex-col items-center justify-center py-1 px-3 rounded-lg text-muted-foreground transition-colors",
                         isMenuOpen ? "text-brand-1 font-bold scale-105" : "hover:text-foreground active:scale-95"
                     )}
                 >
@@ -284,7 +284,7 @@ export function BottomNavigation() {
 
                         <Button
                             onClick={handleLogout}
-                            className="w-full h-11 bg-danger-bg hover:bg-destructive hover:text-white border border-destructive/20 text-destructive font-bold text-sm rounded-xl flex items-center justify-center gap-2 active:scale-98 transition-all"
+                            className="w-full h-11 bg-danger-bg hover:bg-destructive hover:text-white border border-destructive/20 text-destructive font-bold text-sm rounded-xl flex items-center justify-center gap-2 active:scale-98 transition-colors"
                         >
                             <LogOut className="h-4.5 w-4.5" />
                             <span>Cerrar Sesión</span>

@@ -15,9 +15,11 @@ export default async function BankAccountDetailPage({
     params: Promise<{ id: string }>;
     searchParams: Promise<{ page?: string; limit?: string }>;
 }) {
-    const { id } = await params;
-    const { empresaId } = await getTenantContext();
-    const sp = await searchParams;
+    const [{ id }, { empresaId }, sp] = await Promise.all([
+        params,
+        getTenantContext(),
+        searchParams,
+    ]);
     const page = Number(sp.page) || 1;
     const limit = Math.min(Number(sp.limit) || 50, 100);
     const skip = (page - 1) * limit;

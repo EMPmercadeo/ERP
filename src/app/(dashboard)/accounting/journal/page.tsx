@@ -13,8 +13,10 @@ export default async function JournalPage(props: {
         origen?: string;
     }>;
 }) {
-    const searchParams = await props.searchParams;
-    const { empresaId } = await getTenantContext();
+    const [searchParams, { empresaId }] = await Promise.all([
+        props.searchParams,
+        getTenantContext(),
+    ]);
     const startDate = searchParams.startDate;
     const endDate = searchParams.endDate;
     const origen = searchParams.origen;

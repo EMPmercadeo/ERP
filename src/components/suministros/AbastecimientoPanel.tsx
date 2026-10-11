@@ -57,19 +57,33 @@ export function AbastecimientoPanel() {
     const [error, setError] = useState<string | null>(null);
     const [dias, setDias] = useState('30');
     const [incluirOk, setIncluirOk] = useState(false);
-
-    const cargar = async (diasHistorial: string, verTodo: boolean) => {
-        setLoading(true);
-        const res = await getAlertasReabastecimiento({ dias: Number(diasHistorial), incluirOk: verTodo });
-        setAlertas(res.alertas);
-        setError(res.error ?? null);
-        setLoading(false);
-    };
+    const [reloadKey, setReloadKey] = useState(0);
 
     useEffect(() => {
-        cargar(dias, incluirOk);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dias, incluirOk]);
+        let isCancelled = false;
+        setLoading(true);
+        getAlertasReabastecimiento({ dias: Number(dias), incluirOk })
+            .then((res) => {
+                if (!isCancelled) {
+                    setAlertas(res.alertas);
+                    setError(res.error ?? null);
+                }
+            })
+            .catch((err: unknown) => {
+                if (!isCancelled) {
+                    setError(err instanceof Error ? err.message : 'Error al cargar alertas');
+                }
+            })
+            .finally(() => {
+                if (!isCancelled) {
+                    setLoading(false);
+                }
+            });
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [dias, incluirOk, reloadKey]);
 
     if (loading) {
         return (
@@ -131,7 +145,7 @@ export function AbastecimientoPanel() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => cargar(dias, incluirOk)}
+                        onClick={() => setReloadKey((k) => k + 1)}
                         className="h-9 w-9"
                         aria-label="Recalcular"
                     >

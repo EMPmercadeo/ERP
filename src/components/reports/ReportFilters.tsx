@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -76,21 +76,20 @@ export function ReportFilters({
     onExportCSV
 }: ReportFiltersProps) {
     const router = useRouter();
-    const pathname = usePathname();
     const searchParams = useSearchParams();
 
     // Local filter states
-    const [dateFrom, setDateFrom] = useState(currentFilters.dateFrom);
-    const [dateTo, setDateTo] = useState(currentFilters.dateTo);
-    const [periodoRapido, setPeriodoRapido] = useState(currentFilters.periodoRapido);
-    const [groupBy, setGroupBy] = useState(currentFilters.groupBy);
-    const [clienteId, setClienteId] = useState(currentFilters.clienteId);
-    const [productoId, setProductoId] = useState(currentFilters.productoId);
-    const [creadorId, setCreadorId] = useState(currentFilters.creadorId);
-    const [tipoDocumento, setTipoDocumento] = useState(currentFilters.tipoDocumento);
-    const [estadoDgi, setEstadoDgi] = useState(currentFilters.estadoDgi);
-    const [paymentStatus, setPaymentStatus] = useState(currentFilters.paymentStatus);
-    const [metodoPago, setMetodoPago] = useState(currentFilters.metodoPago || 'all');
+    const [dateFrom, setDateFrom] = useState(() => currentFilters.dateFrom);
+    const [dateTo, setDateTo] = useState(() => currentFilters.dateTo);
+    const [periodoRapido, setPeriodoRapido] = useState(() => currentFilters.periodoRapido);
+    const [groupBy, setGroupBy] = useState(() => currentFilters.groupBy);
+    const [clienteId, setClienteId] = useState(() => currentFilters.clienteId);
+    const [productoId, setProductoId] = useState(() => currentFilters.productoId);
+    const [creadorId, setCreadorId] = useState(() => currentFilters.creadorId);
+    const [tipoDocumento, setTipoDocumento] = useState(() => currentFilters.tipoDocumento);
+    const [estadoDgi, setEstadoDgi] = useState(() => currentFilters.estadoDgi);
+    const [paymentStatus, setPaymentStatus] = useState(() => currentFilters.paymentStatus);
+    const [metodoPago, setMetodoPago] = useState(() => currentFilters.metodoPago || 'all');
 
     // Advanced filters panel state
     const hasActiveAdvancedFilters = 
@@ -250,7 +249,7 @@ export function ReportFilters({
         if (impersonation) params.set('x-impersonation', impersonation);
 
         params.set('page', '1');
-        router.push(`${pathname}?${params.toString()}`);
+        router.push(`${window.location.pathname}?${params.toString()}`);
     };
 
     const handleReset = () => {
@@ -272,7 +271,7 @@ export function ReportFilters({
         const impersonation = searchParams.get('x-impersonation');
         if (impersonation) params.set('x-impersonation', impersonation);
         
-        router.push(`${pathname}${params.toString() ? `?${params.toString()}` : ''}`);
+        router.push(`${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`);
     };
 
     const handleClearClient = () => {
@@ -387,10 +386,20 @@ export function ReportFilters({
                                     clientSuggestions.map((c) => (
                                         <div
                                             key={c.id}
+                                            role="button"
+                                            tabIndex={0}
                                             onClick={() => {
                                                 setClientSearch(c.razonSocial);
                                                 setClienteId(c.id);
                                                 setShowClientDropdown(false);
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    setClientSearch(c.razonSocial);
+                                                    setClienteId(c.id);
+                                                    setShowClientDropdown(false);
+                                                }
                                             }}
                                             className="p-2.5 text-xs hover:bg-accent cursor-pointer border-b border-border last:border-0"
                                         >
@@ -442,10 +451,20 @@ export function ReportFilters({
                                     productSuggestions.map((p) => (
                                         <div
                                             key={p.id}
+                                            role="button"
+                                            tabIndex={0}
                                             onClick={() => {
                                                 setProductSearch(p.descripcion);
                                                 setProductoId(p.id);
                                                 setShowProductDropdown(false);
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    setProductSearch(p.descripcion);
+                                                    setProductoId(p.id);
+                                                    setShowProductDropdown(false);
+                                                }
                                             }}
                                             className="p-2.5 text-xs hover:bg-accent cursor-pointer border-b border-border last:border-0"
                                         >
@@ -578,7 +597,7 @@ export function ReportFilters({
                                             } else {
                                                 params.set('x-impersonation', val);
                                             }
-                                            router.push(`${pathname}?${params.toString()}`);
+                                            router.push(`${window.location.pathname}?${params.toString()}`);
                                         }}
                                     >
                                         <SelectTrigger id="empresaFilter" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-lg w-full">
@@ -608,7 +627,7 @@ export function ReportFilters({
 
                     {/* Alerta de validación de fechas (si la inicial es mayor que la final) */}
                     {isDateRangeInvalid && (
-                        <div className="col-span-1 sm:col-span-3 lg:col-span-6 flex items-center gap-2 p-2 bg-danger-bg text-danger rounded-lg text-xs font-semibold border border-danger/20 transition-all">
+                        <div className="col-span-1 sm:col-span-3 lg:col-span-6 flex items-center gap-2 p-2 bg-danger-bg text-danger rounded-lg text-xs font-semibold border border-danger/20 transition-colors">
                             <AlertCircle className="h-4.5 w-4.5 shrink-0" />
                             <span>La fecha inicial (Desde) no puede ser posterior a la fecha final (Hasta).</span>
                         </div>
@@ -624,7 +643,7 @@ export function ReportFilters({
                             type="button"
                             variant="outline"
                             onClick={() => setIsAdvancedExpanded(!isAdvancedExpanded)}
-                            className="h-10 text-xs font-bold text-muted-foreground border-border rounded-lg w-full flex items-center justify-center gap-1.5 transition-all hover:bg-accent shrink-0 lg:col-span-1"
+                            className="h-10 text-xs font-bold text-muted-foreground border-border rounded-lg w-full flex items-center justify-center gap-1.5 transition-colors hover:bg-accent shrink-0 lg:col-span-1"
                         >
                             <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
                             <span>{isAdvancedExpanded ? 'Menos filtros' : 'Más filtros'}</span>
@@ -640,7 +659,7 @@ export function ReportFilters({
                             <DropdownMenuTrigger asChild id="export-report-trigger">
                                 <Button
                                     variant="outline"
-                                    className="h-10 text-xs font-bold text-muted-foreground border-border rounded-lg w-full flex items-center justify-center gap-1.5 transition-all hover:bg-accent shrink-0 lg:col-span-1"
+                                    className="h-10 text-xs font-bold text-muted-foreground border-border rounded-lg w-full flex items-center justify-center gap-1.5 transition-colors hover:bg-accent shrink-0 lg:col-span-1"
                                 >
                                     <Download className="h-3.5 w-3.5 text-muted-foreground" />
                                     <span>Exportar</span>
@@ -665,7 +684,7 @@ export function ReportFilters({
                             type="button"
                             variant="outline"
                             onClick={handleReset}
-                            className="h-10 text-xs font-bold text-muted-foreground border-border rounded-lg w-full flex items-center justify-center gap-1.5 transition-all hover:bg-accent shrink-0 lg:col-span-1"
+                            className="h-10 text-xs font-bold text-muted-foreground border-border rounded-lg w-full flex items-center justify-center gap-1.5 transition-colors hover:bg-accent shrink-0 lg:col-span-1"
                         >
                             <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
                             <span>Limpiar</span>
@@ -676,7 +695,7 @@ export function ReportFilters({
                             type="button"
                             onClick={handleApply}
                             disabled={isDateRangeInvalid}
-                            className={`h-10 text-xs font-bold text-white rounded-lg w-full flex items-center justify-center gap-1.5 shadow-sm transition-all shrink-0 lg:col-span-1 ${
+                            className={`h-10 text-xs font-bold text-white rounded-lg w-full flex items-center justify-center gap-1.5 shadow-sm transition-colors shrink-0 lg:col-span-1 ${
                                 isDateRangeInvalid 
                                 ? 'bg-muted text-muted-foreground cursor-not-allowed shadow-none' 
                                 : 'bg-brand-1 hover:bg-brand-2 active:scale-95'

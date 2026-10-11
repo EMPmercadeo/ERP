@@ -9,8 +9,10 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 export default async function ReconcilePage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params;
-    const { empresaId } = await getTenantContext();
+    const [{ id }, { empresaId }] = await Promise.all([
+        params,
+        getTenantContext(),
+    ]);
 
     const cuenta = await prisma.cuentaBancaria.findFirst({
         where: { id, empresaId },
@@ -21,22 +23,23 @@ export default async function ReconcilePage({ params }: { params: Promise<{ id: 
         notFound();
     }
 
-    const movimientos = await prisma.movimientoBancario.findMany({
-        where: { cuentaBancariaId: id, empresaId, conciliado: false },
-        orderBy: { fecha: 'asc' },
-    });
-
-    const lineas = await prisma.asientoContableLinea.findMany({
-        where: {
-            cuentaId: cuenta.cuentaContableId,
-            asiento: {
-                empresaId,
-                movimientosBancarios: { none: { conciliado: true } },
+    const [movimientos, lineas] = await Promise.all([
+        prisma.movimientoBancario.findMany({
+            where: { cuentaBancariaId: id, empresaId, conciliado: false },
+            orderBy: { fecha: 'asc' },
+        }),
+        prisma.asientoContableLinea.findMany({
+            where: {
+                cuentaId: cuenta.cuentaContableId,
+                asiento: {
+                    empresaId,
+                    movimientosBancarios: { none: { conciliado: true } },
+                },
             },
-        },
-        include: { asiento: true },
-        orderBy: { asiento: { fecha: 'asc' } },
-    });
+            include: { asiento: true },
+            orderBy: { asiento: { fecha: 'asc' } },
+        }),
+    ]);
 
     const movimientosFormatted = movimientos.map((m) => ({
         id: m.id,

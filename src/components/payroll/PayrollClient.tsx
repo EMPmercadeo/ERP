@@ -255,8 +255,10 @@ export function PayrollClient() {
           <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <Search className="h-4 w-4 text-brand-1 shrink-0" />
-              <label className="text-xs font-semibold text-foreground shrink-0">Consultar Colaborador:</label>
+              <label htmlFor="select-colaborador" className="text-xs font-semibold text-foreground shrink-0">Consultar Colaborador:</label>
               <select
+                id="select-colaborador"
+                aria-label="Consultar Colaborador"
                 value={colaboradorActivoId}
                 onChange={e => {
                   const col = colaboradores.find(c => c.id === e.target.value);
@@ -385,19 +387,19 @@ export function PayrollClient() {
                     <div className="flex h-10 w-full rounded-lg overflow-hidden bg-muted font-bold text-xs">
                       <div
                         style={{ width: `${Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100)}%` }}
-                        className="bg-success-bg text-success flex items-center justify-center px-2 transition-all"
+                        className="bg-success-bg text-success flex items-center justify-center px-2 transition-colors"
                       >
                         Neto ({Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100)}%)
                       </div>
                       <div
                         style={{ width: `${Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100)}%` }}
-                        className="bg-danger-bg text-danger flex items-center justify-center px-2 transition-all"
+                        className="bg-danger-bg text-danger flex items-center justify-center px-2 transition-colors"
                       >
                         Obrero ({Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100)}%)
                       </div>
                       <div
                         style={{ width: `${Math.max(1, 100 - Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100) - Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100))}%` }}
-                        className="bg-warning-bg text-warning flex items-center justify-center px-2 transition-all"
+                        className="bg-warning-bg text-warning flex items-center justify-center px-2 transition-colors"
                       >
                         Patronal ({Math.max(1, 100 - Math.round((dashMetrics.netoTotal / dashMetrics.costoTotal) * 100) - Math.round((dashMetrics.totalRetenciones / dashMetrics.costoTotal) * 100))}%)
                       </div>
@@ -441,7 +443,7 @@ export function PayrollClient() {
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-sm font-semibold flex items-center justify-between">
+                    <label htmlFor="payroll-salario-bruto" className="text-sm font-semibold flex items-center justify-between">
                       <span>Salario Bruto ($)</span>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -451,6 +453,7 @@ export function PayrollClient() {
                       </Tooltip>
                     </label>
                     <Input
+                      id="payroll-salario-bruto"
                       type="number"
                       value={calcSalario}
                       onChange={e => setCalcSalario(Math.max(0, parseFloat(e.target.value) || 0))}
@@ -460,7 +463,7 @@ export function PayrollClient() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-sm font-semibold flex items-center justify-between">
+                    <label htmlFor="payroll-frecuencia" className="text-sm font-semibold flex items-center justify-between">
                       <span>Frecuencia de Pago</span>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -470,6 +473,8 @@ export function PayrollClient() {
                       </Tooltip>
                     </label>
                     <select
+                      id="payroll-frecuencia"
+                      aria-label="Frecuencia de Pago"
                       value={calcFrecuencia}
                       onChange={e => setCalcFrecuencia(e.target.value)}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -481,7 +486,7 @@ export function PayrollClient() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-sm font-semibold flex items-center justify-between">
+                    <label htmlFor="payroll-riesgo" className="text-sm font-semibold flex items-center justify-between">
                       <span>Riesgos Profesionales (%)</span>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -491,6 +496,8 @@ export function PayrollClient() {
                       </Tooltip>
                     </label>
                     <select
+                      id="payroll-riesgo"
+                      aria-label="Riesgos Profesionales (%)"
                       value={calcRiesgo}
                       onChange={e => setCalcRiesgo(parseFloat(e.target.value) || 0.0105)}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -503,7 +510,7 @@ export function PayrollClient() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-sm font-semibold flex items-center justify-between">
+                    <label htmlFor="payroll-fecha-planilla" className="text-sm font-semibold flex items-center justify-between">
                       <span>Fecha de Planilla</span>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -513,6 +520,7 @@ export function PayrollClient() {
                       </Tooltip>
                     </label>
                     <Input
+                      id="payroll-fecha-planilla"
                       type="date"
                       value={calcFecha}
                       onChange={e => setCalcFecha(e.target.value)}
@@ -743,8 +751,9 @@ export function PayrollClient() {
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">Total Devengado en el Cuatrimestre ($)</label>
+                  <label htmlFor="dec-devengado-cuatrimestre" className="text-sm font-semibold">Total Devengado en el Cuatrimestre ($)</label>
                   <Input
+                    id="dec-devengado-cuatrimestre"
                     type="number"
                     value={decAcumulado}
                     onChange={e => setDecAcumulado(Math.max(0, parseFloat(e.target.value) || 0))}
@@ -752,8 +761,9 @@ export function PayrollClient() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">Promedio Mensual Equivalente</label>
+                  <label htmlFor="dec-promedio-mensual" className="text-sm font-semibold">Promedio Mensual Equivalente</label>
                   <Input
+                    id="dec-promedio-mensual"
                     type="text"
                     value={formatMoney(decAcumulado / 4)}
                     disabled
@@ -839,8 +849,9 @@ export function PayrollClient() {
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">Salario Mensual Promedio ($)</label>
+                  <label htmlFor="liq-salario-promedio" className="text-sm font-semibold">Salario Mensual Promedio ($)</label>
                   <Input
+                    id="liq-salario-promedio"
                     type="number"
                     value={liqSalario}
                     onChange={e => setLiqSalario(Math.max(0, parseFloat(e.target.value) || 0))}
@@ -848,8 +859,9 @@ export function PayrollClient() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">Meses Laborados Totales</label>
+                  <label htmlFor="liq-meses-laborados" className="text-sm font-semibold">Meses Laborados Totales</label>
                   <Input
+                    id="liq-meses-laborados"
                     type="number"
                     value={liqMeses}
                     onChange={e => {
@@ -861,8 +873,9 @@ export function PayrollClient() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-semibold">Años Equivalentes</label>
+                  <label htmlFor="liq-anios-equivalentes" className="text-sm font-semibold">Años Equivalentes</label>
                   <Input
+                    id="liq-anios-equivalentes"
                     type="number"
                     value={liqAnios}
                     onChange={e => {

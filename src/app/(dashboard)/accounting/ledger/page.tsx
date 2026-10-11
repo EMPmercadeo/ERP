@@ -10,8 +10,10 @@ export default async function LedgerPage(props: {
         cuentaId?: string;
     }>;
 }) {
-    const searchParams = await props.searchParams;
-    const { empresaId } = await getTenantContext();
+    const [searchParams, { empresaId }] = await Promise.all([
+        props.searchParams,
+        getTenantContext(),
+    ]);
     const selectedCuentaId = searchParams.cuentaId || 'none';
 
     // Obtener catálogo de cuentas para el dropdown

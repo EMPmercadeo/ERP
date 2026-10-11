@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-import { User, Lock, Fingerprint, MessageSquare, Shield, Star, X } from 'lucide-react';
+import { User, Lock, Fingerprint, MessageSquare, Shield, Star, X, Loader2 } from 'lucide-react';
 import { Alert } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -83,6 +83,7 @@ export default function LoginPage() {
     const [isBiometricLoading, setIsBiometricLoading] = useState(false);
 
     const handleBiometricLogin = async () => {
+        if (isBiometricLoading) return;
         setError('');
 
         if (!browserSupportsWebAuthn()) {
@@ -168,7 +169,7 @@ export default function LoginPage() {
                                 <button
                                     type="button"
                                     onClick={() => setActiveModal(null)}
-                                    className="w-full bg-brand-2 text-white font-bold py-3 rounded-xl text-sm hover:bg-brand-1 transition-all cursor-pointer"
+                                    className="w-full bg-brand-2 text-white font-bold py-3 rounded-xl text-sm hover:bg-brand-1 transition-colors cursor-pointer"
                                 >
                                     Entendido
                                 </button>
@@ -186,7 +187,7 @@ export default function LoginPage() {
                                 </p>
                                 <Link
                                     href="/help"
-                                    className="block w-full bg-success text-white font-bold py-3 rounded-xl text-sm hover:bg-success/90 transition-all text-center"
+                                    className="block w-full bg-success text-white font-bold py-3 rounded-xl text-sm hover:bg-success/90 transition-colors text-center"
                                 >
                                     Ir al Centro de Ayuda
                                 </Link>
@@ -282,11 +283,16 @@ export default function LoginPage() {
                         <button
                             type="button"
                             onClick={handleBiometricLogin}
+                            disabled={isBiometricLoading}
                             title="Login biométrico (próximamente)"
                             aria-label="Login biométrico (próximamente)"
-                            className="bg-white rounded-2xl h-11 w-11 sm:h-12 sm:w-12 shadow-sm flex items-center justify-center text-brand-medium hover:bg-info-bg transition-all shrink-0 active:scale-95 cursor-pointer"
+                            className="bg-white rounded-2xl h-11 w-11 sm:h-12 sm:w-12 shadow-sm flex items-center justify-center text-brand-medium hover:bg-info-bg transition-colors shrink-0 active:scale-95 cursor-pointer disabled:opacity-50"
                         >
-                            <Fingerprint className="h-5 w-5 sm:h-6 sm:w-6" />
+                            {isBiometricLoading ? (
+                                <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-brand-1" />
+                            ) : (
+                                <Fingerprint className="h-5 w-5 sm:h-6 sm:w-6" />
+                            )}
                         </button>
                     </div>
 
@@ -294,7 +300,7 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-brand-bg-blue hover:bg-brand-bg-blue-hover-dark text-white font-bold text-sm sm:text-base h-11 sm:h-12 rounded-2xl shadow-md transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide truncate"
+                        className="w-full bg-brand-bg-blue hover:bg-brand-bg-blue-hover-dark text-white font-bold text-sm sm:text-base h-11 sm:h-12 rounded-2xl shadow-md transition-colors active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide truncate"
                     >
                         {isLoading ? 'Iniciando sesión...' : 'Entrar'}
                     </button>
@@ -306,7 +312,7 @@ export default function LoginPage() {
                         ¿Olvidaste tu contraseña?
                     </Link>
 
-                    <Link href="/register" className="w-full border border-white/80 rounded-2xl py-2 px-4 text-center text-xs sm:text-sm font-bold text-white hover:bg-white/10 transition-all truncate">
+                    <Link href="/register" className="w-full border border-white/80 rounded-2xl py-2 px-4 text-center text-xs sm:text-sm font-bold text-white hover:bg-white/10 transition-colors truncate">
                         Crea tu usuario o abre tu cuenta
                     </Link>
 
@@ -315,7 +321,7 @@ export default function LoginPage() {
                         type="button"
                         onClick={handleGoogleLogin}
                         disabled={isGoogleLoading}
-                        className="w-full bg-white/90 text-foreground font-semibold text-xs h-10 px-3 rounded-2xl shadow hover:bg-white flex items-center justify-center gap-1.5 transition-all cursor-pointer truncate"
+                        className="w-full bg-white/90 text-foreground font-semibold text-xs h-10 px-3 rounded-2xl shadow hover:bg-white flex items-center justify-center gap-1.5 transition-colors cursor-pointer truncate"
                     >
                         <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -361,7 +367,7 @@ export default function LoginPage() {
 
                 {/* Formulario Escritorio */}
                 <form onSubmit={handleSubmit} className="space-y-3.5">
-                    <div className="bg-white border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-3 focus-within:border-brand-1 focus-within:ring-2 focus-within:ring-brand-1/10 transition-all shadow-sm">
+                    <div className="bg-white border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-3 focus-within:border-brand-1 focus-within:ring-2 focus-within:ring-brand-1/10 transition-colors shadow-sm">
                         <User className="h-5 w-5 text-muted-foreground shrink-0" />
                         <Label htmlFor="login-email-desktop" className="sr-only">Usuario o correo</Label>
                         <Input
@@ -377,7 +383,7 @@ export default function LoginPage() {
                     </div>
 
                     <div className="flex gap-2.5 items-center">
-                        <div className="bg-white border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-3 flex-1 focus-within:border-brand-1 focus-within:ring-2 focus-within:ring-brand-1/10 transition-all shadow-sm">
+                        <div className="bg-white border border-border rounded-xl px-3.5 py-2.5 flex items-center gap-3 flex-1 focus-within:border-brand-1 focus-within:ring-2 focus-within:ring-brand-1/10 transition-colors shadow-sm">
                             <Lock className="h-5 w-5 text-muted-foreground shrink-0" />
                             <Label htmlFor="login-password-desktop" className="sr-only">Contraseña</Label>
                             <Input
@@ -403,11 +409,16 @@ export default function LoginPage() {
                         <button
                             type="button"
                             onClick={handleBiometricLogin}
+                            disabled={isBiometricLoading}
                             title="Login biométrico (próximamente)"
                             aria-label="Login biométrico (próximamente)"
-                            className="bg-white border border-border rounded-xl p-3 shadow-sm flex items-center justify-center text-brand-1 hover:bg-info-bg transition-all shrink-0 active:scale-95 cursor-pointer"
+                            className="bg-white border border-border rounded-xl p-3 shadow-sm flex items-center justify-center text-brand-1 hover:bg-info-bg transition-colors shrink-0 active:scale-95 cursor-pointer disabled:opacity-50"
                         >
-                            <Fingerprint className="h-5 w-5" />
+                            {isBiometricLoading ? (
+                                <Loader2 className="h-5 w-5 animate-spin text-brand-1" />
+                            ) : (
+                                <Fingerprint className="h-5 w-5" />
+                            )}
                         </button>
                     </div>
 
@@ -415,7 +426,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-brand-2 hover:bg-brand-1 text-white font-extrabold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.99] disabled:opacity-70 text-sm tracking-wide cursor-pointer"
+                            className="w-full bg-brand-2 hover:bg-brand-1 text-white font-extrabold py-3.5 rounded-xl shadow-md transition-colors active:scale-[0.99] disabled:opacity-70 text-sm tracking-wide cursor-pointer"
                         >
                             {isLoading ? 'Conectando...' : 'Entrar'}
                         </button>
@@ -433,7 +444,7 @@ export default function LoginPage() {
                 <div className="space-y-3">
                     <Link
                         href="/register"
-                        className="block w-full border border-brand-1 text-brand-1 font-bold py-3 rounded-xl text-sm hover:bg-info-bg transition-all text-center shadow-sm"
+                        className="block w-full border border-brand-1 text-brand-1 font-bold py-3 rounded-xl text-sm hover:bg-info-bg transition-colors text-center shadow-sm"
                     >
                         Crea tu usuario o abre tu cuenta
                     </Link>
@@ -442,7 +453,7 @@ export default function LoginPage() {
                         type="button"
                         onClick={handleGoogleLogin}
                         disabled={isGoogleLoading}
-                        className="w-full bg-white border border-border text-foreground font-semibold py-3 rounded-xl shadow-sm hover:bg-accent flex items-center justify-center gap-2.5 text-sm transition-all cursor-pointer"
+                        className="w-full bg-white border border-border text-foreground font-semibold py-3 rounded-xl shadow-sm hover:bg-accent flex items-center justify-center gap-2.5 text-sm transition-colors cursor-pointer"
                     >
                         <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

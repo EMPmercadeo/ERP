@@ -133,7 +133,11 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
                             </p>
                         </CardHeader>
                         <CardContent className="p-6 space-y-4">
+                            <label htmlFor="motivo-cancelacion-dgi" className="block text-xs font-semibold text-muted-foreground">
+                                Razón de Anulación
+                            </label>
                             <textarea
+                                id="motivo-cancelacion-dgi"
                                 value={motivoCancelacion}
                                 onChange={(e) => setMotivoCancelacion(e.target.value)}
                                 placeholder="Ej. Error en los datos del cliente, devolución de mercancía..."
@@ -199,7 +203,7 @@ export function DgiActions({ facturaId, estadoDgi: initialEstado }: DgiActionsPr
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-2.5 text-right text-[10px] text-muted-foreground">
-                                            {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {new Date(log.createdAt).toLocaleTimeString('es-PA', { timeZone: 'America/Panama', hour: '2-digit', minute: '2-digit' })}
                                         </TableCell>
                                     </TableRow>
                                 ))}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
     Calendar,
     CheckCircle2,
@@ -50,16 +50,14 @@ export function TrialBalanceView({
   initialFilters
 }: TrialBalanceViewProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const [cutOffDate, setCutOffDate] = useState(initialFilters.cutOffDate || '');
 
   const applyFilters = () => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(window.location.search);
     if (cutOffDate) params.set('cutOffDate', cutOffDate);
     else params.delete('cutOffDate');
-    router.push(`${pathname}?${params.toString()}`);
+    router.push(`${window.location.pathname}?${params.toString()}`);
   };
 
   const isBalanced = Math.abs(totalDeudor - totalAcreedor) < 0.01;
@@ -69,19 +67,19 @@ export function TrialBalanceView({
       <div className="space-y-6">
         {/* Resumen de Balance */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
+          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-colors duration-300 hover:shadow-md">
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Deudor</div>
               <div className="mt-2 text-2xl font-bold text-foreground font-mono">{formatCurrency(totalDeudor)}</div>
             </CardContent>
           </Card>
-          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
+          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-colors duration-300 hover:shadow-md">
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Acreedor</div>
               <div className="mt-2 text-2xl font-bold text-foreground font-mono">{formatCurrency(totalAcreedor)}</div>
             </CardContent>
           </Card>
-          <Card className={`border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md ${isBalanced ? 'bg-success-bg border-success/30' : 'bg-danger-bg border-danger/30'}`}>
+          <Card className={`border shadow-sm rounded-2xl overflow-hidden transition-colors duration-300 hover:shadow-md ${isBalanced ? 'bg-success-bg border-success/30' : 'bg-danger-bg border-danger/30'}`}>
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cuadre del Balance</div>
               <div className="mt-2 flex items-center gap-2">
@@ -105,10 +103,11 @@ export function TrialBalanceView({
         <Card className="bg-card border-border shadow-sm rounded-2xl">
           <CardContent className="p-5 flex flex-col sm:flex-row sm:items-end sm:gap-4">
             <div className="flex-1 space-y-1.5">
-              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Fecha de Corte</label>
+              <label htmlFor="trial-cutoff-date" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Fecha de Corte</label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input 
+                  id="trial-cutoff-date"
                   type="date" 
                   value={cutOffDate} 
                   onChange={e => setCutOffDate(e.target.value)} 

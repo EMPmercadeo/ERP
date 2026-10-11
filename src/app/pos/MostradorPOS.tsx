@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import QRCode from 'qrcode';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -724,6 +724,11 @@ export default function MostradorPOS({
     (p.codigoBarras && p.codigoBarras.includes(buscar))
   );
 
+  const agregarAlCarritoRef = useRef(agregarAlCarrito);
+  useEffect(() => {
+    agregarAlCarritoRef.current = agregarAlCarrito;
+  });
+
   // Agregar automáticamente al carrito cuando el texto de búsqueda coincide exacto con un
   // código de barras (lectora física que "escribe" el código + Enter, o el escáner de cámara
   // dejando el código en el buscador): evita el tap manual extra en cada venta.
@@ -735,11 +740,11 @@ export default function MostradorPOS({
     );
     if (!match) return;
     const id = setTimeout(() => {
-      agregarAlCarrito(match);
+      agregarAlCarritoRef.current(match);
       setBuscar('');
     }, 0);
     return () => clearTimeout(id);
-  }, [buscar, productos, agregarAlCarrito]);
+  }, [buscar, productos]);
 
   // Genera el QR real del recibo: codifica el link de verificación DGI (cafUrl, que ya trae
   // el CUFE embebido) o, si no hay link, el CUFE crudo. En contingencia no hay CUFE todavía
@@ -797,7 +802,7 @@ export default function MostradorPOS({
             <button
               onClick={abrirModalCierreTurno}
               title="Cerrar turno de caja"
-              className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-full text-xs font-bold transition-all border bg-secondary text-foreground border-border hover:border-primary"
+              className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-full text-xs font-bold transition-colors border bg-secondary text-foreground border-border hover:border-primary"
             >
               <Wallet className="h-4 w-4 text-primary" />
               <span className="sm:hidden">Turno</span><span className="hidden sm:inline">Turno abierto (${turnoActivo.montoInicial.toFixed(2)} inicial)</span>
@@ -808,7 +813,7 @@ export default function MostradorPOS({
           {/* Botón de Estado y Contingencia */}
           <button
             onClick={() => setShowContingenciaConfirm(true)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-colors border ${
               !isOnline || contingenciaForzada
                 ? 'bg-warning-bg text-warning border-warning/40'
                 : 'bg-success-bg text-success border-success/40'
@@ -825,7 +830,7 @@ export default function MostradorPOS({
               onClick={impresoraPort ? handleDesconectarImpresora : handleConectarImpresora}
               disabled={conectandoImpresora}
               title={impresoraPort ? 'Impresora térmica conectada (click para desconectar)' : 'Conectar impresora térmica / cajón de dinero (USB-Serial)'}
-              className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+              className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-colors border ${
                 impresoraPort ? 'bg-success-bg text-success border-success/40' : 'bg-secondary text-muted-foreground border-border hover:border-primary'
               }`}
             >
@@ -916,7 +921,7 @@ export default function MostradorPOS({
                   key={prod.id}
                   onClick={() => agregarAlCarrito(prod)}
                   disabled={agotado}
-                  className={`flex flex-col justify-between text-left p-3.5 rounded-xl border transition-all select-none group shadow-premium ${
+                  className={`flex flex-col justify-between text-left p-3.5 rounded-xl border transition-colors select-none group shadow-premium ${
                     agotado
                       ? 'bg-muted/40 border-border opacity-50 cursor-not-allowed'
                       : 'bg-card border-border hover:border-primary hover:shadow-premium-hover active:scale-95'
@@ -1021,6 +1026,8 @@ export default function MostradorPOS({
                     {/* Botones Touch + / - */}
                     <div className="flex items-center gap-2 bg-secondary px-1 py-0.5 rounded border border-border">
                       <button
+                        type="button"
+                        aria-label="Disminuir cantidad"
                         onClick={() => modificarCantidad(item.productoId, -1)}
                         className="h-6 w-6 rounded bg-muted hover:bg-muted-foreground/20 text-foreground flex items-center justify-center active:scale-90"
                       >
@@ -1028,6 +1035,8 @@ export default function MostradorPOS({
                       </button>
                       <span className="font-mono font-bold text-foreground w-6 text-center">{item.cantidad}</span>
                       <button
+                        type="button"
+                        aria-label="Aumentar cantidad"
                         onClick={() => modificarCantidad(item.productoId, 1)}
                         className="h-6 w-6 rounded bg-primary text-primary-foreground font-bold flex items-center justify-center active:scale-90"
                       >
@@ -1042,11 +1051,16 @@ export default function MostradorPOS({
                     <div className="flex items-center gap-1.5">
                       <input
                         type="number"
+                        aria-label="Porcentaje de descuento"
                         min={0}
                         max={100}
                         step={0.5}
                         value={item.descuentoPorcentaje}
-                        onChange={(e) => modificarDescuento(item.productoId, parseFloat(e.target.value))}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const parsed = val ? Number(val) : 0;
+                          modificarDescuento(item.productoId, Number.isNaN(parsed) ? 0 : parsed);
+                        }}
                         className="w-14 h-6 text-[11px] font-mono text-right bg-secondary border border-border rounded px-1"
                       />
                       <span className="text-[10px] text-muted-foreground">%</span>
@@ -1095,7 +1109,7 @@ export default function MostradorPOS({
                 setShowPagoModal(true);
               }}
               disabled={carrito.length === 0 || !turnoActivo}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base h-12 shadow-premium mt-3 tracking-wider active:scale-[0.98] transition-all"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base h-12 shadow-premium mt-3 tracking-wider active:scale-[0.98] transition-colors"
             >
               <DollarSign className="h-5 w-5 mr-1" />
               {turnoActivo ? `COBRAR $${total.toFixed(2)}` : 'Abre tu turno de caja para cobrar'}
@@ -1133,7 +1147,7 @@ export default function MostradorPOS({
                 <button
                   type="button"
                   onClick={() => setTipoDoc('02')}
-                  className={`py-2 rounded font-bold transition-all flex items-center justify-center gap-1.5 ${
+                  className={`py-2 rounded font-bold transition-colors flex items-center justify-center gap-1.5 ${
                     tipoDoc === '02' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -1142,7 +1156,7 @@ export default function MostradorPOS({
                 <button
                   type="button"
                   onClick={() => setTipoDoc('01')}
-                  className={`py-2 rounded font-bold transition-all flex items-center justify-center gap-1.5 ${
+                  className={`py-2 rounded font-bold transition-colors flex items-center justify-center gap-1.5 ${
                     tipoDoc === '01' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -1152,10 +1166,11 @@ export default function MostradorPOS({
 
               {/* RUC / Cédula Cliente */}
               <div>
-                <label className="font-semibold text-foreground block mb-1">
+                <label htmlFor="pos-cliente-ruc" className="font-semibold text-foreground block mb-1">
                   {tipoDoc === '01' ? 'RUC o Cédula del Cliente (*Obligatorio para Factura 01):' : 'RUC o Cédula (Opcional, Consumidor Final):'}
                 </label>
                 <Input
+                  id="pos-cliente-ruc"
                   placeholder={tipoDoc === '01' ? 'Ej. 8-NT-1-1234 o 8-800-1234' : 'CF (Consumidor Final)'}
                   value={clienteRuc}
                   onChange={(e) => setClienteRuc(e.target.value)}
@@ -1182,12 +1197,12 @@ export default function MostradorPOS({
 
               {/* Selector de Métodos de Pago Pluggable */}
               <div>
-                <label className="font-semibold text-foreground block mb-2">Método de Pago:</label>
+                <span className="font-semibold text-foreground block mb-2">Método de Pago:</span>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
                     type="button"
                     onClick={() => setMetodoPago('EFECTIVO')}
-                    className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-1 transition-all ${
+                    className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-1 transition-colors ${
                       metodoPago === 'EFECTIVO' ? 'border-primary bg-accent text-primary font-bold' : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -1197,7 +1212,7 @@ export default function MostradorPOS({
                   <button
                     type="button"
                     onClick={() => setMetodoPago('YAPPY')}
-                    className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-1 transition-all ${
+                    className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-1 transition-colors ${
                       metodoPago === 'YAPPY' ? 'border-primary bg-accent text-primary font-bold' : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -1207,7 +1222,7 @@ export default function MostradorPOS({
                   <button
                     type="button"
                     onClick={() => setMetodoPago('TARJETA')}
-                    className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-1 transition-all ${
+                    className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-1 transition-colors ${
                       metodoPago === 'TARJETA' ? 'border-primary bg-accent text-primary font-bold' : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -1217,7 +1232,7 @@ export default function MostradorPOS({
                   <button
                     type="button"
                     onClick={() => setMetodoPago('MIXTO')}
-                    className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-1 transition-all ${
+                    className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-1 transition-colors ${
                       metodoPago === 'MIXTO' ? 'border-primary bg-accent text-primary font-bold' : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -1231,7 +1246,7 @@ export default function MostradorPOS({
               {metodoPago === 'EFECTIVO' && (
                 <div className="bg-secondary p-3 rounded-lg border border-border space-y-3">
                   <div className="flex justify-between items-center">
-                    <label className="font-semibold text-foreground">Efectivo Recibido ($):</label>
+                    <label htmlFor="pos-efectivo-recibido" className="font-semibold text-foreground">Efectivo Recibido ($):</label>
                     <div className="flex gap-1.5">
                       {[10, 20, 50, 100].map(monto => (
                         <button
@@ -1246,6 +1261,7 @@ export default function MostradorPOS({
                     </div>
                   </div>
                   <Input
+                    id="pos-efectivo-recibido"
                     type="number"
                     step="0.01"
                     value={efectivoRecibido}
@@ -1292,10 +1308,11 @@ export default function MostradorPOS({
                   <p className="text-xs font-bold text-primary">Escanee con la App de Yappy para pagar ${total.toFixed(2)}</p>
                   <p className="text-[11px] text-muted-foreground">Directorio comercial: @ERPPANAMA_POS (o confirmación por webhook)</p>
                   <div className="text-left pt-2 border-t border-border">
-                    <label className="font-semibold text-foreground block mb-1">
+                    <label htmlFor="pos-ref-yappy" className="font-semibold text-foreground block mb-1">
                       Nº de referencia/autorización de Yappy (*obligatorio):
                     </label>
                     <Input
+                      id="pos-ref-yappy"
                       placeholder="Ej. 123456789"
                       value={referenciaPago}
                       onChange={(e) => setReferenciaPago(e.target.value)}
@@ -1312,10 +1329,11 @@ export default function MostradorPOS({
                 <div className="bg-secondary p-4 rounded-lg border border-primary/30 space-y-3">
                   <p className="text-xs font-bold text-primary text-center">Cobre ${total.toFixed(2)} en el datáfono del banco</p>
                   <div>
-                    <label className="font-semibold text-foreground block mb-1">
+                    <label htmlFor="pos-ref-tarjeta" className="font-semibold text-foreground block mb-1">
                       Nº de referencia/autorización del datáfono (*obligatorio):
                     </label>
                     <Input
+                      id="pos-ref-tarjeta"
                       placeholder="Ej. AUTH-004821"
                       value={referenciaPago}
                       onChange={(e) => setReferenciaPago(e.target.value)}
@@ -1334,8 +1352,9 @@ export default function MostradorPOS({
                     Combine efectivo con tarjeta/Yappy por fuera del sistema y registre aquí, si aplica, la referencia de la porción no efectiva para conciliarla después.
                   </p>
                   <div>
-                    <label className="font-semibold text-foreground block mb-1">Nº de referencia/autorización (opcional):</label>
+                    <label htmlFor="pos-ref-mixto" className="font-semibold text-foreground block mb-1">Nº de referencia/autorización (opcional):</label>
                     <Input
+                      id="pos-ref-mixto"
                       placeholder="Ej. AUTH-004821"
                       value={referenciaPago}
                       onChange={(e) => setReferenciaPago(e.target.value)}
@@ -1394,8 +1413,9 @@ export default function MostradorPOS({
                 </div>
               )}
               <div>
-                <label className="font-semibold text-foreground block mb-1">Correo del admin/gerente</label>
+                <label htmlFor="pos-admin-email" className="font-semibold text-foreground block mb-1">Correo del admin/gerente</label>
                 <Input
+                  id="pos-admin-email"
                   type="email"
                   placeholder="admin@empresa.com"
                   value={adminEmailAutorizacion}
@@ -1403,8 +1423,9 @@ export default function MostradorPOS({
                 />
               </div>
               <div>
-                <label className="font-semibold text-foreground block mb-1">PIN de autorización</label>
+                <label htmlFor="pos-pin-auth" className="font-semibold text-foreground block mb-1">PIN de autorización</label>
                 <Input
+                  id="pos-pin-auth"
                   type="password"
                   inputMode="numeric"
                   placeholder="••••"
@@ -1469,8 +1490,8 @@ export default function MostradorPOS({
                 <span>DESCRIPCIÓN</span>
                 <span>TOTAL</span>
               </div>
-              {reciboVenta.items.map((it, i: number) => (
-                <div key={i} className="flex justify-between py-0.5">
+              {reciboVenta.items.map((it) => (
+                <div key={it.productoId || it.descripcion} className="flex justify-between py-0.5">
                   <span>{it.cantidad}x {it.descripcion}</span>
                   <span>${(it.cantidad * it.precioUnitario).toFixed(2)}</span>
                 </div>
@@ -1579,8 +1600,9 @@ export default function MostradorPOS({
                 </div>
               )}
               <div>
-                <label className="font-semibold text-foreground block mb-1">Efectivo inicial en caja ($)</label>
+                <label htmlFor="pos-monto-inicial-turno" className="font-semibold text-foreground block mb-1">Efectivo inicial en caja ($)</label>
                 <Input
+                  id="pos-monto-inicial-turno"
                   type="number"
                   step="0.01"
                   min="0"
@@ -1637,8 +1659,9 @@ export default function MostradorPOS({
                 <div className="flex justify-between border-t border-border pt-1.5"><span className="font-semibold text-foreground">Esperado en caja:</span><span className="font-mono font-black text-primary">${(resumenCierreTurno?.montoEsperado ?? turnoActivo.montoInicial).toFixed(2)}</span></div>
               </div>
               <div>
-                <label className="font-semibold text-foreground block mb-1">Efectivo contado ($)</label>
+                <label htmlFor="pos-monto-contado-cierre" className="font-semibold text-foreground block mb-1">Efectivo contado ($)</label>
                 <Input
+                  id="pos-monto-contado-cierre"
                   type="number"
                   step="0.01"
                   min="0"

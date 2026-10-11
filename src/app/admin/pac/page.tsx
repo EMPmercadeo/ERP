@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Building2, ShieldCheck, Activity, Plus, Trash2, RefreshCw, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { ContentContainer } from '@/components/layout/Content';
@@ -92,8 +92,13 @@ export default function SuperadminPACPage() {
     }
   };
 
+  const eliminandoPacRef = useRef(false);
+  const guardandoPacRef = useRef(false);
+
   const handleEliminar = async (id: string) => {
+    if (eliminandoPacRef.current) return;
     if (!confirm('¿Seguro que deseas eliminar esta configuración PAC?')) return;
+    eliminandoPacRef.current = true;
     try {
       const res = await fetch(`/api/admin/pac/${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -104,16 +109,19 @@ export default function SuperadminPACPage() {
       }
     } catch {
       toast.error('Error al eliminar PAC');
+    } finally {
+      eliminandoPacRef.current = false;
     }
   };
 
   const handleGuardarPAC = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (guardando) return;
+    if (guardandoPacRef.current || guardando) return;
     if (!proveedor.trim() || !credenciales.trim()) {
       toast.error('Proveedor y credenciales son obligatorios.');
       return;
     }
+    guardandoPacRef.current = true;
     setGuardando(true);
     try {
       const res = await fetch('/api/admin/pac', {
@@ -140,6 +148,7 @@ export default function SuperadminPACPage() {
     } catch {
       toast.error('Error guardando configuración');
     } finally {
+      guardandoPacRef.current = false;
       setGuardando(false);
     }
   };
@@ -260,8 +269,9 @@ export default function SuperadminPACPage() {
           <CardContent className="pt-4">
             <form onSubmit={handleGuardarPAC} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="block text-xs text-muted-foreground">Nombre del Proveedor</label>
+                <label htmlFor="pac-proveedor" className="block text-xs text-muted-foreground">Nombre del Proveedor</label>
                 <Input
+                  id="pac-proveedor"
                   type="text"
                   value={proveedor}
                   onChange={(e) => setProveedor(e.target.value)}
@@ -272,8 +282,9 @@ export default function SuperadminPACPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs text-muted-foreground">Ambiente de Operación</label>
+                <label htmlFor="pac-ambiente" className="block text-xs text-muted-foreground">Ambiente de Operación</label>
                 <select
+                  id="pac-ambiente"
                   value={ambiente}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setAmbiente(e.target.value as 'TEST' | 'PRODUCCION')}
                   className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none"
@@ -284,8 +295,9 @@ export default function SuperadminPACPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs text-muted-foreground">Credenciales / Token CIF o Certificado Digital</label>
+                <label htmlFor="pac-credenciales" className="block text-xs text-muted-foreground">Credenciales / Token CIF o Certificado Digital</label>
                 <textarea
+                  id="pac-credenciales"
                   value={credenciales}
                   onChange={(e) => setCredenciales(e.target.value)}
                   rows={3}

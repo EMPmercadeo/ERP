@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MessageSquare, CheckCircle, Filter, Send, User, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { ContentContainer } from '@/components/layout/Content';
@@ -85,10 +85,13 @@ export default function SuperadminSoportePage() {
     }
   };
 
+  const enviandoRespuestaRef = useRef(false);
+
   const handleResponder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (enviandoRespuesta) return;
+    if (enviandoRespuestaRef.current || enviandoRespuesta) return;
     if (!selectedTicket || !mensajeRespuesta.trim()) return;
+    enviandoRespuestaRef.current = true;
     setEnviandoRespuesta(true);
     try {
       const res = await fetch(`/api/admin/soporte/${selectedTicket.id}/responder`, {
@@ -112,6 +115,7 @@ export default function SuperadminSoportePage() {
     } catch {
       toast.error('Fallo al conectar con el servidor');
     } finally {
+      enviandoRespuestaRef.current = false;
       setEnviandoRespuesta(false);
     }
   };
@@ -152,7 +156,7 @@ export default function SuperadminSoportePage() {
           <div className="flex items-center gap-2 text-xs text-muted-foreground font-semibold uppercase tracking-wider">
             <Filter className="h-4 w-4 text-primary" /> Estado:
           </div>
-          <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} className={selectClass}>
+          <select aria-label="Filtrar por estado" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} className={selectClass}>
             <option value="all">Todos los Estados</option>
             <option value="ABIERTO">Abiertos</option>
             <option value="EN_PROCESO">En Proceso</option>
@@ -163,7 +167,7 @@ export default function SuperadminSoportePage() {
           <div className="flex items-center gap-2 text-xs text-muted-foreground font-semibold uppercase tracking-wider ml-2">
             Prioridad:
           </div>
-          <select value={filtroPrioridad} onChange={(e) => setFiltroPrioridad(e.target.value)} className={selectClass}>
+          <select aria-label="Filtrar por prioridad" value={filtroPrioridad} onChange={(e) => setFiltroPrioridad(e.target.value)} className={selectClass}>
             <option value="all">Todas las Prioridades</option>
             <option value="URGENTE">Urgente</option>
             <option value="ALTA">Alta</option>
@@ -185,7 +189,15 @@ export default function SuperadminSoportePage() {
               tickets.map((t) => (
                 <div
                   key={t.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => abrirDetalle(t.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      abrirDetalle(t.id);
+                    }
+                  }}
                   className={cn(
                     'p-4 rounded-xl border transition cursor-pointer',
                     selectedTicket?.id === t.id
@@ -236,6 +248,7 @@ export default function SuperadminSoportePage() {
                       </p>
                     </div>
                     <select
+                      aria-label="Cambiar estado del ticket"
                       value={nuevoEstado}
                       onChange={(e) => setNuevoEstado(e.target.value)}
                       className={cn(selectClass, 'font-bold')}
@@ -286,14 +299,20 @@ export default function SuperadminSoportePage() {
 
                 {/* Formulario de Respuesta Rápida */}
                 <form onSubmit={handleResponder} className="mt-4 pt-4 border-t shrink-0 space-y-3">
-                  <textarea
-                    value={mensajeRespuesta}
-                    onChange={(e) => setMensajeRespuesta(e.target.value)}
-                    placeholder="Escribe tu respuesta aquí. Se notificará de inmediato al correo del cliente..."
-                    rows={3}
-                    className="w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none"
-                    required
-                  />
+                  <div className="space-y-1.5">
+                    <label htmlFor="mensaje-respuesta" className="block text-xs font-semibold text-muted-foreground">
+                      Respuesta al cliente
+                    </label>
+                    <textarea
+                      id="mensaje-respuesta"
+                      value={mensajeRespuesta}
+                      onChange={(e) => setMensajeRespuesta(e.target.value)}
+                      placeholder="Escribe tu respuesta aquí. Se notificará de inmediato al correo del cliente..."
+                      rows={3}
+                      className="w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none"
+                      required
+                    />
+                  </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">
                       Al responder, el estado cambiará a: <strong className="text-primary">{nuevoEstado}</strong>

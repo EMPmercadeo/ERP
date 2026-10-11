@@ -2,6 +2,7 @@
 'use client';
 
 import React from 'react';
+// oxlint-disable-next-line react-doctor/prefer-dynamic-import -- Leaf PDF document template loaded on demand by callers
 import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
 
 // Register a standard font (Helvetica is built-in, but Inter or Roboto is nicer if custom loaded. 
@@ -290,13 +291,13 @@ export const QuotePDF = ({ data }: QuotePDFProps) => {
                     </View>
 
                     {/* Rows */}
-                    {data.items.map((item, index) => {
+                    {data.items.map((item) => {
                         const lineSub = item.price * item.quantity;
                         const lineVal = lineSub - (lineSub * (item.discount / 100)); // Value after discount before tax
                         const taxVal = lineVal * (Number(item.taxRate) / 100);
                         
                         return (
-                            <View key={index} style={styles.tableRow}>
+                            <View key={item.sku && item.sku !== 'N/A' ? item.sku : item.description} style={styles.tableRow}>
                                 <Text style={styles.colDesc}>{item.description}</Text>
                                 <Text style={styles.colQty}>{item.quantity}</Text>
                                 <Text style={styles.colPrice}>${formatCurrency(item.price)}</Text>

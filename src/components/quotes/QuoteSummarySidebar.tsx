@@ -53,9 +53,6 @@ interface QuoteSummarySidebarProps {
     onLoading?: boolean;
 }
 
-// Dynamic import to avoid SSR issues with react-pdf? 
-// Actually standard import should work if we only use it in client handler.
-import { pdf } from '@react-pdf/renderer';
 import { QuotePDF } from './QuotePDF';
 
 export function QuoteSummarySidebar({
@@ -81,11 +78,13 @@ export function QuoteSummarySidebar({
         }
         
         setIsGeneratingPdf(true);
+        const currentDate = new Date().toLocaleDateString('es-PA');
+        const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-PA');
         try {
             const doc = <QuotePDF data={{
                 quoteNumber: 'BORRADOR', // Placeholder
-                date: new Date().toLocaleDateString('es-PA'),
-                validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-PA'), // 30 days
+                date: currentDate,
+                validUntil: expiryDate, // 30 days
                 salesperson: 'Usuario Demo',
                 company: {
                     name: 'Mi Empresa S.A.',
@@ -112,6 +111,9 @@ export function QuoteSummarySidebar({
                 notes: notes
             }} />;
 
+            const [{ pdf }] = await Promise.all([
+                import('@react-pdf/renderer')
+            ]);
             const blob = await pdf(doc).toBlob();
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');

@@ -88,7 +88,7 @@ export default async function AdminUsersPage(props: PageProps) {
 
             {/* Filters */}
             <Suspense fallback={<div className="h-10 bg-muted animate-pulse rounded-md mb-6" />}>
-                <UserFilters />
+                <UserFilters initialRole={role} />
             </Suspense>
 
             {/* User List Card Container */}

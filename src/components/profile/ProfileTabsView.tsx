@@ -598,7 +598,7 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                                             </div>
                                             <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
                                                 <div
-                                                    className="bg-info h-full rounded-full transition-all"
+                                                    className="bg-info h-full rounded-full transition-colors"
                                                     style={{
                                                         width: `${Math.min(100, Math.round((overviewData.billing.foliosUsed / Math.max(1, overviewData.billing.foliosIncluded + overviewData.billing.foliosExtra)) * 100))}%`
                                                     }}
@@ -656,7 +656,7 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                                             <p className="text-xs font-medium text-muted-foreground uppercase">Próximo Cobro</p>
                                             <p className="text-sm font-medium mt-1">
                                                 {overviewData.billing.currentPeriodEnd
-                                                    ? new Date(overviewData.billing.currentPeriodEnd).toLocaleDateString('es-PA')
+                                                    ? new Date(overviewData.billing.currentPeriodEnd).toLocaleDateString('es-PA', { timeZone: 'America/Panama' })
                                                     : 'Renovación automática'}
                                             </p>
                                         </div>
@@ -695,7 +695,7 @@ export function ProfileTabsView({ overviewData }: { overviewData: ProfileOvervie
                         const Icon = link.icon;
                         return (
                             <Link key={link.href} href={link.href}>
-                                <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm hover:shadow-md hover:border-primary/30 transition-all">
+                                <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm hover:shadow-md hover:border-primary/30 transition-colors">
                                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                                         <Icon className="h-5 w-5" />
                                     </div>

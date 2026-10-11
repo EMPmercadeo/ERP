@@ -19,6 +19,7 @@ import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { saveAs } from 'file-saver';
 import ExcelJS from 'exceljs';
+import { formatCurrency } from '@/lib/utils/currency';
 
 interface KpiMetric {
     value: number;
@@ -65,22 +66,22 @@ export function DashboardHeader({ title = 'Dashboard', kpiData, recentInvoices }
         
         kpiSheet.addRow({
             title: 'Facturado',
-            value: new Intl.NumberFormat('es-PA', { style: 'currency', currency: 'USD' }).format(kpiData.ventas.value),
+            value: formatCurrency(kpiData.ventas.value),
             change: `${kpiData.ventas.change}%`
         });
         kpiSheet.addRow({
             title: 'Cobrado',
-            value: new Intl.NumberFormat('es-PA', { style: 'currency', currency: 'USD' }).format(kpiData.cobrado.value),
+            value: formatCurrency(kpiData.cobrado.value),
             change: `${kpiData.cobrado.change}%`
         });
         kpiSheet.addRow({
             title: 'Pendiente por Cobrar',
-            value: new Intl.NumberFormat('es-PA', { style: 'currency', currency: 'USD' }).format(kpiData.pendiente.value),
+            value: formatCurrency(kpiData.pendiente.value),
             change: `${kpiData.pendiente.change}%`
         });
         kpiSheet.addRow({
             title: 'Vencido',
-            value: new Intl.NumberFormat('es-PA', { style: 'currency', currency: 'USD' }).format(kpiData.vencido.value),
+            value: formatCurrency(kpiData.vencido.value),
             change: `${kpiData.vencido.change}%`
         });
 

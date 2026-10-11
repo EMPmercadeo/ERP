@@ -41,16 +41,12 @@ export function ClientSearch({ onSelect, className }: ClientSearchProps) {
 
     // Search effect
     React.useEffect(() => {
+        let active = true;
         const controller = new AbortController();
 
         const searchClients = async () => {
-            // Allow empty query for default suggestions
-            // if (debouncedQuery.length < 2) ... removed check to allow empty
-
             setLoading(true);
             setError(null);
-            // setIsOpen(true); // Don't auto open on every debounce change if it's closed, only if intentional? 
-            // Actually user wants it to just work. Let's keep isOpen logic in input handlers mostly, but if we have results we might want to ensure it is open if focused.
 
             try {
                 // If query is empty -> API returns default 3
@@ -61,20 +57,29 @@ export function ClientSearch({ onSelect, className }: ClientSearchProps) {
                 if (!res.ok) throw new Error('Error buscando clientes');
 
                 const json = await res.json();
-                setResults(json.data || []);
+                if (active) {
+                    setResults(json.data || []);
+                }
             } catch (err) {
                 if (err instanceof Error && err.name === 'AbortError') return;
-                setError('Error buscando clientes');
-                setResults([]);
+                if (active) {
+                    setError('Error buscando clientes');
+                    setResults([]);
+                }
             } finally {
-                setLoading(false);
+                if (active) {
+                    setLoading(false);
+                }
             }
         };
 
         // Trigger search always on debounce change (even empty)
         searchClients();
 
-        return () => controller.abort();
+        return () => {
+            active = false;
+            controller.abort();
+        };
     }, [debouncedQuery]);
 
     const handleSelect = (client: Client) => {
@@ -150,10 +155,18 @@ export function ClientSearch({ onSelect, className }: ClientSearchProps) {
                         {!loading && !error && results.length > 0 && results.map((client) => (
                             <div
                                 key={client.id}
+                                role="button"
+                                tabIndex={0}
                                 className={cn(
                                     "relative flex cursor-default select-none items-start gap-3 rounded-sm px-2 py-3 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                                 )}
                                 onClick={() => handleSelect(client)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        handleSelect(client);
+                                    }
+                                }}
                             >
                                 <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted/50 text-muted-foreground">
                                     <User className="h-4 w-4" />

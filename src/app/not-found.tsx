@@ -31,14 +31,14 @@ export default function NotFound() {
         <div className="pt-4 flex flex-col gap-3">
           <Link
             href="/dashboard"
-            className="w-full h-11 bg-brand-1 hover:bg-brand-2 text-white font-semibold text-sm rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg shadow-brand-1/20"
+            className="w-full h-11 bg-brand-1 hover:bg-brand-2 text-white font-semibold text-sm rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-colors shadow-lg shadow-brand-1/20"
           >
             <Home className="h-4 w-4" />
             <span>Volver al Panel</span>
           </Link>
           <button
             onClick={() => window.history.back()}
-            className="w-full h-11 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/80 text-slate-300 font-semibold text-sm rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-all"
+            className="w-full h-11 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/80 text-slate-300 font-semibold text-sm rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Página Anterior</span>

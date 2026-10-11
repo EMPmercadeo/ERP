@@ -42,6 +42,7 @@ interface FormProps {
 }
 
 interface FormItem {
+    id?: string;
     productoId: string | null;
     descripcion: string;
     cantidadPedida: number;
@@ -52,11 +53,13 @@ interface FormItem {
     codigoTasaItbms: string;
 }
 
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
+
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+    return currencyFormatter.format(value);
 }
 
 export function DeliveryNoteForm({ clients, products, quotes, users }: FormProps) {
@@ -116,6 +119,7 @@ export function DeliveryNoteForm({ clients, products, quotes, users }: FormProps
             
             // Auto fill items
             const newItems: FormItem[] = quote.items.map(item => ({
+                id: item.productoId || crypto.randomUUID(),
                 productoId: item.productoId,
                 descripcion: item.descripcion,
                 cantidadPedida: item.cantidad,
@@ -146,6 +150,7 @@ export function DeliveryNoteForm({ clients, products, quotes, users }: FormProps
             setItems(updated);
         } else {
             setItems([...items, {
+                id: prod.id,
                 productoId: prod.id,
                 descripcion: prod.descripcion,
                 cantidadPedida: qty,
@@ -391,7 +396,7 @@ export function DeliveryNoteForm({ clients, products, quotes, users }: FormProps
                                     </TableHeader>
                                     <TableBody>
                                         {items.length > 0 ? items.map((item, idx) => (
-                                            <TableRow key={idx}>
+                                            <TableRow key={item.id || item.productoId || item.descripcion}>
                                                 <TableCell className="font-medium">{item.descripcion}</TableCell>
                                                 <TableCell className="text-right">
                                                     <Input 

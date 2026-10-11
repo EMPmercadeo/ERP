@@ -74,14 +74,14 @@ export default function ForgotPasswordPage() {
                     </p>
                     <Link
                         href="/login"
-                        className="block w-full bg-brand-bg-blue lg:bg-primary text-white font-bold py-3.5 rounded-2xl transition-all shadow-md"
+                        className="block w-full bg-brand-bg-blue lg:bg-primary text-white font-bold py-3.5 rounded-2xl transition-colors shadow-md"
                     >
                         Volver a Iniciar Sesión
                     </Link>
                 </div>
             ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="bg-white rounded-2xl p-2 shadow-lg flex items-center gap-3 border border-transparent focus-within:ring-2 focus-within:ring-info/40 transition-all text-foreground">
+                    <div className="bg-white rounded-2xl p-2 shadow-lg flex items-center gap-3 border border-transparent focus-within:ring-2 focus-within:ring-info/40 transition-colors text-foreground">
                         <Mail className="h-5 w-5 text-muted-foreground ml-2 shrink-0" />
                         <Label htmlFor="forgot-password-email" className="sr-only">Correo electrónico</Label>
                         <Input
@@ -100,7 +100,7 @@ export default function ForgotPasswordPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-brand-bg-blue hover:bg-brand-bg-blue-hover lg:bg-primary lg:hover:bg-primary/90 text-white font-extrabold text-lg py-4 rounded-2xl shadow-xl transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide"
+                            className="w-full bg-brand-bg-blue hover:bg-brand-bg-blue-hover lg:bg-primary lg:hover:bg-primary/90 text-white font-extrabold text-lg py-4 rounded-2xl shadow-xl transition-colors active:scale-[0.98] disabled:opacity-70 cursor-pointer tracking-wide"
                         >
                             {isLoading ? 'Enviando instrucciones...' : 'Enviar Enlace'}
                         </button>

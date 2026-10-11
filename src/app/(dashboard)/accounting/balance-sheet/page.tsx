@@ -10,32 +10,34 @@ export default async function BalanceSheetPage(props: {
         cutOffDate?: string;
     }>;
 }) {
-    const searchParams = await props.searchParams;
-    const { empresaId } = await getTenantContext();
+    const [searchParams, { empresaId }] = await Promise.all([
+        props.searchParams,
+        getTenantContext(),
+    ]);
 
     const cutOffDateStr = searchParams.cutOffDate || new Date().toISOString().split('T')[0];
     const cutOffDate = new Date(`${cutOffDateStr}T23:59:59Z`);
 
-    // Obtener catálogo completo de cuentas
-    const cuentas = await prisma.planCuentas.findMany({
-        where: { empresaId },
-        orderBy: { codigo: 'asc' }
-    });
-
-    // Agrupar movimientos de base de datos hasta la fecha de corte
-    const aggregates = await prisma.asientoContableLinea.groupBy({
-        by: ['cuentaId'],
-        where: {
-            asiento: {
-                empresaId,
-                fecha: { lte: cutOffDate }
+    // Obtener catálogo completo de cuentas y agrupaciones en paralelo
+    const [cuentas, aggregates] = await Promise.all([
+        prisma.planCuentas.findMany({
+            where: { empresaId },
+            orderBy: { codigo: 'asc' }
+        }),
+        prisma.asientoContableLinea.groupBy({
+            by: ['cuentaId'],
+            where: {
+                asiento: {
+                    empresaId,
+                    fecha: { lte: cutOffDate }
+                }
+            },
+            _sum: {
+                debe: true,
+                haber: true
             }
-        },
-        _sum: {
-            debe: true,
-            haber: true
-        }
-    });
+        })
+    ]);
 
     const movementMap = new Map(
         aggregates.map(a => [

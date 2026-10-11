@@ -148,7 +148,7 @@ export default function NewQuotePage() {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label>Fecha Emisión</Label>
-                                                <Input type="date" className="bg-muted/30" disabled value={new Date().toISOString().split('T')[0]} />
+                                                <Input type="date" className="bg-muted/30" disabled suppressHydrationWarning value={new Date().toISOString().split('T')[0]} />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Válida Hasta</Label>

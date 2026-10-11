@@ -2,7 +2,8 @@
   "$schema": "https://react.doctor/schema.json",
   "ignore": {
     "files": [
-      "design-review-package/**"
+      "design-review-package/**",
+      "prisma/**"
     ]
   },
   "rules": {

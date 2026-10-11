@@ -3,6 +3,19 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 
+function logClientError(payload: Record<string, unknown>) {
+    fetch('/api/client-errors', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+    }).catch(err => {
+        // Silently fail if logging endpoint is down to avoid infinite loop
+        console.error('Failed to dispatch error report:', err);
+    });
+}
+
 export default function GlobalError({
     error,
     reset,
@@ -21,17 +34,7 @@ export default function GlobalError({
             versionDespliegue: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0'
         };
 
-        // Report to centralized endpoint
-        fetch('/api/client-errors', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-        }).catch(err => {
-            // Silently fail if logging endpoint is down to avoid infinite loop
-            console.error('Failed to dispatch error report:', err);
-        });
+        logClientError(payload);
     }, [error]);
 
     return (

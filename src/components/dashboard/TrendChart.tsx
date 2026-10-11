@@ -222,7 +222,7 @@ export function TrendChart({ data }: TrendChartProps) {
                     {/* Tooltip Overlay */}
                     {hoveredPoint && (
                         <div
-                            className="absolute pointer-events-none bg-foreground text-white rounded-lg px-3 py-2 text-xs shadow-xl border border-border z-30 transition-all duration-150"
+                            className="absolute pointer-events-none bg-foreground text-white rounded-lg px-3 py-2 text-xs shadow-xl border border-border z-30 transition-colors duration-150"
                             style={{
                                 left: `${hoveredPoint.x}%`,
                                 top: `calc(${hoveredPoint.y}% - 18px)`,

@@ -184,7 +184,7 @@ export function ImportClientsDialog() {
                                 <div className="max-h-40 overflow-y-auto rounded-lg border border-border bg-muted/50 p-3">
                                     <ul className="space-y-1 text-xs text-muted-foreground">
                                         {summary.errors.map((err, idx) => (
-                                            <li key={idx}>{err}</li>
+                                            <li key={`${err}-${idx}`}>{err}</li>
                                         ))}
                                     </ul>
                                 </div>

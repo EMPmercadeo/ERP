@@ -51,8 +51,9 @@ export default function ClaimSuperAdminPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Código</label>
+              <label htmlFor="claim-code" className="block text-sm font-medium text-foreground mb-1">Código</label>
               <Input
+                id="claim-code"
                 type="password"
                 required
                 value={code}

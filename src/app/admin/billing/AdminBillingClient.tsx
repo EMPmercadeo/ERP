@@ -22,7 +22,7 @@ interface AdminBillingClientProps {
 
 export function AdminBillingClient({ company, invoicesCount }: AdminBillingClientProps) {
     const router = useRouter();
-    const [planType, setPlanType] = useState(company.planType);
+    const [planType, setPlanType] = useState(() => company.planType);
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     const [isPlanLoading, setIsPlanLoading] = useState(false);
 
@@ -183,7 +183,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                         <div className="text-xs text-brand-3/60 mb-2">Consumo de documentos:</div>
                         <div className="w-full sm:w-48 bg-brand-1/10 rounded-full h-2 overflow-hidden">
                             <div 
-                                className="bg-brand-1 h-2 rounded-full transition-all duration-500" 
+                                className="bg-brand-1 h-2 rounded-full transition-colors duration-500" 
                                 style={{ width: `${progressWidth}%` }} 
                             />
                         </div>
@@ -200,7 +200,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                 <div className="inline-flex items-center p-1 bg-muted rounded-lg border border-border shadow-inner">
                     <button
                         onClick={() => setBillingCycle('monthly')}
-                        className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                             billingCycle === 'monthly'
                                 ? 'bg-card text-foreground shadow-sm'
                                 : 'text-muted-foreground hover:text-foreground'
@@ -210,7 +210,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                     </button>
                     <button
                         onClick={() => setBillingCycle('yearly')}
-                        className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-1.5 ${
+                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${
                             billingCycle === 'yearly'
                                 ? 'bg-brand-1 text-white shadow-sm'
                                 : 'text-muted-foreground hover:text-foreground'
@@ -238,7 +238,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
                     return (
                         <Card
                             key={plan.id}
-                            className={`flex flex-col h-full relative transition-all duration-300 hover:shadow-lg ${
+                            className={`flex flex-col h-full relative transition-colors duration-300 hover:shadow-lg ${
                                 plan.highlight
                                     ? 'border-brand-1 shadow-md ring-2 ring-brand-1/10 scale-100 md:scale-[1.02]'
                                     : 'border-border'
@@ -282,8 +282,8 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
 
                                 {/* Features List */}
                                 <ul className="space-y-3.5 flex-1 mb-8 text-sm text-muted-foreground">
-                                    {plan.features.map((feature, i) => (
-                                        <li key={i} className="flex items-start gap-2.5">
+                                    {plan.features.map((feature) => (
+                                        <li key={feature} className="flex items-start gap-2.5">
                                             <div className={`p-0.5 rounded-full mt-0.5 shrink-0 ${
                                                 plan.highlight
                                                     ? 'bg-brand-1/10 text-brand-2'
@@ -298,7 +298,7 @@ export function AdminBillingClient({ company, invoicesCount }: AdminBillingClien
 
                                 {/* CTA Button */}
                                 <Button
-                                    className={`w-full py-5 text-sm font-semibold transition-all ${
+                                    className={`w-full py-5 text-sm font-semibold transition-colors ${
                                         isCurrent
                                             ? 'bg-muted text-muted-foreground border-none cursor-default hover:bg-muted'
                                             : plan.highlight

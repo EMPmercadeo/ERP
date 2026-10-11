@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
     Calendar,
     Filter
@@ -53,27 +53,25 @@ export function IncomeStatementView({
   initialFilters
 }: IncomeStatementViewProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const [startDate, setStartDate] = useState(initialFilters.startDate || '');
   const [endDate, setEndDate] = useState(initialFilters.endDate || '');
 
   const applyFilters = () => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(window.location.search);
     if (startDate) params.set('startDate', startDate);
     else params.delete('startDate');
 
     if (endDate) params.set('endDate', endDate);
     else params.delete('endDate');
 
-    router.push(`${pathname}?${params.toString()}`);
+    router.push(`${window.location.pathname}?${params.toString()}`);
   };
 
   const clearFilters = () => {
     setStartDate('');
     setEndDate('');
-    router.push(pathname);
+    router.push(window.location.pathname);
   };
 
   return (
@@ -81,20 +79,20 @@ export function IncomeStatementView({
       <div className="space-y-6">
         {/* Resumen de Utilidades */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
+          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-colors duration-300 hover:shadow-md">
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Ingresos</div>
               <div className="mt-2 text-2xl font-bold text-success font-mono">{formatCurrency(totalIngresos)}</div>
             </CardContent>
           </Card>
-          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
+          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-colors duration-300 hover:shadow-md">
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Utilidad Bruta</div>
               <div className="mt-2 text-2xl font-bold text-foreground font-mono">{formatCurrency(utilidadBruta)}</div>
               <div className="text-[10px] text-muted-foreground mt-1">Ingresos - Costos</div>
             </CardContent>
           </Card>
-          <Card className={`border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md ${utilidadNeta >= 0 ? 'bg-success-bg border-success/30' : 'bg-danger-bg border-danger/30'}`}>
+          <Card className={`border shadow-sm rounded-2xl overflow-hidden transition-colors duration-300 hover:shadow-md ${utilidadNeta >= 0 ? 'bg-success-bg border-success/30' : 'bg-danger-bg border-danger/30'}`}>
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Utilidad Neta (Ejercicio)</div>
               <div className={`mt-2 text-2xl font-bold font-mono ${utilidadNeta >= 0 ? 'text-success' : 'text-danger'}`}>
@@ -109,10 +107,11 @@ export function IncomeStatementView({
         <Card className="bg-card border-border shadow-sm rounded-2xl">
           <CardContent className="p-5 flex flex-col sm:flex-row sm:items-end sm:gap-4">
             <div className="flex-1 space-y-1.5">
-              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Fecha Desde</label>
+              <label htmlFor="income-start-date" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Fecha Desde</label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input 
+                  id="income-start-date"
                   type="date" 
                   value={startDate} 
                   onChange={e => setStartDate(e.target.value)} 
@@ -122,10 +121,11 @@ export function IncomeStatementView({
             </div>
 
             <div className="flex-1 space-y-1.5">
-              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Fecha Hasta</label>
+              <label htmlFor="income-end-date" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">Fecha Hasta</label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input 
+                  id="income-end-date"
                   type="date" 
                   value={endDate} 
                   onChange={e => setEndDate(e.target.value)} 
@@ -151,7 +151,7 @@ export function IncomeStatementView({
           <div className="text-center pb-4 border-b border-border">
             <h2 className="text-lg font-bold text-foreground">Estado de Resultados</h2>
             <p className="text-xs text-muted-foreground mt-1">
-              Período: {startDate ? new Date(startDate).toLocaleDateString('es-PA') : 'Inicio'} &mdash; {endDate ? new Date(endDate).toLocaleDateString('es-PA') : 'Presente'}
+              Período: {startDate ? new Date(startDate).toLocaleDateString('es-PA', { timeZone: 'America/Panama' }) : 'Inicio'} &mdash; {endDate ? new Date(endDate).toLocaleDateString('es-PA', { timeZone: 'America/Panama' }) : 'Presente'}
             </p>
           </div>
 

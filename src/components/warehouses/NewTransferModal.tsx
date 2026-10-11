@@ -57,15 +57,17 @@ export function NewTransferModal({ bodegas }: { bodegas: BodegaOption[] }) {
     const [productoSeleccionado, setProductoSeleccionado] = useState('');
     const router = useRouter();
 
-    useEffect(() => {
-        if (!open) return;
-        setBodegaOrigenId('');
-        setBodegaDestinoId('');
-        setNotas('');
-        setItems([]);
-        setProductosOrigen([]);
-        setProductoSeleccionado('');
-    }, [open]);
+    const handleOpenChange = (isOpen: boolean) => {
+        setOpen(isOpen);
+        if (isOpen) {
+            setBodegaOrigenId('');
+            setBodegaDestinoId('');
+            setNotas('');
+            setItems([]);
+            setProductosOrigen([]);
+            setProductoSeleccionado('');
+        }
+    };
 
     useEffect(() => {
         if (!bodegaOrigenId) {
@@ -143,7 +145,7 @@ export function NewTransferModal({ bodegas }: { bodegas: BodegaOption[] }) {
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 <Button className="bg-brand-1 text-white hover:bg-brand-1/90">
                     <Plus className="mr-2 h-4 w-4" />

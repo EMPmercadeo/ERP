@@ -94,6 +94,7 @@ export async function createProduct(prevState: unknown, formData: FormData) {
                     entidad: 'Producto',
                     entidadId: prod.id,
                     accion: 'crear',
+                    // oxlint-disable-next-line react-doctor/no-json-parse-stringify-clone -- Intentional serialization to sanitize Prisma Decimal and Date instances for JSON column storage
                     datosDespues: JSON.parse(JSON.stringify({
                         ...prod,
                         costoUnitario: prod.costoUnitario.toNumber(),
@@ -206,11 +207,13 @@ export async function updateProduct(id: string, prevState: unknown, formData: Fo
                     entidad: 'Producto',
                     entidadId: id,
                     accion: 'editar',
+                    // oxlint-disable-next-line react-doctor/no-json-parse-stringify-clone -- Intentional serialization to sanitize Prisma Decimal and Date instances for JSON column storage
                     datosAntes: JSON.parse(JSON.stringify({
                         ...existingProduct,
                         costoUnitario: existingProduct.costoUnitario.toNumber(),
                         precioVenta: existingProduct.precioVenta.toNumber()
                     })),
+                    // oxlint-disable-next-line react-doctor/no-json-parse-stringify-clone -- Intentional serialization to sanitize Prisma Decimal and Date instances for JSON column storage
                     datosDespues: JSON.parse(JSON.stringify({
                         ...updated,
                         costoUnitario: updated.costoUnitario.toNumber(),
@@ -375,6 +378,7 @@ export async function deleteProduct(id: string) {
                     entidad: 'Producto',
                     entidadId: id,
                     accion: 'eliminar',
+                    // oxlint-disable-next-line react-doctor/no-json-parse-stringify-clone -- Intentional serialization to sanitize Prisma Decimal and Date instances for JSON column storage
                     datosAntes: JSON.parse(JSON.stringify({
                         ...product,
                         costoUnitario: product.costoUnitario.toNumber(),

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -39,11 +39,13 @@ export interface PurchaseData {
     };
 }
 
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
+
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+    return currencyFormatter.format(value);
 }
 
 const getInitials = (name: string) => {
@@ -84,9 +86,8 @@ export function PurchaseList({
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    const [isMounted, setIsMounted] = useState(false);
     const [search, setSearch] = useState(initialSearch);
-    const [purchases, setPurchases] = useState<PurchaseData[]>(initialData);
+    const [deletedIds, setDeletedIds] = useState<Set<string>>(() => new Set());
 
     const createQueryString = useCallback((params: Record<string, string | null>) => {
         const newParams = new URLSearchParams(searchParams.toString());
@@ -100,27 +101,23 @@ export function PurchaseList({
         return newParams.toString();
     }, [searchParams]);
 
-    /* eslint-disable react-hooks/exhaustive-deps -- ejecutarse solo cuando cambia search para evitar loop */
+    const createQueryStringRef = useRef(createQueryString);
+    useEffect(() => {
+        createQueryStringRef.current = createQueryString;
+    });
+
     useEffect(() => {
         const timer = setTimeout(() => {
             const currentSearch = searchParams.get('search') || '';
             if (search !== currentSearch) {
-                const query = createQueryString({ search: search || null, page: '1' });
+                const query = createQueryStringRef.current({ search: search || null, page: '1' });
                 router.push(`${pathname}?${query}`);
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [search]);
-    /* eslint-enable react-hooks/exhaustive-deps */
+    }, [search, pathname, router, searchParams]);
 
-    useEffect(() => {
-        setPurchases(initialData);
-    }, [initialData]);
-
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
-
+    const purchases = initialData.filter((p) => !deletedIds.has(p.id));
     const filtered = purchases;
 
     const handleDelete = async (id: string) => {
@@ -128,14 +125,13 @@ export function PurchaseList({
             const res = await deletePurchase(id);
             if (res.success) {
                 toast.success(res.message);
-                setPurchases(purchases.filter(p => p.id !== id));
+                setDeletedIds((prev) => new Set(prev).add(id));
+                router.refresh();
             } else {
                 toast.error(res.error || 'Error al eliminar');
             }
         }
     };
-
-    if (!isMounted) return null;
 
     return (
         <ContentContainer className="py-4 space-y-4">

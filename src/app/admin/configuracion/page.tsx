@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Settings, Server, Mail, ShieldAlert, RefreshCw, Save, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ContentContainer } from '@/components/layout/Content';
@@ -72,9 +72,14 @@ export default function SuperadminConfiguracionPage() {
     cargarConfig();
   }, []);
 
+  const guardandoRef = useRef(false);
+  const probandoSmtpRef = useRef(false);
+  const ejecutandoKillSwitchRef = useRef(false);
+
   const handleGuardarSMTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (guardando) return;
+    if (guardandoRef.current || guardando) return;
+    guardandoRef.current = true;
     setGuardando(true);
     try {
       const res = await fetch('/api/admin/configuracion', {
@@ -93,16 +98,18 @@ export default function SuperadminConfiguracionPage() {
     } catch {
       toast.error('Fallo en la comunicación al guardar SMTP');
     } finally {
+      guardandoRef.current = false;
       setGuardando(false);
     }
   };
 
   const handleProbarSMTP = async () => {
-    if (probandoSmtp) return;
+    if (probandoSmtpRef.current || probandoSmtp) return;
     if (!correoPrueba) {
       toast.error('Indica un correo para la prueba en el campo inferior.');
       return;
     }
+    probandoSmtpRef.current = true;
     setProbandoSmtp(true);
     try {
       const res = await fetch('/api/admin/configuracion/smtp-test', {
@@ -120,14 +127,17 @@ export default function SuperadminConfiguracionPage() {
     } catch {
       toast.error('Error al conectar para prueba SMTP');
     } finally {
+      probandoSmtpRef.current = false;
       setProbandoSmtp(false);
     }
   };
 
   const handleKillSwitch = async () => {
+    if (ejecutandoKillSwitchRef.current || ejecutandoKillSwitch) return;
     const confirmacion = confirm('¿Estás seguro? Esta acción desactivará el PAC primario actual y conmutará TODAS las facturas electrónicas de la plataforma para ser emitidas por el PAC de respaldo.');
     if (!confirmacion) return;
 
+    ejecutandoKillSwitchRef.current = true;
     setEjecutandoKillSwitch(true);
     try {
       const res = await fetch('/api/admin/configuracion/killswitch', { method: 'POST' });
@@ -140,6 +150,7 @@ export default function SuperadminConfiguracionPage() {
     } catch {
       toast.error('Error al ejecutar conmutación de emergencia');
     } finally {
+      ejecutandoKillSwitchRef.current = false;
       setEjecutandoKillSwitch(false);
     }
   };
@@ -175,8 +186,9 @@ export default function SuperadminConfiguracionPage() {
             <form onSubmit={handleGuardarSMTP} className="space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2 space-y-1.5">
-                  <label className="block text-xs font-medium text-muted-foreground">Servidor Host (SMTP)</label>
+                  <label htmlFor="admin-smtp-host" className="block text-xs font-medium text-muted-foreground">Servidor Host (SMTP)</label>
                   <Input
+                    id="admin-smtp-host"
                     type="text"
                     value={smtp.servidor}
                     onChange={(e) => setSmtp({ ...smtp, servidor: e.target.value })}
@@ -185,8 +197,9 @@ export default function SuperadminConfiguracionPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-muted-foreground">Puerto</label>
+                  <label htmlFor="admin-smtp-port" className="block text-xs font-medium text-muted-foreground">Puerto</label>
                   <Input
+                    id="admin-smtp-port"
                     type="number"
                     value={smtp.puerto}
                     onChange={(e) => setSmtp({ ...smtp, puerto: parseInt(e.target.value || '587', 10) })}
@@ -198,8 +211,9 @@ export default function SuperadminConfiguracionPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-muted-foreground">Usuario / API Key</label>
+                  <label htmlFor="admin-smtp-user" className="block text-xs font-medium text-muted-foreground">Usuario / API Key</label>
                   <Input
+                    id="admin-smtp-user"
                     type="text"
                     value={smtp.usuario}
                     onChange={(e) => setSmtp({ ...smtp, usuario: e.target.value })}
@@ -208,8 +222,9 @@ export default function SuperadminConfiguracionPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-muted-foreground">Contraseña / Secreto</label>
+                  <label htmlFor="admin-smtp-pass" className="block text-xs font-medium text-muted-foreground">Contraseña / Secreto</label>
                   <Input
+                    id="admin-smtp-pass"
                     type="password"
                     value={smtp.passwordCifrado}
                     onChange={(e) => setSmtp({ ...smtp, passwordCifrado: e.target.value })}
@@ -220,8 +235,9 @@ export default function SuperadminConfiguracionPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-muted-foreground">Remitente Oficial (From Email)</label>
+                <label htmlFor="admin-smtp-from" className="block text-xs font-medium text-muted-foreground">Remitente Oficial (From Email)</label>
                 <Input
+                  id="admin-smtp-from"
                   type="email"
                   value={smtp.remitente}
                   onChange={(e) => setSmtp({ ...smtp, remitente: e.target.value })}
@@ -310,12 +326,12 @@ export default function SuperadminConfiguracionPage() {
             <CardContent className="space-y-4 pt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-muted-foreground">Nombre de la Plataforma</label>
-                  <Input type="text" value={plataforma.nombre} disabled className="text-sm font-semibold" />
+                  <label htmlFor="admin-plataforma-nombre" className="block text-xs font-medium text-muted-foreground">Nombre de la Plataforma</label>
+                  <Input id="admin-plataforma-nombre" type="text" value={plataforma.nombre} disabled className="text-sm font-semibold" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-muted-foreground">Correo de Contacto</label>
-                  <Input type="text" value={plataforma.correoContacto} disabled className="text-sm font-mono" />
+                  <label htmlFor="admin-plataforma-correo" className="block text-xs font-medium text-muted-foreground">Correo de Contacto</label>
+                  <Input id="admin-plataforma-correo" type="text" value={plataforma.correoContacto} disabled className="text-sm font-mono" />
                 </div>
               </div>
 

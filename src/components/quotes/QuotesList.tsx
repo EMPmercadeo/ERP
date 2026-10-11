@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -87,11 +88,13 @@ const palette = [
     'bg-primary text-white'
 ];
 
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
+
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+    return currencyFormatter.format(value);
 }
 
 export function QuotesList({
@@ -125,14 +128,9 @@ export function QuotesList({
     );
     const [globalFilter, setGlobalFilter] = useState(initialSearch);
     const [statusFilter, setStatusFilter] = useState<string>(initialStatus);
-    const [isMounted, setIsMounted] = useState(false);
+    const isMounted = useIsMounted();
 
-    // Prevent hydration mismatch for Radix components
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
-
-    const createQueryString = (params: Record<string, string | null>) => {
+    const createQueryString = useCallback((params: Record<string, string | null>) => {
         const newParams = new URLSearchParams(searchParams.toString());
         for (const [key, value] of Object.entries(params)) {
             if (value === null) {
@@ -142,21 +140,24 @@ export function QuotesList({
             }
         }
         return newParams.toString();
-    };
+    }, [searchParams]);
+
+    const createQueryStringRef = useRef(createQueryString);
+    useEffect(() => {
+        createQueryStringRef.current = createQueryString;
+    });
 
     // Debounce search update to URL
-    /* eslint-disable react-hooks/exhaustive-deps -- ejecutarse solo cuando cambia globalFilter para evitar loop */
     useEffect(() => {
         const timer = setTimeout(() => {
             const currentSearch = searchParams.get('search') || '';
             if (globalFilter !== currentSearch) {
-                const query = createQueryString({ search: globalFilter || null, page: '1' });
+                const query = createQueryStringRef.current({ search: globalFilter || null, page: '1' });
                 router.push(`${pathname}?${query}`);
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [globalFilter]);
-    /* eslint-enable react-hooks/exhaustive-deps */
+    }, [globalFilter, pathname, router, searchParams]);
 
     const handleStatusChange = (val: string) => {
         setStatusFilter(val);

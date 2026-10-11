@@ -142,12 +142,12 @@ export default function RegisterPage() {
             <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Tipo de cuenta - Only render after hydration */}
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
+                    <label htmlFor="register-tipo-cuenta" className="block text-sm font-medium text-foreground mb-1">
                         Tipo de Cuenta
                     </label>
                     {mounted ? (
                         <Select value={tipoCuenta} onValueChange={setTipoCuenta}>
-                            <SelectTrigger className="w-full">
+                            <SelectTrigger id="register-tipo-cuenta" className="w-full">
                                 <SelectValue placeholder="Selecciona tipo de cuenta">
                                     {getAccountTypeLabel()}
                                 </SelectValue>
@@ -231,6 +231,7 @@ export default function RegisterPage() {
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground z-10 cursor-pointer"
                             tabIndex={-1}
                         >
@@ -258,6 +259,7 @@ export default function RegisterPage() {
                         <button
                             type="button"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            aria-label={showConfirmPassword ? 'Ocultar confirmación de contraseña' : 'Ver confirmación de contraseña'}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground z-10 cursor-pointer"
                             tabIndex={-1}
                         >

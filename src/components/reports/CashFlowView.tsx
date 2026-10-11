@@ -19,8 +19,13 @@ export interface CashFlowBucket {
     neto: number;
 }
 
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
+
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', { style: 'currency', currency: 'USD' }).format(value);
+    return currencyFormatter.format(value);
 }
 
 export function CashFlowView({

@@ -62,6 +62,7 @@ interface BodegaSimple {
 }
 
 interface ItemRow {
+    id?: string;
     productoId: string;
     descripcion: string;
     /** SIEMPRE en la unidad base del producto. Si se compró por presentación, ya viene convertida. */
@@ -76,7 +77,8 @@ interface ItemRow {
     cantidadPresentaciones: number;
 }
 
-const ITEM_VACIO: ItemRow = {
+const crearItemVacio = (): ItemRow => ({
+    id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
     productoId: '',
     descripcion: '',
     cantidad: 1,
@@ -85,13 +87,15 @@ const ITEM_VACIO: ItemRow = {
     codigoTasaItbms: '01',
     presentacionId: '',
     cantidadPresentaciones: 1,
-};
+});
+
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
 
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+    return currencyFormatter.format(value);
 }
 
 export function NewPurchaseForm({
@@ -116,7 +120,7 @@ export function NewPurchaseForm({
     const [observaciones, setObservaciones] = useState('');
     const [bodegaId, setBodegaId] = useState(bodegas[0]?.id || '');
 
-    const [items, setItems] = useState<ItemRow[]>([{ ...ITEM_VACIO }]);
+    const [items, setItems] = useState<ItemRow[]>(() => [crearItemVacio()]);
 
     /** Presentaciones que este proveedor vende de este producto. */
     const presentacionesDe = (productoId: string) =>
@@ -224,7 +228,7 @@ export function NewPurchaseForm({
     };
 
     const addItem = () => {
-        setItems([...items, { ...ITEM_VACIO }]);
+        setItems([...items, crearItemVacio()]);
     };
 
     const removeItem = (index: number) => {
@@ -433,7 +437,7 @@ export function NewPurchaseForm({
                                     const totalItem = base * (1 + tasa);
 
                                     return (
-                                        <TableRow key={index}>
+                                        <TableRow key={item.id || item.productoId || item.descripcion}>
                                             <TableCell>
                                                 <Select
                                                     value={item.productoId || 'none'}

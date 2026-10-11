@@ -17,8 +17,13 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
+
 function formatCurrency(val: number) {
-    return new Intl.NumberFormat('es-PA', { style: 'currency', currency: 'USD' }).format(val);
+    return currencyFormatter.format(val);
 }
 
 export default async function CreditNotesListPage() {

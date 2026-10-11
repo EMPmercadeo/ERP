@@ -91,7 +91,7 @@ export function DgiStatusCard({ data }: DgiStatusCardProps) {
                                                 strokeDasharray={strokeDashArray}
                                                 strokeDashoffset={strokeDashOffset}
                                                 strokeLinecap="round"
-                                                className="transition-all duration-300"
+                                                className="transition-colors duration-300"
                                             />
                                         );
                                     })}
@@ -114,7 +114,7 @@ export function DgiStatusCard({ data }: DgiStatusCardProps) {
                                 const percentage = Math.round((segment.value / total) * 100);
                                 return (
                                     <div
-                                        key={i}
+                                        key={segment.label}
                                         className="flex items-center gap-3 px-3 py-1.5 rounded-xl transition-colors hover:bg-accent cursor-default"
                                     >
                                         <i

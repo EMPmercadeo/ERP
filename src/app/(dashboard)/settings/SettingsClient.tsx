@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -165,7 +165,6 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
     const [posApiKey, setPosApiKey] = useState('');
     const [posApiSecret, setPosApiSecret] = useState('');
     const [posAccessToken, setPosAccessToken] = useState('');
-    const [posRefreshToken, setPosRefreshToken] = useState('');
     const [posSyncProducts, setPosSyncProducts] = useState(true);
     const [posSyncSales, setPosSyncSales] = useState(true);
     const [posSyncInventory, setPosSyncInventory] = useState(true);
@@ -463,7 +462,6 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                 apiKey: posApiKey,
                 apiSecret: posApiSecret,
                 accessToken: posAccessToken,
-                refreshToken: posRefreshToken,
                 syncProducts: posSyncProducts,
                 syncSales: posSyncSales,
                 syncInventory: posSyncInventory
@@ -474,7 +472,6 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                 setPosApiKey('');
                 setPosApiSecret('');
                 setPosAccessToken('');
-                setPosRefreshToken('');
                 
                 const data = await getPOSIntegrations();
                 setPosIntegrations(data || []);
@@ -525,9 +522,14 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
         }
     };
 
+    const guardarWooRef = useRef(false);
+    const sincronizarStockWooRef = useRef(false);
+    const importarPedidosWooRef = useRef(false);
+
     const handleGuardarWooCredenciales = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (wooGuardando) return;
+        if (guardarWooRef.current || wooGuardando) return;
+        guardarWooRef.current = true;
         setWooGuardando(true);
         try {
             const cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
@@ -552,11 +554,14 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
         } catch {
             toast.error('Error de conexión al guardar credenciales de WooCommerce.');
         } finally {
+            guardarWooRef.current = false;
             setWooGuardando(false);
         }
     };
 
     const handleSincronizarStockWoo = async () => {
+        if (sincronizarStockWooRef.current || wooSincronizandoStock) return;
+        sincronizarStockWooRef.current = true;
         setWooSincronizandoStock(true);
         try {
             const cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
@@ -575,11 +580,14 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
         } catch {
             toast.error('Error al ejecutar la sincronización de stock.');
         } finally {
+            sincronizarStockWooRef.current = false;
             setWooSincronizandoStock(false);
         }
     };
 
     const handleImportarPedidosWoo = async () => {
+        if (importarPedidosWooRef.current || wooImportandoPedidos) return;
+        importarPedidosWooRef.current = true;
         setWooImportandoPedidos(true);
         try {
             const cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
@@ -597,6 +605,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
         } catch {
             toast.error('Error en la solicitud de importación de pedidos.');
         } finally {
+            importarPedidosWooRef.current = false;
             setWooImportandoPedidos(false);
         }
     };
@@ -877,10 +886,11 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                            <label htmlFor="settings-razon-social" className="block text-sm font-medium text-foreground mb-1">
                                                 Razón Social
                                             </label>
                                             <Input
+                                                id="settings-razon-social"
                                                 placeholder="Mi Empresa, S.A."
                                                 value={razonSocial}
                                                 onChange={(e) => setRazonSocial(e.target.value)}
@@ -888,20 +898,22 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                         </div>
                                         <div className="grid grid-cols-3 gap-3">
                                             <div className="col-span-2">
-                                                <label className="block text-sm font-medium text-foreground mb-1">
+                                                <label htmlFor="settings-ruc" className="block text-sm font-medium text-foreground mb-1">
                                                     RUC
                                                 </label>
                                                 <Input
+                                                    id="settings-ruc"
                                                     placeholder="155-123-456789"
                                                     value={ruc}
                                                     onChange={(e) => setRuc(e.target.value)}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-foreground mb-1">
+                                                <label htmlFor="settings-dv" className="block text-sm font-medium text-foreground mb-1">
                                                     DV
                                                 </label>
                                                 <Input
+                                                    id="settings-dv"
                                                     placeholder="12"
                                                     value={dv}
                                                     onChange={(e) => setDv(e.target.value)}
@@ -909,20 +921,23 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                            <label htmlFor="settings-direccion" className="block text-sm font-medium text-foreground mb-1">
                                                 Dirección de Sucursal
                                             </label>
                                             <Input
+                                                id="settings-direccion"
                                                 placeholder="Calle Principal, Ciudad de Panamá"
                                                 value={direccion}
                                                 onChange={(e) => setDireccion(e.target.value)}
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                            <label htmlFor="settings-ambiente-dgi" className="block text-sm font-medium text-foreground mb-1">
                                                 Ambiente de Integración DGI
                                             </label>
                                             <select
+                                                id="settings-ambiente-dgi"
+                                                aria-label="Ambiente de Integración DGI"
                                                 value={ambienteDgi}
                                                 onChange={(e) => setAmbienteDgi(e.target.value)}
                                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -955,9 +970,9 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                     <CardContent className="space-y-4">
                                         {/* Certificate Upload */}
                                         <div>
-                                            <label className="block text-sm font-medium text-foreground mb-2">
+                                            <span className="block text-sm font-medium text-foreground mb-2">
                                                 Certificado Digital (.p12)
-                                            </label>
+                                            </span>
                                             <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
                                                 <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                                                 <p className="text-sm text-muted-foreground mb-2">
@@ -980,20 +995,22 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                         <Separator />
 
                                         <div>
-                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                            <label htmlFor="settings-usuario-pac" className="block text-sm font-medium text-foreground mb-1">
                                                 Usuario PAC
                                             </label>
                                             <Input
+                                                id="settings-usuario-pac"
                                                 placeholder="usuario@pac.com"
                                                 value={usuarioPac}
                                                 onChange={(e) => setUsuarioPac(e.target.value)}
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                            <label htmlFor="settings-password-pac" className="block text-sm font-medium text-foreground mb-1">
                                                 Contraseña PAC
                                             </label>
                                             <Input
+                                                id="settings-password-pac"
                                                 type="password"
                                                 placeholder={company.hasPacPassword ? "•••••••• (Configurada)" : "••••••••"}
                                                 value={passwordPac}
@@ -1109,7 +1126,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             </div>
                                             <div className="w-full sm:w-48 bg-brand-1/10 rounded-full h-2 overflow-hidden">
                                                 <div 
-                                                    className="bg-brand-1 h-2 rounded-full transition-all duration-500" 
+                                                    className="bg-brand-1 h-2 rounded-full transition-colors duration-500" 
                                                     style={{ width: `${progressWidth}%` }} 
                                                 />
                                             </div>
@@ -1134,7 +1151,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                 <div className="inline-flex items-center p-1 bg-muted rounded-lg border border-border shadow-inner">
                                     <button
                                         onClick={() => setBillingCycle('monthly')}
-                                        className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                                             billingCycle === 'monthly'
                                                 ? 'bg-card text-foreground shadow-sm'
                                                 : 'text-muted-foreground hover:text-foreground'
@@ -1144,7 +1161,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                     </button>
                                     <button
                                         onClick={() => setBillingCycle('yearly')}
-                                        className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-1.5 ${
+                                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${
                                             billingCycle === 'yearly'
                                                 ? 'bg-brand-1 text-white shadow-sm'
                                                 : 'text-muted-foreground hover:text-foreground'
@@ -1175,7 +1192,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                     return (
                                         <Card
                                             key={plan.id}
-                                            className={`flex flex-col h-full relative transition-all duration-300 hover:shadow-lg ${
+                                            className={`flex flex-col h-full relative transition-colors duration-300 hover:shadow-lg ${
                                                 plan.highlight
                                                     ? 'border-brand-1 shadow-md ring-2 ring-brand-1/10 scale-100 md:scale-[1.02]'
                                                      : 'border-border'
@@ -1227,8 +1244,8 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
 
                                                 {/* Features List */}
                                                 <ul className="space-y-3.5 flex-1 mb-8 text-sm text-muted-foreground">
-                                                    {plan.features.map((feature, i) => (
-                                                        <li key={i} className="flex items-start gap-2.5">
+                                                    {plan.features.map((feature) => (
+                                                        <li key={feature} className="flex items-start gap-2.5">
                                                             <div className={`p-0.5 rounded-full mt-0.5 shrink-0 ${
                                                                 plan.highlight
                                                                     ? 'bg-brand-1/10 text-brand-2'
@@ -1243,7 +1260,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
 
                                                 {/* CTA Button */}
                                                 <Button
-                                                    className={`w-full py-5 text-sm font-semibold transition-all ${
+                                                    className={`w-full py-5 text-sm font-semibold transition-colors ${
                                                         isCurrent
                                                             ? 'bg-muted text-muted-foreground border-none cursor-default hover:bg-muted'
                                                             : plan.highlight
@@ -1327,10 +1344,11 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                            <label htmlFor="settings-whatsapp-phone" className="block text-sm font-medium text-foreground mb-1">
                                                 Teléfono Emisor de WhatsApp
                                             </label>
                                             <Input
+                                                id="settings-whatsapp-phone"
                                                 placeholder="+507 6000-0000"
                                                 value={whatsappPhone}
                                                 onChange={(e) => setWhatsappPhone(e.target.value)}
@@ -1340,10 +1358,11 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             </p>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                            <label htmlFor="settings-whatsapp-token" className="block text-sm font-medium text-foreground mb-1">
                                                 API Token / Access Token
                                             </label>
                                             <Input
+                                                id="settings-whatsapp-token"
                                                 type="password"
                                                 placeholder="Token de acceso permanente de Meta"
                                                 value={whatsappToken}
@@ -1369,10 +1388,11 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                            <label htmlFor="settings-webhook-url" className="block text-sm font-medium text-foreground mb-1">
                                                 URL de Destino del Webhook
                                             </label>
                                             <Input
+                                                id="settings-webhook-url"
                                                 placeholder="https://tu-sistema.com/api/webhooks/factura"
                                                 value={webhookUrl}
                                                 onChange={(e) => setWebhookUrl(e.target.value)}
@@ -1382,10 +1402,11 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             </p>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                            <label htmlFor="settings-webhook-token" className="block text-sm font-medium text-foreground mb-1">
                                                 Firma Secreta del Webhook (Token)
                                             </label>
                                             <Input
+                                                id="settings-webhook-token"
                                                 type="password"
                                                 placeholder="Clave de seguridad para verificar autenticidad"
                                                 value={webhookToken}
@@ -1458,8 +1479,10 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                 <h4 className="text-sm font-bold text-foreground">Conectar Nuevo POS</h4>
                                                 <div className="space-y-3">
                                                     <div>
-                                                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Proveedor POS</label>
+                                                        <label htmlFor="pos-provider-select" className="block text-xs font-semibold text-muted-foreground mb-1.5">Proveedor POS</label>
                                                         <select
+                                                            id="pos-provider-select"
+                                                            aria-label="Proveedor POS"
                                                             value={posProvider}
                                                             onChange={(e) => setPosProvider(e.target.value)}
                                                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -1476,8 +1499,9 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                     {(posProvider !== 'manual_pos') && (
                                                         <>
                                                             <div>
-                                                                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">API Key / Client ID</label>
+                                                                <label htmlFor="pos-api-key" className="block text-xs font-semibold text-muted-foreground mb-1.5">API Key / Client ID</label>
                                                                 <Input 
+                                                                    id="pos-api-key"
                                                                     placeholder="Ingresa la llave de API"
                                                                     value={posApiKey}
                                                                     onChange={(e) => setPosApiKey(e.target.value)}
@@ -1485,8 +1509,9 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">API Secret / Client Secret</label>
+                                                                <label htmlFor="pos-api-secret" className="block text-xs font-semibold text-muted-foreground mb-1.5">API Secret / Client Secret</label>
                                                                 <Input 
+                                                                    id="pos-api-secret"
                                                                     type="password"
                                                                     placeholder="Ingresa la clave secreta de API"
                                                                     value={posApiSecret}
@@ -1496,8 +1521,9 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                             </div>
                                                             {(posProvider === 'square' || posProvider === 'shopify_pos') && (
                                                                 <div>
-                                                                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Access Token</label>
+                                                                    <label htmlFor="pos-access-token" className="block text-xs font-semibold text-muted-foreground mb-1.5">Access Token</label>
                                                                     <Input 
+                                                                        id="pos-access-token"
                                                                         type="password"
                                                                         placeholder="Ingresa el token de acceso"
                                                                         value={posAccessToken}
@@ -1510,7 +1536,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                     )}
 
                                                     <div className="space-y-2 pt-2">
-                                                        <label className="block text-xs font-semibold text-muted-foreground">Opciones de Sincronización</label>
+                                                        <span className="block text-xs font-semibold text-muted-foreground">Opciones de Sincronización</span>
                                                         <div className="flex flex-wrap gap-4 text-xs">
                                                             <label className="flex items-center gap-1.5 font-medium cursor-pointer">
                                                                 <input 
@@ -1575,7 +1601,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                                     <div>
                                                                         <div className="font-bold text-xs text-foreground">{integration.providerName}</div>
                                                                         <div className="text-[10px] text-muted-foreground mt-0.5">
-                                                                            Última Sincronización: {integration.lastSyncAt ? new Date(integration.lastSyncAt).toLocaleString('es-PA') : 'Nunca'}
+                                                                            Última Sincronización: {integration.lastSyncAt ? new Date(integration.lastSyncAt).toLocaleString('es-PA', { timeZone: 'America/Panama' }) : 'Nunca'}
                                                                         </div>
                                                                     </div>
                                                                     <div className="flex items-center gap-2">
@@ -1654,7 +1680,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                                                         }>
                                                                                             {log.status === 'success' ? 'Exitoso' : 'Error'}
                                                                                         </Badge>
-                                                                                        <span className="text-muted-foreground text-[8px]">{new Date(log.createdAt).toLocaleTimeString('es-PA')}</span>
+                                                                                        <span className="text-muted-foreground text-[8px]">{new Date(log.createdAt).toLocaleTimeString('es-PA', { timeZone: 'America/Panama' })}</span>
                                                                                     </div>
                                                                                 </div>
                                                                             ))}
@@ -1696,8 +1722,9 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                 Credenciales REST API (cifradas)
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">URL de su Tienda Online</label>
+                                                <label htmlFor="woo-url-tienda" className="block text-xs font-semibold text-muted-foreground mb-1.5">URL de su Tienda Online</label>
                                                 <Input
+                                                    id="woo-url-tienda"
                                                     required
                                                     placeholder="https://tienda.miempresa.com"
                                                     value={wooUrlTienda}
@@ -1706,8 +1733,9 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Consumer Key (ck_...)</label>
+                                                <label htmlFor="woo-consumer-key" className="block text-xs font-semibold text-muted-foreground mb-1.5">Consumer Key (ck_...)</label>
                                                 <Input
+                                                    id="woo-consumer-key"
                                                     required
                                                     type="password"
                                                     placeholder="ck_123456789abcdef012345678"
@@ -1717,8 +1745,9 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Consumer Secret (cs_...)</label>
+                                                <label htmlFor="woo-consumer-sec" className="block text-xs font-semibold text-muted-foreground mb-1.5">Consumer Secret (cs_...)</label>
                                                 <Input
+                                                    id="woo-consumer-sec"
                                                     required
                                                     type="password"
                                                     placeholder="cs_123456789abcdef012345678"
@@ -1841,8 +1870,9 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             , eligiendo plataforma de desarrollo propio (Node.js). El dominio debe ser exactamente el de este ERP.
                                         </p>
                                         <div>
-                                            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">ID de Comercio (merchantId)</label>
+                                            <label htmlFor="settings-yappy-merchant-id" className="block text-xs font-semibold text-muted-foreground mb-1.5">ID de Comercio (merchantId)</label>
                                             <Input
+                                                id="settings-yappy-merchant-id"
                                                 placeholder="Ej. 123456"
                                                 value={yappyMerchantId}
                                                 onChange={(e) => setYappyMerchantId(e.target.value)}
@@ -1850,10 +1880,11 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                                            <label htmlFor="settings-yappy-secret-key" className="block text-xs font-semibold text-muted-foreground mb-1.5">
                                                 Clave Secreta {hasYappySecretKey && <span className="text-success font-normal">(ya guardada — deja en blanco para conservarla)</span>}
                                             </label>
                                             <Input
+                                                id="settings-yappy-secret-key"
                                                 type="password"
                                                 placeholder={hasYappySecretKey ? '••••••••••••' : 'Clave secreta generada en Yappy Comercial'}
                                                 value={yappySecretKey}
@@ -1862,8 +1893,9 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Dominio registrado en Yappy Comercial</label>
+                                            <label htmlFor="settings-yappy-domain" className="block text-xs font-semibold text-muted-foreground mb-1.5">Dominio registrado en Yappy Comercial</label>
                                             <Input
+                                                id="settings-yappy-domain"
                                                 placeholder="erp-drab-psi.vercel.app"
                                                 value={yappyDomain}
                                                 onChange={(e) => setYappyDomain(e.target.value)}
@@ -1871,8 +1903,10 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Ambiente</label>
+                                            <label htmlFor="settings-yappy-ambiente" className="block text-xs font-semibold text-muted-foreground mb-1.5">Ambiente</label>
                                             <select
+                                                id="settings-yappy-ambiente"
+                                                aria-label="Ambiente Yappy"
                                                 value={yappyAmbiente}
                                                 onChange={(e) => setYappyAmbiente(e.target.value)}
                                                 className="w-full h-9 rounded-md border border-border bg-background px-3 text-xs"
@@ -1912,6 +1946,8 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="w-full max-w-md bg-card rounded-xl border border-border shadow-2xl p-6 relative font-sans">
                         <button
+                            type="button"
+                            aria-label="Cerrar modal de suscripción"
                             onClick={() => setShowPaypalModal(false)}
                             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
                             disabled={paymentStep === 'simulating'}
@@ -2013,6 +2049,8 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="w-full max-w-md bg-card rounded-xl border border-border shadow-2xl p-6 relative font-sans">
                         <button
+                            type="button"
+                            aria-label="Cerrar modal de advertencia"
                             onClick={() => setShowCancelModal(false)}
                             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
                             disabled={isPlanLoading}
@@ -2071,6 +2109,8 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="w-full max-w-md bg-card rounded-xl border border-border shadow-2xl p-6 relative font-sans">
                         <button
+                            type="button"
+                            aria-label="Cerrar modal de compra de bloques"
                             onClick={() => setShowPurchaseBlockModal(false)}
                             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
                             disabled={isPurchasingBlock}
@@ -2085,7 +2125,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                             </div>
 
                             <div className="space-y-3">
-                                <label className="block text-xs font-semibold text-muted-foreground">Seleccionar Tamaño del Bloque</label>
+                                <span className="block text-xs font-semibold text-muted-foreground">Seleccionar Tamaño del Bloque</span>
                                 <div className="grid grid-cols-3 gap-3">
                                     {[
                                         { size: 100, price: 5.00, label: '100 docs' },
@@ -2096,7 +2136,7 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
                                             key={block.size}
                                             type="button"
                                             onClick={() => setSelectedBlockSize(block.size)}
-                                            className={`p-3 border rounded-lg flex flex-col items-center justify-center gap-1 transition-all ${
+                                            className={`p-3 border rounded-lg flex flex-col items-center justify-center gap-1 transition-colors ${
                                                 selectedBlockSize === block.size
                                                     ? 'border-brand-1 bg-brand-1/50 text-brand-3 ring-2 ring-brand-1/10'
                                                     : 'border-border bg-card text-foreground hover:bg-accent'

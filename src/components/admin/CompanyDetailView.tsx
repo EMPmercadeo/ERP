@@ -52,12 +52,12 @@ export function CompanyDetailView({ company }: { company: TenantDetailData }) {
     const [loading, setLoading] = useState(false);
 
     // Form state
-    const [razonSocial, setRazonSocial] = useState(company.razonSocial);
-    const [nombreComercial, setNombreComercial] = useState(company.nombreComercial === 'N/A' ? '' : company.nombreComercial);
-    const [direccion, setDireccion] = useState(company.direccion);
-    const [telefono, setTelefono] = useState(company.telefono === 'N/A' ? '' : company.telefono);
-    const [email, setEmail] = useState(company.email === 'N/A' ? '' : company.email);
-    const [planType, setPlanType] = useState(company.planType);
+    const [razonSocial, setRazonSocial] = useState(() => company.razonSocial);
+    const [nombreComercial, setNombreComercial] = useState(() => company.nombreComercial === 'N/A' ? '' : company.nombreComercial);
+    const [direccion, setDireccion] = useState(() => company.direccion);
+    const [telefono, setTelefono] = useState(() => company.telefono === 'N/A' ? '' : company.telefono);
+    const [email, setEmail] = useState(() => company.email === 'N/A' ? '' : company.email);
+    const [planType, setPlanType] = useState(() => company.planType);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -115,7 +115,7 @@ export function CompanyDetailView({ company }: { company: TenantDetailData }) {
                         </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1 ml-11">
-                        RUC: {company.ruc} - DV: {company.dv} | Creada: {new Date(company.createdAt).toLocaleDateString('es-PA')}
+                        RUC: {company.ruc} - DV: {company.dv} | Creada: {new Date(company.createdAt).toLocaleDateString('es-PA', { timeZone: 'America/Panama' })}
                     </p>
                 </div>
 
@@ -198,46 +198,52 @@ export function CompanyDetailView({ company }: { company: TenantDetailData }) {
                         <form onSubmit={handleSave} className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Razón Social</label>
+                                    <label htmlFor="company-razonSocial" className="text-sm font-medium">Razón Social</label>
                                     <Input
+                                        id="company-razonSocial"
                                         value={razonSocial}
                                         onChange={(e) => setRazonSocial(e.target.value)}
                                         required
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Nombre Comercial</label>
+                                    <label htmlFor="company-nombreComercial" className="text-sm font-medium">Nombre Comercial</label>
                                     <Input
+                                        id="company-nombreComercial"
                                         value={nombreComercial}
                                         onChange={(e) => setNombreComercial(e.target.value)}
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Dirección</label>
+                                    <label htmlFor="company-direccion" className="text-sm font-medium">Dirección</label>
                                     <Input
+                                        id="company-direccion"
                                         value={direccion}
                                         onChange={(e) => setDireccion(e.target.value)}
                                         required
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Teléfono</label>
+                                    <label htmlFor="company-telefono" className="text-sm font-medium">Teléfono</label>
                                     <Input
+                                        id="company-telefono"
                                         value={telefono}
                                         onChange={(e) => setTelefono(e.target.value)}
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Email</label>
+                                    <label htmlFor="company-email" className="text-sm font-medium">Email</label>
                                     <Input
+                                        id="company-email"
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Plan de Suscripción</label>
+                                    <label htmlFor="company-planType" className="text-sm font-medium">Plan de Suscripción</label>
                                     <Input
+                                        id="company-planType"
                                         value={planType}
                                         onChange={(e) => setPlanType(e.target.value)}
                                     />
@@ -326,7 +332,7 @@ export function CompanyDetailView({ company }: { company: TenantDetailData }) {
                                         </TableCell>
                                         <TableCell>
                                             {user.lastLogin
-                                                ? new Date(user.lastLogin).toLocaleString('es-PA')
+                                                ? new Date(user.lastLogin).toLocaleString('es-PA', { timeZone: 'America/Panama' })
                                                 : 'Nunca'}
                                         </TableCell>
                                     </TableRow>

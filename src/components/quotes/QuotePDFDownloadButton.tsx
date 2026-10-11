@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
-import { pdf } from '@react-pdf/renderer';
 import { QuotePDF } from './QuotePDF';
 import { useState } from 'react';
 
@@ -84,6 +83,9 @@ export function QuotePDFDownloadButton({ quote }: { quote: QuoteData }) {
                 notes: '' // Need to store notes in DB?
             };
 
+            const [{ pdf }] = await Promise.all([
+                import('@react-pdf/renderer')
+            ]);
             const doc = <QuotePDF data={pdfData} />;
             const blob = await pdf(doc).toBlob();
             const url = URL.createObjectURL(blob);

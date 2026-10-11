@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -49,11 +49,13 @@ export interface DeliveryNoteData {
     itemsSummary: string;
 }
 
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
+
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+    return currencyFormatter.format(value);
 }
 
 export function DeliveryNoteList({
@@ -75,15 +77,15 @@ export function DeliveryNoteList({
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    const [notes, setNotes] = useState<DeliveryNoteData[]>(initialData);
+    const [invoicedIds, setInvoicedIds] = useState<Set<string>>(() => new Set());
     const [searchTerm, setSearchTerm] = useState(initialSearch);
     const [statusFilter, setStatusFilter] = useState('todos');
     const [invoicedFilter, setInvoicedFilter] = useState('todas');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const selectedIdsSet = useMemo(() => new Set(selectedIds), [selectedIds]);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isMounted, setIsMounted] = useState(false);
 
     const createQueryString = useCallback((params: Record<string, string | null>) => {
         const newParams = new URLSearchParams(searchParams.toString());
@@ -97,25 +99,23 @@ export function DeliveryNoteList({
         return newParams.toString();
     }, [searchParams]);
 
-    /* eslint-disable react-hooks/exhaustive-deps -- ejecutarse solo cuando cambia searchTerm para evitar loop */
+    const createQueryStringRef = useRef(createQueryString);
+    useEffect(() => {
+        createQueryStringRef.current = createQueryString;
+    });
+
     useEffect(() => {
         const timer = setTimeout(() => {
             const currentSearch = searchParams.get('search') || '';
             if (searchTerm !== currentSearch) {
-                const query = createQueryString({ search: searchTerm || null, page: '1' });
+                const query = createQueryStringRef.current({ search: searchTerm || null, page: '1' });
                 router.push(`${pathname}?${query}`);
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [searchTerm]);
-    /* eslint-enable react-hooks/exhaustive-deps */
+    }, [searchTerm, pathname, router, searchParams]);
 
-    useEffect(() => {
-        setIsMounted(true);
-        setNotes(initialData);
-    }, [initialData]);
-
-    if (!isMounted) return null;
+    const notes = initialData.map((n) => (invoicedIds.has(n.id) ? { ...n, estado: 'facturado' } : n));
 
     const filteredNotes = notes.filter((n) => {
         // Search term filter
@@ -173,8 +173,14 @@ export function DeliveryNoteList({
             const res = await invoiceGroupedDeliveryNotes(selectedIds);
             if (res.success) {
                 toast.success(res.message);
-                setNotes(notes.map(n => selectedIds.includes(n.id) ? { ...n, estado: 'facturado' } : n));
+                const currentSelected = [...selectedIds];
+                setInvoicedIds((prev) => {
+                    const next = new Set(prev);
+                    currentSelected.forEach((id) => next.add(id));
+                    return next;
+                });
                 setSelectedIds([]);
+                router.refresh();
             } else {
                 toast.error(res.message || 'Error al agrupar notas de entrega');
             }
@@ -284,6 +290,7 @@ export function DeliveryNoteList({
                                     <TableHead className="w-12 text-center">
                                         <input
                                             type="checkbox"
+                                            aria-label="Seleccionar todas las notas de entrega"
                                             className="rounded border-border text-brand-1 focus:ring-brand-1"
                                             onChange={(e) => handleSelectAll(e.target.checked)}
                                             checked={selectedIds.length > 0 && selectedIds.length === filteredNotes.filter(n => n.estado !== 'facturado' && !n.factura).length}
@@ -324,8 +331,9 @@ export function DeliveryNoteList({
                                                     {!isFacturado && note.estado !== 'anulado' && (
                                                         <input
                                                             type="checkbox"
+                                                            aria-label={`Seleccionar nota de entrega ${note.numero}`}
                                                             className="rounded border-border text-brand-1 focus:ring-brand-1"
-                                                            checked={selectedIds.includes(note.id)}
+                                                            checked={selectedIdsSet.has(note.id)}
                                                             onChange={(e) => handleSelectOne(note.id, e.target.checked)}
                                                         />
                                                     )}
@@ -348,15 +356,15 @@ export function DeliveryNoteList({
                                                 </TableCell>
                                                 <TableCell>
                                                     {note.factura ? (
-                                                        <span
+                                                        <Link
+                                                            href={`/invoices/${note.factura.id}`}
                                                             className="inline-flex items-center text-xs font-medium text-info bg-info-bg px-2 py-1 rounded border border-info/20 hover:underline"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                router.push(`/invoices/${note.factura?.id}`);
                                                             }}
                                                         >
                                                             {note.factura.numero}
-                                                        </span>
+                                                        </Link>
                                                     ) : (
                                                         <span className="text-xs text-muted-foreground">No facturada</span>
                                                     )}

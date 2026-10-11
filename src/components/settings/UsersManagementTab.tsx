@@ -185,17 +185,17 @@ export function UsersManagementTab({ myRole }: { myRole: string }) {
                     <CardContent>
                         <form onSubmit={handleInvitar} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                             <div className="sm:col-span-1">
-                                <label className="block text-xs font-medium text-foreground mb-1">Nombre</label>
-                                <Input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre completo" required />
+                                <label htmlFor="user-new-nombre" className="block text-xs font-medium text-foreground mb-1">Nombre</label>
+                                <Input id="user-new-nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre completo" required />
                             </div>
                             <div className="sm:col-span-1">
-                                <label className="block text-xs font-medium text-foreground mb-1">Correo</label>
-                                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="correo@ejemplo.com" required />
+                                <label htmlFor="user-new-email" className="block text-xs font-medium text-foreground mb-1">Correo</label>
+                                <Input id="user-new-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="correo@ejemplo.com" required />
                             </div>
                             <div className="sm:col-span-1">
-                                <label className="block text-xs font-medium text-foreground mb-1">Rol</label>
+                                <label htmlFor="user-new-rol" className="block text-xs font-medium text-foreground mb-1">Rol</label>
                                 <Select value={rol} onValueChange={setRol}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectTrigger id="user-new-rol"><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         {ASSIGNABLE_ROLES.filter(r => r !== 'admin').map((r) => (
                                             <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
@@ -271,8 +271,8 @@ export function UsersManagementTab({ myRole }: { myRole: string }) {
                     <CardContent>
                         <form onSubmit={handleGuardarPin} className="flex items-end gap-3 max-w-sm">
                             <div className="flex-1">
-                                <label className="block text-xs font-medium text-foreground mb-1">Nuevo PIN</label>
-                                <Input type="password" inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value)} placeholder="••••" required />
+                                <label htmlFor="user-new-pin" className="block text-xs font-medium text-foreground mb-1">Nuevo PIN</label>
+                                <Input id="user-new-pin" type="password" inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value)} placeholder="••••" required />
                             </div>
                             <Button type="submit" disabled={guardandoPin}>
                                 {guardandoPin ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
@@ -294,8 +294,8 @@ export function UsersManagementTab({ myRole }: { myRole: string }) {
                     <CardContent>
                         <div className="flex items-end gap-3 max-w-xs">
                             <div className="flex-1">
-                                <label className="block text-xs font-medium text-foreground mb-1">Tope (%)</label>
-                                <Input type="number" min={0} max={100} step={0.5} value={tope} onChange={(e) => setTope(e.target.value)} />
+                                <label htmlFor="user-tope-descuento" className="block text-xs font-medium text-foreground mb-1">Tope (%)</label>
+                                <Input id="user-tope-descuento" type="number" min={0} max={100} step={0.5} value={tope} onChange={(e) => setTope(e.target.value)} />
                             </div>
                             <Button onClick={handleGuardarTope} disabled={guardandoTope}>
                                 {guardandoTope ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}

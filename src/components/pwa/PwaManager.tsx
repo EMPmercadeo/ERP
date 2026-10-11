@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Download, Wifi, WifiOff, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -11,7 +11,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function PwaManager() {
-    const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+    const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
     const [isInstallable, setIsInstallable] = useState(false);
     const [isDismissed, setIsDismissed] = useState(false);
 
@@ -30,7 +30,7 @@ export function PwaManager() {
         // Listen for Install Prompt
         const handleBeforeInstallPrompt = (e: Event) => {
             e.preventDefault();
-            setDeferredPrompt(e as BeforeInstallPromptEvent);
+            deferredPromptRef.current = e as BeforeInstallPromptEvent;
             setIsInstallable(true);
         };
 
@@ -62,11 +62,12 @@ export function PwaManager() {
     }, []);
 
     const handleInstallClick = async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
+        const promptEvent = deferredPromptRef.current;
+        if (!promptEvent) return;
+        promptEvent.prompt();
+        const { outcome } = await promptEvent.userChoice;
         console.log(`User response to install prompt: ${outcome}`);
-        setDeferredPrompt(null);
+        deferredPromptRef.current = null;
         setIsInstallable(false);
     };
 
@@ -80,6 +81,8 @@ export function PwaManager() {
                     <p className="text-[11px] text-muted-foreground mt-1 leading-normal">Instala ERP Panamá en tu dispositivo móvil para un acceso rápido y mejor rendimiento.</p>
                 </div>
                 <button 
+                    type="button"
+                    aria-label="Cerrar aviso de instalación"
                     onClick={() => setIsDismissed(true)}
                     className="text-muted-foreground hover:text-foreground rounded p-0.5 hover:bg-accent transition-colors"
                 >
@@ -89,7 +92,7 @@ export function PwaManager() {
             <div className="mt-3 flex gap-2">
                 <Button 
                     onClick={handleInstallClick} 
-                    className="flex-1 h-9 bg-brand-1 hover:bg-brand-2 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm"
+                    className="flex-1 h-9 bg-brand-1 hover:bg-brand-2 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1.5 active:scale-95 transition-colors shadow-sm"
                 >
                     <Download className="h-3.5 w-3.5" />
                     <span>Instalar Ahora</span>

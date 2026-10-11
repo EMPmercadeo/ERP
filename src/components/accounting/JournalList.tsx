@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
     ChevronDown,
     ChevronUp,
@@ -78,8 +78,6 @@ export function JournalList({
   initialFilters 
 }: JournalListProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const [expandedAsientos, setExpandedAsientos] = useState<Record<string, boolean>>({});
   const [startDate, setStartDate] = useState(initialFilters.startDate || '');
@@ -94,7 +92,7 @@ export function JournalList({
   };
 
   const applyFilters = () => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(window.location.search);
     if (startDate) params.set('startDate', startDate);
     else params.delete('startDate');
 
@@ -104,14 +102,14 @@ export function JournalList({
     if (origen && origen !== 'all') params.set('origen', origen);
     else params.delete('origen');
 
-    router.push(`${pathname}?${params.toString()}`);
+    router.push(`${window.location.pathname}?${params.toString()}`);
   };
 
   const clearFilters = () => {
     setStartDate('');
     setEndDate('');
     setOrigen('all');
-    router.push(pathname);
+    router.push(window.location.pathname);
   };
 
   const isBalanced = Math.abs(totalDebeGlobal - totalHaberGlobal) < 0.01;
@@ -121,19 +119,19 @@ export function JournalList({
       <div className="space-y-6">
         {/* Resumen Contable */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
+          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-colors duration-300 hover:shadow-md">
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Débitos (Debe)</div>
               <div className="mt-2 text-2xl font-bold text-foreground font-mono">{formatCurrency(totalDebeGlobal)}</div>
             </CardContent>
           </Card>
-          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md">
+          <Card className="bg-card border-border shadow-sm rounded-2xl overflow-hidden transition-colors duration-300 hover:shadow-md">
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Créditos (Haber)</div>
               <div className="mt-2 text-2xl font-bold text-foreground font-mono">{formatCurrency(totalHaberGlobal)}</div>
             </CardContent>
           </Card>
-          <Card className={`border shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md ${isBalanced ? 'bg-success-bg border-success/30' : 'bg-danger-bg border-danger/30'}`}>
+          <Card className={`border shadow-sm rounded-2xl overflow-hidden transition-colors duration-300 hover:shadow-md ${isBalanced ? 'bg-success-bg border-success/30' : 'bg-danger-bg border-danger/30'}`}>
             <CardContent className="p-6">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Estado de Cuadrado</div>
               <div className="mt-2 flex items-center gap-2">
@@ -157,10 +155,11 @@ export function JournalList({
         <Card className="bg-card border-border shadow-sm rounded-2xl">
           <CardContent className="p-5 space-y-4 md:space-y-0 md:flex md:items-end md:gap-4">
             <div className="flex-1 space-y-1">
-              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Fecha Desde</label>
+              <label htmlFor="journal-start-date" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Fecha Desde</label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input 
+                  id="journal-start-date"
                   type="date" 
                   value={startDate} 
                   onChange={e => setStartDate(e.target.value)} 
@@ -170,10 +169,11 @@ export function JournalList({
             </div>
             
             <div className="flex-1 space-y-1">
-              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Fecha Hasta</label>
+              <label htmlFor="journal-end-date" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Fecha Hasta</label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input 
+                  id="journal-end-date"
                   type="date" 
                   value={endDate} 
                   onChange={e => setEndDate(e.target.value)} 
@@ -183,9 +183,9 @@ export function JournalList({
             </div>
 
             <div className="flex-1 space-y-1">
-              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider font-semibold">Origen</label>
+              <label htmlFor="journal-origen" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider font-semibold">Origen</label>
               <Select value={origen} onValueChange={setOrigen}>
-                <SelectTrigger className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-xl">
+                <SelectTrigger id="journal-origen" className="h-10 text-xs sm:text-sm bg-muted/50 border-border rounded-xl">
                   <SelectValue placeholder="Todos los orígenes" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">

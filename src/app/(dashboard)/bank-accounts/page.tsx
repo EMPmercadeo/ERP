@@ -13,20 +13,21 @@ export default async function BankAccountsPage() {
     const { empresaId, role } = await getTenantContext();
     if (!puedeVerRuta(role, '/bank-accounts')) redirect('/dashboard');
 
-    const cuentas = await prisma.cuentaBancaria.findMany({
-        where: { empresaId },
-        orderBy: { createdAt: 'asc' },
-        include: {
-            cuentaContable: { select: { codigo: true, nombre: true } },
-            _count: { select: { movimientos: true } },
-        },
-    });
-
-    const cuentasContables = await prisma.planCuentas.findMany({
-        where: { empresaId, codigo: { startsWith: '1.1.01' }, aceptaMovimiento: true },
-        orderBy: { codigo: 'asc' },
-        select: { id: true, codigo: true, nombre: true },
-    });
+    const [cuentas, cuentasContables] = await Promise.all([
+        prisma.cuentaBancaria.findMany({
+            where: { empresaId },
+            orderBy: { createdAt: 'asc' },
+            include: {
+                cuentaContable: { select: { codigo: true, nombre: true } },
+                _count: { select: { movimientos: true } },
+            },
+        }),
+        prisma.planCuentas.findMany({
+            where: { empresaId, codigo: { startsWith: '1.1.01' }, aceptaMovimiento: true },
+            orderBy: { codigo: 'asc' },
+            select: { id: true, codigo: true, nombre: true },
+        }),
+    ]);
 
     const formattedCuentas = cuentas.map((c) => ({
         id: c.id,

@@ -501,6 +501,7 @@ export default function MesasClient({ active = true }: { active?: boolean }) {
                     <span className="mt-1 flex items-center gap-1 tabular-nums">
                       <Clock3 className="h-3 w-3" aria-hidden="true" />
                       {new Date(m.abiertaAt).toLocaleTimeString('es-PA', {
+                        timeZone: 'America/Panama',
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
@@ -900,7 +901,7 @@ export default function MesasClient({ active = true }: { active?: boolean }) {
                   <span className="tabular-nums">{money(s.total)}</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {s.salonero} · {s.metodoPago} · {new Date(s.cerradaAt).toLocaleString('es-PA')}
+                  {s.salonero} · {s.metodoPago} · {new Date(s.cerradaAt).toLocaleString('es-PA', { timeZone: 'America/Panama' })}
                 </p>
               </div>
             ))}
@@ -921,7 +922,7 @@ export default function MesasClient({ active = true }: { active?: boolean }) {
                   <tr key={s.id} className="border-b border-border last:border-0">
                     <td className="py-2">{s.mesa}</td>
                     <td>{s.salonero}</td>
-                    <td>{new Date(s.cerradaAt).toLocaleString('es-PA')}</td>
+                    <td>{new Date(s.cerradaAt).toLocaleString('es-PA', { timeZone: 'America/Panama' })}</td>
                     <td>{s.metodoPago}</td>
                     <td className="text-right tabular-nums">{money(s.total)}</td>
                   </tr>

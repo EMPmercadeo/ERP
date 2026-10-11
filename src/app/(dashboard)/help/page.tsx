@@ -88,10 +88,10 @@ export default function HelpPage() {
 
                     {/* Categories Grid */}
                     <div className="grid gap-6 md:grid-cols-3">
-                        {categories.map((cat, idx) => {
+                        {categories.map((cat) => {
                             const Icon = cat.icon;
                             return (
-                                <Card key={idx} className="flex flex-col h-full hover:shadow-md transition-shadow">
+                                <Card key={cat.title} className="flex flex-col h-full hover:shadow-md transition-shadow">
                                     <CardHeader>
                                         <div className="h-10 w-10 bg-brand-1/5 text-brand-1 rounded-lg flex items-center justify-center mb-3">
                                             <Icon className="h-5 w-5" />
@@ -103,9 +103,9 @@ export default function HelpPage() {
                                     </CardHeader>
                                     <CardContent className="flex-1 flex flex-col justify-end pt-0">
                                         <div className="border-t pt-4 space-y-2">
-                                            {cat.links.map((link, lIdx) => (
+                                            {cat.links.map((link) => (
                                                 <a
-                                                    key={lIdx}
+                                                    key={link.name || link.href}
                                                     href={link.href}
                                                     className="group flex items-center justify-between text-xs text-brand-1 hover:text-brand-2 font-medium"
                                                 >
@@ -128,8 +128,8 @@ export default function HelpPage() {
                                 Preguntas Frecuentes (FAQs)
                             </h3>
                             <div className="space-y-4">
-                                {faqs.map((faq, idx) => (
-                                    <div key={idx} className="border rounded-lg p-5 bg-card shadow-sm space-y-2">
+                                {faqs.map((faq) => (
+                                    <div key={faq.q} className="border rounded-lg p-5 bg-card shadow-sm space-y-2">
                                         <h4 className="text-sm font-semibold text-foreground">{faq.q}</h4>
                                         <p className="text-xs text-muted-foreground leading-relaxed">
                                             {faq.a}

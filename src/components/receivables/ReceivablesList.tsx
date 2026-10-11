@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
     Search,
@@ -94,8 +94,8 @@ export function ReceivablesList({
 
     // Active local filter states
     const [globalFilter, setGlobalFilter] = useState(initialSearch);
-    const [sortBy, setSortBy] = useState(initialSortBy);
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(initialSortOrder);
+    const sortBy = searchParams.get('sortBy') || initialSortBy;
+    const sortOrder = (searchParams.get('sortOrder') as 'asc' | 'desc') || initialSortOrder;
 
     // Modal state for recording a payment
     const [activeInvoice, setActiveInvoice] = useState<ReceivableInvoice | null>(null);
@@ -116,17 +116,22 @@ export function ReceivablesList({
         return newParams.toString();
     }, [searchParams]);
 
+    const createQueryStringRef = useRef(createQueryString);
+    useEffect(() => {
+        createQueryStringRef.current = createQueryString;
+    });
+
     // Debounce search update to URL
     useEffect(() => {
         const timer = setTimeout(() => {
             const currentSearch = searchParams.get('search') || '';
             if (globalFilter !== currentSearch) {
-                const query = createQueryString({ search: globalFilter || null, page: '1' });
+                const query = createQueryStringRef.current({ search: globalFilter || null, page: '1' });
                 router.push(`${pathname}?${query}`);
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [globalFilter, pathname, router, searchParams, createQueryString]);
+    }, [globalFilter, pathname, router, searchParams]);
 
     // Update state when activeInvoice is selected
     useEffect(() => {
@@ -139,8 +144,6 @@ export function ReceivablesList({
 
     const handleSort = (field: string) => {
         const nextOrder = sortBy === field && sortOrder === 'asc' ? 'desc' : 'asc';
-        setSortBy(field);
-        setSortOrder(nextOrder);
         const query = createQueryString({ sortBy: field, sortOrder: nextOrder, page: '1' });
         router.push(`${pathname}?${query}`);
     };
@@ -255,6 +258,7 @@ export function ReceivablesList({
                             {globalFilter && (
                                 <button
                                     type="button"
+                                    aria-label="Limpiar búsqueda"
                                     onClick={() => setGlobalFilter('')}
                                     className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                 >
@@ -307,10 +311,10 @@ export function ReceivablesList({
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="py-3 text-xs text-muted-foreground">
-                                                        {new Date(invoice.fechaEmision).toLocaleDateString('es-PA')}
+                                                        {new Date(invoice.fechaEmision).toLocaleDateString('es-PA', { timeZone: 'America/Panama' })}
                                                     </TableCell>
                                                     <TableCell className="py-3 text-xs text-muted-foreground">
-                                                        {invoice.fechaVencimiento ? new Date(invoice.fechaVencimiento).toLocaleDateString('es-PA') : '—'}
+                                                        {invoice.fechaVencimiento ? new Date(invoice.fechaVencimiento).toLocaleDateString('es-PA', { timeZone: 'America/Panama' }) : '—'}
                                                     </TableCell>
                                                     <TableCell className="py-3 text-right font-mono text-xs font-semibold text-foreground">
                                                         {formatCurrency(invoice.totalNeto)}
@@ -367,7 +371,7 @@ export function ReceivablesList({
                                     return (
                                         <div 
                                             key={invoice.id}
-                                            className="bg-muted/50 border border-border rounded-xl p-3.5 space-y-3.5 shadow-sm active:scale-[0.99] transition-all cursor-pointer relative"
+                                            className="bg-muted/50 border border-border rounded-xl p-3.5 space-y-3.5 shadow-sm active:scale-[0.99] transition-colors cursor-pointer relative"
                                             onClick={() => setActiveInvoice(invoice)}
                                         >
                                             <div className="flex items-start justify-between gap-2">
@@ -388,10 +392,10 @@ export function ReceivablesList({
                                             <div className="flex justify-between items-baseline border-t border-border/60 pt-2.5">
                                                 <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground">
                                                     <span>Total: {formatCurrency(invoice.totalNeto)}</span>
-                                                    <span>Emisión: {new Date(invoice.fechaEmision).toLocaleDateString('es-PA')}</span>
+                                                    <span>Emisión: {new Date(invoice.fechaEmision).toLocaleDateString('es-PA', { timeZone: 'America/Panama' })}</span>
                                                     {invoice.fechaVencimiento && (
                                                         <span className={overdue ? "text-danger font-medium" : ""}>
-                                                            Vence: {new Date(invoice.fechaVencimiento).toLocaleDateString('es-PA')}
+                                                            Vence: {new Date(invoice.fechaVencimiento).toLocaleDateString('es-PA', { timeZone: 'America/Panama' })}
                                                         </span>
                                                     )}
                                                 </div>
@@ -447,6 +451,8 @@ export function ReceivablesList({
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-2xl p-6 relative font-sans">
                         <button
+                            type="button"
+                            aria-label="Cerrar modal de cobro"
                             onClick={() => setActiveInvoice(null)}
                             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
                             disabled={isSavingPayment}

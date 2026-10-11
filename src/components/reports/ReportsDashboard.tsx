@@ -821,7 +821,7 @@ export function ReportsDashboard({
                                                             strokeDasharray={strokeDashArray}
                                                             strokeDashoffset={strokeDashOffset}
                                                             strokeLinecap="round"
-                                                            className="transition-all duration-300"
+                                                            className="transition-colors duration-300"
                                                         />
                                                     );
                                                 });
@@ -848,7 +848,7 @@ export function ReportsDashboard({
                                         const pct = total > 0 ? (s.count / total) * 100 : 0;
 
                                         return (
-                                            <div key={i} className="flex items-center justify-between text-xs py-1 hover:bg-accent px-2 rounded transition-colors">
+                                            <div key={s.status} className="flex items-center justify-between text-xs py-1 hover:bg-accent px-2 rounded transition-colors">
                                                 <div className="flex items-center gap-2">
                                                     <span className={`w-2.5 h-2.5 rounded-full ${color}`} />
                                                     <span className="capitalize font-semibold text-muted-foreground">{s.status}</span>
@@ -884,42 +884,42 @@ export function ReportsDashboard({
                             <div className="w-full bg-muted h-4 rounded-full flex overflow-hidden shadow-inner">
                                 {receivablesAging.noVencido > 0 && (
                                     <div
-                                        className="bg-success h-full transition-all"
+                                        className="bg-success h-full transition-colors"
                                         style={{ width: `${(receivablesAging.noVencido / totalAging) * 100}%` }}
                                         title={`Al día (No Vencido): ${formatCurrency(receivablesAging.noVencido)}`}
                                     />
                                 )}
                                 {receivablesAging.days30 > 0 && (
                                     <div
-                                        className="bg-warning/60 h-full transition-all"
+                                        className="bg-warning/60 h-full transition-colors"
                                         style={{ width: `${(receivablesAging.days30 / totalAging) * 100}%` }}
                                         title={`0-30 días: ${formatCurrency(receivablesAging.days30)}`}
                                     />
                                 )}
                                 {receivablesAging.days60 > 0 && (
                                     <div
-                                        className="bg-warning h-full transition-all"
+                                        className="bg-warning h-full transition-colors"
                                         style={{ width: `${(receivablesAging.days60 / totalAging) * 100}%` }}
                                         title={`31-60 días: ${formatCurrency(receivablesAging.days60)}`}
                                     />
                                 )}
                                 {receivablesAging.days90 > 0 && (
                                     <div
-                                        className="bg-danger/60 h-full transition-all"
+                                        className="bg-danger/60 h-full transition-colors"
                                         style={{ width: `${(receivablesAging.days90 / totalAging) * 100}%` }}
                                         title={`61-90 días: ${formatCurrency(receivablesAging.days90)}`}
                                     />
                                 )}
                                 {receivablesAging.daysOver90 > 0 && (
                                     <div
-                                        className="bg-danger h-full transition-all"
+                                        className="bg-danger h-full transition-colors"
                                         style={{ width: `${(receivablesAging.daysOver90 / totalAging) * 100}%` }}
                                         title={`+90 días: ${formatCurrency(receivablesAging.daysOver90)}`}
                                     />
                                 )}
                                 {receivablesAging.sinVencimiento > 0 && (
                                     <div
-                                        className="bg-muted h-full transition-all"
+                                        className="bg-muted h-full transition-colors"
                                         style={{ width: `${(receivablesAging.sinVencimiento / totalAging) * 100}%` }}
                                         title={`Sin Vencimiento: ${formatCurrency(receivablesAging.sinVencimiento)}`}
                                     />
@@ -938,7 +938,7 @@ export function ReportsDashboard({
                                 ].map((bucket, i) => {
                                     const pct = totalAging > 0 ? (bucket.val / totalAging) * 100 : 0;
                                     return (
-                                        <div key={i} className="flex flex-col items-center bg-muted p-3 rounded-xl border border-border">
+                                        <div key={bucket.label} className="flex flex-col items-center bg-muted p-3 rounded-xl border border-border">
                                             <div className="flex items-center gap-1.5 mb-1 text-xs font-bold text-muted-foreground">
                                                 <span className={`w-2.5 h-2.5 rounded-full ${bucket.color}`} />
                                                 {bucket.label}
@@ -980,7 +980,7 @@ export function ReportsDashboard({
                                     const progress = (p.ingreso / maxProductIngreso) * 100;
                                     const margin = p.ingreso > 0 ? (p.gananciaBruta / p.ingreso) * 100 : 0;
                                     return (
-                                        <TableRow key={i} className="hover:bg-accent/50">
+                                        <TableRow key={p.codigoInterno || p.descripcion} className="hover:bg-accent/50">
                                             <TableCell className="font-semibold pl-5 py-3">
                                                 <div className="flex flex-col">
                                                     <span className="text-foreground max-w-[200px] truncate">{p.descripcion}</span>
@@ -1035,7 +1035,7 @@ export function ReportsDashboard({
                                 {topClients.map((c, i) => {
                                     const progress = (c.totalFacturado / maxClientFacturado) * 100;
                                     return (
-                                        <TableRow key={i} className="hover:bg-accent/50">
+                                        <TableRow key={c.ruc || c.razonSocial} className="hover:bg-accent/50">
                                             <TableCell className="font-semibold pl-5 py-3">
                                                 <div className="flex flex-col">
                                                     <span className="text-foreground max-w-[200px] truncate">{c.razonSocial}</span>
@@ -1087,8 +1087,8 @@ export function ReportsDashboard({
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {salesBySeller.map((s, i) => (
-                                <TableRow key={i}>
+                            {salesBySeller.map((s) => (
+                                <TableRow key={s.email || s.nombre}>
                                     <TableCell className="font-semibold pl-5 py-3">{s.nombre}</TableCell>
                                     <TableCell className="text-muted-foreground">{s.email}</TableCell>
                                     <TableCell className="text-right font-mono font-semibold">{s.facturasCount}</TableCell>
@@ -1128,7 +1128,7 @@ export function ReportsDashboard({
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {invoiceDetail.invoices.map((inv, i) => {
+                            {invoiceDetail.invoices.map((inv) => {
                                 let badgeColor = 'bg-info';
                                 if (inv.estadoDgi === 'aceptada') badgeColor = 'bg-success';
                                 if (inv.estadoDgi === 'rechazada') badgeColor = 'bg-danger';
@@ -1136,10 +1136,10 @@ export function ReportsDashboard({
                                 if (inv.estadoDgi === 'anulada') badgeColor = 'bg-muted';
 
                                 return (
-                                    <TableRow key={i} className="hover:bg-accent/50 cursor-pointer" onClick={() => router.push(`/invoices/${inv.id}`)}>
+                                    <TableRow key={inv.id} className="hover:bg-accent/50 cursor-pointer" onClick={() => router.push(`/invoices/${inv.id}`)}>
                                         <TableCell className="font-mono text-xs font-bold text-brand-1 pl-5 py-3">{inv.numeroCompleto}</TableCell>
                                         <TableCell className="font-mono text-xs text-muted-foreground">
-                                            {new Date(inv.fechaEmision).toLocaleDateString('es-PA', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                            {new Date(inv.fechaEmision).toLocaleDateString('es-PA', { timeZone: 'America/Panama', day: '2-digit', month: 'short', year: 'numeric' })}
                                         </TableCell>
                                         <TableCell className="font-semibold text-foreground text-sm max-w-[160px] truncate">{inv.clienteNombre}</TableCell>
                                         <TableCell className="text-sm text-muted-foreground">{inv.vendedor}</TableCell>

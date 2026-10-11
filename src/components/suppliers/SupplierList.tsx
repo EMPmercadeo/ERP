@@ -72,11 +72,13 @@ export interface SupplierSummary {
     proveedoresActivos: number;
 }
 
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
+
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+    return currencyFormatter.format(value);
 }
 
 function formatDate(dateStr?: string | null) {
@@ -120,7 +122,8 @@ export function SupplierList({
     const [saldoFilter, setSaldoFilter] = useState('todos');
     const [termsFilter, setTermsFilter] = useState('todos');
     const [suppliers, setSuppliers] = useState<SupplierData[]>(initialData);
-    const [summaryState, setSummaryState] = useState<SupplierSummary>(summary);
+    const [clientSummary, setClientSummary] = useState<SupplierSummary | null>(null);
+    const summaryState = clientSummary ?? summary;
     const [editingSupplier, setEditingSupplier] = useState<SupplierData | null>(null);
 
     useEffect(() => {
@@ -129,20 +132,17 @@ export function SupplierList({
         if (initialData && initialData.length > 0) {
             setSuppliers(initialData);
         }
-        if (summary) {
-            setSummaryState(summary);
-        }
 
         // Siempre obtener la lista y resumen más recientes en el cliente al montar el componente
         getSuppliersWithSummary().then((res) => {
             if (res && res.success && res.suppliers) {
                 setSuppliers(res.suppliers);
                 if (res.summary) {
-                    setSummaryState(res.summary);
+                    setClientSummary(res.summary);
                 }
             }
         });
-    }, [initialData, summary]);
+    }, [initialData]);
 
     const filtered = useMemo(() => {
         return suppliers.filter(s => {
@@ -287,6 +287,7 @@ export function SupplierList({
 
                         <div>
                             <select
+                                aria-label="Filtrar por estado"
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                                 className="w-full h-9 rounded-md border border-input bg-card px-3 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
@@ -301,6 +302,7 @@ export function SupplierList({
 
                         <div>
                             <select
+                                aria-label="Filtrar por saldos"
                                 value={saldoFilter}
                                 onChange={(e) => setSaldoFilter(e.target.value)}
                                 className="w-full h-9 rounded-md border border-input bg-card px-3 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
@@ -313,6 +315,7 @@ export function SupplierList({
 
                         <div>
                             <select
+                                aria-label="Filtrar por términos"
                                 value={termsFilter}
                                 onChange={(e) => setTermsFilter(e.target.value)}
                                 className="w-full h-9 rounded-md border border-input bg-card px-3 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"

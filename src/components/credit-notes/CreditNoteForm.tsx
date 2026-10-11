@@ -83,8 +83,13 @@ const MOTIVOS_DGI = [
     '05 - Otros motivos fiscales'
 ];
 
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
+
 function formatCurrency(val: number) {
-    return new Intl.NumberFormat('es-PA', { style: 'currency', currency: 'USD' }).format(val);
+    return currencyFormatter.format(val);
 }
 
 function SubmitButton() {
@@ -302,7 +307,7 @@ export function CreditNoteForm({
                             <button
                                 type="button"
                                 onClick={() => setMode('select')}
-                                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                                     mode === 'select'
                                         ? 'bg-card text-foreground shadow-sm'
                                         : 'text-muted-foreground hover:text-foreground'
@@ -313,7 +318,7 @@ export function CreditNoteForm({
                             <button
                                 type="button"
                                 onClick={() => setMode('manual')}
-                                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                                     mode === 'manual'
                                         ? 'bg-card text-foreground shadow-sm'
                                         : 'text-muted-foreground hover:text-foreground'
@@ -349,8 +354,16 @@ export function CreditNoteForm({
                                         return (
                                             <div
                                                 key={inv.id}
+                                                role="button"
+                                                tabIndex={0}
                                                 onClick={() => handleSelectInvoice(inv.id)}
-                                                className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                        e.preventDefault();
+                                                        handleSelectInvoice(inv.id);
+                                                    }
+                                                }}
+                                                className={`p-4 rounded-xl border transition-colors cursor-pointer flex flex-col justify-between gap-2 ${
                                                     isSelected
                                                         ? 'border-danger bg-danger-bg/60 ring-2 ring-danger/20 shadow-sm'
                                                         : 'border-border hover:border-brand-1/40 bg-card hover:bg-accent/50'
@@ -366,7 +379,7 @@ export function CreditNoteForm({
                                                         </span>
                                                     </div>
                                                     <Badge variant="outline" className="text-[10px] font-semibold bg-muted shrink-0">
-                                                        {new Date(inv.fechaEmision).toLocaleDateString()}
+                                                        {new Date(inv.fechaEmision).toLocaleDateString('es-PA', { timeZone: 'America/Panama' })}
                                                     </Badge>
                                                 </div>
                                                 <div className="flex justify-between items-end border-t border-border pt-2 mt-1">
@@ -402,10 +415,11 @@ export function CreditNoteForm({
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-foreground">
+                                <label htmlFor="cn-cufe-ref" className="text-xs font-bold text-foreground">
                                     CUFE de Referencia (66 caracteres hex) <span className="text-danger">*</span>
                                 </label>
                                 <Input
+                                    id="cn-cufe-ref"
                                     placeholder="Ej: fe0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef01"
                                     value={cufeReferencia}
                                     onChange={(e) => setCufeReferencia(e.target.value)}
@@ -418,11 +432,11 @@ export function CreditNoteForm({
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-foreground">
+                                <label htmlFor="cn-cliente-afectado" className="text-xs font-bold text-foreground">
                                     Cliente Afectado <span className="text-danger">*</span>
                                 </label>
                                 <Select value={selectedClientId} onValueChange={setSelectedClientId}>
-                                    <SelectTrigger className="h-11 rounded-xl border-border text-sm">
+                                    <SelectTrigger id="cn-cliente-afectado" className="h-11 rounded-xl border-border text-sm">
                                         <SelectValue placeholder="Seleccione un cliente" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -451,11 +465,11 @@ export function CreditNoteForm({
                 </CardHeader>
                 <CardContent className="p-6">
                     <div className="max-w-xl space-y-1.5">
-                        <label className="text-xs font-bold text-foreground">
+                        <label htmlFor="cn-tipo-nc" className="text-xs font-bold text-foreground">
                             Tipo de Nota de Crédito <span className="text-danger">*</span>
                         </label>
                         <Select value={motivoDgi} onValueChange={setMotivoDgi}>
-                            <SelectTrigger className="h-11 rounded-xl border-border text-sm font-medium">
+                            <SelectTrigger id="cn-tipo-nc" className="h-11 rounded-xl border-border text-sm font-medium">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -601,6 +615,7 @@ export function CreditNoteForm({
                                             <TableCell className="text-center">
                                                 <button
                                                     type="button"
+                                                    aria-label="Eliminar ítem"
                                                     onClick={() => handleRemoveItem(item.id)}
                                                     className="text-muted-foreground hover:text-danger p-1 rounded-md transition-colors"
                                                 >

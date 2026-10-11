@@ -14,8 +14,10 @@ export default async function ClientsPage(props: {
         limit?: string;
     }>;
 }) {
-    const searchParams = await props.searchParams;
-    const { empresaId } = await getTenantContext();
+    const [searchParams, { empresaId }] = await Promise.all([
+        props.searchParams,
+        getTenantContext(),
+    ]);
     const page = Number(searchParams.page) || 1;
     const search = searchParams.search || '';
     const sortBy = searchParams.sortBy || 'createdAt';

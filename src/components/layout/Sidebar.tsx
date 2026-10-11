@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -173,7 +174,7 @@ export function Sidebar() {
     const router = useRouter();
     const { isCollapsed: storedCollapsed, toggleCollapsed, setMobileOpen } = useSidebarStore();
     const { user, signOut, role } = useAuth();
-    const [isMounted, setIsMounted] = useState(false);
+    const isMounted = useIsMounted();
     // Consola de admin colapsable: por defecto cerrada para no saturar la barra; se abre
     // sola cuando el superadmin está navegando dentro de /admin.
     const [adminOpen, setAdminOpen] = useState(false);
@@ -212,9 +213,7 @@ export function Sidebar() {
     const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
     const [isSubmittingSupport, setIsSubmittingSupport] = useState(false);
 
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
+
 
     // Abrir la consola de admin automáticamente si ya estamos en una ruta /admin.
     useEffect(() => {
@@ -366,7 +365,7 @@ const handleSendFeedback = async (e: React.FormEvent) => {
             {/* Sidebar - Desktop Only */}
             <aside
                 className={cn(
-                    'fixed left-0 top-0 z-50 hidden lg:flex h-full flex-col border-r border-sidebar-border/30 bg-sidebar transition-all duration-300',
+                    'fixed left-0 top-0 z-50 hidden lg:flex h-full flex-col border-r border-sidebar-border/30 bg-sidebar transition-colors duration-300',
                     isCollapsed ? 'w-16' : 'w-64'
                 )}
             >
@@ -810,7 +809,11 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                             <p className="text-xs text-muted-foreground">
                                 ¿Tienes ideas, reportes de fallos o sugerencias? Déjanos tus comentarios abajo.
                             </p>
+                            <label htmlFor="sidebar-feedback-text" className="block text-xs font-semibold text-muted-foreground">
+                                Comentarios
+                            </label>
                             <textarea
+                                id="sidebar-feedback-text"
                                 value={feedbackText}
                                 onChange={(e) => setFeedbackText(e.target.value)}
                                 placeholder="Escribe tus comentarios aquí..."
@@ -849,8 +852,9 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                             </p>
                             <div className="space-y-3">
                                 <div>
-                                    <label className="block text-xs font-medium mb-1">Asunto</label>
+                                    <label htmlFor="sidebar-support-subject" className="block text-xs font-medium mb-1">Asunto</label>
                                     <Input
+                                        id="sidebar-support-subject"
                                         value={supportSubject}
                                         onChange={(e) => setSupportSubject(e.target.value)}
                                         placeholder="Ej. Error en facturación fiscal"
@@ -859,8 +863,9 @@ const handleSendFeedback = async (e: React.FormEvent) => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium mb-1">Mensaje</label>
+                                    <label htmlFor="sidebar-support-message" className="block text-xs font-medium mb-1">Mensaje</label>
                                     <textarea
+                                        id="sidebar-support-message"
                                         value={supportMessage}
                                         onChange={(e) => setSupportMessage(e.target.value)}
                                         placeholder="Describe el inconveniente en detalle..."

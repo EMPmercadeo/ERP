@@ -23,7 +23,7 @@ export default function OfflinePage() {
                 <div className="mt-8 space-y-3">
                     <Button 
                         onClick={handleRetry} 
-                        className="w-full h-11 bg-brand-1 hover:bg-brand-2 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-all shadow-sm"
+                        className="w-full h-11 bg-brand-1 hover:bg-brand-2 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-colors shadow-sm"
                     >
                         <RefreshCw className="h-4 w-4" />
                         <span>Reintentar Conexión</span>

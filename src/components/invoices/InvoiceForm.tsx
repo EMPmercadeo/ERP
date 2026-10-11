@@ -85,11 +85,13 @@ const itbmsRates: Record<string, number> = {
     '03': 0.15,
 };
 
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
+
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+    return currencyFormatter.format(value);
 }
 
 const initialState = {
@@ -572,11 +574,11 @@ export function InvoiceForm({
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="invoice-condicion-pago" className="block text-sm font-medium text-foreground mb-1">
                                             Condición de Pago
                                         </label>
                                         <Select name="condicionPago" value={condicionPago} onValueChange={setCondicionPago}>
-                                            <SelectTrigger className="h-11 md:h-10">
+                                            <SelectTrigger id="invoice-condicion-pago" className="h-11 md:h-10">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -590,11 +592,11 @@ export function InvoiceForm({
 
                                     {bodegas.length >= 2 && (
                                         <div>
-                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                            <label htmlFor="invoice-bodega-despacho" className="block text-sm font-medium text-foreground mb-1">
                                                 Bodega de Despacho
                                             </label>
                                             <Select value={bodegaId} onValueChange={setBodegaId}>
-                                                <SelectTrigger className="h-11 md:h-10">
+                                                <SelectTrigger id="invoice-bodega-despacho" className="h-11 md:h-10">
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -609,10 +611,11 @@ export function InvoiceForm({
                                     )}
 
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="invoice-observaciones" className="block text-sm font-medium text-foreground mb-1">
                                             Observaciones
                                         </label>
                                         <Textarea
+                                            id="invoice-observaciones"
                                             name="observaciones"
                                             placeholder="Notas adicionales..."
                                             rows={3}
@@ -661,6 +664,8 @@ export function InvoiceForm({
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="w-full max-w-md bg-card rounded-xl border border-border shadow-2xl p-6 relative font-sans">
                         <button
+                            type="button"
+                            aria-label="Cerrar modal compra bloque"
                             onClick={() => setShowPurchaseBlockModal(false)}
                             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
                             disabled={isPurchasingBlock}
@@ -675,7 +680,7 @@ export function InvoiceForm({
                             </div>
 
                             <div className="space-y-3">
-                                <label className="block text-xs font-semibold text-muted-foreground">Seleccionar Tamaño del Bloque</label>
+                                <span className="block text-xs font-semibold text-muted-foreground">Seleccionar Tamaño del Bloque</span>
                                 <div className="grid grid-cols-3 gap-3">
                                     {[
                                         { size: 100, price: 5.00, label: '100 docs' },
@@ -686,7 +691,7 @@ export function InvoiceForm({
                                             key={block.size}
                                             type="button"
                                             onClick={() => setSelectedBlockSize(block.size)}
-                                            className={`p-3 border rounded-lg flex flex-col items-center justify-center gap-1 transition-all ${
+                                            className={`p-3 border rounded-lg flex flex-col items-center justify-center gap-1 transition-colors ${
                                                 selectedBlockSize === block.size
                                                     ? 'border-brand-1 bg-brand-1/5 text-brand-1 ring-2 ring-brand-1/10'
                                                     : 'border-border bg-card text-foreground hover:bg-accent'

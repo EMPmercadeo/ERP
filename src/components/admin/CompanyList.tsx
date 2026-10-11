@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +43,7 @@ export function CompanyList({
     const searchParams = useSearchParams();
 
     const [searchTerm, setSearchTerm] = useState(initialSearch);
-    const [companies, setCompanies] = useState<CompanyData[]>(initialData);
+    const companies = initialData;
 
     const createQueryString = useCallback((params: Record<string, string | null>) => {
         const newParams = new URLSearchParams(searchParams.toString());
@@ -57,22 +57,21 @@ export function CompanyList({
         return newParams.toString();
     }, [searchParams]);
 
-    /* eslint-disable react-hooks/exhaustive-deps -- ejecutarse solo cuando cambia searchTerm para evitar loop */
+    const createQueryStringRef = useRef(createQueryString);
+    useEffect(() => {
+        createQueryStringRef.current = createQueryString;
+    });
+
     useEffect(() => {
         const timer = setTimeout(() => {
             const currentSearch = searchParams.get('search') || '';
             if (searchTerm !== currentSearch) {
-                const query = createQueryString({ search: searchTerm || null, page: '1' });
+                const query = createQueryStringRef.current({ search: searchTerm || null, page: '1' });
                 router.push(`${pathname}?${query}`);
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [searchTerm]);
-    /* eslint-enable react-hooks/exhaustive-deps */
-
-    useEffect(() => {
-        setCompanies(initialData);
-    }, [initialData]);
+    }, [searchTerm, pathname, router, searchParams]);
 
     return (
         <div className="space-y-4">
@@ -143,6 +142,7 @@ export function CompanyList({
                                                     const res = await toggleTenantStatus(company.id);
                                                     if (res.success) {
                                                         toast.success(`Empresa ${res.newStatus === 'active' ? 'reactivada' : 'suspendida'} exitosamente`);
+                                                        router.refresh();
                                                     } else {
                                                         toast.error(res.error || 'Error al cambiar el estado');
                                                     }

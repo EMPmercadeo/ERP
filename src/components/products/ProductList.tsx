@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
@@ -105,11 +105,13 @@ const commonUnits = [
     { value: 'SRV', label: 'Servicio (SRV)' },
 ];
 
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
+
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+    return currencyFormatter.format(value);
 }
 
 function calculateMargin(cost: number, price: number): number {
@@ -174,7 +176,7 @@ export function ProductList({
             .catch(() => setCategorias([]));
     }, []);
 
-    const createQueryString = (params: Record<string, string | null>) => {
+    const createQueryString = useCallback((params: Record<string, string | null>) => {
         const newParams = new URLSearchParams(searchParams.toString());
         for (const [key, value] of Object.entries(params)) {
             if (value === null) {
@@ -184,21 +186,24 @@ export function ProductList({
             }
         }
         return newParams.toString();
-    };
+    }, [searchParams]);
+
+    const createQueryStringRef = useRef(createQueryString);
+    useEffect(() => {
+        createQueryStringRef.current = createQueryString;
+    });
 
     // Debounce search update to URL
-    /* eslint-disable react-hooks/exhaustive-deps -- ejecutarse solo cuando cambia globalFilter para evitar loop */
     useEffect(() => {
         const timer = setTimeout(() => {
             const currentSearch = searchParams.get('search') || '';
             if (globalFilter !== currentSearch) {
-                const query = createQueryString({ search: globalFilter || null, page: '1' });
+                const query = createQueryStringRef.current({ search: globalFilter || null, page: '1' });
                 router.push(`${pathname}?${query}`);
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [globalFilter]);
-    /* eslint-enable react-hooks/exhaustive-deps */
+    }, [globalFilter, pathname, router, searchParams]);
 
     const handleFilterChange = (key: string, value: string) => {
         const query = createQueryString({ [key]: value === 'all' ? null : value, page: '1' });
@@ -628,6 +633,7 @@ export function ProductList({
                                     {globalFilter && (
                                         <button
                                             type="button"
+                                            aria-label="Limpiar búsqueda"
                                             onClick={() => setGlobalFilter('')}
                                             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                         >
@@ -810,7 +816,15 @@ export function ProductList({
                                     return (
                                         <div 
                                             key={product.id}
+                                            role="button"
+                                            tabIndex={0}
                                             onClick={() => router.push(`/products/${product.id}`)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    router.push(`/products/${product.id}`);
+                                                }
+                                            }}
                                             className="bg-muted/50 border border-border rounded-xl p-3 flex flex-col justify-between shadow-sm active:scale-98 transition-transform cursor-pointer relative"
                                         >
                                             <div>

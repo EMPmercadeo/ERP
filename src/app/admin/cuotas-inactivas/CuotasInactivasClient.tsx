@@ -26,7 +26,7 @@ export function CuotasInactivasClient({
     cuentasIniciales: CuentaInactivaDTO[];
     meses: number;
 }) {
-    const [cuentas, setCuentas] = useState<CuentaInactivaDTO[]>(cuentasIniciales);
+    const [cuentas, setCuentas] = useState<CuentaInactivaDTO[]>(() => cuentasIniciales);
     const [cargando, setCargando] = useState(false);
     const [notificando, setNotificando] = useState(false);
 
@@ -139,12 +139,12 @@ export function CuotasInactivasClient({
                                         <td className="py-2 pr-4 text-right">{c.diasSinConsumir} días</td>
                                         <td className="py-2 pr-4">
                                             {c.ultimoConsumo
-                                                ? new Date(c.ultimoConsumo).toLocaleDateString('es-PA')
+                                                ? new Date(c.ultimoConsumo).toLocaleDateString('es-PA', { timeZone: 'America/Panama' })
                                                 : <span className="text-muted-foreground">sin uso</span>}
                                         </td>
                                         <td className="py-2 pr-4">
                                             {c.notificadoInactividadEn
-                                                ? new Date(c.notificadoInactividadEn).toLocaleDateString('es-PA')
+                                                ? new Date(c.notificadoInactividadEn).toLocaleDateString('es-PA', { timeZone: 'America/Panama' })
                                                 : <span className="text-muted-foreground">nunca</span>}
                                         </td>
                                         <td className="py-2 text-right">

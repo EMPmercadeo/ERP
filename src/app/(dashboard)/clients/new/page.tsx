@@ -65,11 +65,11 @@ export default function NewClientPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="new-client-tipoRuc" className="block text-sm font-medium text-foreground mb-1">
                                             Tipo de RUC
                                         </label>
                                         <Select name="tipoRuc" value={tipoRuc} onValueChange={setTipoRuc}>
-                                            <SelectTrigger>
+                                            <SelectTrigger id="new-client-tipoRuc">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -83,10 +83,11 @@ export default function NewClientPage() {
 
                                     <div className="grid grid-cols-3 gap-3">
                                         <div className="col-span-2">
-                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                            <label htmlFor="new-client-ruc" className="block text-sm font-medium text-foreground mb-1">
                                                 RUC
                                             </label>
                                             <Input
+                                                id="new-client-ruc"
                                                 name="ruc"
                                                 placeholder={tipoRuc === '01' ? '8-123-4567' : '155-123-456789'}
                                                 required
@@ -95,10 +96,11 @@ export default function NewClientPage() {
                                             {state?.errors?.ruc && <p className="text-xs text-destructive mt-1">{state.errors.ruc[0]}</p>}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                            <label htmlFor="new-client-dv" className="block text-sm font-medium text-foreground mb-1">
                                                 DV
                                             </label>
                                             <Input
+                                                id="new-client-dv"
                                                 name="dv"
                                                 placeholder="12"
                                                 maxLength={2}
@@ -107,10 +109,11 @@ export default function NewClientPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="new-client-razonSocial" className="block text-sm font-medium text-foreground mb-1">
                                             Razón Social / Nombre
                                         </label>
                                         <Input
+                                            id="new-client-razonSocial"
                                             name="razonSocial"
                                             placeholder="Nombre completo o razón social"
                                             required
@@ -120,10 +123,11 @@ export default function NewClientPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="new-client-direccion" className="block text-sm font-medium text-foreground mb-1">
                                             Dirección
                                         </label>
                                         <Input
+                                            id="new-client-direccion"
                                             name="direccion"
                                             placeholder="Calle, Ciudad, Provincia"
                                         />
@@ -139,10 +143,11 @@ export default function NewClientPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="new-client-email" className="block text-sm font-medium text-foreground mb-1">
                                             Correo Electrónico
                                         </label>
                                         <Input
+                                            id="new-client-email"
                                             name="email"
                                             type="email"
                                             placeholder="cliente@empresa.com"
@@ -150,20 +155,22 @@ export default function NewClientPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="new-client-telefono" className="block text-sm font-medium text-foreground mb-1">
                                             Teléfono
                                         </label>
                                         <Input
+                                            id="new-client-telefono"
                                             name="telefono"
                                             placeholder="+507 6123-4567"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="new-client-limiteCredito" className="block text-sm font-medium text-foreground mb-1">
                                             Límite de Crédito (USD)
                                         </label>
                                         <Input
+                                            id="new-client-limiteCredito"
                                             name="limiteCredito"
                                             type="number"
                                             placeholder="0.00"
@@ -173,11 +180,11 @@ export default function NewClientPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="new-client-diasCredito" className="block text-sm font-medium text-foreground mb-1">
                                             Días de Crédito
                                         </label>
                                         <Select name="diasCredito" value={diasCredito} onValueChange={setDiasCredito}>
-                                            <SelectTrigger>
+                                            <SelectTrigger id="new-client-diasCredito">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -192,10 +199,11 @@ export default function NewClientPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                        <label htmlFor="new-client-descuentoEspecial" className="block text-sm font-medium text-foreground mb-1">
                                             Descuento Especial (%)
                                         </label>
                                         <Input
+                                            id="new-client-descuentoEspecial"
                                             name="descuentoEspecial"
                                             type="number"
                                             placeholder="0"

@@ -97,15 +97,6 @@ async function getPeriodStats(filters: ReportFilters) {
         tipoDocumento: 'NC',
         estadoDgi: { not: 'anulada' }
     };
-    const ncAgg = await prisma.factura.aggregate({
-        where: ncWhere,
-        _sum: {
-            totalNeto: true,
-        },
-        _count: {
-            id: true,
-        }
-    });
 
     // Payments collected in the period
     const pagoWhere: Prisma.PagoWhereInput = {
@@ -120,12 +111,6 @@ async function getPeriodStats(filters: ReportFilters) {
     if (filters.productoId) {
         pagoWhere.factura = { items: { some: { productoId: filters.productoId } } };
     }
-    const pagoAgg = await prisma.pago.aggregate({
-        where: pagoWhere,
-        _sum: {
-            monto: true,
-        }
-    });
 
     // Overdue accounts (invoice deadline has passed and there is a pending balance)
     const vencidaWhere = {
@@ -133,32 +118,48 @@ async function getPeriodStats(filters: ReportFilters) {
         saldoPendiente: { gt: 0 },
         fechaVencimiento: { lt: new Date() }
     };
-    const vencidaAgg = await prisma.factura.aggregate({
-        where: vencidaWhere,
-        _sum: {
-            saldoPendiente: true
-        }
-    });
 
-    // Gross profit = Sales - COGS
-    const items = await prisma.facturaItem.findMany({
-        where: {
-            factura: {
-                ...whereClause,
-                estadoDgi: { not: 'anulada' }
+    const [ncAgg, pagoAgg, vencidaAgg, items] = await Promise.all([
+        prisma.factura.aggregate({
+            where: ncWhere,
+            _sum: {
+                totalNeto: true,
+            },
+            _count: {
+                id: true,
             }
-        },
-        select: {
-            montoTotal: true,
-            costoUnitario: true,
-            cantidad: true,
-            factura: {
-                select: {
-                    tipoDocumento: true
+        }),
+        prisma.pago.aggregate({
+            where: pagoWhere,
+            _sum: {
+                monto: true,
+            }
+        }),
+        prisma.factura.aggregate({
+            where: vencidaWhere,
+            _sum: {
+                saldoPendiente: true
+            }
+        }),
+        prisma.facturaItem.findMany({
+            where: {
+                factura: {
+                    ...whereClause,
+                    estadoDgi: { not: 'anulada' }
+                }
+            },
+            select: {
+                montoTotal: true,
+                costoUnitario: true,
+                cantidad: true,
+                factura: {
+                    select: {
+                        tipoDocumento: true
+                    }
                 }
             }
-        }
-    });
+        })
+    ]);
 
     let grossProfit = 0;
     for (const item of items) {

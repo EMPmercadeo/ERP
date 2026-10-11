@@ -58,86 +58,89 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
     const whereDate = { empresaId, fechaEmision: { gte: start, lte: end } };
     const wherePrev = { empresaId, fechaEmision: { gte: prevStart, lte: prevEnd } };
 
-    // 1. Fetch Current Data & Details
+    // 1 & 2. Fetch Current & Previous Data for Trends concurrently
     const [
-        recentInvoices,
-        dgiStats, // GroupBy
-        totalSalesAgg,
-        totalPaymentsAgg,
-        totalReceivablesAgg,
-        totalOverdueAgg
+        [
+            recentInvoices,
+            dgiStats, // GroupBy
+            totalSalesAgg,
+            totalPaymentsAgg,
+            totalReceivablesAgg,
+            totalOverdueAgg
+        ],
+        [
+            prevSalesAgg,
+            prevPaymentsAgg,
+            prevReceivablesAgg,
+            prevOverdueAgg
+        ]
     ] = await Promise.all([
-        prisma.factura.findMany({
-            where: whereDate,
-            take: 20,
-            orderBy: { fechaEmision: 'desc' },
-            select: {
-                id: true,
-                numeroCompleto: true,
-                fechaEmision: true,
-                fechaVencimiento: true,
-                totalNeto: true,
-                saldoPendiente: true,
-                estadoDgi: true,
-                cliente: { select: { razonSocial: true, ruc: true, dv: true } }
-            }
-        }),
-        prisma.factura.groupBy({
-            by: ['estadoDgi'],
-            _count: { estadoDgi: true },
-            where: whereDate
-        }),
-        prisma.factura.aggregate({
-            _sum: { totalNeto: true },
-            where: { ...whereDate, estadoDgi: { not: 'anulada' } }
-        }),
-        prisma.pago.aggregate({
-            _sum: { monto: true },
-            where: { empresaId, fechaPago: { gte: start, lte: end } }
-        }),
-        prisma.factura.aggregate({
-            _sum: { saldoPendiente: true },
-            where: { ...whereDate, estadoDgi: { not: 'anulada' } }
-        }),
-        prisma.factura.aggregate({
-            _sum: { saldoPendiente: true },
-            where: {
-                ...whereDate,
-                fechaVencimiento: { lt: now },
-                saldoPendiente: { gt: 0 },
-                estadoDgi: { not: 'anulada' }
-            }
-        })
-    ]);
-
-    // 2. Fetch Previous Data for Trends
-    const [
-        prevSalesAgg,
-        prevPaymentsAgg,
-        prevReceivablesAgg,
-        prevOverdueAgg
-    ] = await Promise.all([
-        prisma.factura.aggregate({
-            _sum: { totalNeto: true },
-            where: { ...wherePrev, estadoDgi: { not: 'anulada' } }
-        }),
-        prisma.pago.aggregate({
-            _sum: { monto: true },
-            where: { empresaId, fechaPago: { gte: prevStart, lte: prevEnd } }
-        }),
-        prisma.factura.aggregate({
-            _sum: { saldoPendiente: true },
-            where: { ...wherePrev, estadoDgi: { not: 'anulada' } }
-        }),
-        prisma.factura.aggregate({
-            _sum: { saldoPendiente: true },
-            where: {
-                ...wherePrev,
-                fechaVencimiento: { lt: prevEnd },
-                saldoPendiente: { gt: 0 },
-                estadoDgi: { not: 'anulada' }
-            }
-        })
+        Promise.all([
+            prisma.factura.findMany({
+                where: whereDate,
+                take: 20,
+                orderBy: { fechaEmision: 'desc' },
+                select: {
+                    id: true,
+                    numeroCompleto: true,
+                    fechaEmision: true,
+                    fechaVencimiento: true,
+                    totalNeto: true,
+                    saldoPendiente: true,
+                    estadoDgi: true,
+                    cliente: { select: { razonSocial: true, ruc: true, dv: true } }
+                }
+            }),
+            prisma.factura.groupBy({
+                by: ['estadoDgi'],
+                _count: { estadoDgi: true },
+                where: whereDate
+            }),
+            prisma.factura.aggregate({
+                _sum: { totalNeto: true },
+                where: { ...whereDate, estadoDgi: { not: 'anulada' } }
+            }),
+            prisma.pago.aggregate({
+                _sum: { monto: true },
+                where: { empresaId, fechaPago: { gte: start, lte: end } }
+            }),
+            prisma.factura.aggregate({
+                _sum: { saldoPendiente: true },
+                where: { ...whereDate, estadoDgi: { not: 'anulada' } }
+            }),
+            prisma.factura.aggregate({
+                _sum: { saldoPendiente: true },
+                where: {
+                    ...whereDate,
+                    fechaVencimiento: { lt: now },
+                    saldoPendiente: { gt: 0 },
+                    estadoDgi: { not: 'anulada' }
+                }
+            })
+        ]),
+        Promise.all([
+            prisma.factura.aggregate({
+                _sum: { totalNeto: true },
+                where: { ...wherePrev, estadoDgi: { not: 'anulada' } }
+            }),
+            prisma.pago.aggregate({
+                _sum: { monto: true },
+                where: { empresaId, fechaPago: { gte: prevStart, lte: prevEnd } }
+            }),
+            prisma.factura.aggregate({
+                _sum: { saldoPendiente: true },
+                where: { ...wherePrev, estadoDgi: { not: 'anulada' } }
+            }),
+            prisma.factura.aggregate({
+                _sum: { saldoPendiente: true },
+                where: {
+                    ...wherePrev,
+                    fechaVencimiento: { lt: prevEnd },
+                    saldoPendiente: { gt: 0 },
+                    estadoDgi: { not: 'anulada' }
+                }
+            })
+        ])
     ]);
 
     // 3. Last 6 months trend & sparks calculation
@@ -298,8 +301,10 @@ async function getDashboardData(searchParams: { [key: string]: string | string[]
 }
 
 export default async function DashboardPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
-    const searchParams = await props.searchParams;
-    const { empresaId } = await getTenantContext();
+    const [searchParams, { empresaId }] = await Promise.all([
+        props.searchParams,
+        getTenantContext(),
+    ]);
     const { recentInvoices, dgiData, trendData, sparks, kpiData } = await getDashboardData(searchParams, empresaId);
 
     return (

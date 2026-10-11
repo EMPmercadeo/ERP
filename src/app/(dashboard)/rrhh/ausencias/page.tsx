@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -85,9 +85,13 @@ export default function AusenciasPage() {
     cargarDatos();
   }, [cargarDatos]);
 
+  const guardandoRef = useRef(false);
+  const resolviendoRef = useRef(false);
+
   const handleCrearAusencia = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (guardando) return;
+    if (guardandoRef.current || guardando) return;
+    guardandoRef.current = true;
     setErrorModal('');
     setGuardando(true);
     try {
@@ -116,12 +120,15 @@ export default function AusenciasPage() {
     } catch {
       setErrorModal('Error en la conexión con el servidor');
     } finally {
+      guardandoRef.current = false;
       setGuardando(false);
     }
   };
 
   const handleResolver = async (id: string, estado: 'APROBADA' | 'RECHAZADA') => {
+    if (resolviendoRef.current) return;
     if (!confirm(`¿Está seguro que desea ${estado === 'APROBADA' ? 'APROBAR' : 'RECHAZAR'} esta solicitud? Si es de vacaciones y se aprueba, se descontarán los días automáticamente del libro mayor del colaborador.`)) return;
+    resolviendoRef.current = true;
     try {
       const res = await fetch(`/api/rrhh/ausencias/${id}/aprobar`, {
         method: 'POST',
@@ -136,6 +143,8 @@ export default function AusenciasPage() {
       }
     } catch {
       alert('Error al resolver solicitud');
+    } finally {
+      resolviendoRef.current = false;
     }
   };
 
@@ -178,25 +187,25 @@ export default function AusenciasPage() {
                 <div className="flex flex-wrap bg-muted p-1 rounded-md border border-border">
                   <button
                     onClick={() => setFiltroEstado('PENDIENTE')}
-                    className={`px-3 py-1 text-xs rounded transition-all ${filtroEstado === 'PENDIENTE' ? 'bg-warning text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`px-3 py-1 text-xs rounded transition-colors ${filtroEstado === 'PENDIENTE' ? 'bg-warning text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     Pendientes
                   </button>
                   <button
                     onClick={() => setFiltroEstado('APROBADA')}
-                    className={`px-3 py-1 text-xs rounded transition-all ${filtroEstado === 'APROBADA' ? 'bg-success text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`px-3 py-1 text-xs rounded transition-colors ${filtroEstado === 'APROBADA' ? 'bg-success text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     Aprobadas
                   </button>
                   <button
                     onClick={() => setFiltroEstado('RECHAZADA')}
-                    className={`px-3 py-1 text-xs rounded transition-all ${filtroEstado === 'RECHAZADA' ? 'bg-danger text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`px-3 py-1 text-xs rounded transition-colors ${filtroEstado === 'RECHAZADA' ? 'bg-danger text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     Rechazadas
                   </button>
                   <button
                     onClick={() => setFiltroEstado('all')}
-                    className={`px-3 py-1 text-xs rounded transition-all ${filtroEstado === 'all' ? 'bg-brand-1 text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`px-3 py-1 text-xs rounded transition-colors ${filtroEstado === 'all' ? 'bg-brand-1 text-white font-bold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     Todas
                   </button>
@@ -219,7 +228,7 @@ export default function AusenciasPage() {
           ) : (
             <div className="space-y-3">
               {ausencias.map((aus) => (
-                <Card key={aus.id} className="border-border hover:border-brand-1/30 transition-all shadow-sm">
+                <Card key={aus.id} className="border-border hover:border-brand-1/30 transition-colors shadow-sm">
                   <CardContent className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -307,8 +316,9 @@ export default function AusenciasPage() {
                   </div>
                 )}
                 <div>
-                  <label className="font-semibold text-muted-foreground block mb-1">Colaborador:</label>
+                  <label htmlFor="colaboradorAusenciaSelect" className="font-semibold text-muted-foreground block mb-1">Colaborador:</label>
                   <select
+                    id="colaboradorAusenciaSelect"
                     required
                     value={empleadoId}
                     onChange={(e) => setEmpleadoId(e.target.value)}
@@ -322,8 +332,9 @@ export default function AusenciasPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="font-semibold text-muted-foreground block mb-1">Tipo de Ausencia / Permiso:</label>
+                  <label htmlFor="tipoAusenciaSelect" className="font-semibold text-muted-foreground block mb-1">Tipo de Ausencia / Permiso:</label>
                   <select
+                    id="tipoAusenciaSelect"
                     value={tipo}
                     onChange={(e) => setTipo(e.target.value)}
                     className="w-full bg-muted/50 border border-border rounded-md text-sm text-foreground px-3 py-2 h-10 focus:outline-none focus:ring-1 focus:ring-brand-1 focus:border-brand-1"
@@ -339,8 +350,9 @@ export default function AusenciasPage() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="font-semibold text-muted-foreground block mb-1">Desde (Inicio):</label>
+                    <label htmlFor="ausencia-desde" className="font-semibold text-muted-foreground block mb-1">Desde (Inicio):</label>
                     <Input
+                      id="ausencia-desde"
                       required
                       type="date"
                       value={desde}
@@ -349,8 +361,9 @@ export default function AusenciasPage() {
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-muted-foreground block mb-1">Hasta (Fin):</label>
+                    <label htmlFor="ausencia-hasta" className="font-semibold text-muted-foreground block mb-1">Hasta (Fin):</label>
                     <Input
+                      id="ausencia-hasta"
                       required
                       type="date"
                       value={hasta}
@@ -361,8 +374,9 @@ export default function AusenciasPage() {
                 </div>
                 {(tipo === 'ENFERMEDAD' || tipo === 'MATERNIDAD') && (
                   <div>
-                    <label className="font-semibold text-info block mb-1">URL / Enlace Certificado Médico o CSS (*Obligatorio):</label>
+                    <label htmlFor="ausencia-doc-url" className="font-semibold text-info block mb-1">URL / Enlace Certificado Médico o CSS (*Obligatorio):</label>
                     <Input
+                      id="ausencia-doc-url"
                       required
                       placeholder="https://... certificado_css.pdf"
                       value={docUrl}
@@ -372,8 +386,9 @@ export default function AusenciasPage() {
                   </div>
                 )}
                 <div>
-                  <label className="font-semibold text-muted-foreground block mb-1">Nota o Detalle Adicional:</label>
+                  <label htmlFor="ausencia-nota" className="font-semibold text-muted-foreground block mb-1">Nota o Detalle Adicional:</label>
                   <Input
+                    id="ausencia-nota"
                     placeholder="Motivo, indicaciones del médico, etc."
                     value={nota}
                     onChange={(e) => setNota(e.target.value)}

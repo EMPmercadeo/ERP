@@ -119,23 +119,30 @@ export function PresentacionesInsumo({
     };
 
     useEffect(() => {
+        let isCancelled = false;
         const cargar = async () => {
             const datos =
                 modo === 'proveedor'
                     ? await getInsumosDeProveedor(proveedorId!)
                     : await getProveedoresDeInsumo(productoId!);
+            if (isCancelled) return;
             setFilas(datos);
 
             // Cada modo necesita el catálogo del eje que NO está fijado: en la ficha del
             // proveedor se elige el insumo, y en la del producto se elige el proveedor.
             if (modo === 'proveedor') {
-                setInsumos(await getInsumosDisponibles());
+                const insumosData = await getInsumosDisponibles();
+                if (!isCancelled) setInsumos(insumosData);
             } else if (proveedoresDisponibles.length === 0) {
-                setProveedores(await getProveedoresActivos());
+                const provsData = await getProveedoresActivos();
+                if (!isCancelled) setProveedores(provsData);
             }
-            setLoading(false);
+            if (!isCancelled) setLoading(false);
         };
         cargar();
+        return () => {
+            isCancelled = true;
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [modo, proveedorId, productoId]);
 

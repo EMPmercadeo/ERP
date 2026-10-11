@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -111,9 +111,14 @@ export default function FichaColaboradorPage() {
     if (id) cargarFicha();
   }, [id, cargarFicha]);
 
+  const guardandoActaRef = useRef(false);
+  const firmandoAcuseRef = useRef(false);
+  const dandoDeBajaRef = useRef(false);
+
   const handleCrearActa = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (guardandoActa) return;
+    if (guardandoActaRef.current || guardandoActa) return;
+    guardandoActaRef.current = true;
     setGuardandoActa(true);
     try {
       const res = await fetch(`/api/rrhh/expediente/${id}`, {
@@ -140,12 +145,15 @@ export default function FichaColaboradorPage() {
     } catch {
       alert('Error de conexión');
     } finally {
+      guardandoActaRef.current = false;
       setGuardandoActa(false);
     }
   };
 
   const handleFirmarAcuse = async (actaId: string) => {
+    if (firmandoAcuseRef.current) return;
     if (!confirm('Al confirmar, se registrará la firma probatoria electrónica (Acuse de Recibo) de este colaborador, junto con la fecha y hora exacta de recepción (Art. 213 Código de Trabajo). ¿Desea continuar?')) return;
+    firmandoAcuseRef.current = true;
     try {
       const res = await fetch(`/api/rrhh/expediente/${id}`, {
         method: 'POST',
@@ -162,11 +170,15 @@ export default function FichaColaboradorPage() {
       }
     } catch {
       alert('Error de red');
+    } finally {
+      firmandoAcuseRef.current = false;
     }
   };
 
   const handleDarDeBaja = async () => {
+    if (dandoDeBajaRef.current) return;
     if (!confirm('¿Seguro que desea dar de baja a este colaborador? Se aplicará soft-delete (retención de historial y ledger según DGI y Código de Trabajo).')) return;
+    dandoDeBajaRef.current = true;
     try {
       const res = await fetch(`/api/rrhh/empleados/${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -177,6 +189,8 @@ export default function FichaColaboradorPage() {
       }
     } catch {
       alert('Error en la solicitud');
+    } finally {
+      dandoDeBajaRef.current = false;
     }
   };
 
@@ -292,19 +306,19 @@ export default function FichaColaboradorPage() {
             <div className="flex border-b border-border gap-2 min-w-max sm:min-w-0">
               <button
                 onClick={() => setActiveTab('vacaciones')}
-                className={`pb-3 px-3 sm:px-4 text-xs font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${activeTab === 'vacaciones' ? 'border-brand-1 text-brand-1' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                className={`pb-3 px-3 sm:px-4 text-xs font-bold border-b-2 transition-colors whitespace-nowrap shrink-0 ${activeTab === 'vacaciones' ? 'border-brand-1 text-brand-1' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
               >
                 1. Ledger de Vacaciones
               </button>
               <button
                 onClick={() => setActiveTab('ausencias')}
-                className={`pb-3 px-3 sm:px-4 text-xs font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${activeTab === 'ausencias' ? 'border-brand-1 text-brand-1' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                className={`pb-3 px-3 sm:px-4 text-xs font-bold border-b-2 transition-colors whitespace-nowrap shrink-0 ${activeTab === 'ausencias' ? 'border-brand-1 text-brand-1' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
               >
                 2. Ausencias CSS ({ficha.ausencias?.length || 0})
               </button>
               <button
                 onClick={() => setActiveTab('expediente')}
-                className={`pb-3 px-3 sm:px-4 text-xs font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${activeTab === 'expediente' ? 'border-brand-1 text-brand-1' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                className={`pb-3 px-3 sm:px-4 text-xs font-bold border-b-2 transition-colors whitespace-nowrap shrink-0 ${activeTab === 'expediente' ? 'border-brand-1 text-brand-1' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
               >
                 3. Expediente Disciplinario ({ficha.actas?.length || 0})
               </button>
@@ -475,7 +489,7 @@ export default function FichaColaboradorPage() {
               ) : (
                 <div className="space-y-4">
                   {ficha.actas?.map((acta) => (
-                    <Card key={acta.id} className="border-border hover:shadow-md transition-all shadow-sm">
+                    <Card key={acta.id} className="border-border hover:shadow-md transition-colors shadow-sm">
                       <CardHeader className="pb-2">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -545,8 +559,9 @@ export default function FichaColaboradorPage() {
             <form onSubmit={handleCrearActa}>
               <CardContent className="space-y-4 pt-4 text-xs">
                 <div>
-                  <label className="font-semibold text-muted-foreground block mb-1">Tipo de Sanción / Medida:</label>
+                  <label htmlFor="acta-tipo" className="font-semibold text-muted-foreground block mb-1">Tipo de Sanción / Medida:</label>
                   <select
+                    id="acta-tipo"
                     value={actaTipo}
                     onChange={(e) => setActaTipo(e.target.value)}
                     className="w-full bg-muted/50 border border-border rounded-md text-sm text-foreground px-3 py-2 h-10 focus:outline-none focus:ring-1 focus:ring-danger focus:border-danger"
@@ -558,8 +573,9 @@ export default function FichaColaboradorPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="font-semibold text-muted-foreground block mb-1">Categoría / Motivo de Falta:</label>
+                  <label htmlFor="acta-falta" className="font-semibold text-muted-foreground block mb-1">Categoría / Motivo de Falta:</label>
                   <Input
+                    id="acta-falta"
                     required
                     placeholder="Ej. Ausentismo Injustificado, Incumplimiento de Horario, Falta de Respeto"
                     value={actaFalta}
@@ -568,8 +584,9 @@ export default function FichaColaboradorPage() {
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-muted-foreground block mb-1">Descripción Detallada de los Hechos:</label>
+                  <label htmlFor="acta-desc" className="font-semibold text-muted-foreground block mb-1">Descripción Detallada de los Hechos:</label>
                   <textarea
+                    id="acta-desc"
                     required
                     rows={4}
                     placeholder="Describa con exactitud fecha, hora, testigos e infracción cometida..."
@@ -580,8 +597,9 @@ export default function FichaColaboradorPage() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="font-semibold text-muted-foreground block mb-1">Fecha del Hecho:</label>
+                    <label htmlFor="acta-fecha" className="font-semibold text-muted-foreground block mb-1">Fecha del Hecho:</label>
                     <Input
+                      id="acta-fecha"
                       required
                       type="date"
                       value={actaFecha}
@@ -590,8 +608,9 @@ export default function FichaColaboradorPage() {
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-muted-foreground block mb-1">URL Evidencia (Opcional):</label>
+                    <label htmlFor="acta-evidencia" className="font-semibold text-muted-foreground block mb-1">URL Evidencia (Opcional):</label>
                     <Input
+                      id="acta-evidencia"
                       placeholder="https://... foto, correo, pdf"
                       value={actaEvidencia}
                       onChange={(e) => setActaEvidencia(e.target.value)}

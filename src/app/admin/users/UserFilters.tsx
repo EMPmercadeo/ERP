@@ -12,7 +12,11 @@ import {
 } from '@/components/ui/select';
 import { Search } from 'lucide-react';
 
-export function UserFilters() {
+interface UserFiltersProps {
+    initialRole?: string;
+}
+
+export function UserFilters({ initialRole = 'all' }: UserFiltersProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isPending, startTransition] = useTransition();
@@ -38,6 +42,9 @@ export function UserFilters() {
         updateFilters('search', search);
     };
 
+    const ALLOWED_ROLES = new Set(['all', 'super_admin', 'admin', 'vendedor', 'contador']);
+    const selectedRole = ALLOWED_ROLES.has(initialRole) ? initialRole : 'all';
+
     return (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
             <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-sm">
@@ -55,7 +62,7 @@ export function UserFilters() {
             <div className="flex flex-wrap items-center gap-3">
                 {/* Role Filter */}
                 <Select
-                    value={searchParams.get('role') || 'all'}
+                    value={selectedRole}
                     onValueChange={(val) => updateFilters('role', val)}
                     disabled={isPending}
                 >

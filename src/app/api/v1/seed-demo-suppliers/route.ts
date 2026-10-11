@@ -125,7 +125,8 @@ async function seedHandler() {
                     fechaEmision.setDate(fechaEmision.getDate() - diasEmision);
 
                     const fechaVencimiento = new Date(fechaEmision);
-                    const diasCredito = condicionPago.includes('15') ? 15 : condicionPago.includes('30') ? 30 : condicionPago.includes('60') ? 60 : 0;
+                    const diasMatch = condicionPago.match(/15|30|60/);
+                    const diasCredito = diasMatch ? Number(diasMatch[0]) : 0;
                     fechaVencimiento.setDate(fechaVencimiento.getDate() + diasCredito);
 
                     if (rndEstado < 0.40) {

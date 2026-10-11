@@ -37,8 +37,8 @@ export interface BodegaDetail {
 export function EditWarehouseModal({ bodega, sucursales }: { bodega: BodegaDetail; sucursales: SucursalOption[] }) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [sucursalId, setSucursalId] = useState(bodega.sucursalId);
-    const [activa, setActiva] = useState(bodega.activa);
+    const [sucursalId, setSucursalId] = useState(() => bodega.sucursalId);
+    const [activa, setActiva] = useState(() => bodega.activa);
     const router = useRouter();
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

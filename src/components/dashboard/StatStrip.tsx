@@ -46,8 +46,13 @@ const strokeTone: Record<NonNullable<StatItem['tone']>, string> = {
     danger: 'var(--danger)',
 };
 
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
+
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', { style: 'currency', currency: 'USD' }).format(value);
+    return currencyFormatter.format(value);
 }
 
 /** Curva suave de Catmull-Rom convertida a bézier, para que la línea no se vea quebrada. */

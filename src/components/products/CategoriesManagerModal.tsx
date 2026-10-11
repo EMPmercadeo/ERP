@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,10 +78,15 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
+    const creandoRef = useRef(false);
+    const guardandoRef = useRef(false);
+    const eliminandoRef = useRef(false);
+
     const handleCrear = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (creando) return;
+        if (creandoRef.current || creando) return;
         if (!nombre.trim()) return;
+        creandoRef.current = true;
         setCreando(true);
         try {
             const res = await fetch('/api/categories', {
@@ -101,6 +106,7 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
         } catch {
             toast.error('Error de conexión al crear la categoría.');
         } finally {
+            creandoRef.current = false;
             setCreando(false);
         }
     };
@@ -112,7 +118,8 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
     };
 
     const guardarEdicion = async (id: string) => {
-        if (guardando) return;
+        if (guardandoRef.current || guardando) return;
+        guardandoRef.current = true;
         setGuardando(true);
         try {
             const res = await fetch(`/api/categories/${id}`, {
@@ -131,12 +138,15 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
         } catch {
             toast.error('Error de conexión al actualizar la categoría.');
         } finally {
+            guardandoRef.current = false;
             setGuardando(false);
         }
     };
 
     const handleEliminar = async (cat: CategoriaItem) => {
+        if (eliminandoRef.current) return;
         if (!confirm(`¿Eliminar la categoría "${cat.nombre}"? Los productos que la tengan asignada quedarán sin categoría.`)) return;
+        eliminandoRef.current = true;
         try {
             const res = await fetch(`/api/categories/${cat.id}`, { method: 'DELETE' });
             if (res.ok) {
@@ -148,6 +158,8 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
             }
         } catch {
             toast.error('Error de conexión al eliminar la categoría.');
+        } finally {
+            eliminandoRef.current = false;
         }
     };
 

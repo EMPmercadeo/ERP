@@ -405,11 +405,12 @@ export default function NewProductPage() {
                                             { code: '03', label: '15%', sub: 'Tabaco' },
                                             { code: '00', label: 'Exento', sub: '0%' }
                                         ].map((rate) => (
-                                            <div
+                                            <button
+                                                type="button"
                                                 key={rate.code}
                                                 onClick={() => setCodigoTasaItbms(rate.code)}
                                                 className={cn(
-                                                    "cursor-pointer rounded-lg border p-2 text-center transition-all select-none",
+                                                    "cursor-pointer rounded-lg border p-2 text-center transition-colors select-none",
                                                     codigoTasaItbms === rate.code
                                                         ? "border-brand-1 bg-brand-1/5 ring-1 ring-brand-1 text-brand-1 font-bold"
                                                         : "border-border bg-card text-muted-foreground hover:bg-accent"
@@ -417,7 +418,7 @@ export default function NewProductPage() {
                                             >
                                                 <div className="text-xs font-bold">{rate.label}</div>
                                                 <div className="text-[8px] font-semibold uppercase tracking-wider opacity-85">{rate.sub}</div>
-                                            </div>
+                                            </button>
                                         ))}
                                     </div>
                                 </div>
@@ -565,7 +566,7 @@ export default function NewProductPage() {
 function SubmitButton() {
     const { pending } = useFormStatus();
     return (
-        <Button type="submit" disabled={pending} className="h-9 bg-brand-1 hover:bg-brand-2 text-white font-bold text-xs shadow-sm px-4 rounded-lg flex items-center gap-1.5 active:scale-95 transition-all">
+        <Button type="submit" disabled={pending} className="h-9 bg-brand-1 hover:bg-brand-2 text-white font-bold text-xs shadow-sm px-4 rounded-lg flex items-center gap-1.5 active:scale-95 transition-colors">
             {pending ? (
                 <>
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />

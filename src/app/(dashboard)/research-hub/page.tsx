@@ -184,7 +184,7 @@ Al crear o editar productos:
                                 <button
                                     key={cat.id}
                                     onClick={() => setSelectedCategory(cat.id)}
-                                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
                                         selectedCategory === cat.id
                                             ? 'bg-brand-1 border-brand-1 text-white shadow-sm'
                                             : 'bg-card border-border hover:bg-accent text-muted-foreground'
@@ -212,7 +212,7 @@ Al crear o editar productos:
                                 return (
                                     <Card
                                         key={art.id}
-                                        className={`transition-all duration-300 ${
+                                        className={`transition-colors duration-300 ${
                                             isExpanded ? 'ring-1 ring-brand-1/20 shadow-md' : 'hover:shadow-sm'
                                         }`}
                                     >

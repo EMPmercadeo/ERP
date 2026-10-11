@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -75,11 +75,13 @@ const getInitials = (name: string) => {
         .toUpperCase();
 };
 
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
+
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+    return currencyFormatter.format(value);
 }
 
 export function ClientList({
@@ -124,17 +126,22 @@ export function ClientList({
         return newParams.toString();
     }, [searchParams]);
 
+    const createQueryStringRef = useRef(createQueryString);
+    useEffect(() => {
+        createQueryStringRef.current = createQueryString;
+    });
+
     // Debounce search update to URL
     useEffect(() => {
         const timer = setTimeout(() => {
             const currentSearch = searchParams.get('search') || '';
             if (globalFilter !== currentSearch) {
-                const query = createQueryString({ search: globalFilter || null, page: '1' });
+                const query = createQueryStringRef.current({ search: globalFilter || null, page: '1' });
                 router.push(`${pathname}?${query}`);
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [globalFilter, pathname, router, searchParams, createQueryString]);
+    }, [globalFilter, pathname, router, searchParams]);
 
     const handleDelete = useCallback(async (id: string) => {
         if (confirm('¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer.')) {
@@ -283,11 +290,7 @@ export function ClientList({
         },
     ], [handleDelete, router]);
 
-    const [isMounted, setIsMounted] = useState(false);
 
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
 
     // TanStack Table's useReactTable() devuelve funciones nuevas en cada render que el compilador
     // de React no puede memoizar de forma segura; es una limitacion inherente a la API de la
@@ -363,9 +366,6 @@ export function ClientList({
         saveAs(blob, `clientes-${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
-    if (!isMounted) {
-        return null;
-    }
 
     return (
         <ContentContainer className="py-4">
@@ -491,7 +491,15 @@ export function ClientList({
                                     return (
                                         <div
                                             key={client.id}
+                                            role="button"
+                                            tabIndex={0}
                                             onClick={() => router.push(`/clients/${client.id}`)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    router.push(`/clients/${client.id}`);
+                                                }
+                                            }}
                                             className="bg-muted/50 border border-border rounded-xl p-3.5 space-y-3 shadow-sm active:scale-98 transition-transform cursor-pointer"
                                         >
                                             <div className="flex items-start justify-between gap-2">

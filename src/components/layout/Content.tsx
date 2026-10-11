@@ -22,7 +22,7 @@ export function Content({ children, className }: ContentProps) {
                 // altura de más -> scroll vertical forzado en TODAS las páginas del dashboard
                 // incluso con poco contenido. Se descuenta esa altura aquí; son 3.5rem desde
                 // que la v2 bajó la barra a 56px.
-                'min-h-[calc(100dvh-3.5rem)] w-full max-w-full overflow-x-hidden bg-background transition-all duration-300 pb-20 lg:pb-0',
+                'min-h-[calc(100dvh-3.5rem)] w-full max-w-full overflow-x-hidden bg-background transition-[padding] duration-300 pb-20 lg:pb-0',
                 isCollapsed ? 'lg:pl-16' : 'lg:pl-64',
                 className
             )}

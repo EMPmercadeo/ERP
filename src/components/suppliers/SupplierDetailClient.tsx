@@ -78,15 +78,18 @@ const purchaseStatusVariants: Record<string, 'success' | 'warning' | 'destructiv
     vencida: 'destructive',
 };
 
+const currencyFormatter = new Intl.NumberFormat('es-PA', {
+    style: 'currency',
+    currency: 'USD',
+});
+
 function formatCurrency(value: number) {
-    return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+    return currencyFormatter.format(value);
 }
 
 function formatDate(dateStr: string) {
     return new Date(dateStr).toLocaleDateString('es-PA', {
+        timeZone: 'America/Panama',
         year: 'numeric',
         month: 'short',
         day: 'numeric'
@@ -496,8 +499,8 @@ export function SupplierDetailClient({ supplier, purchases, payments, initialTab
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {ledger.length > 0 ? ledger.map((entry, index) => (
-                                            <TableRow key={index} className="hover:bg-accent/50">
+                                        {ledger.length > 0 ? ledger.map((entry) => (
+                                            <TableRow key={entry.id} className="hover:bg-accent/50">
                                                 <TableCell className="text-sm">{formatDate(entry.date.toISOString())}</TableCell>
                                                 <TableCell className="text-sm font-medium text-foreground">
                                                     {entry.description}

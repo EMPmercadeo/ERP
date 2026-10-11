@@ -97,6 +97,7 @@ export async function importProducts(products: Record<string, string>[]) {
                             entidad: 'Producto',
                             entidadId: prod.id,
                             accion: 'crear',
+                            // oxlint-disable-next-line react-doctor/no-json-parse-stringify-clone -- Intentional serialization to sanitize Prisma Decimal and Date instances for JSON column storage
                             datosDespues: JSON.parse(JSON.stringify({
                                 ...prod,
                                 costoUnitario: prod.costoUnitario.toNumber(),

@@ -114,6 +114,12 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
     const [state, formAction] = useActionState(
         async (prevState: typeof initialState, formData: FormData) => {
             const res = await updateProduct(product.id, prevState, formData);
+            if (res?.success) {
+                toast.success('Producto actualizado correctamente');
+                router.push('/products');
+            } else if (res?.message) {
+                toast.error(res.message);
+            }
             return {
                 message: res?.message || '',
                 errors: (res as { errors?: Record<string, string[] | undefined> })?.errors || {},
@@ -290,16 +296,6 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
     const stockPercentage = stockMinimoNum > 0 
         ? Math.min((stockActualNum / (stockMinimoNum * 2.5)) * 100, 100) 
         : 0;
-
-    // Toast feedback on action response
-    useEffect(() => {
-        if (state?.success) {
-            toast.success('Producto actualizado correctamente');
-            router.push('/products');
-        } else if (state?.message) {
-            if (state.message.length > 0) toast.error(state.message);
-        }
-    }, [state, router]);
 
     return (
         <form action={formAction} className="flex flex-col min-h-screen bg-secondary/50">
@@ -713,7 +709,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                                 >
                                                                     <TableCell className="py-2 font-semibold text-foreground text-[11px] font-mono">{sale.facturaNumero}</TableCell>
                                                                     <TableCell className="py-2 text-[11px] font-medium text-muted-foreground max-w-[140px] truncate">{sale.cliente}</TableCell>
-                                                                    <TableCell className="py-2 text-[11px] text-muted-foreground">{new Date(sale.fecha).toLocaleDateString('es-PA')}</TableCell>
+                                                                    <TableCell className="py-2 text-[11px] text-muted-foreground">{new Date(sale.fecha).toLocaleDateString('es-PA', { timeZone: 'America/Panama' })}</TableCell>
                                                                     <TableCell className="py-2 text-[11px] text-center font-bold text-foreground">{sale.cantidad} uds</TableCell>
                                                                     <TableCell className="py-2 text-[11px] text-right font-mono font-medium text-muted-foreground">{formatCurrency(sale.precio)}</TableCell>
                                                                     <TableCell className="py-2 text-[11px] text-right font-mono font-bold text-foreground pr-4">{formatCurrency(sale.total)}</TableCell>
@@ -777,6 +773,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                 accept="image/*"
                                                 multiple
                                                 onChange={handleUpload}
+                                                aria-label="Subir imágenes para la galería del producto"
                                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                             />
                                             <ImageIcon className="mx-auto h-10 w-10 text-muted-foreground group-hover:text-brand-1 transition-colors mb-2" />
@@ -911,7 +908,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                                     </div>
                                                                     <div className="flex items-center gap-1 font-semibold text-muted-foreground">
                                                                         <Calendar className="h-3 w-3 text-muted-foreground" />
-                                                                        <span>{new Date(log.createdAt).toLocaleString('es-PA')}</span>
+                                                                        <span>{new Date(log.createdAt).toLocaleString('es-PA', { timeZone: 'America/Panama' })}</span>
                                                                     </div>
                                                                 </div>
 
@@ -978,7 +975,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                         <img 
                                             src={activePreviewUrl || imagenUrl || "/placeholder-product.png"} 
                                             alt={descripcion || 'Producto'} 
-                                            className="max-h-full max-w-full object-contain rounded transition-all duration-300"
+                                            className="max-h-full max-w-full object-contain rounded transition-colors duration-300"
                                         />
                                     </div>
                                     {images.length > 1 && (
@@ -989,7 +986,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                                     type="button"
                                                     onClick={() => setActivePreviewUrl(img.imageUrl)}
                                                     className={cn(
-                                                        "h-10 w-10 rounded border overflow-hidden shrink-0 transition-all p-0.5 bg-card",
+                                                        "h-10 w-10 rounded border overflow-hidden shrink-0 transition-colors p-0.5 bg-card",
                                                         (activePreviewUrl || imagenUrl) === img.imageUrl 
                                                             ? "border-brand-1 scale-95 ring-1 ring-brand-1" 
                                                             : "border-border hover:border-brand-1/40"
@@ -1106,14 +1103,14 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
                                             <CalendarDays className="h-3.5 w-3.5" />
                                             Creado:
                                         </span>
-                                        <span className="font-semibold text-foreground">{new Date(product.createdAt).toLocaleDateString('es-PA')}</span>
+                                        <span className="font-semibold text-foreground">{new Date(product.createdAt).toLocaleDateString('es-PA', { timeZone: 'America/Panama' })}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="flex items-center gap-1.5 text-muted-foreground">
                                             <History className="h-3.5 w-3.5" />
                                             Modificado:
                                         </span>
-                                        <span className="font-semibold text-foreground">{new Date(product.updatedAt).toLocaleDateString('es-PA')}</span>
+                                        <span className="font-semibold text-foreground">{new Date(product.updatedAt).toLocaleDateString('es-PA', { timeZone: 'America/Panama' })}</span>
                                     </div>
                                 </div>
                             </CardContent>
@@ -1129,7 +1126,7 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
 function SubmitButton() {
     const { pending } = useFormStatus();
     return (
-        <Button type="submit" disabled={pending} className="h-9 bg-brand-1 hover:bg-brand-2 text-white font-bold text-xs shadow-sm px-4 rounded-lg flex items-center gap-1.5 active:scale-95 transition-all">
+        <Button type="submit" disabled={pending} className="h-9 bg-brand-1 hover:bg-brand-2 text-white font-bold text-xs shadow-sm px-4 rounded-lg flex items-center gap-1.5 active:scale-95 transition-colors">
             {pending ? (
                 <>
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />

@@ -11,8 +11,10 @@ export default async function IncomeStatementPage(props: {
         endDate?: string;
     }>;
 }) {
-    const searchParams = await props.searchParams;
-    const { empresaId } = await getTenantContext();
+    const [searchParams, { empresaId }] = await Promise.all([
+        props.searchParams,
+        getTenantContext(),
+    ]);
 
     const currentYear = new Date().getFullYear();
     const defaultStart = `${currentYear}-01-01`;

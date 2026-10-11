@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Send, Mail, CheckCircle2, XCircle, FileText, Plus, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { ContentContainer } from '@/components/layout/Content';
@@ -67,13 +67,17 @@ export default function SuperadminCorreosPage() {
     cargarDatos();
   }, []);
 
+  const enviandoRef = useRef(false);
+  const guardandoPlantillaRef = useRef(false);
+
   const handleEnviar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (enviando) return;
+    if (enviandoRef.current || enviando) return;
     if (!asunto.trim() || !cuerpoHtml.trim()) {
       toast.error('Por favor completa el asunto y el contenido HTML del correo.');
       return;
     }
+    enviandoRef.current = true;
     setEnviando(true);
     try {
       const res = await fetch('/api/admin/correos', {
@@ -102,17 +106,19 @@ export default function SuperadminCorreosPage() {
     } catch {
       toast.error('Error de conexión con el servidor de correo');
     } finally {
+      enviandoRef.current = false;
       setEnviando(false);
     }
   };
 
   const handleCrearPlantilla = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (guardandoPlantilla) return;
+    if (guardandoPlantillaRef.current || guardandoPlantilla) return;
     if (!nuevaClave.trim() || !nuevoAsunto.trim() || !nuevoCuerpo.trim()) {
       toast.error('Completa todos los campos para la plantilla.');
       return;
     }
+    guardandoPlantillaRef.current = true;
     setGuardandoPlantilla(true);
     try {
       const res = await fetch('/api/admin/correos/plantillas', {
@@ -139,6 +145,7 @@ export default function SuperadminCorreosPage() {
     } catch {
       toast.error('Error al guardar plantilla.');
     } finally {
+      guardandoPlantillaRef.current = false;
       setGuardandoPlantilla(false);
     }
   };
@@ -246,10 +253,12 @@ export default function SuperadminCorreosPage() {
             <form onSubmit={handleEnviar} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-muted-foreground">
+                  <label htmlFor="admin-tipo-destino" className="block text-xs font-medium text-muted-foreground">
                     Tipo de Destinatario
                   </label>
                   <select
+                    id="admin-tipo-destino"
+                    aria-label="Tipo de Destinatario"
                     value={tipoDestino}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTipoDestino(e.target.value as 'todos' | 'plan' | 'individual')}
                     className="w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none"
@@ -262,10 +271,11 @@ export default function SuperadminCorreosPage() {
 
                 {tipoDestino === 'individual' && (
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-muted-foreground">
+                    <label htmlFor="correo-destino" className="block text-xs font-medium text-muted-foreground">
                       Correo Electrónico Destino
                     </label>
                     <Input
+                      id="correo-destino"
                       type="email"
                       value={correoDestino}
                       onChange={(e) => setCorreoDestino(e.target.value)}
@@ -277,10 +287,11 @@ export default function SuperadminCorreosPage() {
 
                 {tipoDestino === 'plan' && (
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-muted-foreground">
+                    <label htmlFor="plan-destino" className="block text-xs font-medium text-muted-foreground">
                       ID o Slug del Plan
                     </label>
                     <Input
+                      id="plan-destino"
                       type="text"
                       value={planDestino}
                       onChange={(e) => setPlanDestino(e.target.value)}
@@ -292,10 +303,11 @@ export default function SuperadminCorreosPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-muted-foreground">
+                <label htmlFor="correo-asunto" className="block text-xs font-medium text-muted-foreground">
                   Asunto del Correo
                 </label>
                 <Input
+                  id="correo-asunto"
                   type="text"
                   value={asunto}
                   onChange={(e) => setAsunto(e.target.value)}
@@ -305,10 +317,11 @@ export default function SuperadminCorreosPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-muted-foreground">
+                <label htmlFor="correo-cuerpo-html" className="block text-xs font-medium text-muted-foreground">
                   Contenido HTML o Texto Libre (Soporta variables &#123;&#123;nombre&#125;&#125; y &#123;&#123;empresa&#125;&#125;)
                 </label>
                 <textarea
+                  id="correo-cuerpo-html"
                   value={cuerpoHtml}
                   onChange={(e) => setCuerpoHtml(e.target.value)}
                   rows={7}
@@ -372,8 +385,9 @@ export default function SuperadminCorreosPage() {
             <CardContent className="pt-4">
               <form onSubmit={handleCrearPlantilla} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs text-muted-foreground">Clave de Plantilla (Única)</label>
+                  <label htmlFor="nueva-clave-plantilla" className="block text-xs text-muted-foreground">Clave de Plantilla (Única)</label>
                   <Input
+                    id="nueva-clave-plantilla"
                     type="text"
                     value={nuevaClave}
                     onChange={(e) => setNuevaClave(e.target.value)}
@@ -384,8 +398,9 @@ export default function SuperadminCorreosPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs text-muted-foreground">Asunto por Defecto</label>
+                  <label htmlFor="nuevo-asunto-plantilla" className="block text-xs text-muted-foreground">Asunto por Defecto</label>
                   <Input
+                    id="nuevo-asunto-plantilla"
                     type="text"
                     value={nuevoAsunto}
                     onChange={(e) => setNuevoAsunto(e.target.value)}
@@ -396,8 +411,9 @@ export default function SuperadminCorreosPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs text-muted-foreground">Cuerpo HTML</label>
+                  <label htmlFor="nuevo-cuerpo-plantilla" className="block text-xs text-muted-foreground">Cuerpo HTML</label>
                   <textarea
+                    id="nuevo-cuerpo-plantilla"
                     value={nuevoCuerpo}
                     onChange={(e) => setNuevoCuerpo(e.target.value)}
                     rows={5}
@@ -407,8 +423,8 @@ export default function SuperadminCorreosPage() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full" size="sm">
-                  Guardar Plantilla
+                <Button type="submit" disabled={guardandoPlantilla} className="w-full" size="sm">
+                  {guardandoPlantilla ? 'Guardando Plantilla...' : 'Guardar Plantilla'}
                 </Button>
               </form>
             </CardContent>

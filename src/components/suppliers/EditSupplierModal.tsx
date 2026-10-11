@@ -95,8 +95,9 @@ export function EditSupplierModal({
                 <form onSubmit={handleSubmit} className="space-y-4 py-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-foreground">Razón Social *</label>
+                            <label htmlFor="supplier-razonSocial" className="text-xs font-semibold text-foreground">Razón Social *</label>
                             <Input
+                                id="supplier-razonSocial"
                                 required
                                 value={formData.razonSocial}
                                 onChange={e => handleChange('razonSocial', e.target.value)}
@@ -105,8 +106,9 @@ export function EditSupplierModal({
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-foreground">Nombre Comercial</label>
+                            <label htmlFor="supplier-nombreComercial" className="text-xs font-semibold text-foreground">Nombre Comercial</label>
                             <Input
+                                id="supplier-nombreComercial"
                                 value={formData.nombreComercial}
                                 onChange={e => handleChange('nombreComercial', e.target.value)}
                                 placeholder="Ej. +Móvil"
@@ -116,8 +118,9 @@ export function EditSupplierModal({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-foreground">RUC *</label>
+                            <label htmlFor="supplier-ruc" className="text-xs font-semibold text-foreground">RUC *</label>
                             <Input
+                                id="supplier-ruc"
                                 required
                                 value={formData.ruc}
                                 onChange={e => handleChange('ruc', e.target.value)}
@@ -125,8 +128,9 @@ export function EditSupplierModal({
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-foreground">Dígito Verificador (DV)</label>
+                            <label htmlFor="supplier-dv" className="text-xs font-semibold text-foreground">Dígito Verificador (DV)</label>
                             <Input
+                                id="supplier-dv"
                                 value={formData.dv}
                                 onChange={e => handleChange('dv', e.target.value)}
                             />
@@ -135,8 +139,9 @@ export function EditSupplierModal({
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-foreground">Nombre de Contacto</label>
+                            <label htmlFor="supplier-nombreContacto" className="text-xs font-semibold text-foreground">Nombre de Contacto</label>
                             <Input
+                                id="supplier-nombreContacto"
                                 value={formData.nombreContacto}
                                 onChange={e => handleChange('nombreContacto', e.target.value)}
                                 placeholder="Nombre del representante"
@@ -144,8 +149,9 @@ export function EditSupplierModal({
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-foreground">Correo Electrónico</label>
+                            <label htmlFor="supplier-email" className="text-xs font-semibold text-foreground">Correo Electrónico</label>
                             <Input
+                                id="supplier-email"
                                 type="email"
                                 value={formData.email}
                                 onChange={e => handleChange('email', e.target.value)}
@@ -154,8 +160,9 @@ export function EditSupplierModal({
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-foreground">Teléfono</label>
+                            <label htmlFor="supplier-telefono" className="text-xs font-semibold text-foreground">Teléfono</label>
                             <Input
+                                id="supplier-telefono"
                                 value={formData.telefono}
                                 onChange={e => handleChange('telefono', e.target.value)}
                                 placeholder="260-0000 / 6000-0000"
@@ -165,8 +172,10 @@ export function EditSupplierModal({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-foreground">Condición de Pago</label>
+                            <label htmlFor="supplier-condicionPago" className="text-xs font-semibold text-foreground">Condición de Pago</label>
                             <select
+                                id="supplier-condicionPago"
+                                aria-label="Condición de Pago"
                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                 value={formData.condicionPago}
                                 onChange={e => handleChange('condicionPago', e.target.value)}
@@ -179,8 +188,9 @@ export function EditSupplierModal({
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-foreground">Límite de Crédito (USD)</label>
+                            <label htmlFor="supplier-limiteCredito" className="text-xs font-semibold text-foreground">Límite de Crédito (USD)</label>
                             <Input
+                                id="supplier-limiteCredito"
                                 type="number"
                                 step="0.01"
                                 value={formData.limiteCredito}

@@ -89,7 +89,19 @@ export function QuickSalePOS({
     
     // Checkout states
     const [showCheckoutModal, setShowCheckoutModal] = useState(false);
-    const [clienteId, setClienteId] = useState('');
+    const defaultClientId = useMemo(() => {
+        const defaultClient = clients.find(c => 
+            c.razonSocial.toLowerCase().includes('consumidor final') || 
+            c.ruc === '8-NT-8-8' || 
+            c.ruc === '00'
+        ) || clients[0];
+        return defaultClient?.id || '';
+    }, [clients]);
+
+    const [selectedClienteId, setSelectedClienteId] = useState<string | null>(null);
+    const clienteId = selectedClienteId !== null ? selectedClienteId : defaultClientId;
+    const setClienteId = (id: string) => setSelectedClienteId(id);
+
     const [condicionPago, _setCondicionPago] = useState('contado');
     const [metodoPago, setMetodoPago] = useState('efectivo');
     const [clientSearch, setClientSearch] = useState('');
@@ -103,26 +115,7 @@ export function QuickSalePOS({
         totalNeto: number;
     } | null>(null);
 
-    const [baseUrl, setBaseUrl] = useState('');
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            setBaseUrl(window.location.origin);
-        }
-    }, []);
-
-    // Set default client (Consumidor Final) if available
-    useEffect(() => {
-        const defaultClient = clients.find(c => 
-            c.razonSocial.toLowerCase().includes('consumidor final') || 
-            c.ruc === '8-NT-8-8' || 
-            c.ruc === '00'
-        ) || clients[0];
-        
-        if (defaultClient) {
-            setClienteId(defaultClient.id);
-        }
-    }, [clients]);
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
     // Add to cart
     const addToCart = useCallback((product: ProductOption) => {
@@ -148,6 +141,35 @@ export function QuickSalePOS({
         toast.success(`Agregado: ${product.descripcion}`, { duration: 1000 });
     }, [cart]);
 
+    // Handle search input & auto-add barcode
+    const handleSearchChange = (val: string) => {
+        const queryClean = val.trim().toLowerCase();
+        const match = products.find(p => 
+            p.codigoBarras && p.codigoBarras.trim() !== '' && p.codigoBarras.toLowerCase() === queryClean
+        );
+        if (match) {
+            addToCart(match);
+            setSearchQuery('');
+        } else {
+            setSearchQuery(val);
+        }
+    };
+
+    const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const queryClean = searchQuery.trim().toLowerCase();
+            const match = products.find(p => 
+                (p.codigoBarras && p.codigoBarras.trim().toLowerCase() === queryClean) ||
+                p.codigo.toLowerCase() === queryClean
+            );
+            if (match) {
+                addToCart(match);
+                setSearchQuery('');
+            }
+        }
+    };
+
     // Filter products by search query
     const filteredProducts = useMemo(() => {
         return products.filter(p => 
@@ -156,19 +178,6 @@ export function QuickSalePOS({
             (p.codigoBarras && p.codigoBarras.toLowerCase().includes(searchQuery.toLowerCase()))
         );
     }, [products, searchQuery]);
-
-    // Auto-add product when search query exactly matches a barcode
-    useEffect(() => {
-        if (!searchQuery) return;
-        const queryClean = searchQuery.trim().toLowerCase();
-        const match = products.find(p => 
-            p.codigoBarras && p.codigoBarras.trim() !== '' && p.codigoBarras.toLowerCase() === queryClean
-        );
-        if (match) {
-            addToCart(match);
-            setSearchQuery('');
-        }
-    }, [searchQuery, products, addToCart]);
 
     const filteredClients = useMemo(() => {
         if (!clientSearch) return [];
@@ -306,11 +315,14 @@ export function QuickSalePOS({
                             <Input
                                 placeholder="Buscar por código o nombre..."
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) => handleSearchChange(e.target.value)}
+                                onKeyDown={handleSearchKeyDown}
                                 className="h-11 pl-9 bg-card border-border focus-visible:ring-brand-1 rounded-xl text-sm"
                             />
                             {searchQuery && (
                                 <button
+                                    type="button"
+                                    aria-label="Limpiar búsqueda"
                                     onClick={() => setSearchQuery('')}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                 >
@@ -348,8 +360,16 @@ export function QuickSalePOS({
                                 return (
                                     <div
                                         key={product.id}
+                                        role="button"
+                                        tabIndex={isAgotado ? -1 : 0}
                                         onClick={() => !isAgotado && addToCart(product)}
-                                        className={`bg-card border rounded-2xl p-2.5 flex flex-col justify-between shadow-sm relative transition-all select-none ${
+                                        onKeyDown={(e) => {
+                                            if (!isAgotado && (e.key === 'Enter' || e.key === ' ')) {
+                                                e.preventDefault();
+                                                addToCart(product);
+                                            }
+                                        }}
+                                        className={`bg-card border rounded-2xl p-2.5 flex flex-col justify-between shadow-sm relative transition-colors select-none ${
                                             isAgotado 
                                                 ? 'opacity-60 cursor-not-allowed border-border' 
                                                 : 'hover:border-border hover:shadow active:scale-[0.97] cursor-pointer border-border'
@@ -513,7 +533,7 @@ export function QuickSalePOS({
                 <div className="fixed bottom-16 left-0 right-0 z-30 lg:hidden bg-card border-t border-border px-4 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.06)] font-sans">
                     <button
                         onClick={() => cart.length > 0 && setIsCartOpen(!isCartOpen)}
-                        className="flex items-center gap-2 text-left bg-muted border border-border px-3.5 py-2.5 rounded-xl active:scale-95 transition-all select-none"
+                        className="flex items-center gap-2 text-left bg-muted border border-border px-3.5 py-2.5 rounded-xl active:scale-95 transition-colors select-none"
                     >
                         <div className="relative shrink-0">
                             <ShoppingCart className="h-5 w-5 text-brand-1" />
@@ -551,7 +571,12 @@ export function QuickSalePOS({
                                 <ShoppingCart className="h-4 w-4 text-brand-1" />
                                 Artículos Agregados
                             </h4>
-                            <button onClick={() => setIsCartOpen(false)} className="text-muted-foreground hover:text-foreground">
+                            <button
+                                type="button"
+                                aria-label="Cerrar artículos agregados"
+                                onClick={() => setIsCartOpen(false)}
+                                className="text-muted-foreground hover:text-foreground"
+                            >
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
@@ -605,6 +630,8 @@ export function QuickSalePOS({
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-2xl p-6 relative font-sans">
                         <button
+                            type="button"
+                            aria-label="Cerrar modal de pago"
                             onClick={() => setShowCheckoutModal(false)}
                             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
                             disabled={isCheckingOut}
@@ -765,6 +792,8 @@ export function QuickSalePOS({
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-2xl p-6 relative font-sans">
                         <button
+                            type="button"
+                            aria-label="Cerrar comprobante"
                             onClick={() => setSuccessInvoice(null)}
                             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
                         >
@@ -796,16 +825,16 @@ export function QuickSalePOS({
                             </div>
 
                             <div className="space-y-2.5">
-                                <label className="block text-[11px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
+                                <span className="block text-[11px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                                     Entregar Comprobante
-                                </label>
+                                </span>
                                 
                                 <div className="grid grid-cols-2 gap-2">
                                     <a
                                         href={whatsappUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="h-11 px-4 rounded-xl bg-success hover:bg-success/90 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98"
+                                        className="h-11 px-4 rounded-xl bg-success hover:bg-success/90 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors active:scale-98"
                                     >
                                         <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
                                             <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.062 5.248 5.308 0 11.777 0c3.137 0 6.085 1.22 8.302 3.439 2.219 2.219 3.438 5.168 3.436 8.307-.005 6.522-5.252 11.77-11.72 11.77-2.002-.001-3.97-.512-5.713-1.488L0 24zm6.59-4.859c1.72.1.085-.34 2.82.28 1.48.33 2.92.51 4.38.51 5.388 0 9.77-4.386 9.773-9.775.002-2.61-1.014-5.064-2.865-6.916C17.95 1.42 15.5 .4 12.89.4 7.502.4 3.12 4.78 3.117 10.165c-.002 1.63.39 3.22 1.13 4.64l.16.29-1.01 3.69 3.79-.99.3.18c1.35.8 2.9 1.22 4.47 1.22zM17.3 14.3c-.3-.15-1.78-.88-2.06-.98-.28-.1-.49-.15-.69.15-.2.3-.77.98-.95 1.18-.18.2-.36.23-.66.08-1.54-.77-2.58-1.34-3.56-3.03-.26-.45.26-.42.74-1.38.08-.16.04-.3-.02-.45-.06-.15-.49-1.18-.67-1.62-.18-.43-.37-.37-.5-.38l-.43-.01c-.15 0-.39.06-.6.28-.2.22-.8.78-.8 1.9s.82 2.2 1.05 2.5c.23.3 1.6 2.44 3.88 3.42.54.23 1 .37 1.34.48.55.17 1.05.15 1.44.09.44-.06 1.35-.55 1.54-1.08.19-.53.19-1 .13-1.08-.07-.08-.26-.13-.56-.28z"/>
@@ -814,7 +843,7 @@ export function QuickSalePOS({
                                     </a>
                                     <a
                                         href={emailUrl}
-                                        className="h-11 px-4 rounded-xl bg-muted hover:bg-accent dark:bg-card dark:hover:bg-accent text-foreground dark:text-foreground font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98"
+                                        className="h-11 px-4 rounded-xl bg-muted hover:bg-accent dark:bg-card dark:hover:bg-accent text-foreground dark:text-foreground font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors active:scale-98"
                                     >
                                         <Mail className="h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
                                         Correo
