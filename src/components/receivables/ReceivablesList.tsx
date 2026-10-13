@@ -133,14 +133,12 @@ export function ReceivablesList({
         return () => clearTimeout(timer);
     }, [globalFilter, pathname, router, searchParams]);
 
-    // Update state when activeInvoice is selected
-    useEffect(() => {
-        if (activeInvoice) {
-            setMontoPago(activeInvoice.saldoPendiente.toFixed(2));
-            setMetodoPago('efectivo');
-            setReferencia('');
-        }
-    }, [activeInvoice]);
+    const handleOpenPayment = (invoice: ReceivableInvoice) => {
+        setActiveInvoice(invoice);
+        setMontoPago(invoice.saldoPendiente.toFixed(2));
+        setMetodoPago('efectivo');
+        setReferencia('');
+    };
 
     const handleSort = (field: string) => {
         const nextOrder = sortBy === field && sortOrder === 'asc' ? 'desc' : 'asc';
@@ -331,7 +329,7 @@ export function ReceivablesList({
                                                         <Button
                                                             size="sm"
                                                             className="h-8 font-bold text-xs bg-brand-1 hover:bg-brand-2 text-white rounded-lg shadow-sm"
-                                                            onClick={() => setActiveInvoice(invoice)}
+                                                            onClick={() => handleOpenPayment(invoice)}
                                                         >
                                                             Cobrar
                                                         </Button>
@@ -372,7 +370,7 @@ export function ReceivablesList({
                                         <div 
                                             key={invoice.id}
                                             className="bg-muted/50 border border-border rounded-xl p-3.5 space-y-3.5 shadow-sm active:scale-[0.99] transition-colors cursor-pointer relative"
-                                            onClick={() => setActiveInvoice(invoice)}
+                                            onClick={() => handleOpenPayment(invoice)}
                                         >
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="flex items-center gap-2.5 min-w-0">
@@ -410,7 +408,7 @@ export function ReceivablesList({
                                                 <Button
                                                     size="sm"
                                                     className="w-full h-10 font-bold text-xs bg-brand-1 hover:bg-brand-2 text-white rounded-lg shadow-sm"
-                                                    onClick={() => setActiveInvoice(invoice)}
+                                                    onClick={() => handleOpenPayment(invoice)}
                                                 >
                                                     <DollarSign className="h-3.5 w-3.5 mr-1" />
                                                     Registrar Cobro

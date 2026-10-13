@@ -43,6 +43,7 @@ export const metadata: Metadata = {
 
 import { AuthProvider } from '@/lib/firebase/auth';
 import { PwaManager } from '@/components/pwa/PwaManager';
+import { QueryProvider } from '@/providers/QueryProvider';
 import { Toaster } from 'sonner';
 
 export default function RootLayout({
@@ -56,18 +57,20 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <AuthProvider>
-          <PwaManager />
-          {/* Impersonation Banner */}
-          <Suspense fallback={null}>
-            <ImpersonationWrapper />
-          </Suspense>
-          {children}
-          {/* Sin este componente, toast.success()/toast.error() (usados en decenas de
-              formularios y acciones en toda la app) no muestran nada visible: la llamada
-              se ejecuta pero no hay dónde renderizarla. */}
-          <Toaster richColors position="top-right" />
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <PwaManager />
+            {/* Impersonation Banner */}
+            <Suspense fallback={null}>
+              <ImpersonationWrapper />
+            </Suspense>
+            {children}
+            {/* Sin este componente, toast.success()/toast.error() (usados en decenas de
+                formularios y acciones en toda la app) no muestran nada visible: la llamada
+                se ejecuta pero no hay dónde renderizarla. */}
+            <Toaster richColors position="top-right" />
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

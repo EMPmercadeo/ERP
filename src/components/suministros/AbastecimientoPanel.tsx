@@ -61,7 +61,6 @@ export function AbastecimientoPanel() {
 
     useEffect(() => {
         let isCancelled = false;
-        setLoading(true);
         getAlertasReabastecimiento({ dias: Number(dias), incluirOk })
             .then((res) => {
                 if (!isCancelled) {
@@ -113,7 +112,13 @@ export function AbastecimientoPanel() {
                     </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                    <Select value={dias} onValueChange={setDias}>
+                    <Select
+                        value={dias}
+                        onValueChange={(val) => {
+                            setLoading(true);
+                            setDias(val);
+                        }}
+                    >
                         <SelectTrigger className="h-9 text-xs w-40" aria-label="Período de historial">
                             <SelectValue />
                         </SelectTrigger>
@@ -136,7 +141,10 @@ export function AbastecimientoPanel() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setIncluirOk(!incluirOk)}
+                        onClick={() => {
+                            setLoading(true);
+                            setIncluirOk(!incluirOk);
+                        }}
                         className="h-9 text-xs font-bold"
                     >
                         {incluirOk ? 'Solo alertas' : 'Ver todos'}
@@ -145,7 +153,10 @@ export function AbastecimientoPanel() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => setReloadKey((k) => k + 1)}
+                        onClick={() => {
+                            setLoading(true);
+                            setReloadKey((k) => k + 1);
+                        }}
                         className="h-9 w-9"
                         aria-label="Recalcular"
                     >

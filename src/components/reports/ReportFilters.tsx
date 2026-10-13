@@ -126,7 +126,6 @@ export function ReportFilters({
     // Debounced client search
     useEffect(() => {
         if (!clientSearch.trim()) {
-            setClientSuggestions([]);
             return;
         }
         const selected = filterClients.find(c => c.id === clienteId);
@@ -134,28 +133,34 @@ export function ReportFilters({
             return;
         }
 
-        setClientLoading(true);
+        const controller = new AbortController();
         const delayDebounce = setTimeout(async () => {
+            setClientLoading(true);
             try {
-                const res = await fetch(`/api/customers/search?q=${encodeURIComponent(clientSearch)}`);
+                const res = await fetch(`/api/customers/search?q=${encodeURIComponent(clientSearch)}`, {
+                    signal: controller.signal
+                });
                 if (res.ok) {
                     const data = await res.json();
                     setClientSuggestions(data);
                 }
-            } catch (e) {
+            } catch (e: unknown) {
+                if (e instanceof Error && e.name === 'AbortError') return;
                 console.error(e);
             } finally {
                 setClientLoading(false);
             }
         }, 300);
 
-        return () => clearTimeout(delayDebounce);
+        return () => {
+            clearTimeout(delayDebounce);
+            controller.abort();
+        };
     }, [clientSearch, clienteId, filterClients]);
 
     // Debounced product search
     useEffect(() => {
         if (!productSearch.trim()) {
-            setProductSuggestions([]);
             return;
         }
         const selected = filterProducts.find(p => p.id === productoId);
@@ -163,22 +168,29 @@ export function ReportFilters({
             return;
         }
 
-        setProductLoading(true);
+        const controller = new AbortController();
         const delayDebounce = setTimeout(async () => {
+            setProductLoading(true);
             try {
-                const res = await fetch(`/api/products/search?q=${encodeURIComponent(productSearch)}`);
+                const res = await fetch(`/api/products/search?q=${encodeURIComponent(productSearch)}`, {
+                    signal: controller.signal
+                });
                 if (res.ok) {
                     const data = await res.json();
                     setProductSuggestions(data);
                 }
-            } catch (e) {
+            } catch (e: unknown) {
+                if (e instanceof Error && e.name === 'AbortError') return;
                 console.error(e);
             } finally {
                 setProductLoading(false);
             }
         }, 300);
 
-        return () => clearTimeout(delayDebounce);
+        return () => {
+            clearTimeout(delayDebounce);
+            controller.abort();
+        };
     }, [productSearch, productoId, filterProducts]);
 
     // Close autocompletes on click outside
@@ -359,8 +371,10 @@ export function ReportFilters({
                                 onChange={(e) => {
                                     setClientSearch(e.target.value);
                                     setShowClientDropdown(true);
-                                    if (!e.target.value) {
+                                    if (!e.target.value.trim()) {
                                         setClienteId('all');
+                                        setClientSuggestions([]);
+                                        setClientLoading(false);
                                     }
                                 }}
                                 onFocus={() => setShowClientDropdown(true)}
@@ -424,8 +438,10 @@ export function ReportFilters({
                                 onChange={(e) => {
                                     setProductSearch(e.target.value);
                                     setShowProductDropdown(true);
-                                    if (!e.target.value) {
+                                    if (!e.target.value.trim()) {
                                         setProductoId('all');
+                                        setProductSuggestions([]);
+                                        setProductLoading(false);
                                     }
                                 }}
                                 onFocus={() => setShowProductDropdown(true)}

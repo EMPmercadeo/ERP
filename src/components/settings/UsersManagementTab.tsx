@@ -69,8 +69,31 @@ export function UsersManagementTab({ myRole }: { myRole: string }) {
     };
 
     useEffect(() => {
-        cargar();
-         
+        let isMounted = true;
+        (async () => {
+            setLoading(true);
+            try {
+                const [data, topeActual] = await Promise.all([
+                    listCompanyUsers(),
+                    getCompanyDiscountThreshold(),
+                ]);
+                if (isMounted) {
+                    setUsuarios(data as CompanyUser[]);
+                    setTope(String(topeActual));
+                }
+            } catch (e) {
+                if (isMounted) {
+                    toast.error(e instanceof Error ? e.message : 'Error al cargar usuarios.');
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        })();
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const handleInvitar = async (e: React.FormEvent) => {

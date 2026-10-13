@@ -70,12 +70,16 @@ export function NewTransferModal({ bodegas }: { bodegas: BodegaOption[] }) {
     };
 
     useEffect(() => {
-        if (!bodegaOrigenId) {
-            setProductosOrigen([]);
-            return;
-        }
-        setItems([]);
-        getProductosDisponiblesEnBodega(bodegaOrigenId).then(setProductosOrigen);
+        if (!bodegaOrigenId) return;
+        let isCurrent = true;
+        getProductosDisponiblesEnBodega(bodegaOrigenId).then((prods) => {
+            if (isCurrent) {
+                setProductosOrigen(prods);
+            }
+        });
+        return () => {
+            isCurrent = false;
+        };
     }, [bodegaOrigenId]);
 
     const bodegasDestinoDisponibles = useMemo(
@@ -163,7 +167,15 @@ export function NewTransferModal({ bodegas }: { bodegas: BodegaOption[] }) {
                     <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-3 items-end">
                         <div>
                             <Label htmlFor="bodegaOrigenId">Bodega de Origen *</Label>
-                            <Select value={bodegaOrigenId} onValueChange={setBodegaOrigenId}>
+                            <Select
+                                value={bodegaOrigenId}
+                                onValueChange={(val) => {
+                                    setBodegaOrigenId(val);
+                                    setItems([]);
+                                    setProductoSeleccionado('');
+                                    if (!val) setProductosOrigen([]);
+                                }}
+                            >
                                 <SelectTrigger id="bodegaOrigenId">
                                     <SelectValue placeholder="Seleccionar..." />
                                 </SelectTrigger>
