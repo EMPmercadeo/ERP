@@ -4,6 +4,7 @@ import { useFormStatus } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 import {
     ArrowLeft,
     Save,
@@ -151,14 +152,15 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
     const [activePreviewUrl, setActivePreviewUrl] = useState(product.imagenUrl || '');
     const [categoriaId, setCategoriaId] = useState(product.categoriaId || 'none');
     const [descuentoPorcentaje, setDescuentoPorcentaje] = useState(() => product.descuentoPorcentaje?.toString() || '0');
-    const [categorias, setCategorias] = useState<{ id: string; nombre: string; descuentoPorcentaje: number }[]>([]);
-
-    useEffect(() => {
-        fetch('/api/categories')
-            .then(res => res.ok ? res.json() : { items: [] })
-            .then(data => setCategorias(data.items || []))
-            .catch(() => setCategorias([]));
-    }, []);
+    const { data: categorias = [] } = useQuery<{ id: string; nombre: string; descuentoPorcentaje: number }[]>({
+        queryKey: ['categories'],
+        queryFn: async () => {
+            const res = await fetch('/api/categories');
+            if (!res.ok) return [];
+            const data = await res.json();
+            return data.items || [];
+        }
+    });
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -166,30 +168,32 @@ function EditProductForm({ product }: { product: NonNullable<Awaited<ReturnType<
 
         toast.info(`Iniciando subida de ${files.length} archivo(s)...`);
 
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const formData = new FormData();
-            formData.append('file', file);
+        const fileArray = Array.from(files);
+        await Promise.all(
+            fileArray.map(async (file) => {
+                const formData = new FormData();
+                formData.append('file', file);
 
-            try {
-                const res = await uploadProductImage(product.id, formData);
-                if (res.success && res.image) {
-                    setImages(prev => {
-                        if (prev.some(img => img.id === res.image?.id)) return prev;
-                        const next = [...prev, res.image as unknown as typeof prev[0]];
-                        return next.sort((a, b) => a.sortOrder - b.sortOrder);
-                    });
-                    if (res.image.isPrimary) {
-                        setImagenUrl(res.image.imageUrl);
-                        setActivePreviewUrl(res.image.imageUrl);
+                try {
+                    const res = await uploadProductImage(product.id, formData);
+                    if (res.success && res.image) {
+                        setImages(prev => {
+                            if (prev.some(img => img.id === res.image?.id)) return prev;
+                            const next = [...prev, res.image as unknown as typeof prev[0]];
+                            return next.sort((a, b) => a.sortOrder - b.sortOrder);
+                        });
+                        if (res.image.isPrimary) {
+                            setImagenUrl(res.image.imageUrl);
+                            setActivePreviewUrl(res.image.imageUrl);
+                        }
+                    } else {
+                        toast.error(`Error al subir ${file.name}: ${res.message}`);
                     }
-                } else {
-                    toast.error(`Error al subir ${file.name}: ${res.message}`);
+                } catch {
+                    toast.error(`Error de red al subir ${file.name}`);
                 }
-            } catch {
-                toast.error(`Error de red al subir ${file.name}`);
-            }
-        }
+            })
+        );
         toast.success('Proceso de carga de imágenes finalizado.');
     };
 

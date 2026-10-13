@@ -2,19 +2,7 @@
 
 import { useEffect } from 'react';
 import { ErrorCard } from "@/components/ui/error-card";
-
-function logClientError(payload: Record<string, unknown>) {
-    fetch('/api/client-errors', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-    }).catch(err => {
-        // Silently fail if logging endpoint is down to avoid infinite loop
-        console.error('Failed to dispatch error report:', err);
-    });
-}
+import { logClientError } from '@/lib/client-error-logger';
 
 export default function DashboardError({
     error,

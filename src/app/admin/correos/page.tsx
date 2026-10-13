@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, Mail, CheckCircle2, XCircle, FileText, Plus, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { ContentContainer } from '@/components/layout/Content';
@@ -46,26 +46,31 @@ export default function SuperadminCorreosPage() {
   const [nuevoAsunto, setNuevoAsunto] = useState('');
   const [nuevoCuerpo, setNuevoCuerpo] = useState('');
 
-  const cargarDatos = async () => {
+  const cargarDatos = useCallback(async (isCancelled?: unknown) => {
+    const isAborted = () => typeof isCancelled === 'function' && Boolean(isCancelled());
     setLoading(true);
     try {
       const [resC, resP] = await Promise.all([
         fetch('/api/admin/correos').then(r => r.ok ? r.json() : { items: [] }),
         fetch('/api/admin/correos/plantillas').then(r => r.ok ? r.json() : [])
       ]);
+      if (isAborted()) return;
       setCorreos(resC?.items || []);
       setPlantillas(Array.isArray(resP) ? resP : []);
     } catch (error) {
+      if (isAborted()) return;
       console.error('Error al cargar datos de correos:', error);
       toast.error('No se pudieron cargar los correos o plantillas.');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    cargarDatos();
-  }, []);
+    let active = true;
+    cargarDatos(() => !active);
+    return () => { active = false; };
+  }, [cargarDatos]);
 
   const enviandoRef = useRef(false);
   const guardandoPlantillaRef = useRef(false);

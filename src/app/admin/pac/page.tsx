@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Building2, ShieldCheck, Activity, Plus, Trash2, RefreshCw, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { ContentContainer } from '@/components/layout/Content';
@@ -31,26 +31,30 @@ export default function SuperadminPACPage() {
   const [esRespaldo, setEsRespaldo] = useState(false);
   const [guardando, setGuardando] = useState(false);
 
-  const cargarPACs = async () => {
+  const cargarPACs = useCallback(async (isCancelled?: unknown) => {
+    const isAborted = () => typeof isCancelled === 'function' && Boolean(isCancelled());
     setLoading(true);
     try {
       const res = await fetch('/api/admin/pac');
       if (!res.ok) {
-        toast.error('Error al cargar configuración PAC');
+        if (!isAborted()) toast.error('Error al cargar configuración PAC');
         return;
       }
       const data = await res.json();
+      if (isAborted()) return;
       setPacs(Array.isArray(data) ? data : []);
     } catch {
-      toast.error('Error al cargar configuración PAC');
+      if (!isAborted()) toast.error('Error al cargar configuración PAC');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    cargarPACs();
-  }, []);
+    let active = true;
+    cargarPACs(() => !active);
+    return () => { active = false; };
+  }, [cargarPACs]);
 
   const handleProbarConexion = async (id: string) => {
     setTestingId(id);

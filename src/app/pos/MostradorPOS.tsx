@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import QRCode from 'qrcode';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -135,11 +136,52 @@ export default function MostradorPOS({
   active: boolean;
   onOpenSalon?: () => void;
 }) {
-  const [productos, setProductos] = useState<ProductoPOS[]>([]);
+  const queryClient = useQueryClient();
+
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
   const [buscar, setBuscar] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [errorCatalogo, setErrorCatalogo] = useState('');
+
+  // Catálogo de productos con TanStack Query
+  const [stockOverrides, setStockOverrides] = useState<Record<string, number>>({});
+  const {
+    data: productosQuery,
+    isLoading: loading,
+    refetch: refetchProductos,
+    error: errorProductosQuery
+  } = useQuery({
+    queryKey: ['pos-productos'],
+    queryFn: async () => {
+      const res = await fetch('/api/pos/productos');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'No se pudo cargar el catálogo de productos.');
+      }
+      const data = await res.json().catch(() => ({}));
+      const lista = (data.items || []).map((p: ProductoPOSRaw) => ({
+        id: p.id,
+        codigoInterno: p.codigoInterno || 'SKU-01',
+        codigoBarras: p.codigoBarras,
+        descripcion: p.descripcion || 'Producto',
+        precioVenta: Number(p.precioVenta ?? 0),
+        codigoTasaItbms: p.codigoTasaItbms || '00',
+        stockActual: p.stockActual ?? 0,
+        unidadMedida: p.unidadMedida || 'UND',
+        descuentoSugerido: Number(p.descuentoSugerido ?? 0)
+      }));
+      return lista as ProductoPOS[];
+    },
+  });
+
+  const productos: ProductoPOS[] = (productosQuery || []).map(p => ({
+    ...p,
+    stockActual: stockOverrides[p.id] !== undefined ? stockOverrides[p.id] : p.stockActual
+  }));
+
+  const errorCatalogo = errorProductosQuery instanceof Error
+    ? errorProductosQuery.message
+    : (productosQuery && productosQuery.length === 0
+      ? 'No tienes productos activos todavía. Agrega productos en el módulo Productos para poder venderlos aquí.'
+      : '');
 
   // Estado de Red y Cola Offline IndexedDB / LocalStorage
   const [isOnline, setIsOnline] = useState(true);
@@ -147,8 +189,26 @@ export default function MostradorPOS({
   const [showContingenciaConfirm, setShowContingenciaConfirm] = useState(false);
   const [showVaciarCarritoConfirm, setShowVaciarCarritoConfirm] = useState(false);
   const [colaLocal, setColaLocal] = useState<VentaOfflineQueueItem[]>([]);
-  const [pendientesPAC, setPendientesPAC] = useState(0);
   const [sincronizando, setSincronizando] = useState(false);
+
+  // Sincronización PAC con TanStack Query
+  const { data: syncData } = useQuery({
+    queryKey: ['pos-ventas-sync'],
+    queryFn: async () => {
+      const res = await fetch('/api/pos/ventas/sync');
+      if (!res.ok) return { pendientes: 0 };
+      return res.json();
+    },
+    refetchInterval: 30000,
+  });
+  const [pendientesPACManual, setPendientesPACManual] = useState<number | null>(null);
+  const pendientesPAC = pendientesPACManual ?? (syncData?.pendientes ?? 0);
+  const setPendientesPAC = useCallback((val: number | ((prev: number) => number)) => {
+    setPendientesPACManual(prev => {
+      const current = prev ?? (syncData?.pendientes ?? 0);
+      return typeof val === 'function' ? val(current) : val;
+    });
+  }, [syncData?.pendientes]);
 
   // Modal Pago
   const [showPagoModal, setShowPagoModal] = useState(false);
@@ -164,9 +224,31 @@ export default function MostradorPOS({
   const [procesandoVenta, setProcesandoVenta] = useState(false);
   const [errorPago, setErrorPago] = useState('');
 
-  // Descuento especial del cliente encontrado por RUC (preaprobado por el dueño)
-  const [clienteEncontrado, setClienteEncontrado] = useState<{ razonSocial: string; descuentoEspecial: number } | null>(null);
-  const [topeDescuento, setTopeDescuento] = useState<number>(10);
+  // Descuento especial del cliente encontrado por RUC vía TanStack Query
+  const { data: clienteData } = useQuery({
+    queryKey: ['pos-cliente', clienteRuc],
+    queryFn: async () => {
+      if (!clienteRuc || clienteRuc.length < 3) return null;
+      const res = await fetch(`/api/pos/clientes?ruc=${encodeURIComponent(clienteRuc)}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return (data.cliente || null) as { razonSocial: string; descuentoEspecial: number } | null;
+    },
+    enabled: Boolean(clienteRuc && clienteRuc.length >= 3),
+  });
+  const clienteEncontrado = clienteData ?? null;
+
+  // Tope de descuento sin autorización del usuario actual vía TanStack Query
+  const { data: topeData } = useQuery({
+    queryKey: ['pos-tope-descuento'],
+    queryFn: async () => {
+      const res = await fetch('/api/pos/tope-descuento');
+      if (!res.ok) return { tope: 10 };
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const topeDescuento = Number(topeData?.tope ?? 10);
 
   // Modal de autorización de admin/gerente (PIN) para descuentos fuera del tope
   const [showAutorizacionModal, setShowAutorizacionModal] = useState(false);
@@ -179,10 +261,25 @@ export default function MostradorPOS({
   // QR real (librería `qrcode`) que codifica el CUFE / link de verificación DGI del recibo
   const [qrReciboDataUrl, setQrReciboDataUrl] = useState<string>('');
 
-  // Turno de Caja: no se puede vender sin uno abierto (el bloqueo real ocurre en el
-  // servidor en /api/pos/ventas; esto es solo para guiar al cajero en la UI).
-  const [turnoActivo, setTurnoActivo] = useState<TurnoCajaActivo | null>(null);
-  const [cargandoTurno, setCargandoTurno] = useState(true);
+  // Turno de Caja vía TanStack Query
+  const { data: turnoQueryData, isLoading: cargandoTurnoQuery } = useQuery({
+    queryKey: ['pos-turno'],
+    queryFn: async () => {
+      const res = await fetch('/api/pos/turno');
+      if (!res.ok) return null;
+      const data = await res.json().catch(() => ({ turno: null }));
+      return (data?.turno || null) as TurnoCajaActivo | null;
+    },
+    enabled: active,
+  });
+  const [turnoManual, setTurnoManual] = useState<TurnoCajaActivo | null | undefined>(undefined);
+  const turnoActivo = turnoManual !== undefined ? turnoManual : (turnoQueryData ?? null);
+  const cargandoTurno = cargandoTurnoQuery;
+  const setTurnoActivo = useCallback((turno: TurnoCajaActivo | null) => {
+    setTurnoManual(turno);
+    queryClient.invalidateQueries({ queryKey: ['pos-turno'] });
+  }, [queryClient]);
+
   const [montoInicialTurno, setMontoInicialTurno] = useState('');
   const [abriendoTurno, setAbriendoTurno] = useState(false);
   const [errorTurno, setErrorTurno] = useState('');
@@ -203,42 +300,23 @@ export default function MostradorPOS({
   const [avisoSync, setAvisoSync] = useState<{ tipo: 'success' | 'error'; mensaje: string } | null>(null);
 
   // Hardware físico opcional (impresora térmica ESC/POS + cajón de dinero) vía Web Serial.
-  // Nada de esto se puede probar en este entorno de desarrollo (no hay hardware real
-  // conectado) -- se degrada a no-op si el navegador no soporta Web Serial o el usuario no
-  // conecta nada; `window.print()` (imprimirTicket) sigue funcionando siempre como opción.
   const [soportaSerial, setSoportaSerial] = useState(false);
   const [impresoraPort, setImpresoraPort] = useState<SerialPort | null>(null);
   const [conectandoImpresora, setConectandoImpresora] = useState(false);
   const [errorHardware, setErrorHardware] = useState('');
 
-  // Cobro real con Yappy Comercial (si la empresa lo configuró y habilitó en Configuración);
-  // si no, el panel de YAPPY sigue usando el flujo manual de referencia ya existente.
-  const [yappyDisponible, setYappyDisponible] = useState(false);
-  const [yappyAmbiente, setYappyAmbiente] = useState<'produccion' | 'pruebas'>('pruebas');
-
-  // Cargar el tope de descuento sin autorización del usuario actual (solo informativo
-  // para la UI; la validación real y obligatoria siempre ocurre en el servidor).
-  useEffect(() => {
-    fetch('/api/pos/tope-descuento')
-      .then(res => res.ok ? res.json() : { tope: 10 })
-      .then(data => setTopeDescuento(Number(data.tope ?? 10)))
-      .catch(() => setTopeDescuento(10));
-  }, []);
-
-  // Buscar cliente por RUC (con debounce simple) para sugerir su descuento especial
-  useEffect(() => {
-    if (!clienteRuc || clienteRuc.length < 3) {
-      setClienteEncontrado(null);
-      return;
-    }
-    const timeout = setTimeout(() => {
-      fetch(`/api/pos/clientes?ruc=${encodeURIComponent(clienteRuc)}`)
-        .then(res => res.ok ? res.json() : { cliente: null })
-        .then(data => setClienteEncontrado(data.cliente || null))
-        .catch(() => setClienteEncontrado(null));
-    }, 400);
-    return () => clearTimeout(timeout);
-  }, [clienteRuc]);
+  // Cobro real con Yappy Comercial vía TanStack Query
+  const { data: yappyData } = useQuery({
+    queryKey: ['pos-yappy-estado'],
+    queryFn: async () => {
+      const res = await fetch('/api/pos/yappy/estado');
+      if (!res.ok) return { disponible: false, ambiente: 'pruebas' as const };
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const yappyDisponible = Boolean(yappyData?.disponible);
+  const yappyAmbiente: 'produccion' | 'pruebas' = yappyData?.ambiente === 'produccion' ? 'produccion' : 'pruebas';
 
   const aplicarDescuentoCliente = () => {
     if (!clienteEncontrado || clienteEncontrado.descuentoEspecial <= 0) return;
@@ -263,16 +341,7 @@ export default function MostradorPOS({
       try { setColaLocal(JSON.parse(savedQueue)); } catch {}
     }
 
-    cargarProductos();
-    fetch('/api/pos/ventas/sync').then(res => res.ok ? res.json() : { pendientes: 0 }).then(data => setPendientesPAC(data.pendientes ?? 0)).catch(() => {});
     setSoportaSerial(haySoporteSerial());
-    fetch('/api/pos/yappy/estado')
-      .then(res => res.ok ? res.json() : { disponible: false })
-      .then(data => {
-        setYappyDisponible(!!data.disponible);
-        if (data.ambiente === 'produccion') setYappyAmbiente('produccion');
-      })
-      .catch(() => setYappyDisponible(false));
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -311,28 +380,10 @@ export default function MostradorPOS({
     }
   };
 
-  const cargarTurno = async () => {
-    setCargandoTurno(true);
-    try {
-      const res = await fetch('/api/pos/turno');
-      if (!res.ok) {
-        setTurnoActivo(null);
-        return;
-      }
-      const data = await res.json().catch(() => ({ turno: null }));
-      setTurnoActivo(data?.turno || null);
-    } catch {
-      setTurnoActivo(null);
-    } finally {
-      setCargandoTurno(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!active) return;
-    const timer = window.setTimeout(() => void cargarTurno(), 0);
-    return () => window.clearTimeout(timer);
-  }, [active]);
+  const cargarTurno = useCallback(async () => {
+    setTurnoManual(undefined);
+    await queryClient.invalidateQueries({ queryKey: ['pos-turno'] });
+  }, [queryClient]);
 
   const handleAbrirTurno = async () => {
     setErrorTurno('');
@@ -415,43 +466,10 @@ export default function MostradorPOS({
     }
   };
 
-  const cargarProductos = async () => {
-    setLoading(true);
-    try {
-      // El catálogo se scopea a la empresa de la sesión actual en el servidor
-      // (getTenantContext), no por un empresaId que mande el cliente.
-      const res = await fetch('/api/pos/productos');
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setProductos([]);
-        setErrorCatalogo(data.error || 'No se pudo cargar el catálogo de productos.');
-        return;
-      }
-      const data = await res.json().catch(() => ({}));
-      const lista = (data.items || []).map((p: ProductoPOSRaw) => ({
-        id: p.id,
-        codigoInterno: p.codigoInterno || 'SKU-01',
-        codigoBarras: p.codigoBarras,
-        descripcion: p.descripcion || 'Producto',
-        precioVenta: Number(p.precioVenta ?? 0),
-        codigoTasaItbms: p.codigoTasaItbms || '00',
-        stockActual: p.stockActual ?? 0,
-        unidadMedida: p.unidadMedida || 'UND',
-        descuentoSugerido: Number(p.descuentoSugerido ?? 0)
-      }));
-      setProductos(lista);
-      if (lista.length === 0) {
-        setErrorCatalogo('No tienes productos activos todavía. Agrega productos en el módulo Productos para poder venderlos aquí.');
-      } else {
-        setErrorCatalogo('');
-      }
-    } catch {
-      setProductos([]);
-      setErrorCatalogo('Error de conexión al cargar el catálogo de productos.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const cargarProductos = useCallback(async () => {
+    setStockOverrides({});
+    await refetchProductos();
+  }, [refetchProductos]);
 
   const mostrarAvisoCarrito = (mensaje: string) => {
     setAvisoCarrito(mensaje);
@@ -587,10 +605,16 @@ export default function MostradorPOS({
         localStorage.setItem('pos_ventas_queue', JSON.stringify(nuevaCola));
 
         // Descontar en memoria local (los servicios no llevan stock)
-        setProductos(productos.map(p => {
-          const itemCart = carrito.find(c => c.productoId === p.id);
-          return itemCart && p.unidadMedida !== 'SRV' ? { ...p, stockActual: p.stockActual - itemCart.cantidad } : p;
-        }));
+        setStockOverrides(prev => {
+          const next = { ...prev };
+          for (const c of carrito) {
+            const prod = productos.find(p => p.id === c.productoId);
+            if (prod && prod.unidadMedida !== 'SRV') {
+              next[prod.id] = (next[prod.id] ?? prod.stockActual) - c.cantidad;
+            }
+          }
+          return next;
+        });
 
         setReciboVenta({
           numero: `CONTINGENCIA-${ventaOffline.id.slice(-6)}`,

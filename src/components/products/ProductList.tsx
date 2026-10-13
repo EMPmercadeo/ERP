@@ -10,6 +10,7 @@ import {
     getCoreRowModel,
     useReactTable,
 } from '@tanstack/react-table';
+import { useQuery } from '@tanstack/react-query';
 import {
     Select,
     SelectContent,
@@ -166,15 +167,18 @@ export function ProductList({
     const unidad = initialUnidad || 'all';
     const categoriaId = initialCategoriaId || 'all';
 
-    const [categorias, setCategorias] = useState<CategoriaItem[]>([]);
+    const { data: catData, refetch: refetchCategorias } = useQuery<CategoriaItem[]>({
+        queryKey: ['categories'],
+        queryFn: async () => {
+            const res = await fetch('/api/categories');
+            if (!res.ok) return [];
+            const data = await res.json();
+            return data.items || [];
+        }
+    });
+    const [localCategorias, setLocalCategorias] = useState<CategoriaItem[] | null>(null);
+    const categorias = localCategorias ?? catData ?? [];
     const [showCategoriesModal, setShowCategoriesModal] = useState(false);
-
-    useEffect(() => {
-        fetch('/api/categories')
-            .then(res => res.ok ? res.json() : { items: [] })
-            .then(data => setCategorias(data.items || []))
-            .catch(() => setCategorias([]));
-    }, []);
 
     const createQueryString = useCallback((params: Record<string, string | null>) => {
         const newParams = new URLSearchParams(searchParams.toString());
@@ -611,7 +615,10 @@ export function ProductList({
                 <CategoriesManagerModal
                     open={showCategoriesModal}
                     onClose={() => setShowCategoriesModal(false)}
-                    onChanged={setCategorias}
+                    onChanged={(items) => {
+                        setLocalCategorias(items);
+                        refetchCategorias();
+                    }}
                 />
 
                 {/* Compact Filters Grid (h-10 controls) */}

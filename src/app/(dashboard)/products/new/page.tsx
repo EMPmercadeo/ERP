@@ -3,6 +3,7 @@
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Save, Loader2, Package, Calculator, AlertCircle, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,14 +67,15 @@ export default function NewProductPage() {
     const [imagenUrl, setImagenUrl] = useState('');
     const [categoriaId, setCategoriaId] = useState('none');
     const [descuentoPorcentaje, setDescuentoPorcentaje] = useState('0');
-    const [categorias, setCategorias] = useState<{ id: string; nombre: string; descuentoPorcentaje: number }[]>([]);
-
-    useEffect(() => {
-        fetch('/api/categories')
-            .then(res => res.ok ? res.json() : { items: [] })
-            .then(data => setCategorias(data.items || []))
-            .catch(() => setCategorias([]));
-    }, []);
+    const { data: categorias = [] } = useQuery<{ id: string; nombre: string; descuentoPorcentaje: number }[]>({
+        queryKey: ['categories'],
+        queryFn: async () => {
+            const res = await fetch('/api/categories');
+            if (!res.ok) return [];
+            const data = await res.json();
+            return data.items || [];
+        }
+    });
 
     // Derived Calculations using centralized fiscal utility
     const costNum = parseFloat(costoUnitario) || 0;

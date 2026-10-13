@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,46 +37,31 @@ export function CategoriesManagerModal({ open, onClose, onChanged }: CategoriesM
     const [editDescuento, setEditDescuento] = useState('0');
     const [guardando, setGuardando] = useState(false);
 
-    const cargar = async () => {
+    const cargar = useCallback(async (isCancelled?: () => boolean) => {
         setLoading(true);
         try {
             const res = await fetch('/api/categories');
             if (!res.ok) throw new Error('Error al cargar');
             const data = await res.json().catch(() => ({ items: [] }));
+            if (isCancelled && isCancelled()) return;
             const items = data.items || [];
             setCategorias(items);
             onChanged(items);
         } catch {
+            if (isCancelled && isCancelled()) return;
             toast.error('Error al cargar categorías.');
         } finally {
             setLoading(false);
         }
-    };
+    }, [onChanged]);
 
     useEffect(() => {
         let active = true;
         if (open) {
-            setLoading(true);
-            fetch('/api/categories')
-                .then(async (res) => {
-                    if (!res.ok) throw new Error('Error al cargar');
-                    const data = await res.json().catch(() => ({ items: [] }));
-                    if (active) {
-                        const items = data.items || [];
-                        setCategorias(items);
-                        onChanged(items);
-                    }
-                })
-                .catch(() => {
-                    if (active) toast.error('Error al cargar categorías.');
-                })
-                .finally(() => {
-                    if (active) setLoading(false);
-                });
+            cargar(() => !active);
         }
         return () => { active = false; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open]);
+    }, [open, cargar]);
 
     const creandoRef = useRef(false);
     const guardandoRef = useRef(false);

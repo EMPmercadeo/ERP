@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 
 /**
@@ -59,76 +59,83 @@ export default function YappyBotonPago({ ambiente, subtotal, itbms, total, onPag
   const botonElRef = useRef<HTMLElement | null>(null);
   const [estado, setEstado] = useState<'cargando' | 'listo' | 'procesando' | 'error'>('cargando');
 
-  // oxlint-disable-next-line react-doctor/effect-needs-cleanup -- False positive: interval is scheduled within click handler onEventClick and cleared on teardown
-  useEffect(() => {
-    let cancelado = false;
-    let pollTimer: ReturnType<typeof setInterval> | null = null;
+  const canceladoRef = useRef(false);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    async function onEventClick() {
-      setEstado('procesando');
-      try {
-        const res = await fetch('/api/pos/yappy/crear-orden', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ subtotal, itbms, total })
-        });
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.error || 'No se pudo crear la orden de cobro con Yappy.');
-        }
-        const data = await res.json();
-
-        // Best-effort: le pasamos al web component el resultado de crear la orden mediante un
-        // CustomEvent -- ver advertencia arriba, esto necesita verificarse con credenciales
-        // reales.
-        botonElRef.current?.dispatchEvent(new CustomEvent('eventPayment', {
-          detail: { transactionId: data.transactionId, token: data.token, documentName: data.documentName }
-        }));
-
-        // Defensa en profundidad: no confiamos solo en el evento eventSuccess del botón (que
-        // corre en el navegador del cajero) -- hacemos polling al servidor, que es quien
-        // realmente valida el hash de la notificación IPN de Yappy.
-        let intentos = 0;
-        pollTimer = setInterval(async () => {
-          intentos++;
-          if (cancelado) { if (pollTimer) clearInterval(pollTimer); return; }
-          try {
-            const r = await fetch(`/api/pos/yappy/consultar?orderId=${encodeURIComponent(data.orderId)}`);
-            if (!r.ok) return;
-            const d = await r.json();
-            if (d.estado === 'EJECUTADO') {
-              if (pollTimer) clearInterval(pollTimer);
-              setEstado('listo');
-              onPagoConfirmado(data.orderId);
-            } else if (['RECHAZADO', 'CANCELADO', 'EXPIRADO'].includes(d.estado)) {
-              if (pollTimer) clearInterval(pollTimer);
-              setEstado('error');
-              onError('El cliente no completó el pago en Yappy (o fue rechazado/cancelado).');
-            }
-          } catch {
-            // Error de red puntual en un intento de polling: se reintenta en el próximo tick.
-          }
-          // Los pedidos de Yappy vencen a los 5 minutos (100 intentos * 3s ≈ 5 min).
-          if (intentos > 100 && pollTimer) {
-            clearInterval(pollTimer);
-            setEstado('error');
-            onError('El tiempo para pagar con Yappy venció.');
-          }
-        }, 3000);
-      } catch (err) {
-        setEstado('error');
-        onError(err instanceof Error ? err.message : 'Error al iniciar el cobro con Yappy.');
+  const onEventClick = useCallback(async () => {
+    setEstado('procesando');
+    try {
+      const res = await fetch('/api/pos/yappy/crear-orden', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subtotal, itbms, total })
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'No se pudo crear la orden de cobro con Yappy.');
       }
-    }
+      const data = await res.json();
 
-    function onEventError() {
+      botonElRef.current?.dispatchEvent(new CustomEvent('eventPayment', {
+        detail: { transactionId: data.transactionId, token: data.token, documentName: data.documentName }
+      }));
+
+      let intentos = 0;
+      pollTimerRef.current = setInterval(async () => {
+        intentos++;
+        if (canceladoRef.current) {
+          if (pollTimerRef.current) {
+            clearInterval(pollTimerRef.current);
+            pollTimerRef.current = null;
+          }
+          return;
+        }
+        try {
+          const r = await fetch(`/api/pos/yappy/consultar?orderId=${encodeURIComponent(data.orderId)}`);
+          if (!r.ok) return;
+          const d = await r.json();
+          if (d.estado === 'EJECUTADO') {
+            if (pollTimerRef.current) {
+              clearInterval(pollTimerRef.current);
+              pollTimerRef.current = null;
+            }
+            setEstado('listo');
+            onPagoConfirmado(data.orderId);
+          } else if (['RECHAZADO', 'CANCELADO', 'EXPIRADO'].includes(d.estado)) {
+            if (pollTimerRef.current) {
+              clearInterval(pollTimerRef.current);
+              pollTimerRef.current = null;
+            }
+            setEstado('error');
+            onError('El cliente no completó el pago en Yappy (o fue rechazado/cancelado).');
+          }
+        } catch {
+          // Error de red puntual en polling
+        }
+        if (intentos > 100 && pollTimerRef.current) {
+          clearInterval(pollTimerRef.current);
+          pollTimerRef.current = null;
+          setEstado('error');
+          onError('El tiempo para pagar con Yappy venció.');
+        }
+      }, 3000);
+    } catch (err) {
       setEstado('error');
-      onError('El widget de Yappy reportó un error en la transacción.');
+      onError(err instanceof Error ? err.message : 'Error al iniciar el cobro con Yappy.');
     }
+  }, [subtotal, itbms, total, onPagoConfirmado, onError]);
+
+  const onEventError = useCallback(() => {
+    setEstado('error');
+    onError('El widget de Yappy reportó un error en la transacción.');
+  }, [onError]);
+
+  useEffect(() => {
+    canceladoRef.current = false;
 
     cargarScriptYappy(ambiente)
       .then(() => {
-        if (cancelado || !contenedorRef.current) return;
+        if (canceladoRef.current || !contenedorRef.current) return;
         const boton = document.createElement('btn-yappy');
         boton.setAttribute('theme', 'blue');
         boton.setAttribute('rounded', 'true');
@@ -139,15 +146,18 @@ export default function YappyBotonPago({ ambiente, subtotal, itbms, total, onPag
         setEstado('listo');
       })
       .catch((err) => {
-        if (!cancelado) {
+        if (!canceladoRef.current) {
           setEstado('error');
           onError(err instanceof Error ? err.message : 'No se pudo cargar el botón de Yappy.');
         }
       });
 
     return () => {
-      cancelado = true;
-      if (pollTimer) clearInterval(pollTimer);
+      canceladoRef.current = true;
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
       if (botonElRef.current) {
         botonElRef.current.removeEventListener('eventClick', onEventClick);
         botonElRef.current.removeEventListener('eventError', onEventError);

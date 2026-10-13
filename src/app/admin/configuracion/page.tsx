@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Settings, Server, Mail, ShieldAlert, RefreshCw, Save, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ContentContainer } from '@/components/layout/Content';
@@ -45,15 +45,17 @@ export default function SuperadminConfiguracionPage() {
   const [correoPrueba, setCorreoPrueba] = useState('admin@erppanama.com');
   const [ejecutandoKillSwitch, setEjecutandoKillSwitch] = useState(false);
 
-  const cargarConfig = async () => {
+  const cargarConfig = useCallback(async (isCancelled?: unknown) => {
+    const isAborted = () => typeof isCancelled === 'function' && Boolean(isCancelled());
     setLoading(true);
     try {
       const res = await fetch('/api/admin/configuracion');
       if (!res.ok) {
-        toast.error('Error al cargar configuración');
+        if (!isAborted()) toast.error('Error al cargar configuración');
         return;
       }
       const data = await res.json();
+      if (isAborted()) return;
       if (data.plataforma) setPlataforma(data.plataforma);
       if (data.smtp) {
         setSmtp({
@@ -62,15 +64,17 @@ export default function SuperadminConfiguracionPage() {
         });
       }
     } catch {
-      toast.error('Error al cargar configuración');
+      if (!isAborted()) toast.error('Error al cargar configuración');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    cargarConfig();
-  }, []);
+    let active = true;
+    cargarConfig(() => !active);
+    return () => { active = false; };
+  }, [cargarConfig]);
 
   const guardandoRef = useRef(false);
   const probandoSmtpRef = useRef(false);

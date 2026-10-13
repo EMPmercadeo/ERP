@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -183,27 +183,38 @@ export function SettingsClient({ initialCompany, invoicesCount: _invoicesCount, 
     const [wooImportandoPedidos, setWooImportandoPedidos] = useState(false);
     const [wooPedidos, setWooPedidos] = useState<{ idWoo: string; cliente: string; ruc: string; total: number; metodoPago: string; items?: { cantidad: number; descripcion: string }[] }[]>([]);
 
+    const cargarIntegraciones = useCallback(async (isCancelled?: () => boolean) => {
+        setIsLoadingPos(true);
+        try {
+            const data = await getPOSIntegrations();
+            if (isCancelled && isCancelled()) return;
+            setPosIntegrations(data || []);
+        } finally {
+            setIsLoadingPos(false);
+        }
+
+        try {
+            const cuentaId = typeof window !== 'undefined' ? (localStorage.getItem('active_tenant_id') || 'empresa-demo-id') : 'empresa-demo-id';
+            const res = await fetch(`/api/pos/woocommerce?cuentaId=${cuentaId}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (isCancelled && isCancelled()) return;
+                if (data?.config) {
+                    setWooUrlTienda(data.config.urlTienda || '');
+                    setWooActivo(data.config.activo);
+                    setWooUltimaSync(data.config.ultimaSync);
+                }
+            }
+        } catch {}
+    }, []);
+
     useEffect(() => {
         if (activeTab === 'integrations') {
-            setIsLoadingPos(true);
-            getPOSIntegrations().then(data => {
-                setPosIntegrations(data || []);
-                setIsLoadingPos(false);
-            });
-
-            const cuentaId = localStorage.getItem('active_tenant_id') || 'empresa-demo-id';
-            fetch(`/api/pos/woocommerce?cuentaId=${cuentaId}`)
-                .then(res => res.ok ? res.json() : null)
-                .then(data => {
-                    if (data?.config) {
-                        setWooUrlTienda(data.config.urlTienda || '');
-                        setWooActivo(data.config.activo);
-                        setWooUltimaSync(data.config.ultimaSync);
-                    }
-                })
-                .catch(() => {});
+            let active = true;
+            cargarIntegraciones(() => !active);
+            return () => { active = false; };
         }
-    }, [activeTab]);
+    }, [activeTab, cargarIntegraciones]);
 
     useEffect(() => {
         if (!showPaypalModal || !selectedPlanForPay) return;
